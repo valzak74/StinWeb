@@ -44,6 +44,7 @@ namespace Tests
     {
         public static int Trap(int[] height)
         {
+            int w = 0;
             int water = 0;
             var data = height.Select((x, i) => new { value = x, index = i });
             for (int i = 0; i < height.Length; i++)
