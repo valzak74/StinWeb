@@ -1,0 +1,44 @@
+﻿@model StinWeb.Models.DataManager.Справочники.ОтчетПоДолгам
+@(Html
+    .Grid("_ДолгиКонтрагентовNested", Model.Результаты)
+    .Build(columns =>
+    {
+        columns.Add(model => model.Наименование).Titled("Менеджер / Группа / Контрагент");
+        columns.Add(model => model.Долг).Titled("Сумма долга общая").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+        if (Model.СортировкаПокупателиПоставщики)
+        {
+            columns.Add(model => model.Покупатели_Долг).Named("Покупатели_Долг").Titled("Сумма долга").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+            columns.Add(model => model.Покупатели_ТекущийДолг).Named("Покупатели_ТекущийДолг").Titled("Сумма / ТДЗ").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+            columns.Add(model => model.Покупатели_ПросроченныйДолг).Named("Покупатели_ПросроченныйДолг").Titled("Сумма / ПДЗ").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+            columns.Add(model => model.Поставщики_Долг).Named("Поставщики_Долг").Titled("Сумма долга").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+            columns.Add(model => model.Поставщики_ТекущийДолг).Named("Поставщики_ТекущийДолг").Titled("Сумма / ТДЗ").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+            columns.Add(model => model.Поставщики_ПросроченныйДолг).Named("Поставщики_ПросроченныйДолг").Titled("Сумма / ПДЗ").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+        }
+        else
+        {
+            columns.Add(model => model.Поставщики_Долг).Named("Поставщики_Долг").Titled("Сумма долга").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+            columns.Add(model => model.Поставщики_ТекущийДолг).Named("Поставщики_ТекущийДолг").Titled("Сумма / ТДЗ").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+            columns.Add(model => model.Поставщики_ПросроченныйДолг).Named("Поставщики_ПросроченныйДолг").Titled("Сумма / ПДЗ").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+            columns.Add(model => model.Покупатели_Долг).Named("Покупатели_Долг").Titled("Сумма долга").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+            columns.Add(model => model.Покупатели_ТекущийДолг).Named("Покупатели_ТекущийДолг").Titled("Сумма / ТДЗ").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+            columns.Add(model => model.Покупатели_ПросроченныйДолг).Named("Покупатели_ПросроченныйДолг").Titled("Сумма / ПДЗ").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+        }
+    })
+    //.Id("reportData")
+    .Css("css-classes")
+    .AppendCss("table-hover")
+    .Filterable()
+    .Sortable()
+    .Empty("No data found")
+    .RowAttributed(model => new { @class = "таблица_" + model.Флаг.ToString() })
+    .Pageable(pager =>
+    {
+        pager.PartialViewName = "_ExtendedPager";
+        //pager.PageSizes = new Dictionary<Int32, String > { { 0, "All" }, { 10, "10" }, { 15, "15" }, { 20, "20" } };
+        //pager.ShowPageSizes = true;
+        //pager.PagesToDisplay = 7;
+        //pager.CurrentPage = 2;
+        //pager.RowsPerPage = 2;
+        pager.RowsPerPage = 15;
+    })
+)

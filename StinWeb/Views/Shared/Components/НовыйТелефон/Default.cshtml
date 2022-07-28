@@ -1,0 +1,115 @@
+﻿<div class="modal fade" id="новыйТелефон" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Новый телефон</h5>
+                <div id="ОшибкиНовогоТелефона" class="validation float-right text-danger" asp-validation-summary="All"></div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @Html.Hidden("телефонlookupId", "", new { id = "телефонlookupId" })
+                @Html.Hidden("телефонКонтрагентId","", new { id = "телефонКонтрагентId" })
+                <div class="input-group input-group-sm mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Телефон</span>
+                    </div>
+                    <input name="ТелефонНомер" type="text" class="form-control" data-inputmask="'mask': '+7 999 999 99 99'">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btnSave" class="btn btn-primary" onclick="btnНовыйТелефонSaveClick()">Сохранить</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var newPhoneValidator = new Wellidate(document.getElementById("новыйТелефон"), {
+        summary: {
+            container: "[data-valmsg-summary=true]",
+            show(result) {
+                if (this.container) {
+                    CreateManualSummary(result, "ОшибкиНовогоТелефона", ["ТелефонНомер"]);
+                }
+            },
+            reset() {
+                this.show({
+                    isValid: true,
+                    invalid: [],
+                    valid: []
+                });
+            }
+        },
+        rules: {
+            "[name='ТелефонНомер']": {
+                required: {
+                    trim: true,
+                    message: "Укажите телефон",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        return (this.element.value != null && this.element.value != "")
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+                length: {
+                    min: 10,
+                    trim: true,
+                    message: "Телефон должен содержать {0} знаков",
+                    formatMessage() {
+                        return this.message.replace("{0}", this.min);
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if (validatable.isValid) {
+                            var value = this.element.value.replace("+7", "").replaceAll("_", "").replaceAll(" ", "").trim();
+                            if (value != "")
+                                return (this.min == value.length);
+                            else
+                                return true;
+                        }
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            },
+        }
+    });
+    function btnНовыйТелефонSaveClick() {
+        if (newPhoneValidator.form()) {
+            $.ajax({
+                url: "НовыйТелефон",
+                type: "post",
+                datatype: "xml",
+                data: {
+                    контрагентId: $("#телефонКонтрагентId").val(),
+                    номерТелефона: $("[name='ТелефонНомер']").val(),
+                },
+                async: true,
+                cache: false,
+                success: function (data) {
+                    var elementId = $("#телефонlookupId").val();
+                    var lookup = new MvcLookup(document.getElementById(elementId));
+                    lookup.values[0].value = data.id;
+                    lookup.reload();
+                    $("#новыйТелефон").modal("hide");
+                },
+                error: function (e, v, f) {
+                    alert("ошибка выполнения: " + e.message + "!");
+                }
+            });
+        }
+    }
+</script>

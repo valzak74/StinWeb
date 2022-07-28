@@ -1,0 +1,145 @@
+﻿
+<div class="modal fade" id="структураПодчиненности" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document" style="position: center;display:table;overflow: auto;width: auto;min-width:300px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 id="общиеРеквизитыДокумента" style="color:darkred;font-weight:bold;">Структура подчиненности</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="overflow-x:auto !important;max-width:90vw !important;">
+                @Html.Hidden("структураПодчиненностиIdDoc", null, new { id = "структураПодчиненностиIdDoc" })
+                <div id='treeСтруктураПодчиненности'></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .jstree-default-large .jstree-ok,
+    .jstree-default-large .jstree-er {
+        background-image: url("vakata-jstree/dist/themes/default/32px.png");
+        background-repeat: no-repeat;
+        background-color: transparent;
+    }
+    .jstree-default-large .jstree-ok {
+        background-position: 0px -64px;
+    }
+    .jstree-default-large .jstree-er {
+        background-position: -32px -64px;
+    }
+    .jstree-default-large .jstree-icon:empty {
+        height: 60px;
+        line-height: 60px;
+    }
+    .jstree-default-large .jstree-open > .jstree-ocl {
+        background-position: -221px -62px;
+    }
+    .jstree-default-large .jstree-closed > .jstree-ocl {
+        background-position: -176px -64px;
+    }
+    .jstree-default-large .jstree-leaf > .jstree-ocl {
+        background-position: -129px -62px;
+    }
+</style>
+
+<script>
+    $('#структураПодчиненности').on('show.bs.modal', function (e) {
+        $('#treeСтруктураПодчиненности').jstree({
+            "plugins": ["core", "themes", "search", "types"], //, "grid"],
+            "search": {
+                "case_insensitive": true,
+                "show_only_matches": true
+            },
+            //"grid": {
+            //    "columns": [
+            //        { header: "Работы" },
+            //        {
+            //            header: "Цена", value: function (node) {
+            //                if (node.data) {
+            //                    return node.data.price;
+            //                }
+            //            }
+            //        }
+            //    ],
+            //},
+            types: {
+                "root": {
+                    "icon": "glyphicon glyphicon-plus"
+                },
+                "ok": {
+                    "icon": "jstree-ok"
+                },
+                "er": {
+                    "icon": "jstree-er"
+                },
+                "child": {
+                    "icon": "fa fa-wrench fa-lg"
+                },
+                "default": {
+                    "icon": "jstree-file"
+                }
+            },
+            'core': {
+                'animation': 1,
+                'open': true,
+                'themes': {
+                    //"name": 'default-dark',
+                    "variant": "large",
+                    "dots": true,
+                    "responsive": true,
+                    "stripes": false,
+                    //"ellipsis": true
+                //    'name': "dark",
+                //    'icons': this._data.core.themes.icons,
+                //    'dots': this._data.core.themes.dots
+                },
+                'data': {
+                    'url': function (node) {
+                        return node.id === '#' ?
+                            'СтруктураПодчиненности?idDoc=' + $("#структураПодчиненностиIdDoc").val().replaceAll(" ","_") + "&findRoot=true" :
+                            'СтруктураПодчиненности?idDoc=' + node.id;
+                    },
+                    'data': function (node) {
+                        return {
+                            'id': node.id,
+                        };
+                    }
+                }
+            }
+        });
+    });
+    $('#структураПодчиненности').on('hidden.bs.modal', function (e) {
+        $('#treeСтруктураПодчиненности').jstree().destroy();
+    });
+    $('#структураПодчиненности').on("dblclick.jstree", function (e) {
+        var instance = $('#treeСтруктураПодчиненности').jstree();
+        var node = instance.get_node(e.target);
+        if (node != undefined) {
+            //console.log(node.id.replaceAll("_", " "));
+        }
+    //    if (node.icon == 'jstree-file') {
+    //        $.ajax({
+    //            url: "Корзина/ДобавитьВПодбор",
+    //            type: "post",
+    //            dataType: "xml",
+    //            data: { sessionKey: "ПодборРабот", id: node.id, наименование: node.text, цена: node.data.price, количество: 1 },
+    //            async: true,
+    //            cache: false,
+    //            success: function () {
+    //                var gridКорзина = new MvcGrid(document.querySelector("#ПодборРаботm"));
+    //                gridКорзина.set({
+    //                    isAjax: true,
+    //                    url: "Корзина/ПолучитьДанные",
+    //                    query: "key=ПодборРабот"
+    //                        + "&modalVersion=true"
+    //                        + "&showЦены=true"
+    //                });
+    //                gridКорзина.reload();
+    //            },
+    //        });
+
+    //    }
+    });
+</script>

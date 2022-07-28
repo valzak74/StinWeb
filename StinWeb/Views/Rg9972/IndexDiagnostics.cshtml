@@ -1,0 +1,27 @@
+﻿@model IQueryable<StinWeb.Models.DataManager.ПартииМастерской>
+
+@(Html
+    .Grid(Model)
+    .Build(columns =>
+    {
+        columns.Add(model => model.ИзделиеId).Titled("ИзделиеId").Hidden();
+        columns.Add(model => model.Квитанция).Titled("Квитанция");
+        columns.Add(model => model.Гарантия).Titled("Гарантия").Hidden();
+        columns.Add(model => model.ТипРемонта).Titled("Тип ремонта");
+        columns.Add(model => model.Производитель).Titled("Производитель"); 
+        columns.Add(model => model.Изделие).Titled("Тип ремонта");
+        columns.Add(model => model.Заказчик).Titled("Заказчик");
+    })
+    .Named("GridDiagnostics")
+    .Css("css-classes")
+    .AppendCss("table-hover")
+    .RowAttributed(model => new { @class = model.Гарантия == 1 || model.Гарантия == 2 ? "гарантийный" : null, data_id = model.Квитанция })
+    .Using(GridFilterMode.Header)
+    .Empty("No data found")
+    .Pageable(pager =>
+    {
+        pager.RowsPerPage = 20;
+    })
+    .Filterable()
+    .Sortable()
+)

@@ -1,0 +1,32 @@
+﻿@model IQueryable<StinWeb.Models.DataManager.Документы.ОбщиеРеквизиты>
+@(Html
+    .Grid(Model)
+    .Build(columns =>
+    {
+        columns.Add(model => $"<img src=\"/images/" + (model.Удален ? "blog-post-delete-icon-24.png" : (model.Проведен ? "page-accept-icon-24.png" : "page-icon-24.png")) + "\" />")
+        .Css("text-center column-10")
+        .Encoded(false);
+        columns.Add(model => model.IdDoc).Named("IdDoc").Titled("IdDoc").Hidden();
+        columns.Add(model => model.ВидДокумента10).Titled("ВидДокумента10").Hidden();
+        columns.Add(model => model.ВидДокумента36).Titled("ВидДокумента36").Hidden();
+        columns.Add(model => model.Наименование).Titled("Наименование").Hidden();
+        columns.Add(model => model.НазваниеВЖурнале).Titled("Наименование");
+        columns.Add(model => model.НомерДок).Titled("Номер");
+        columns.Add(model => model.ДатаДок).Titled("Дата");
+        columns.Add(model => model.Информация).Titled("Информация");
+        columns.Add(model => model.Фирма.Наименование).Titled("Фирма");
+        columns.Add(model => model.Автор.Name).Titled("Автор");
+        columns.Add(model => model.Комментарий).Titled("Комментарий").Filterable(false).Sortable(false);
+    })
+    .Named("gridЖурналОбщий")
+    .AppendCss("table-hover")
+    .RowAttributed(model => new { id = model.IdDoc, @class = model.Удален ? "снят_с_производства" : !model.Проведен ? "под_заказ" : null })
+    .Using(GridFilterMode.Header)
+    .Empty("No data found")
+    .Pageable(pager =>
+    {
+        pager.RowsPerPage = 15;
+    })
+    .Filterable()
+    .Sortable()
+)

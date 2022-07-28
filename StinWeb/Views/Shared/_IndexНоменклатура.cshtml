@@ -1,0 +1,29 @@
+﻿@model IQueryable<StinWeb.Models.DataManager.Справочники.Номенклатура>
+@(Html
+    .Grid(Model)
+    .Build(columns =>
+    {
+        columns.Add(model => model.Id).Titled("Id").Hidden();
+        columns.Add(model => model.Артикул).Titled("Артикул");
+        columns.Add(model => model.Наименование).Titled("Наименование");
+        columns.Add(model => model.Производитель).Titled("Производитель");
+        columns.Add(model => model.Единица.Наименование).Titled("Ед.").Filterable(false).Sortable(false).Css("text-center column-5");
+        columns.Add(model => Math.Max(0, model.Регистр.Остаток - model.Регистр.Резерв - model.Регистр.ОстатокАвСп)).Titled("Ост").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматКоличества);
+        columns.Add(model => Math.Max(0, model.Регистр.ОстатокВсего - model.Регистр.ОстатокОтстой - model.Регистр.РезервВсего)).Titled("Ост.Ф").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматКоличества);
+        columns.Add(model => model.Регистр.Резерв).Titled("Резерв").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматКоличества);
+        columns.Add(model => model.Регистр.ОжидаемыйПриход).Titled("Ож.Пр.").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматКоличества);
+        columns.Add(model => model.Цена.Клиента).Titled("Цена").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+        columns.Add(model => model.Цена.СП).Titled("СП").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+    })
+    .Named("gridПодборНоменклатура")
+    .AppendCss("table-hover")
+    .RowAttributed(model => new { id = model.Id, @class = model.Статус == StinWeb.Models.DataManager.Справочники.СтатусыНоменклатуры.СнятСПроизводства ? "снят_с_производства" : model.Статус == StinWeb.Models.DataManager.Справочники.СтатусыНоменклатуры.ПодЗаказ ? "под_заказ" : null })
+    .Using(GridFilterMode.Header)
+    .Empty("No data found")
+    .Pageable(pager =>
+    {
+        pager.RowsPerPage = 12;
+    })
+    .Filterable()
+    .Sortable()
+)

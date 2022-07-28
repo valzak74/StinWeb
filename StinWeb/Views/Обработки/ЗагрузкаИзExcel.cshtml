@@ -1,0 +1,781 @@
+﻿@{
+    ViewBag.Title = "Обработка \"Загрузка из Excel\"";
+}
+
+<form id="main">
+    <div class="card accordion border-round" style="background-color: lightgray;">
+        <div id="headingSettings" class="card-header">
+            <div class="d-flex">
+                <h5 class="mb-0">
+                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseSettings" aria-expanded="true" aria-controls="collapseSettings">
+                        Параметры обработки
+                    </button>
+                    <button id="btnCheck" class="btn btn-primary" type="button" onclick="Execute(0);">
+                        <span class="spinner-grow spinner-grow-sm d-none" role="status" aria-hidden="true" id="check"></span>
+                        Проверить (без загрузки)
+                    </button>
+                    <button id="btnOk" class="btn btn-primary" type="button" onclick="Execute(1);">
+                        <span class="spinner-grow spinner-grow-sm d-none" role="status" aria-hidden="true" id="ok"></span>
+                        Загрузить
+                    </button>
+                </h5>
+                <div id="ошибкиОтчета" class="validation float-right text-danger" asp-validation-summary="All"></div>
+            </div>
+        </div>
+        <div id="collapseSettings" class="card-body collapse show" aria-labelledby="headingSettings" data-parent=".accordion">
+            <div class="input-group input-group-sm mb-2">
+                <div class="custom-file">
+                    <input type="file" accept=".xls,.xlsx" class="custom-file-input" id="sourceFile">
+                    <label class="custom-file-label" for="sourceFile">Выберите файл</label>
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="input-group input-group-sm col-6">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Тип загрузки</span>
+                    </div>
+                    <select class="custom-select" id="типЗагрузки">
+                        <option value=1 selected>Создать новый элемент</option>
+                        <option value=0>Обновить существующий элемент</option>
+                    </select>
+                </div>
+                <div class="input-group input-group-sm col-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Артикул</span>
+                    </div>
+                    @Html.DropDownList("выбАртикул", (SelectList)ViewBag.ExcelColumns, new { id = "индексАртикул", @class = "form-control" })
+                </div>
+                <div class="input-group input-group-sm col-3">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0 collapse" id="chkНаименование">
+                            <span class="form-check-label ml-3" for="chkНаименование">Наименование</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбНаименование", (SelectList)ViewBag.ExcelColumns, new { id = "индексНаименование", @class = "form-control" })
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="input-group input-group-sm col-6">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Производитель</span>
+                    </div>
+                    <div id="выбПроизводитель" class="mvc-lookup-sm" mvc-lookup="brendId" url="ЗагрузкаИзExcel/SelectBrend" title="Производитель"></div>
+                </div>
+                <div class="input-group input-group-sm col-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkАртикулОригинал">
+                            <span class="form-check-label ml-3" for="chkАртикулОригинал">Арт (оригинал)</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбАртикулОригинал", (SelectList)ViewBag.ExcelColumns, new { id = "индексАртикулОригинал", @class = "form-control" })
+                </div>
+                <div class="col-2">
+                    <div class="input-group input-group-sm collapse" id="groupЕдиница">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                <input type="checkbox" class="form-check-input ml-0" id="chkЕдиница">
+                                <span class="form-check-label ml-3" for="chkЕдиницы">Единица</span>
+                            </div>
+                        </div>
+                        @Html.DropDownList("выбЕдиница", (SelectList)ViewBag.ExcelColumns, new { id = "индексЕдиница", @class = "form-control" })
+                    </div>
+                </div>
+                <div class="input-group input-group-sm col-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkШтрихКод">
+                            <span class="form-check-label ml-3" for="chkШтрихКод">Штрих-код</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбШтрихКод", (SelectList)ViewBag.ExcelColumns, new { id = "индексШтрихКод", @class = "form-control" })
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-6">
+                    <div class="input-group input-group-sm collapse" id="groupПапкаНоменклатуры">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Папка номенклатуры</span>
+                        </div>
+                        @Html.Hidden("parentId", "")
+                        <input type="text" class="form-control" id="parentName">
+                        <div class="input-group-append">
+                            <button class="mvc-lookup-browser" type="button" onclick="SearchTovarGroup()">
+                                <span class="mvc-lookup-icon"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-group input-group-sm col-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkХарактеристики">
+                            <span class="form-check-label ml-3" for="chkХарактеристики">Характеристики</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбХарактеристики", (SelectList)ViewBag.ExcelColumns, new { id = "индексХарактеристики", @class = "form-control" })
+                </div>
+                <div class="input-group input-group-sm col-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkКраткоеОписание">
+                            <span class="form-check-label ml-3" for="chkКраткоеОписание">Крат. описание</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбКратОписание", (SelectList)ViewBag.ExcelColumns, new { id = "индексКраткоеОписание", @class = "form-control" })
+                </div>
+                <div class="input-group input-group-sm col-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkПодробноеОписание">
+                            <span class="form-check-label ml-3" for="chkПодробноеОписание">Подр. описание</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбПодрОписание", (SelectList)ViewBag.ExcelColumns, new { id = "индексПодробноеОписание", @class = "form-control" })
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="input-group input-group-sm col-6">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Название листа в книге</span>
+                    </div>
+                    <input id="sheetName" type="text" class="form-control" autocomplete="off">
+                </div>
+                <div class="input-group input-group-sm col-3">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkКомментарий">
+                            <span class="form-check-label ml-3" for="chkКомментарий">Комментарий</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбКомментарий", (SelectList)ViewBag.ExcelColumns, new { id = "индексКомментарий", @class = "form-control" })
+                </div>
+                <div class="input-group input-group-sm col-3">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkТнВЭД">
+                            <span class="form-check-label ml-3" for="chkТнВЭД">ТнВЭД</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбТнВЭД", (SelectList)ViewBag.ExcelColumns, new { id = "индексТнВЭД", @class = "form-control" })
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="input-group input-group-sm col-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Анализ начинается со строки</span>
+                    </div>
+                    <input type="number" min="1" value="1" class="form-control" id="startRow">
+                </div>
+                <div class="input-group input-group-sm col-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Информационная колонка</span>
+                    </div>
+                    @Html.DropDownList("выбИнфо", (SelectList)ViewBag.ExcelColumns, new { id = "индексИнфо", @class = "form-control" })
+                </div>
+                <div class="input-group input-group-sm col-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkWeb">
+                            <span class="form-check-label ml-3" for="chkWeb">Web</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбWeb", (SelectList)ViewBag.ExcelColumns, new { id = "индексWeb", @class = "form-control" })
+                </div>
+                <div class="input-group input-group-sm col-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkСнятСПроизводства">
+                            <span class="form-check-label ml-3" for="chkСнятСПроизводства">Снят с пр-ва</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбСнятСПроизводства", (SelectList)ViewBag.ExcelColumns, new { id = "индексСнятСПроизводства", @class = "form-control" })
+                </div>
+                <div class="input-group input-group-sm col-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkПодЗаказ">
+                            <span class="form-check-label ml-3" for="chkПодЗаказ">Под заказ</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбПодЗаказ", (SelectList)ViewBag.ExcelColumns, new { id = "индексПодЗаказ", @class = "form-control" })
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="input-group input-group-sm col-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkВес">
+                            <span class="form-check-label ml-3" for="chkВес">Вес (нетто) (кг)</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбВес", (SelectList)ViewBag.ExcelColumns, new { id = "индексВес", @class = "form-control" })
+                </div>
+                <div class="input-group input-group-sm col-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkВесБрутто">
+                            <span class="form-check-label ml-3" for="chkВесБрутто">Вес (брутто) (кг)</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбВесБрутто", (SelectList)ViewBag.ExcelColumns, new { id = "индексВесБрутто", @class = "form-control" })
+                </div>
+                <div class="input-group input-group-sm col-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkКолМест">
+                            <span class="form-check-label ml-3" for="chkКолМест">Кол мест</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбКолМест", (SelectList)ViewBag.ExcelColumns, new { id = "индексКолМест", @class = "form-control" })
+                </div>
+                <div class="input-group input-group-sm col-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkШирина">
+                            <span class="form-check-label ml-3" for="chkШирина">Ширина (м)</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбШирина", (SelectList)ViewBag.ExcelColumns, new { id = "индексШирина", @class = "form-control" })
+                </div>
+                <div class="input-group input-group-sm col-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkВысота">
+                            <span class="form-check-label ml-3" for="chkВысота">Высота (м)</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбВысота", (SelectList)ViewBag.ExcelColumns, new { id = "индексВысота", @class = "form-control" })
+                </div>
+                <div class="input-group input-group-sm col-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkГлубина">
+                            <span class="form-check-label ml-3" for="chkГлубина">Глубина (м)</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбГлубина", (SelectList)ViewBag.ExcelColumns, new { id = "индексГлубина", @class = "form-control" })
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="input-group input-group-sm col-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkImg1">
+                            <span class="form-check-label ml-3" for="chkImg1">Изображение 1</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбИзображение1", (SelectList)ViewBag.ExcelColumns, new { id = "индексИзображение1", @class = "form-control" })
+                </div>
+                <div class="input-group input-group-sm col-2 collapse hide" id="groupImg2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkImg2">
+                            <span class="form-check-label ml-3" for="chkImg2">Изображение 2</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбИзображение2", (SelectList)ViewBag.ExcelColumns, new { id = "индексИзображение2", @class = "form-control" })
+                </div>
+                <div class="input-group input-group-sm col-2 collapse hide" id="groupImg3">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkImg3">
+                            <span class="form-check-label ml-3" for="chkImg3">Изображение 3</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбИзображение3", (SelectList)ViewBag.ExcelColumns, new { id = "индексИзображение3", @class = "form-control" })
+                </div>
+                <div class="input-group input-group-sm col-2 collapse hide" id="groupImg4">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkImg4">
+                            <span class="form-check-label ml-3" for="chkImg4">Изображение 4</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбИзображение4", (SelectList)ViewBag.ExcelColumns, new { id = "индексИзображение4", @class = "form-control" })
+                </div>
+                <div class="input-group input-group-sm col-2 collapse hide" id="groupImg5">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkImg5">
+                            <span class="form-check-label ml-3" for="chkImg5">Изображение 5</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбИзображение5", (SelectList)ViewBag.ExcelColumns, new { id = "индексИзображение5", @class = "form-control" })
+                </div>
+                <div class="input-group input-group-sm col-2 collapse hide" id="groupImg6">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkImg6">
+                            <span class="form-check-label ml-3" for="chkImg6">Изображение 6</span>
+                        </div>
+                    </div>
+                    @Html.DropDownList("выбИзображение6", (SelectList)ViewBag.ExcelColumns, new { id = "индексИзображение6", @class = "form-control" })
+                </div>
+            </div>
+        </div>
+        </div>
+    <div class="modal fade" id="groupTovar" tabindex="-1" role="dialog" aria-labelledby="выборПапкиНоменклатуры" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="выборПапкиНоменклатуры">Папки номенклатуры</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id='treeview'></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="btnSave" class="btn btn-info" onclick="btnSelectGroup()">Выбрать</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    var ВыбПроизводитель = "";
+    const idПроизводитель = document.getElementById("выбПроизводитель");
+    idПроизводитель.addEventListener("lookupselect", e => {
+        var newValue = e.detail.data[0];
+        if (newValue == undefined) {
+            ВыбПроизводитель = "";
+        }
+        else {
+            ВыбПроизводитель = newValue.Id;
+        }
+    });
+
+    document.querySelector('.custom-file-input').addEventListener('change', function (e) {
+        var fileName = document.getElementById("sourceFile").files[0].name;
+        var nextSibling = e.target.nextElementSibling
+        nextSibling.innerText = fileName
+    });
+
+    $(function () {
+        $('#parentName').keypress(function (event) {
+            event.preventDefault(); return false;
+        });
+    });
+    $("#типЗагрузки").on('change', function () {
+        if (this.value == 1 && !$("#chkНаименование").is(':checked')) {
+            $("#chkНаименование").prop('checked', true);
+            $("#chkНаименование").trigger("change");
+        }
+        if (this.value == 0 && $("#chkЕдиница").is(':checked')) {
+            $("#chkЕдиница").prop('checked', false);
+            $("#chkЕдиница").trigger("change");
+        }
+        $("#chkНаименование").collapse(this.value == 0 ? "show" : "hide");
+        $("#groupЕдиница").collapse(this.value == 1 ? "show" : "hide");
+        $("#groupПапкаНоменклатуры").collapse(this.value == 1 ? "show" : "hide");
+    });
+    $("#типЗагрузки").trigger('change');
+
+    $("input#chkНаименование").on("change", function () { InputGroupCheckDisable("индексНаименование", $(this).is(':checked')); });
+
+    $("input#chkАртикулОригинал").on("change", function () { InputGroupCheckDisable("индексАртикулОригинал", $(this).is(':checked')); });
+    $("input#chkЕдиница").on("change", function () { InputGroupCheckDisable("индексЕдиница", $(this).is(':checked')); });
+    $("input#chkШтрихКод").on("change", function () { InputGroupCheckDisable("индексШтрихКод", $(this).is(':checked')); });
+
+    $("input#chkХарактеристики").on("change", function () { InputGroupCheckDisable("индексХарактеристики", $(this).is(':checked')); });
+    $("input#chkКраткоеОписание").on("change", function () { InputGroupCheckDisable("индексКраткоеОписание", $(this).is(':checked')); });
+    $("input#chkПодробноеОписание").on("change", function () { InputGroupCheckDisable("индексПодробноеОписание", $(this).is(':checked')); });
+
+    $("input#chkКомментарий").on("change", function () { InputGroupCheckDisable("индексКомментарий", $(this).is(':checked')); });
+    $("input#chkТнВЭД").on("change", function () { InputGroupCheckDisable("индексТнВЭД", $(this).is(':checked')); });
+
+    $("input#chkWeb").on("change", function () { InputGroupCheckDisable("индексWeb", $(this).is(':checked')); });
+    $("input#chkСнятСПроизводства").on("change", function () { InputGroupCheckDisable("индексСнятСПроизводства", $(this).is(':checked')); });
+    $("input#chkПодЗаказ").on("change", function () { InputGroupCheckDisable("индексПодЗаказ", $(this).is(':checked')); });
+
+    $("input#chkВес").on("change", function () { InputGroupCheckDisable("индексВес", $(this).is(':checked')); });
+    $("input#chkВесБрутто").on("change", function () { InputGroupCheckDisable("индексВесБрутто", $(this).is(':checked')); });
+    $("input#chkКолМест").on("change", function () { InputGroupCheckDisable("индексКолМест", $(this).is(':checked')); });
+    $("input#chkШирина").on("change", function () { InputGroupCheckDisable("индексШирина", $(this).is(':checked')); });
+    $("input#chkВысота").on("change", function () { InputGroupCheckDisable("индексВысота", $(this).is(':checked')); });
+    $("input#chkГлубина").on("change", function () { InputGroupCheckDisable("индексГлубина", $(this).is(':checked')); });
+
+    $("input#chkImg1").on("change", function () {
+        InputGroupCheckDisable("индексИзображение1", $(this).is(':checked'));
+        $("#groupImg2").collapse($(this).is(':checked') ? "show" : "hide");
+        if (!$(this).is(':checked')) {
+            $("#chkImg2").prop('checked', false);
+            $("#chkImg2").trigger("change");
+        }
+    });
+    $("input#chkImg2").on("change", function () {
+        InputGroupCheckDisable("индексИзображение2", $(this).is(':checked'));
+        $("#groupImg3").collapse($(this).is(':checked') ? "show" : "hide");
+        if (!$(this).is(':checked')) {
+            $("#chkImg3").prop('checked', false);
+            $("#chkImg3").trigger("change");
+        }
+    });
+    $("input#chkImg3").on("change", function () {
+        InputGroupCheckDisable("индексИзображение3", $(this).is(':checked'));
+        $("#groupImg4").collapse($(this).is(':checked') ? "show" : "hide");
+        if (!$(this).is(':checked')) {
+            $("#chkImg4").prop('checked', false);
+            $("#chkImg4").trigger("change");
+        }
+    });
+    $("input#chkImg4").on("change", function () {
+        InputGroupCheckDisable("индексИзображение4", $(this).is(':checked'));
+        $("#groupImg5").collapse($(this).is(':checked') ? "show" : "hide");
+        if (!$(this).is(':checked')) {
+            $("#chkImg5").prop('checked', false);
+            $("#chkImg5").trigger("change");
+        }
+    });
+    $("input#chkImg5").on("change", function () {
+        InputGroupCheckDisable("индексИзображение5", $(this).is(':checked'));
+        $("#groupImg6").collapse($(this).is(':checked') ? "show" : "hide");
+        if (!$(this).is(':checked')) {
+            $("#chkImg6").prop('checked', false);
+            $("#chkImg6").trigger("change");
+        }
+    });
+    $("input#chkImg6").on("change", function () { InputGroupCheckDisable("индексИзображение2", $(this).is(':checked')); });
+
+    $("#chkНаименование").trigger("change");
+
+    $("#chkАртикулОригинал").trigger("change");
+    $("#chkЕдиница").trigger("change");
+    $("#chkШтрихКод").trigger("change");
+
+    $("#chkХарактеристики").trigger("change");
+    $("#chkКраткоеОписание").trigger("change");
+    $("#chkПодробноеОписание").trigger("change");
+
+    $("#chkКомментарий").trigger("change");
+    $("#chkТнВЭД").trigger("change");
+
+    $("#chkWeb").trigger("change");
+    $("#chkСнятСПроизводства").trigger("change");
+    $("#chkПодЗаказ").trigger("change");
+
+    $("#chkВес").trigger("change");
+    $("#chkВесБрутто").trigger("change");
+    $("#chkКолМест").trigger("change");
+    $("#chkШирина").trigger("change");
+    $("#chkВысота").trigger("change");
+    $("#chkГлубина").trigger("change");
+
+    $("#chkImg1").trigger("change");
+    $("#chkImg2").trigger("change");
+    $("#chkImg3").trigger("change");
+    $("#chkImg4").trigger("change");
+    $("#chkImg5").trigger("change");
+    $("#chkImg6").trigger("change");
+
+    function Execute(op) {
+        if (pageValidator.form()) {
+            var formData = new FormData();
+            formData.append("Проверка", op == 0);
+            formData.append("sourceFile", document.getElementById("sourceFile").files[0]);
+            formData.append("ТипЗагрузки", $("#типЗагрузки").val());
+            formData.append("sheetName", $("#sheetName").val());
+            formData.append("startRowNum", $("#startRow").val() - 1);
+            formData.append("ИнфоИндекс", $("#индексИнфо").val());
+            formData.append("АртикулИндекс", $("#индексАртикул").val());
+            formData.append("НаименованиеИндекс", $("#индексНаименование").val() == undefined ? -1 : $("#индексНаименование").val());
+
+            formData.append("ParentId", $("#parentId").val());
+            formData.append("BrendId", ВыбПроизводитель);
+
+            formData.append("ЕдиницаИндекс", $("#индексЕдиница").val() == undefined ? -1 : $("#индексЕдиница").val());
+            formData.append("ШтрихкодИндекс", $("#индексШтрихКод").val() == undefined ? -1 : $("#индексШтрихКод").val());
+            formData.append("СнятСПрИндекс", $("#индексСнятСПроизводства").val() == undefined ? -1 : $("#индексСнятСПроизводства").val());
+            formData.append("ПодЗаказИндекс", $("#индексПодЗаказ").val() == undefined ? -1 : $("#индексПодЗаказ").val());
+            formData.append("WebИндекс", $("#индексWeb").val() == undefined ? -1 : $("#индексWeb").val());
+            formData.append("КомментИндекс", $("#индексКомментарий").val() == undefined ? -1 : $("#индексКомментарий").val());
+            formData.append("КратОписИндекс", $("#индексКраткоеОписание").val() == undefined ? -1 : $("#индексКраткоеОписание").val());
+            formData.append("ХарактеристикиИндекс", $("#индексХарактеристики").val() == undefined ? -1 : $("#индексХарактеристики").val());
+            formData.append("ПодробОписИндекс", $("#индексПодробноеОписание").val() == undefined ? -1 : $("#индексПодробноеОписание").val());
+            formData.append("АртикулОригиналИндекс", $("#индексАртикулОригинал").val() == undefined ? -1 : $("#индексАртикулОригинал").val());
+            formData.append("ТнВэдИндекс", $("#индексТнВЭД").val() == undefined ? -1 : $("#индексТнВЭД").val());
+
+            formData.append("ВесИндекс", $("#индексВес").val() == undefined ? -1 : $("#индексВес").val());
+            formData.append("ВесБруттоИндекс", $("#индексВесБрутто").val() == undefined ? -1 : $("#индексВесБрутто").val());
+            formData.append("КолМестИндекс", $("#индексКолМест").val() == undefined ? -1 : $("#индексКолМест").val());
+            formData.append("ШиринаИндекс", $("#индексШирина").val() == undefined ? -1 : $("#индексШирина").val());
+            formData.append("ВысотаИндекс", $("#индексВысота").val() == undefined ? -1 : $("#индексВысота").val());
+            formData.append("ГлубинаИндекс", $("#индексГлубина").val() == undefined ? -1 : $("#индексГлубина").val());
+
+            formData.append("Image1Index", $("#индексИзображение1").val() == undefined ? -1 : $("#индексИзображение1").val());
+            formData.append("Image2Index", $("#индексИзображение2").val() == undefined ? -1 : $("#индексИзображение2").val());
+            formData.append("Image3Index", $("#индексИзображение3").val() == undefined ? -1 : $("#индексИзображение3").val());
+            formData.append("Image4Index", $("#индексИзображение4").val() == undefined ? -1 : $("#индексИзображение4").val());
+            formData.append("Image5Index", $("#индексИзображение5").val() == undefined ? -1 : $("#индексИзображение5").val());
+            formData.append("Image6Index", $("#индексИзображение6").val() == undefined ? -1 : $("#индексИзображение6").val());
+
+            $.ajax({
+                url: "ЗагрузкаИзExcel/LoadData",
+                type: "post",
+                datatype: "xml",
+                data: formData,
+                processData: false,
+                contentType: false,
+                async: true,
+                cache: false,
+                //xhrFields: {
+                //    responseType: 'blob' // to avoid binary data being mangled on charset conversion
+                //},
+                xhr: function() {
+                    var xhr = new XMLHttpRequest();
+                    xhr.onreadystatechange = function() {
+                        if (xhr.readyState == 2) {
+                            if (xhr.status == 200) {
+                                xhr.responseType = "blob";
+                            } else {
+                                xhr.responseType = "text";
+                            }
+                        }
+                    };
+                    return xhr;
+                },
+                beforeSend: function () {
+                    $("#btnCheck").attr("disabled", true);
+                    $("#btnOk").attr("disabled", true);
+                    if (op == 0)
+                        $("#check").removeClass('d-none');
+                    else
+                        $("#ok").removeClass('d-none');
+                },
+                complete: function () {
+                    if (op == 0)
+                        $("#check").addClass('d-none');
+                    else
+                        $("#ok").addClass('d-none');
+                    //$('.spinner-grow').addClass('d-none');
+                    $("#btnCheck").attr("disabled", false);
+                    $("#btnOk").attr("disabled", false);
+                },
+                success: function (blob, status, xhr) {
+                    // check for a filename
+                    var filename = "";
+                    var disposition = xhr.getResponseHeader('Content-Disposition');
+                    if (disposition && disposition.indexOf('attachment') !== -1) {
+                        var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                        var matches = filenameRegex.exec(disposition);
+                        if (matches != null && matches[1]) filename = decodeURIComponent(matches[1].replace(/['"]/g, ''));
+                    }
+
+                    if (typeof window.navigator.msSaveBlob !== 'undefined') {
+                        // IE workaround for "HTML7007: One or more blob URLs were revoked by closing the blob for which they were created. These URLs will no longer resolve as the data backing the URL has been freed."
+                        window.navigator.msSaveBlob(blob, filename);
+                    } else {
+                        var URL = window.URL || window.webkitURL;
+                        var downloadUrl = URL.createObjectURL(blob);
+
+                        if (filename) {
+                            // use HTML5 a[download] attribute to specify filename
+                            var a = document.createElement("a");
+                            // safari doesn't support this yet
+                            if (typeof a.download === 'undefined') {
+                                window.location.href = downloadUrl;
+                            } else {
+                                a.href = downloadUrl;
+                                a.download = filename;
+                                document.body.appendChild(a);
+                                a.click();
+                            }
+                        } else {
+                            window.location.href = downloadUrl;
+                        }
+
+                        setTimeout(function () { URL.revokeObjectURL(downloadUrl); }, 100); // cleanup
+                    }
+                },
+                error: function (jqXHR, exception, f) {
+                    var msg = '';
+                    if (jqXHR.status === 0) {
+                        msg = 'Not connect.\n Verify Network.';
+                    } else if (jqXHR.status == 404) {
+                        msg = 'Requested page not found. [404]';
+                    } else if (jqXHR.status == 500) {
+                        msg = 'Internal Server Error [500].';
+                    } else if (jqXHR.status == 501) {
+                        msg = 'Internal Server Error [501].';
+                        if (jqXHR.responseText === 'timeout')
+                            msg = 'Блокировка ожидания. Повторите попытку...';
+                        else
+                            msg = msg + '\n' + jqXHR.responseText;
+                    } else if (jqXHR.status == 502) {
+                        msg = 'Internal Server Error [502].';
+                        if (jqXHR.responseText != "")
+                            msg = msg + '\n' + jqXHR.responseText;
+                    } else if (jqXHR.status == 503) {
+                        msg = 'Internal Server Error [503].';
+                        if (jqXHR.responseText != "")
+                            msg = msg + '\n' + jqXHR.responseText;
+                    } else if (exception === 'parsererror') {
+                        msg = 'Requested JSON parse failed.';
+                    } else if (exception === 'timeout') {
+                        msg = 'Time out error.';
+                    } else if (exception === 'abort') {
+                        msg = 'Ajax request aborted.';
+                    } else {
+                        msg = 'Uncaught Error.\n' + jqXHR.responseText;
+                    }
+                    alert(msg);
+                }
+            });
+        }
+    }
+
+    function SearchTovarGroup() {
+        $("#groupTovar").modal("show");
+    }
+
+    $('#treeview').slimScroll({ height: '300px' });
+    $('#treeview').jstree({
+        'core': {
+            'animation': 1,
+            'data': {
+                'url': function (node) {
+                    return "ЗагрузкаИзExcel/GetChildren";
+                },
+                'data': function (node) {
+                    return {
+                        'id': node.id
+                    };
+                }
+            }
+        }
+    });
+
+    function btnSelectGroup() {
+        var selectedNode = $("#treeview").jstree("get_selected", true);
+        if (selectedNode != undefined) {
+            $("#parentId").val(selectedNode[0].id);
+            $("#parentName").val(selectedNode[0].text);
+            $("#groupTovar").modal("hide");
+        }
+    }
+
+    var pageValidator = new Wellidate(document.querySelector("form"), {
+        summary: {
+            container: "[data-valmsg-summary=true]",
+            show(result) {
+                if (this.container) {
+                    CreateManualSummary(result, "ошибкиОтчета", ["", "brendId"]);
+                }
+            },
+            reset() {
+                this.show({
+                    isValid: true,
+                    invalid: [],
+                    valid: []
+                });
+            }
+        },
+        rules: {
+            "#sourceFile": {
+                required: {
+                    trim: true,
+                    message: "Укажите файл для загрузки",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        return this.element.files.length > 0;
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            },
+            "#parentName": {
+                required: {
+                    trim: true,
+                    message: "Укажите Папку номенклатуры",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        return ($("#типЗагрузки").val() == 0) || (this.element.value != null && this.element.value != "");
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            },
+            "#brendId": {
+                required: {
+                    trim: true,
+                    message: "Укажите Производителя",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        const lookup = new MvcLookup(idПроизводитель);
+                        return lookup.selected.length > 0;
+                        //return (ВыбПроизводитель != undefined && ВыбПроизводитель != "")
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+            },
+            "#startRow": {
+                required: {
+                    trim: true,
+                    message: "Укажите начальную строку",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        return (this.element.value != null && this.element.value != "");
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+                min: {
+                    // Required, minimum numeric value that should be entered.
+                    value: 1,
+                    // Optional, trim value before validating.
+                    trim: true,
+                    // Optional, failed validation message.
+                    message: "Начальная строка не может быть меньше {0}",
+                    // Optional, format message in desired format.
+                    formatMessage() {
+                        return this.message.replace("{0}", this.value);
+                    },
+                    // Optional, filter enabled when function.
+                    isEnabled() {
+                        return true;
+                    },
+                    // Optional, override validation.
+                    isValid() {
+                        const value = this.normalizeValue();
+
+                        return !value || parseFloat(this.value) <= value;
+                    },
+                    // Optional, override value normalization for the rule.
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            },
+        }
+    });
+</script>

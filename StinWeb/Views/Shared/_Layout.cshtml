@@ -1,0 +1,168 @@
+﻿@using System.Security.Claims
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - StinWeb</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="~/css/site-addin.css" />
+    <link href="~/css/mvc-grid/mvc-grid.css" rel="stylesheet">
+    <link href="~/css/mvc-lookup/mvc-lookup.css" rel="stylesheet">
+    <link href="~/css/mvc-lookup/mvc-lookup-addin.css" rel="stylesheet">
+    <link rel="stylesheet" href="~/vakata-jstree/dist/themes/default/style.min.css" />
+    <link rel="stylesheet" href="~/vakata-jstree/dist/themes/default-dark/style.min.css" />
+    <link rel="stylesheet" href="~/bootstrap-select/1.13.5/content/Content/bootstrap-select.min.css" />
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/jquery.splitter.css" />
+    <link rel="stylesheet" href="~/css/daterangepicker.css" />
+</head>
+<body>
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/vakata-jstree/dist/jstree.min.js"></script>
+    <script src="~/vakata-jstree/dist/jstreegrid.js"></script>
+    <script src="~/js/slimScroll.js"></script>
+    <script src="~/inputmask/jquery.inputmask.js"></script>
+    <script src="~/inputmask/bindings/inputmask.binding.js"></script>
+    <script src="~/js/wellidate.js"></script>
+    <script src="~/js/jquery.splitter.js"></script>
+    <script src="~/js/mvc-grid/mvc-grid.js"></script>
+    <script src="~/js/mvc-lookup/mvc-lookup.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/bootstrap-select/1.13.5/content/Scripts/bootstrap-select.min.js"></script>
+    <script src="~/js/moment.min.js"></script>
+    <script src="~/js/daterangepicker.min.js"></script>
+    <script src="~/js/html5-qrcode.min.js"></script>
+    
+    <partial name="MvcLookup/_Dialog" />
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">StinWeb</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <ul class="nav nav-pills mr-auto mt-2 mt-lg-0">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" aria-haspopup="true" aria-expanded="false">
+                                Журналы
+                            </a>
+                            <ul class="dropdown-menu">
+                                @if ((new[] { "Любой", "Сервис", "Претензионный", "Бухгалтерия" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
+                                {
+                                    <li><a class="dropdown-item" asp-controller="ЖурналОбщий" asp-action="Index">Общий</a></li>
+                                    <li><a class="dropdown-item" asp-controller="ЖурналДоставки" asp-action="Index">Доставка</a></li>
+                                }
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Документы
+                            </a>
+                            <ul class="dropdown-menu">
+                                @if ((new[] { "Любой", "Сервис", "Претензионный" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
+                                {
+                                    <li class="dropdown-submenu">
+                                        <a class="dropdown-item dropdown-toggle" href="#">Сервис</a>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" asp-controller="Раскладки" asp-action="Index">Раскладки</a></li>
+                                            <li><a class="dropdown-item" asp-controller="ПриемВРемонт" asp-action="Index">Приём в ремонт</a></li>
+                                            <li><a class="dropdown-item" asp-controller="Rg9972" asp-action="IndexDiagnostics">Диагностика</a></li>
+                                        </ul>
+                                    </li>
+                                }
+                                @if ((new[] { "Любой", "Продажи", "ИнтернетЗаказы", "Водители" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
+                                {
+                                    <li class="dropdown-submenu">
+                                        <a class="dropdown-item dropdown-toggle" href="#">Интернет-заказы</a>
+                                        <ul class="dropdown-menu">
+                                            @*<li><a class="dropdown-item" asp-controller="ИнтернетЗаказы" asp-action="Index">Журнал</a></li>*@
+                                            <li><a class="dropdown-item" asp-controller="ИнтернетЗаказы" asp-action="Console">Консоль управления</a></li>
+                                            @*<li><a class="dropdown-item" asp-controller="ИнтернетЗаказы" asp-action="CreateNewDoc">Новый заказ</a></li>*@
+                                        </ul>
+                                    </li>
+                                }
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" aria-haspopup="true" aria-expanded="false">
+                                Отчеты
+                            </a>
+                            <ul class="dropdown-menu">
+                                @if ((new[] { "Любой", "Продажи", "Закупки", "Бухгалтерия" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
+                                {
+                                    <li><a class="dropdown-item" asp-controller="ДолгиКонтрагентов" asp-action="Index">Долги контрагентов</a></li>
+                                }
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" aria-haspopup="true" aria-expanded="false">
+                                Обработки
+                            </a>
+                            <ul class="dropdown-menu">
+                                @if ((new[] { "Любой", "Закупки", "Бухгалтерия" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
+                                {
+                                    <li><a class="dropdown-item" asp-controller="ЗагрузкаИзExcel" asp-action="Index">Загрузка из Excel</a></li>
+                                }
+                                @if ((new[] { "Любой", "ИнтернетЗаказы" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
+                                {
+                                    <li><a class="dropdown-item" asp-controller="MarketplaceMatrix" asp-action="Index">Матрица товаров для маркетплейс</a></li>
+                                }
+                                @if ((new[] { "Любой" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
+                                {
+                                    <li><a class="dropdown-item" asp-controller="ScanBarcode" asp-action="Index">Scanning</a></li>
+                                }
+                            </ul>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        <li class="drop-down">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="true"> <span class="nav-label">@@@User.FindFirstValue("Имя")</span> <span class="caret"></span></a>
+                            <ul class="dropdown-menu dropdown-menu-right text-center">
+                                <li><a asp-controller="Account" asp-action="LogOut">Выйти</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                 }
+            </div>
+        </nav>
+    </header>
+    <div class="container-fluid">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2020 - 2022  StinWeb - <a asp-area="" asp-controller="Home" asp-action="Privacy">©copyright</a>
+        </div>
+    </footer>
+    <script>
+        document.querySelectorAll(".mvc-grid").forEach(element => new MvcGrid(element));
+        document.querySelectorAll(".mvc-lookup").forEach(element => new MvcLookup(element));
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
+<script>
+    $('.dropdown-menu a.dropdown-toggle').on('click', function (e) {
+        if (!$(this).next().hasClass('show')) {
+            $(this).parents('.dropdown-menu').first().find('.show').removeClass("show");
+        }
+        var $subMenu = $(this).next(".dropdown-menu");
+        $subMenu.toggleClass('show');
+
+        $(this).parents('li.nav-item.dropdown.show').on('hidden.bs.dropdown', function (e) {
+            $('.dropdown-submenu .show').removeClass("show");
+        });
+
+        return false;
+    });
+</script>

@@ -1,0 +1,566 @@
+﻿@using StinWeb.Models.DataManager.Extensions
+@using StinClasses;
+@model StinWeb.Views.Shared.Components.Order.ReportOrder 
+
+<div class="modal fade" id="формаOrder" tabindex="-1" role="dialog" aria-labelledby="формаOrder" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="height: 50px;">
+                <h6 class="modal-title" >Заказ @Model.Order.Marketplace № @(Model.Order.MarketplaceId + "/" + Model.Order.OrderNo)</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @Html.Hidden("CurrentOrderId", Model.Order.Id, new { id = "currentOrderId" })
+                @Html.Hidden("OrderUsedStocks", Model.ИспользуемыеСкладыId, new { id = "orderUsedStocks" })
+                @if (Model.СостояниеПоРегистрам == 1)
+                {
+                    @Html.LabelWithValue("Состояние: ", "Заказ(одобрен)" + (string.IsNullOrWhiteSpace(Model.ИспользуемыеСкладыНаименование) ? "" : " " + Model.ИспользуемыеСкладыНаименование), null, new { style = "font-size:larger;font-weight:bold;" })
+                }
+                else if (Model.СостояниеПоРегистрам == 2)
+                {
+                    @Html.LabelWithValue("Состояние: ", "Резерв" + (string.IsNullOrWhiteSpace(Model.ИспользуемыеСкладыНаименование) ? "" : " " + Model.ИспользуемыеСкладыНаименование), null, new { style = "font-size:larger;font-weight:bold;" })
+                }
+                else if (Model.СостояниеПоРегистрам == 3)
+                {
+                    @Html.LabelWithValue("Состояние: ", "Набор" + (string.IsNullOrWhiteSpace(Model.ИспользуемыеСкладыНаименование) ? "" : " " + Model.ИспользуемыеСкладыНаименование), null, new { style = "font-size:larger;font-weight:bold;" })
+                }
+                else if (Model.СостояниеПоРегистрам == 4)
+                {
+                    @Html.LabelWithValue("Состояние: ", "Готов" + (string.IsNullOrWhiteSpace(Model.ИспользуемыеСкладыНаименование) ? "" : " " + Model.ИспользуемыеСкладыНаименование), null, new { style = "font-size:larger;font-weight:bold;" })
+                }
+                else if (Model.СостояниеПоРегистрам == 5)
+                {
+                    @Html.LabelWithValue("Состояние: ", "Отменён" + (string.IsNullOrWhiteSpace(Model.ИспользуемыеСкладыНаименование) ? "" : " " + Model.ИспользуемыеСкладыНаименование), null, new { style = "font-size:larger;font-weight:bold;" })
+                }
+                else
+                {
+                    @Html.LabelWithValue("Состояние: ", "Неизвестно", null, new { style = "font-size:larger;font-weight:bold;" })
+                }
+                @if (Model.Order != null && Model.Order.InternalStatus == 1)
+                {
+                    @Html.LabelWithValue("Статус: ", "Груз сформирован", null, new { style = "font-size:larger;font-weight:bold;" })
+                }
+                else if (Model.Order != null && Model.Order.InternalStatus == 2)
+                {
+                    @Html.LabelWithValue("Статус: ", "Этикетки получены", null, new { style = "font-size:larger;font-weight:bold;" })
+                }
+                else if (Model.Order != null && Model.Order.InternalStatus == 3)
+                {
+                    @Html.LabelWithValue("Статус: ", "Готов к отгрузке", null, new { style = "font-size:larger;font-weight:bold;" })
+                }
+                else if (Model.Order != null && Model.Order.InternalStatus == 5)
+                {
+                    @Html.LabelWithValue("Статус: ", "Отменен", null, new { style = "font-size:larger;font-weight:bold;" })
+                }
+                else if (Model.Order != null && Model.Order.InternalStatus == 7)
+                {
+                    @Html.LabelWithValue("Статус: ", "Поступил запрос на отмену", null, new { style = "font-size:larger;font-weight:bold;" })
+                }
+                else if (Model.Order != null && Model.Order.InternalStatus == 8)
+                {
+                    @Html.LabelWithValue("Статус: ", "Обрабатывается", null, new { style = "font-size:larger;font-weight:bold;" })
+                }
+                else if (Model.Order != null && Model.Order.InternalStatus == 9)
+                {
+                    if (Model.Order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP && Model.Order.DeliveryType == StinDeliveryType.PICKUP)
+                    {
+                        @Html.LabelWithValue("Статус: ", "Прибыл в точку самовывоза", null, new { style = "font-size:larger;font-weight:bold;" })
+                    }
+                    else if (Model.Order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP && Model.Order.DeliveryType == StinDeliveryType.DELIVERY)
+                    {
+                        @Html.LabelWithValue("Статус: ", "Передан в службу доставки", null, new { style = "font-size:larger;font-weight:bold;" })
+                    }
+                    else
+                    {
+                        @Html.LabelWithValue("Статус: ", "Неизвестный статус 9", null, new { style = "font-size:larger;font-weight:bold;" })
+                    }
+                }
+                else if (Model.Order != null && Model.Order.InternalStatus == 13)
+                {
+                    @Html.LabelWithValue("Статус: ", "Спорный", null, new { style = "font-size:larger;font-weight:bold;" })
+                }
+                else
+                {
+                    @Html.LabelWithValue("Статус: ", "Неизвестно", null, new { style = "font-size:larger;font-weight:bold;" })
+                }
+                @if (Model.Order != null && Model.Order.Recipient != null)
+                {
+                    <div class="info-area w-100" style="margin-bottom: 0.5em; line-height: 1em;padding: 5px;padding-inline-start: 20px;font-size:larger">
+                        @if (!string.IsNullOrWhiteSpace(Model.Order.Recipient.Recipient))
+                        {
+                            @Html.LabelWithValue("Получитель: ",Model.Order.Recipient.Recipient, new { style = "font-size:small;"})
+                        }
+                        else
+                        {
+                            if (!string.IsNullOrWhiteSpace(Model.Order.Recipient.FirstName))
+                            {
+                                @Html.LabelWithValue("Имя: ",Model.Order.Recipient.FirstName, new { style = "font-size:small;"})
+                            }
+                            if (!string.IsNullOrWhiteSpace(Model.Order.Recipient.MiddleName))
+                            {
+                                @Html.LabelWithValue("Отчество: ",Model.Order.Recipient.MiddleName, new { style = "font-size:small;"})
+                            }
+                            if (!string.IsNullOrWhiteSpace(Model.Order.Recipient.LastName))
+                            {
+                                @Html.LabelWithValue("Фамилия: ",Model.Order.Recipient.LastName, new { style = "font-size:small;"})
+                            }
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.Order.Recipient.Phone))
+                        {
+                            @Html.LabelWithValue("Телефон: ",Model.Order.Recipient.Phone, new { style = "font-size:small;"}, new { style = "font-weight:bold;"})
+                        }
+                    </div>
+                }
+                @if (Model.Order != null && !string.IsNullOrWhiteSpace(Model.АдресСтрокой))
+                {
+                    <div class="info-area w-100" style="margin-bottom: 0.5em; line-height: 1em;padding: 5px;padding-inline-start: 20px;font-size:small">
+                        @Html.LabelWithValue("Адрес: ",Model.АдресСтрокой)
+                   </div>
+                }
+                @if (Model.СоставЗаказа != null && Model.СоставЗаказа.Count > 0)
+                {
+                    @(Html
+                        .Grid(Model.СоставЗаказа)
+                        .Build(columns =>
+                        {
+                            columns.Add().RenderedAs((model, row) => row + 1).Titled("#").Css("text-center  column-10");
+                            columns.Add(model => model.Номенклатура.Артикул).Titled("Артикул");
+                            columns.Add(model => model.Номенклатура.Наименование).Titled("Наименование");
+                            columns.Add(model => model.Номенклатура.Производитель != null ? model.Номенклатура.Производитель.Наименование : "").Titled("Производитель");
+                            columns.Add(model => model.Количество).Titled("Количество").Css("column-10p").Css("text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматКоличества);
+                            columns.Add(model => model.Цена).Titled("Цена").Css("column-10p").Css("text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+                            columns.Add(model => model.Сумма).Titled("Сумма").Css("column-10p").Css("text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+                        })
+                        .AppendCss("table-striped")
+                        .Empty("No data found")
+                        .UsingFooter("~/Views/Shared/Components/Order/_Footer.cshtml")
+                    )
+                }
+                @if (Model.Order != null && (Model.Order.InternalStatus != 5) && Model.Order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP && Model.Order.PaymentType == StinPaymentType.POSTPAID)
+                {
+
+                    <div class="info-area w-100" id="данныеДляЧека" style="margin-top: 0.5em; line-height: 1em;padding: 5px;padding-inline-start: 20px;font-size:larger">
+                        <div id="ОшибкиДанныхДляЧека" class="validation float-right text-danger" asp-validation-summary="All"></div>
+                        <div class="form-control mb-2">
+                        @Html.LabelWithValue("Сумма к оплате : ", (Model.СоставЗаказа.Sum(x => x.Сумма) - Model.Order.СуммаВозмещения).ToString(StinWeb.Models.DataManager.Common.ФорматЦеныСи), null, new { style = "font-size:larger;font-weight:bold;" })
+                        </div>
+                        @Html.InputGroup("mb-2", "Тип оплаты :", null, "select", "PaymentTypes", (SelectList)ViewBag.PaymentTypes, new { id = "paymentTypes", @class = "form-control" })
+                        @Html.InputGroup("mb-2", "Телефон * :", null, "input", "ReceiverPhone", "", new { id = "receiverPhone", @class = "form-control", data_inputmask="'mask': '+7 999 999 99 99'", autocomplete="off" })
+                        @Html.InputGroup("mb-2", "Эл. почта * :", null, "input", "ReceiverEmail", "", new { id = "receiverEmail", @class = "form-control", data_inputmask="'alias': 'email'", autocomplete="off" })
+                        @Html.Label(null, "* - по указанным реквизитам будет выслан чек", null)
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="chkNoContactData">
+                            <label class="custom-control-label" for="chkNoContactData">Контактные сведения недоступны</label>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                @if (Model.Order != null && Model.СостояниеПоРегистрам == 4 && (Model.Order.InternalStatus == 3 || Model.Order.InternalStatus == 9))
+                    if (Model.Order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP && Model.Order.PaymentType == StinPaymentType.POSTPAID)
+                    {
+                        <button type="button" id="btnProcessSell" class="btn btn-primary" onclick="btnProcessSellClick()">ПРОБИТЬ ЧЕК и сформировать отгрузочные документы</button>
+                    }
+                    else if (Model.Order.Тип == "ЯНДЕКС")
+                    {
+                        <button type="button" id="btnProcess" class="btn btn-primary" onclick="btnProcessClick()">Сформировать отгрузочные документы</button>
+                    }
+                @if (Model.Order != null && Model.Order.InternalStatus == 13 && Model.Order.Тип == "OZON")
+                {
+                    <button type="button" id="btnAddOrderToPostings" class="btn btn-primary" onclick="btnAddOrderToPostingsClick()">Передать спорный заказ к отгрузке</button>
+                }
+                @if (Model.Order != null && Model.Order.InternalStatus == 7 && Model.Order.Тип == "ЯНДЕКС")
+                {
+                    <button type="button" id="btnCancelOrder" class="btn btn-danger" onclick="btnCancelOrderClick()">Подтвердить ОТМЕНУ ЗАКАЗА</button>
+                }
+                @if (Model.Order != null && ((Model.СостояниеПоРегистрам == 3) || (Model.СостояниеПоРегистрам == 4)))
+                {
+                    <button type="button" id="btnPrintNabor" class="btn btn-secondary" onclick="btnPrintNaborClick()">Печать</button>
+                }
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var divSell = document.getElementById("данныеДляЧека");
+    if (divSell) {
+        var SellDataValidator = new Wellidate(divSell, {
+            summary: {
+                container: "[data-valmsg-summary=true]",
+                show(result) {
+                    if (this.container) {
+                        CreateManualSummary(result, "ОшибкиДанныхДляЧека", ["ReceiverPhone", "ReceiverEmail"]);
+                    }
+                },
+                reset() {
+                    this.show({
+                        isValid: true,
+                        invalid: [],
+                        valid: []
+                    });
+                }
+            },
+            rules: {
+                "#receiverPhone": {
+                    required: {
+                        trim: true,
+                        message: "Укажите телефон",
+                        formatMessage() {
+                            return this.message;
+                        },
+                        isEnabled() {
+                            return true;
+                        },
+                        isValid() {
+                            if (document.getElementById("chkNoContactData").checked) {
+                                return true;
+                            }
+                            else {
+                                const email = document.getElementById("receiverEmail");
+                                return (this.element.value != null && this.element.value != "") || (email.value != null && email.value != "")
+                            }
+                        },
+                        normalizeValue() {
+                            return this.trim ? this.element.value.trim() : this.element.value;
+                        }
+                    },
+                    length: {
+                        min: 10,
+                        trim: true,
+                        message: "Телефон должен содержать {0} знаков",
+                        formatMessage() {
+                            return this.message.replace("{0}", this.min);
+                        },
+                        isEnabled() {
+                            return true;
+                        },
+                        isValid(validatable) {
+                            if (validatable.isValid) {
+                                var value = this.element.value.replace("+7", "").replaceAll("_", "").replaceAll(" ", "").trim();
+                                if (value != "")
+                                    return (this.min == value.length);
+                                else
+                                    return true;
+                            }
+                        },
+                        normalizeValue() {
+                            return this.trim ? this.element.value.trim() : this.element.value;
+                        }
+                    }
+                },
+                "#receiverEmail": {
+                    required: {
+                        trim: true,
+                        message: " и/или email",
+                        formatMessage() {
+                            return this.message;
+                        },
+                        isEnabled() {
+                            return true;
+                        },
+                        isValid() {
+                            if (document.getElementById("chkNoContactData").checked) {
+                                return true;
+                            }
+                            else {
+                                const phone = document.getElementById("receiverPhone");
+                                return (this.element.value != null && this.element.value != "") || (phone.value != null && phone.value != "")
+                            }
+                        },
+                        normalizeValue() {
+                            return this.trim ? this.element.value.trim() : this.element.value;
+                        }
+                    },
+                    email: {
+                        trim: true,
+                        message: "Введите правильный email",
+                        formatMessage() {
+                            return this.message;
+                        },
+                        isEnabled() {
+                            return true;
+                        },
+                        isValid(validatable) {
+                            if (validatable.isValid) {
+                                var value = this.element.value.replaceAll("_", "").replaceAll(" ", "").trim();
+                                if (value != "")
+                                    return /^$|^([\w\.\-]+)@@([\w\-]+)((\.(\w){2,3})+)$/.test(value);
+                                else
+                                    return true;
+                            }
+                        },
+                        normalizeValue() {
+                            return this.trim ? this.element.value.trim() : this.element.value;
+                        }
+                    }
+                }
+            }
+        });
+    }
+    $(function () {
+        var usedStocks = $("#orderUsedStocks").val().split(',');
+        var validSklads = $("#разрешенныеСклады").val().split(',');
+        var found = $("#этоВодитель").val() == "True";
+        if (!found && usedStocks) {
+            found = usedStocks.some(r=> validSklads.includes(r));
+        }
+        btnProcess = document.getElementById("btnProcess");
+        if (btnProcess) {
+            btnProcess.style.visibility = found ? "visible" : "hidden";
+        }
+        btnProcessSell = document.getElementById("btnProcessSell");
+        if (btnProcessSell)
+            btnProcessSell.style.visibility = found ? "visible" : "hidden";
+        btnCancelOrder = document.getElementById("btnCancelOrder");
+        if (btnCancelOrder)
+            btnCancelOrder.style.visibility = found ? "visible" : "hidden";
+    });
+
+    $("#chkNoContactData").trigger('change');
+    $("input#chkNoContactData").on("change", function () { 
+        $("#receiverPhone").val("");
+        $("#receiverEmail").val("");
+        $("#receiverPhone").prop("disabled", $(this).is(':checked'));
+        $("#receiverEmail").prop("disabled", $(this).is(':checked'));
+    });
+
+    function btnProcessSellClick() {
+        if (SellDataValidator.form()) {
+            $("#формаOrder").modal("hide");
+            var receiverEmail = $("#chkNoContactData").is(':checked') ? $("#defaultEmail").val() : $("#receiverEmail").val();
+            var receiverPhone = $("#chkNoContactData").is(':checked') ? "" : $("#receiverPhone").val();
+            CreateDocs($("#currentOrderId").val(),$("#paymentTypes").val(),receiverEmail,receiverPhone);
+        }
+    }
+    function btnPrintNaborClick() {
+        EnableBusyScreen();
+        $.ajax({
+            url: "ПечатьНабор",
+            type: "post",
+            datatype: "xml",
+            data: {
+                ids: [$("#currentOrderId").val()]
+            },
+            async: true,
+            cache: false,
+            success: function (obj) {
+                if (obj) {  
+                    printPage(obj, false);
+                }
+                DisableBusyScreen();
+            },
+            error: function (jqXHR, exception) {
+                var msg = '';
+                if (jqXHR.status === 0) {
+                    msg = 'Not connect.\n Verify Network.';
+                } else if (jqXHR.status == 404) {
+                    msg = 'Requested page not found. [404]';
+                } else if (jqXHR.status == 500) {
+                    msg = 'Internal Server Error [500].';
+                } else if (jqXHR.status == 501) {
+                    msg = 'Internal Server Error [501].';
+                    if (jqXHR.responseText === 'timeout')
+                        msg = 'Блокировка ожидания. Повторите попытку...';
+                    else
+                        msg = msg + '\n' + jqXHR.responseText;
+                } else if (jqXHR.status == 502) {
+                    msg = 'Internal Server Error [502].';
+                    if (jqXHR.responseText != "")
+                        msg = msg + '\n' + jqXHR.responseText;
+                } else if (jqXHR.status == 503) {
+                    msg = 'Internal Server Error [503].';
+                    if (jqXHR.responseText != "")
+                        msg = msg + '\n' + jqXHR.responseText;
+                } else if (exception === 'parsererror') {
+                    msg = 'Requested JSON parse failed.';
+                } else if (exception === 'timeout') {
+                    msg = 'Time out error.';
+                } else if (exception === 'abort') {
+                    msg = 'Ajax request aborted.';
+                } else {
+                    msg = 'Uncaught Error.\n' + jqXHR.responseText;
+                }
+                alert(msg);
+            }
+        });
+    }
+    function btnProcessClick() {
+        $("#формаOrder").modal("hide");
+        CreateDocs($("#currentOrderId").val(),0,"","");
+    }
+    function btnAddOrderToPostingsClick() {
+        $("#формаOrder").modal("hide");
+        EnableBusyScreen();
+        $.ajax({
+            url: "ПередатьОтправлениеКОтгрузке",
+            type: "post",
+            datatype: "xml",
+            data: {
+                orderId: $("#currentOrderId").val()
+            },
+            async: true,
+            cache: false,
+            success: function (obj) {
+                if (obj) {  // check if data is defined
+                    alert(obj);
+                //    $("#docContent").html(obj);
+                //    $("#выбДокумент").modal("show");
+                }
+                DisableBusyScreen();
+                //ReloadGrid();
+                new MvcGrid(document.querySelector("div[data-name='gridConsole']")).reload();
+            },
+            error: function (jqXHR, exception) {
+                var msg = '';
+                if (jqXHR.status === 0) {
+                    msg = 'Not connect.\n Verify Network.';
+                } else if (jqXHR.status == 404) {
+                    msg = 'Requested page not found. [404]';
+                } else if (jqXHR.status == 500) {
+                    msg = 'Internal Server Error [500].';
+                } else if (jqXHR.status == 501) {
+                    msg = 'Internal Server Error [501].';
+                    if (jqXHR.responseText === 'timeout')
+                        msg = 'Блокировка ожидания. Повторите попытку...';
+                    else
+                        msg = msg + '\n' + jqXHR.responseText;
+                } else if (jqXHR.status == 502) {
+                    msg = 'Internal Server Error [502].';
+                    if (jqXHR.responseText != "")
+                        msg = msg + '\n' + jqXHR.responseText;
+                } else if (jqXHR.status == 503) {
+                    msg = 'Internal Server Error [503].';
+                    if (jqXHR.responseText != "")
+                        msg = msg + '\n' + jqXHR.responseText;
+                } else if (exception === 'parsererror') {
+                    msg = 'Requested JSON parse failed.';
+                } else if (exception === 'timeout') {
+                    msg = 'Time out error.';
+                } else if (exception === 'abort') {
+                    msg = 'Ajax request aborted.';
+                } else {
+                    msg = 'Uncaught Error.\n' + jqXHR.responseText;
+                }
+                alert(msg);
+            }
+        });
+    }
+    function btnCancelOrderClick() {
+        $("#формаOrder").modal("hide");
+        EnableBusyScreen();
+        $.ajax({
+            url: "ПодтвердитьОтмену",
+            type: "post",
+            datatype: "xml",
+            data: {
+                orderId: $("#currentOrderId").val()
+            },
+            async: true,
+            cache: false,
+            success: function (obj) {
+                if (obj) {  // check if data is defined
+                    alert(obj);
+                //    $("#docContent").html(obj);
+                //    $("#выбДокумент").modal("show");
+                }
+                DisableBusyScreen();
+                //ReloadGrid();
+                new MvcGrid(document.querySelector("div[data-name='gridConsole']")).reload();
+            },
+            error: function (jqXHR, exception) {
+                var msg = '';
+                if (jqXHR.status === 0) {
+                    msg = 'Not connect.\n Verify Network.';
+                } else if (jqXHR.status == 404) {
+                    msg = 'Requested page not found. [404]';
+                } else if (jqXHR.status == 500) {
+                    msg = 'Internal Server Error [500].';
+                } else if (jqXHR.status == 501) {
+                    msg = 'Internal Server Error [501].';
+                    if (jqXHR.responseText === 'timeout')
+                        msg = 'Блокировка ожидания. Повторите попытку...';
+                    else
+                        msg = msg + '\n' + jqXHR.responseText;
+                } else if (jqXHR.status == 502) {
+                    msg = 'Internal Server Error [502].';
+                    if (jqXHR.responseText != "")
+                        msg = msg + '\n' + jqXHR.responseText;
+                } else if (jqXHR.status == 503) {
+                    msg = 'Internal Server Error [503].';
+                    if (jqXHR.responseText != "")
+                        msg = msg + '\n' + jqXHR.responseText;
+                } else if (exception === 'parsererror') {
+                    msg = 'Requested JSON parse failed.';
+                } else if (exception === 'timeout') {
+                    msg = 'Time out error.';
+                } else if (exception === 'abort') {
+                    msg = 'Ajax request aborted.';
+                } else {
+                    msg = 'Uncaught Error.\n' + jqXHR.responseText;
+                }
+                alert(msg);
+            }
+        });
+    }
+    function CreateDocs(id, paymentType, email, phone) {
+        EnableBusyScreen();
+        $.ajax({
+            url: "СформироватьОтгрузочныеДокументы",
+            type: "post",
+            datatype: "xml",
+            data: {
+                orderId: id,
+                intReceiverPaymentType: paymentType,
+                receiverEmail: email,
+                receiverPhone: phone
+            },
+            async: true,
+            cache: false,
+            success: function (obj) {
+                if (obj) {  // check if data is defined
+                    alert(obj);
+                }
+                DisableBusyScreen();
+                new MvcGrid(document.querySelector("div[data-name='gridConsole']")).reload();
+            },
+            error: function (jqXHR, exception) {
+                var msg = '';
+                if (jqXHR.status === 0) {
+                    msg = 'Not connect.\n Verify Network.';
+                } else if (jqXHR.status == 404) {
+                    msg = 'Requested page not found. [404]';
+                } else if (jqXHR.status == 500) {
+                    msg = 'Internal Server Error [500].';
+                } else if (jqXHR.status == 501) {
+                    msg = 'Internal Server Error [501].';
+                    if (jqXHR.responseText === 'timeout')
+                        msg = 'Блокировка ожидания. Повторите попытку...';
+                    else
+                        msg = msg + '\n' + jqXHR.responseText;
+                } else if (jqXHR.status == 502) {
+                    msg = 'Internal Server Error [502].';
+                    if (jqXHR.responseText != "")
+                        msg = msg + '\n' + jqXHR.responseText;
+                } else if (jqXHR.status == 503) {
+                    msg = 'Internal Server Error [503].';
+                    if (jqXHR.responseText != "")
+                        msg = msg + '\n' + jqXHR.responseText;
+                } else if (exception === 'parsererror') {
+                    msg = 'Requested JSON parse failed.';
+                } else if (exception === 'timeout') {
+                    msg = 'Time out error.';
+                } else if (exception === 'abort') {
+                    msg = 'Ajax request aborted.';
+                } else {
+                    msg = 'Uncaught Error.\n' + jqXHR.responseText;
+                }
+                alert(msg);
+            }
+        });
+    }
+ </script>
+

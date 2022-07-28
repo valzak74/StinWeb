@@ -1,0 +1,38 @@
+﻿@model StinWeb.Models.DataManager.Справочники.Долги
+
+<div class="info-area w-100">
+    @if (Model == null)
+    {
+        <label>Менеджер:</label><label id="инфоМенеджер" class="font-weight-bold">не указан</label><br />
+        <label>Группа:</label><label id="инфоГруппа" class="font-weight-bold">не указана</label><br />
+        <label>Общий долг: </label><label id="инфоОбщийДолг" class="font-weight-bold">0 руб.</label><br />
+    }
+    else
+    {
+        <label>Менеджер:</label>
+        @if (Model.Менеджер != null)
+        {
+            <label id="инфоМенеджер" class="font-weight-bold">@Model.Менеджер.Наименование</label><br />
+        }
+        else
+        {
+            <label id="инфоМенеджер" class="font-weight-bold">не указан</label><br />
+        }
+        <label>Группа:</label>
+        @if (Model.Группа != null)
+        {
+            <label id="инфоГруппа" class="font-weight-bold">@Model.Группа.Наименование</label><br />
+        }
+        else
+        {
+            <label id="инфоГруппа" class="font-weight-bold">не указана</label><br />
+        }
+        <label>Общий долг: </label><label id="инфоОбщийДолг" class="font-weight-bold">@Model.Долг.ToString("#,##0.00;-#,##0.00;0") руб.</label><br />
+        if (Model.Долг != 0)
+        {
+            <div id="инфоВтомЧисле"><label>в том числе</label><br /></div>
+            <div id="инфоТекущийДолг"><label>-текущий: </label><label>@((Model.ПокупателиТекущийДолг + Model.ПоставщикиТекущийДолг).ToString("#,##0.00;-#,##0.00;0")) руб.</label><br /></div>
+            <div id="инфоПросроченныйДолг"><label>-просроченный: </label><label class="font-weight-bold">@((Model.ПокупателиПросроченныйДолг + Model.ПоставщикиПросроченныйДолг).ToString("#,##0.00;-#,##0.00;0")) руб.</label><br /></div>
+        }
+    }
+</div>

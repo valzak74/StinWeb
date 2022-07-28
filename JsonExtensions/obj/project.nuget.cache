@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "jVoD1k3lO61RLgCsUsaLvpdLS2+jvE+GE8mgDeHesTjuEV0mOOdADGcalj/CBjH2wWo0Ws+8uzbu+X/LyrwKCA==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Валентин\\.nuget\\packages\\newtonsoft.json\\13.0.1\\newtonsoft.json.13.0.1.nupkg.sha512"
+  ],
+  "logs": []
+}

@@ -1,0 +1,445 @@
+﻿@using StinWeb.Models.DataManager.Extensions
+@using System.Security.Claims
+
+@{
+    ViewBag.Title = "Консоль управления marketplace-заказами";
+}
+
+@Html.Hidden("isDriver", ViewBag.ЭтоВодитель, new { id = "этоВодитель"})
+@Html.Hidden("Role", ViewBag.DriverId, new { id = "role"})
+@Html.Hidden("ValidSklads", ViewBag.СкладыСтрокой, new { id = "разрешенныеСклады"})
+@Html.Hidden("DefaultEmail", ViewBag.DefaultEmail, new { id = "defaultEmail"})
+
+@if ((new[] { "Любой", "Продажи", "ИнтернетЗаказы" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
+{
+    <div class="card border-round" style="background-color: lightgray;">
+@*        
+        <div class="card-header">
+            <div class="input-group-text" id="AliveBlock">
+                @Html.CheckBox("alive", true, new { @class = "form-check-input ml-0", id = "chkAlive", onchange = "AliveCheck()" }))
+                <span class="form-check-label ml-3" for="chkAlive">Только активные</span>
+            </div>
+            <div class="input-group input-group-sm" id="inputGroupPeriod">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Период</span>
+                </div>
+                <div id="reportrange" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">
+                    <i class="fa fa-calendar"></i>&nbsp;
+                    <span></span> <i class="fa fa-caret-down"></i>
+                </div>
+            </div>
+        </div>
+*@        
+        <div class="card-body">
+            <div class="row">
+                @Html.InputGroup("col-6", "Компания :", "<button type=\"button\" id=\"btnAct\" class=\"btn btn-sm btn-outline-success\" onclick=\"btnActClick()\"><span class=\"spinner-grow spinner-grow-sm d-none\" role=\"status\" aria-hidden=\"true\"></span>Акт приема-передачи</button>", "select", "CampaignIds", (SelectList)ViewBag.CampaignIds, new { id = "campaignIds", @class = "form-control", onchange = "InfoText()" })
+
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-outline-success dropdown-toggle" type="button" id="dropdownMultiLink" data-toggle="dropdown" aria-expanded="false">
+                    Групповая обработка
+                  </button>
+                  <div class="dropdown-menu" aria-labelledby="dropdownMultiLink">
+                    <a class="dropdown-item" id="itemMultiPrint" href="#">Печать этикеток</a>
+                    <a class="dropdown-item" id="itemMultiPrintNabor" href="#">Распечатать наборы</a>
+                    <a class="dropdown-item" id="itemMultiCreate" href="#">Сформировать документы</a>
+                  </div>
+                </div>
+@*
+                <div class="dropdown">
+                  <a class="btn btn-sm btn-outline-success dropdown-toggle" href="#" role="button" id="dropdownMultiLink" data-bs-toggle="dropdown" aria-expanded="false">
+                    Групповая обработка
+                  </a>
+
+                  <ul class="dropdown-menu" aria-labelledby="dropdownMultiLink">
+                    <li><a class="dropdown-item" href="#">Печать этикеток</a></li>
+                    <li><a class="dropdown-item" href="#">Сформировать документы</a></li>
+                  </ul>
+                </div>
+                @Html.Button("<span class=\"spinner-grow spinner-grow-sm d-none\" role=\"status\" aria-hidden=\"true\"></span>Печать этикеток", new { @type = "button", id = "btnMultiPrint", @class = "btn btn-sm btn-outline-success", onclick = "btnMultiOrdersClick(0)" })
+                @Html.Button("<span class=\"spinner-grow spinner-grow-sm d-none\" role=\"status\" aria-hidden=\"true\"></span>Сформировать документы", new { @type = "button", id = "btnMultiCreate", @class = "btn btn-sm btn-outline-success", onclick = "btnMultiOrdersClick(1)" })
+                *@
+            </div>
+            <div id="infoFBS"></div>
+        </div>
+    </div>
+}
+
+<ul id="div-popover" style="display:none">
+    @Html.Hidden("popoverOrderId", "")
+    <li><a id="опцияПросмотр" href="#">Просмотр заказа</a></li>
+</ul>
+
+<div class="grid-header">
+    <div class="grid-header-buttons">
+        <span id="gridConfigure" class="fa fa-cog"></span>
+    </div>
+    <div style="flex-grow:1"></div>
+    <div class="grid-header-buttons">
+        <span id="gridRefresh" class="fa fa-refresh"></span>
+    </div>
+</div>
+@Html.AjaxGrid(Url.Action("OrdersConsole", "ИнтернетЗаказы", new { isDriver = ViewBag.ЭтоВодитель, driverId = ViewBag.DriverId }))
+
+<div id="orderContent"></div>
+
+<script>
+    var insidePopover = false;
+    //$(function () {
+
+    //    var start = moment();
+    //    var end = moment();
+
+    //    function cb(start, end) {
+    //        $('#reportrange span').html(start.format('DD.MM.YYYY') + ' - ' + end.format('DD.MM.YYYY'));
+    //    }
+
+    //    $('#reportrange').daterangepicker({
+    //        "showDropdowns": true,
+    //        "locale": {
+    //            "format": "DD.MM.YYYY",
+    //            "separator": " - ",
+    //            "applyLabel": "Выбрать",
+    //            "cancelLabel": "Отмена",
+    //            "fromLabel": "от",
+    //            "toLabel": "до",
+    //            "customRangeLabel": "Произвольный",
+    //            "weekLabel": "W",
+    //            "daysOfWeek": [
+    //                "Вс",
+    //                "Пн",
+    //                "Вт",
+    //                "Ср",
+    //                "Чт",
+    //                "Пт",
+    //                "Сб"
+    //            ],
+    //            "monthNames": [
+    //                "Январь",
+    //                "Февраль",
+    //                "Март",
+    //                "Апрель",
+    //                "Май",
+    //                "Июнь",
+    //                "Июль",
+    //                "Август",
+    //                "Сентябрь",
+    //                "Октябрь",
+    //                "Ноябрь",
+    //                "Декабрь"
+    //            ],
+    //            "firstDay": 1
+    //        },
+    //        startDate: start,
+    //        endDate: end,
+    //        ranges: {
+    //            'Текущая дата': [moment(), moment()],
+    //            'Текущая неделя': [moment().startOf('week').add(1, 'days'), moment()],
+    //            'Текущий месяц': [moment().startOf('month'), moment()],
+    //            'Прошлый месяц': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+    //        }
+    //    }, cb);
+
+    //    cb(start, end);
+    //    $("#chkAlive").trigger("change");
+    //});
+
+    function attachEvents(tr) {
+        $('.popover').on('mouseenter', function () {
+            insidePopover = true;
+        });
+        $('.popover').on('mouseleave', function () {
+            insidePopover = false;
+            $(tr).popover('hide');
+        });
+    }
+
+    $(document).on('mouseleave', 'tr', function () {
+        $(this).find('td').each(function () {
+            var popoverId = $(this).attr('aria-describedby');
+            if (popoverId != undefined && popoverId.startsWith('popover')) {
+                var td = $(this);
+                setTimeout(function () {
+                    if (!insidePopover) td.popover('hide');
+                }, 200);
+            }
+        });
+    });
+
+    function Popover(element, orderId) {
+        if ($(element).attr('havePopover') != 'true') {
+            $(element).attr('havePopover', 'true');
+            $(element).popover({
+                html: true,
+                trigger: "manual",
+                placement: "bottom",
+                container: element,
+                content: function () {
+                    $("#popoverOrderId").val(orderId);
+                    return $("#div-popover").html();
+                }
+            });
+            $(element).on('shown.bs.popover', function () {
+                //var popoverIdDoc = $('#idDoc').val();
+                //$("#идентификаторДокумента").val(popoverIdDoc);
+                $('#опцияПросмотр').click(function () {
+                    $(element).popover('hide');
+                    ПросмотрЗаказа();
+                });
+                //$('#опцияВводНаОсновании').click(function () {
+                //    $(element).popover('hide');
+                //    ПолучитьВидДокумента10("ВводНаОсновании");
+                //    });
+            });
+            $(element).on('hidden.bs.popover', function () {
+                insidePopover = false;
+            });
+        }
+        setTimeout(function () {
+            if (!insidePopover) {
+                $(element).popover('show');
+                attachEvents(element);
+            }
+        }, 200);
+    }
+    function ReloadGrid() {
+        if (document.querySelectorAll("[data-name='gridConsole']").length > 0) {
+            const gridConsole = new MvcGrid(document.querySelector("div[data-name='gridConsole']"));
+            gridConsole.set({
+                isAjax: true,
+                url: "OrdersConsole",
+                query: "isDriver=" + $("#этоВодитель").val()
+                    + "&driverId=" + $("#role").val(),
+                loadingDelay: 300
+            });
+            gridConsole.reload();
+        }
+    }
+
+    if (document.getElementById("itemMultiPrint")) {
+        document.getElementById("itemMultiPrint").addEventListener("click", function () {
+            MultiOrdersClick(0);
+        });
+    }
+    if (document.getElementById("itemMultiPrintNabor")) {
+        document.getElementById("itemMultiPrintNabor").addEventListener("click", function () {
+            MultiOrdersClick(1);
+        });
+    }
+    if (document.getElementById("itemMultiCreate")) {
+        document.getElementById("itemMultiCreate").addEventListener("click", function () {
+            if (confirm("Действие необратимо. Вы уверены, что хотите сформировать отгрузочные документы для выбранных позиций?"))
+                MultiOrdersClick(2);
+        });
+    }
+    document.getElementById("gridConfigure").addEventListener("click", function () {
+        new MvcGrid(document.querySelector("div[data-name='gridConsole']")).showConfiguration(this);
+    });
+
+    document.addEventListener("gridconfigure", function (e) {
+        localStorage.setItem("grid-" + e.detail.grid.name, JSON.stringify(e.detail.grid.getConfiguration()));
+    });
+    
+    document.getElementById("gridRefresh").addEventListener("click", function () {
+        new MvcGrid(document.querySelector("div[data-name='gridConsole']")).reload();
+    });
+
+    function CheckAllClick(cb) {
+        document.querySelectorAll("[id^='Chk'").forEach(checkbox => { 
+            if (!checkbox.disabled)
+                checkbox.checked = cb.checked
+        });
+    }
+
+    function MultiOrdersClick(e) {
+        var orderIds = [];
+        document.querySelectorAll("[id^='Chk'").forEach(checkbox => {
+            if (checkbox.checked) {
+                orderIds.push(checkbox.id.substring(3));
+            }
+        });
+        if (orderIds.length > 0) {
+            if (e == 0) {
+                var params = "?";
+                orderIds.forEach(function(item, index, array) {
+                    if (index > 0)
+                        params = params + "&";
+                    params = params + "ids=" + item;
+                });
+                var url = '@Url.Action("GetMultiLabelsPdf", "ИнтернетЗаказы")' + params + "#view=fitH";
+                printPage(url, true);
+            }
+            else if (e == 1) {
+                EnableBusyScreen();
+                $.ajax({
+                    url: "ПечатьНабор",
+                    type: "post",
+                    datatype: "xml",
+                    data: {
+                        ids: orderIds
+                    },
+                    async: true,
+                    cache: false,
+                    success: function (obj) {
+                        if (obj) {  
+                            printPage(obj, false);
+                        }
+                        DisableBusyScreen();
+                        new MvcGrid(document.querySelector("div[data-name='gridConsole']")).reload();
+                    },
+                    error: function (jqXHR, exception) {
+                        var msg = '';
+                        if (jqXHR.status === 0) {
+                            msg = 'Not connect.\n Verify Network.';
+                        } else if (jqXHR.status == 404) {
+                            msg = 'Requested page not found. [404]';
+                        } else if (jqXHR.status == 500) {
+                            msg = 'Internal Server Error [500].';
+                        } else if (jqXHR.status == 501) {
+                            msg = 'Internal Server Error [501].';
+                            if (jqXHR.responseText === 'timeout')
+                                msg = 'Блокировка ожидания. Повторите попытку...';
+                            else
+                                msg = msg + '\n' + jqXHR.responseText;
+                        } else if (jqXHR.status == 502) {
+                            msg = 'Internal Server Error [502].';
+                            if (jqXHR.responseText != "")
+                                msg = msg + '\n' + jqXHR.responseText;
+                        } else if (jqXHR.status == 503) {
+                            msg = 'Internal Server Error [503].';
+                            if (jqXHR.responseText != "")
+                                msg = msg + '\n' + jqXHR.responseText;
+                        } else if (exception === 'parsererror') {
+                            msg = 'Requested JSON parse failed.';
+                        } else if (exception === 'timeout') {
+                            msg = 'Time out error.';
+                        } else if (exception === 'abort') {
+                            msg = 'Ajax request aborted.';
+                        } else {
+                            msg = 'Uncaught Error.\n' + jqXHR.responseText;
+                        }
+                        alert(msg);
+                    }
+                });
+            }
+            else {
+                EnableBusyScreen();
+                $.ajax({
+                    url: "СформироватьМультиОтгрузочныеДокументы",
+                    type: "post",
+                    datatype: "xml",
+                    data: {
+                        ids: orderIds
+                    },
+                    async: true,
+                    cache: false,
+                    success: function (obj) {
+                        if (obj) {  // check if data is defined
+                            alert(obj);
+                        }
+                        DisableBusyScreen();
+                        new MvcGrid(document.querySelector("div[data-name='gridConsole']")).reload();
+                    },
+                    error: function (jqXHR, exception) {
+                        var msg = '';
+                        if (jqXHR.status === 0) {
+                            msg = 'Not connect.\n Verify Network.';
+                        } else if (jqXHR.status == 404) {
+                            msg = 'Requested page not found. [404]';
+                        } else if (jqXHR.status == 500) {
+                            msg = 'Internal Server Error [500].';
+                        } else if (jqXHR.status == 501) {
+                            msg = 'Internal Server Error [501].';
+                            if (jqXHR.responseText === 'timeout')
+                                msg = 'Блокировка ожидания. Повторите попытку...';
+                            else
+                                msg = msg + '\n' + jqXHR.responseText;
+                        } else if (jqXHR.status == 502) {
+                            msg = 'Internal Server Error [502].';
+                            if (jqXHR.responseText != "")
+                                msg = msg + '\n' + jqXHR.responseText;
+                        } else if (jqXHR.status == 503) {
+                            msg = 'Internal Server Error [503].';
+                            if (jqXHR.responseText != "")
+                                msg = msg + '\n' + jqXHR.responseText;
+                        } else if (exception === 'parsererror') {
+                            msg = 'Requested JSON parse failed.';
+                        } else if (exception === 'timeout') {
+                            msg = 'Time out error.';
+                        } else if (exception === 'abort') {
+                            msg = 'Ajax request aborted.';
+                        } else {
+                            msg = 'Uncaught Error.\n' + jqXHR.responseText;
+                        }
+                        alert(msg);
+                    }
+                });
+            }
+        }
+    }
+    
+    //$('#reportrange').on('apply.daterangepicker', function (ev, picker) {
+    //    ReloadGrid();
+    //});
+    //function AliveCheck() {
+    //    var alive = $("#chkAlive").is(':checked');
+    //    $("#inputGroupPeriod").attr("hidden", alive);
+    //    ReloadGrid();
+    //}
+    function GetLabels(orderId) {
+        var url = '@Url.Action("GetLabelsPdf", "ИнтернетЗаказы")' + '?id=' + orderId.replaceAll(" ", "_") + "#view=fitH";
+        printPage(url, true);
+    }
+    function btnActClick() {
+        var e = document.getElementById("campaignIds");
+        $("#btnAct").attr("disabled", true);
+        $('.spinner-grow').removeClass('d-none');
+        var url = '@Url.Action("GetReceptionTransferAct", "ИнтернетЗаказы")' + '?campaignId=' + e.value + "#view=fitH";
+        printPage(url, true);
+        $('.spinner-grow').addClass('d-none');
+        $("#btnAct").attr("disabled", false);
+    }
+    function ПросмотрЗаказа() {
+        EnableBusyScreen();
+        $.ajax({
+            url: "GetOrderDetails",
+            type: "post",
+            datatype: "xml",
+            data: {
+                orderId: $("#popoverOrderId").val()
+            },
+            async: true,
+            cache: false,
+            success: function (obj) {
+                if (obj) {  // check if data is defined
+                    $("#orderContent").html(obj);
+                    $("#формаOrder").modal("show");
+                }
+                DisableBusyScreen();
+            },
+            error: function (e, v, f) {
+                alert("ошибка выполнения!");
+            }
+        });
+    }
+    document.addEventListener("rowrightclick", e => {
+        if (e.detail.grid.name == "gridConsole") {
+            Popover(e.detail.originalEvent.target, e.detail.data["Id"]);
+        }
+    });
+    document.addEventListener("rowdblclick", e => {
+        if (e.detail.grid.name == "gridConsole") {
+            $("#popoverOrderId").val(e.detail.data["Id"]);
+            ПросмотрЗаказа();
+        }
+    });
+    function InfoText() {
+        var info = "<p align='left'>";
+        if ($("#campaignIds").val() != undefined) {
+            info += $("#campaignIds option:selected").text();
+        }
+        info += "</p>";
+        $("#infoFBS").html(info);
+    }
+    var selCampaign = document.getElementById("campaignIds");
+    selCampaign.onchange();
+</script>

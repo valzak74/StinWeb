@@ -1,0 +1,6 @@
+﻿@model IGrid<StinClasses.Документы.ФормаПредварительнаяЗаявкаТЧ>
+
+<tr>
+    <td colspan="@(Model.Columns.Count - 1)" align="right"><b>Итого</b></td>
+    <td align="right"><b>@(Model.Rows.Sum(row => row.Model.Сумма).ToString(StinWeb.Models.DataManager.Common.ФорматЦеныСи))</b></td>
+</tr>

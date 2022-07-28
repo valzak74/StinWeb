@@ -1,0 +1,240 @@
+﻿@using System.Security.Claims;
+
+@{
+    ViewBag.Title = "Журнал \"Общий\"";
+}
+
+<div class="card border-round" style="background-color: lightgray;">
+    <div class="card-header">
+        <div class="input-group input-group-sm">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Период</span>
+            </div>
+            <div id="reportrange" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">
+                <i class="fa fa-calendar"></i>&nbsp;
+                <span></span> <i class="fa fa-caret-down"></i>
+            </div>
+        </div>
+
+    </div>
+    <div class="card-body">
+        <button type="button" class="btn btn-success" onclick="ModalДокумент(false, undefined, 9899)">
+            <i class="fa fa-wrench fa-lg"></i> Прием в ремонт
+        </button>
+        @if ((new[] { "Любой", "Претензионный" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
+        {
+            <button type="button" class="btn btn-success" onclick="ModalДокумент(false, undefined, 9899, undefined, undefined, 'ПРЕТЕНЗИЯ')">
+                <i class="fa fa-wrench fa-lg"></i> Регистрация Претензии
+            </button>
+            <button type="button" class="btn btn-success" onclick="ModalДокумент(false, undefined, 13737)">
+                <i class="fa fa-bars fa-lg"></i> Изменение статуса
+            </button>
+        }
+        <button type="button" class="btn btn-success" onclick="ModalДокумент(false, undefined, 10080)">
+            <i class="fa fa-truck fa-lg"></i> Перемещение изделий
+        </button>
+    </div>
+</div>
+
+<ul id="div-popover" style="display:none">
+    @Html.Hidden("popoverIdDoc", "")
+    @Html.Hidden("popoverВидДок10", "", new { id = "popoverВидДок10" })
+    <li><a id="опцияПросмотр" href="#">Просмотр документа</a></li>
+    <li><a id="опцияСтруктураПодчиненности" href="#">Структура подчиненности</a></li>
+    <li><a id="опцияВводНаОсновании" href="#">Ввести на основании</a></li>
+</ul>
+
+@*@await Component.InvokeAsync("ЖурналОбщий")*@
+@Html.AjaxGrid(Url.Action("ПолучитьЖурнал", "ЖурналОбщий"))
+<div id="docContent"></div>
+@await Component.InvokeAsync("СтруктураПодчиненности")
+
+<script>
+    var insidePopover = false;
+
+    function attachEvents(tr) {
+        $('.popover').on('mouseenter', function () {
+            insidePopover = true;
+        });
+        $('.popover').on('mouseleave', function () {
+            insidePopover = false;
+            $(tr).popover('hide');
+        });
+    }
+
+    $(document).on('mouseleave', 'tr', function () {
+        $(this).find('td').each(function () {
+            var popoverId = $(this).attr('aria-describedby');
+            if (popoverId != undefined && popoverId.startsWith('popover')) {
+                var td = $(this);
+                setTimeout(function () {
+                    if (!insidePopover) td.popover('hide');
+                }, 200);
+            }
+        });
+    });
+    function TablePopover(element, idDoc, видДок10) {
+        if ($(element).attr('havePopover') != 'true') {
+            $(element).attr('havePopover', 'true');
+            $(element).popover({
+                html: true,
+                trigger: "manual",
+                placement: "bottom",
+                container: element,
+                content: function () {
+                    $("#popoverIdDoc").val(idDoc);
+                    $("#popoverВидДок10").val(видДок10);
+                    return $("#div-popover").html();
+                }
+            });
+            $(element).on('shown.bs.popover', function () {
+                $('#опцияПросмотр').click(function () {
+                    $(element).popover('hide');
+                    ModalДокумент(true, $("#popoverIdDoc").val(), $("#popoverВидДок10").val());
+                });
+                $('#опцияСтруктураПодчиненности').click(function () {
+                    $(element).popover('hide');
+                    СтруктураПодчиненности($("#popoverIdDoc").val());
+                });
+                $('#опцияВводНаОсновании').click(function () {
+                    $(element).popover('hide');
+                    ModalДокумент(false, undefined, $("#popoverВидДок10").val(), $("#popoverIdDoc").val(), $("#popoverВидДок10").val());
+                });
+            });
+            $(element).on('hidden.bs.popover', function () {
+                insidePopover = false;
+            });
+        }
+        setTimeout(function () {
+            if (!insidePopover) {
+                $(element).popover('show');
+                attachEvents(element);
+            }
+        }, 200);
+    }
+
+    $(function () {
+
+        var start = moment();
+        var end = moment();
+
+        function cb(start, end) {
+            $('#reportrange span').html(start.format('DD.MM.YYYY') + ' - ' + end.format('DD.MM.YYYY'));
+        }
+
+        $('#reportrange').daterangepicker({
+            "showDropdowns": true,
+            "locale": {
+                "format": "DD.MM.YYYY",
+                "separator": " - ",
+                "applyLabel": "Выбрать",
+                "cancelLabel": "Отмена",
+                "fromLabel": "от",
+                "toLabel": "до",
+                "customRangeLabel": "Произвольный",
+                "weekLabel": "W",
+                "daysOfWeek": [
+                    "Вс",
+                    "Пн",
+                    "Вт",
+                    "Ср",
+                    "Чт",
+                    "Пт",
+                    "Сб"
+                ],
+                "monthNames": [
+                    "Январь",
+                    "Февраль",
+                    "Март",
+                    "Апрель",
+                    "Май",
+                    "Июнь",
+                    "Июль",
+                    "Август",
+                    "Сентябрь",
+                    "Октябрь",
+                    "Ноябрь",
+                    "Декабрь"
+                ],
+                "firstDay": 1
+            },
+            startDate: start,
+            endDate: end,
+            ranges: {
+                'Текущая дата': [moment(), moment()],
+                'Текущая неделя': [moment().startOf('week').add(1, 'days'), moment()],
+                'Текущий месяц': [moment().startOf('month'), moment()],
+                'Прошлый месяц': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+            }
+        }, cb);
+
+        cb(start, end);
+
+    });
+    $(function () {
+        setInterval(function () {
+            if (!$('body').find('.modal.show').length && !$('body').find('.popover.show').length) {
+                const gridЖурнал = new MvcGrid(document.querySelector("div[data-name='gridЖурналОбщий']"));
+                gridЖурнал.reload();
+            }
+        }, refreshTimeout);
+    });
+    $('#reportrange').on('apply.daterangepicker', function (ev, picker) {
+        const gridЖурнал = new MvcGrid(document.querySelector("div[data-name='gridЖурналОбщий']"));
+        gridЖурнал.set({
+            isAjax: true,
+            url: "ЖурналОбщий/ПолучитьЖурнал",
+            query: "startDate=" + DateTimeToLocalISOString(picker.startDate)
+                + "&endDate=" + DateTimeToLocalISOString(picker.endDate)
+        });
+        gridЖурнал.reload();
+    });
+
+    document.addEventListener("rowdblclick", e => {
+        if (e.detail.grid.name == "gridЖурналОбщий") {
+            ModalДокумент(true, e.detail.data["IdDoc"], e.detail.data["ВидДокумента10"]);
+        }
+    });
+    document.addEventListener("rowrightclick", e => {
+        if (e.detail.grid.name == "gridЖурналОбщий") {
+            TablePopover(e.detail.originalEvent.target, e.detail.data["IdDoc"], e.detail.data["ВидДокумента10"]);
+        }
+    });
+
+    function ModalДокумент(option, idDoc, видДок10, основаниеIdDoc, основаниеВидДок10, параметр) {
+        EnableBusyScreen()
+        $.ajax({
+            url: "ПолучитьФормуДокумента",
+            type: "post",
+            datatype: "xml",
+            data: {
+                родитель: "gridЖурналОбщий",
+                idDoc: idDoc,
+                видДок: видДок10,
+                просмотр: option,
+                докОснованиеId: основаниеIdDoc,
+                видДокОснование: основаниеВидДок10,
+                параметр: параметр
+            },
+            async: true,
+            cache: false,
+            success: function (obj) {
+                if (obj) {  // check if data is defined
+                    $("#docContent").html(obj);
+                    $("#выбДокумент").modal("show");
+                }
+                DisableBusyScreen();
+            },
+            error: function (e, v, f) {
+                alert("ошибка выполнения!");
+            }
+        });
+    }
+    function СтруктураПодчиненности(el) {
+        if (el == undefined) 
+            $("#структураПодчиненностиIdDoc").val($("#idDoc").val());
+        else
+            $("#структураПодчиненностиIdDoc").val(el);
+        $('#структураПодчиненности').modal("show");
+    }
+</script>

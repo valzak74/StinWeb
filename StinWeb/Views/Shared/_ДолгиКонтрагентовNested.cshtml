@@ -1,0 +1,190 @@
+﻿@model IGrid<StinWeb.Models.DataManager.Справочники.ДолгиТаблица>
+
+<div id="reportData" class="mvc-grid">
+    <table>
+        <thead>
+            <tr>
+                @{ var mergedColumn = ""; int sorting = -1;}
+                @{ var col2 = Model.Columns.Count / 2;}
+                @foreach (IGridColumn column in Model.Columns)
+                {
+                    if (mergedColumn != "" && !column.Name.StartsWith(mergedColumn))
+                        mergedColumn = "";
+                    @if (column.Name.StartsWith("Покупатели_"))
+                    {
+                        if (mergedColumn == "")
+                        {
+                            if (sorting == -1)
+                                sorting = 0;
+                            mergedColumn = "Покупатели_";
+                            <th colspan="@Model.Columns.Count(x => x.Name.StartsWith(mergedColumn))" style="text-align:center; @(sorting == 0 ? "background-color:aquamarine;" : "")">
+                                <span class="mvc-grid-title">Покупатели</span>
+                            </th>
+                        }
+                    }
+                    else if (column.Name.StartsWith("Поставщики_"))
+                    {
+                        if (mergedColumn == "")
+                        {
+                            if (sorting == -1)
+                                sorting = 1;
+                            mergedColumn = "Поставщики_";
+                            <th colspan="@Model.Columns.Count(x => x.Name.StartsWith(mergedColumn))" style="text-align:center; @(sorting == 1 ? "background-color:aquamarine;" : "")">
+                                <span class="mvc-grid-title">Поставщики</span>
+                            </th>
+                        }
+                    }
+                    else
+                    {
+                        <th rowspan="2">
+                            <span class="mvc-grid-title">@column.Title</span>
+                        </th>
+                    }
+                }
+            </tr>
+            <tr>
+                @foreach (IGridColumn column in Model.Columns.Where(x => x.Name.StartsWith("Покупатели_") || x.Name.StartsWith("Поставщики_")))
+                {
+                    @if (column.Name.StartsWith("Покупатели_"))
+                    {
+                        <th style="text-align:right; @(sorting == 0 ? "background-color:aquamarine;" : "")">
+                            <span class="mvc-grid-title">@column.Title</span>
+                        </th>
+                    }
+                    else
+                    {
+                        <th style="text-align:right; @(sorting == 1 ? "background-color:aquamarine;" : "")">
+                            <span class="mvc-grid-title">@column.Title</span>
+                        </th>
+                    }
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Rows.Any())
+            {
+                foreach (IGridRow<StinWeb.Models.DataManager.Справочники.ДолгиТаблица> row in Model.Rows)
+                {
+                    <tr class="таблица_@row.Model.Флаг">
+                        @foreach (IGridColumn column in Model.Columns)
+                        {
+                            <td class="@column.CssClasses">@column.ValueFor(row)</td>
+                        }
+                    </tr>
+                    
+                    if (row.Model.ДокументыРеализации.Any() || row.Model.ДокументыПоступления.Any())
+                    {
+                        <tr>
+                            @if (sorting == 0)
+                            {
+                                <td colspan="@col2" valign="top">
+                                    @if (row.Model.ДокументыРеализации.Any())
+                                    {
+                                        @(Html
+                                            .Grid(row.Model.ДокументыРеализации)
+                                            .Build(columns =>
+                                            {
+                                                columns.Add(model => model.DocНазвание).Titled("Наименование");
+                                                columns.Add(model => model.DocNo).Titled("Номер");
+                                                columns.Add(model => model.DocDate).Titled("Дата").Css("column-10p text-center").Formatted("{0:d}");
+                                                columns.Add(model => model.ОтсрочкаДней).Titled("Отсрочка, дней").Css("text-center column-10");
+                                                columns.Add(model => model.ДатаОплаты).Titled("Дата оплаты").Css("column-10p text-center").Formatted("{0:d}");
+                                                columns.Add(model => model.СуммаДокумента).Titled("Сумма по документу").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+                                                columns.Add(model => model.СуммаТекущегоДолга).Titled("Сумма / ТДЗ").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+                                                columns.Add(model => model.СуммаПросроченногоДолга).Titled("Сумма / ПДЗ").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+                                            })
+                                            .Css("css-classes")
+                                            .AppendCss("table-hover")
+                                            .RowAttributed(model => new { @class = (model.СуммаДокумента != model.СуммаТекущегоДолга + model.СуммаПросроченногоДолга) ? "под_заказ" : (model.СуммаПросроченногоДолга > 0 ? "снят_с_производства" : "") })
+                                        )
+                                    }
+                                </td>
+                                <td colspan="@col2" valign="top">
+                                    @if (row.Model.ДокументыПоступления.Any())
+                                    {
+                                        @(Html
+                                            .Grid(row.Model.ДокументыПоступления)
+                                            .Build(columns =>
+                                            {
+                                                columns.Add(model => model.DocНазвание).Titled("Наименование");
+                                                columns.Add(model => model.DocNo).Titled("Номер");
+                                                columns.Add(model => model.DocDate).Titled("Дата").Css("column-10p text-center").Formatted("{0:d}");
+                                                columns.Add(model => model.ОтсрочкаДней).Titled("Отсрочка, дней").Css("text-center column-10");
+                                                columns.Add(model => model.ДатаОплаты).Titled("Дата оплаты").Css("column-10p text-center").Formatted("{0:d}");
+                                                columns.Add(model => model.СуммаДокумента).Titled("Сумма по документу").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+                                                columns.Add(model => model.СуммаТекущегоДолга).Titled("Сумма / ТДЗ").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+                                                columns.Add(model => model.СуммаПросроченногоДолга).Titled("Сумма / ПДЗ").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+                                            })
+                                            .Css("css-classes")
+                                            .AppendCss("table-hover")
+                                            .RowAttributed(model => new { @class = (model.СуммаДокумента != model.СуммаТекущегоДолга + model.СуммаПросроченногоДолга) ? "под_заказ" : (model.СуммаПросроченногоДолга > 0 ? "снят_с_производства" : "") })
+                                        )
+                                    }
+                                </td>
+                            }
+                            else
+                            {
+                                <td colspan="@col2" valign="top">
+                                    @if (row.Model.ДокументыПоступления.Any())
+                                    {
+                                        @(Html
+                                            .Grid(row.Model.ДокументыПоступления)
+                                            .Build(columns =>
+                                            {
+                                                columns.Add(model => model.DocНазвание).Titled("Наименование");
+                                                columns.Add(model => model.DocNo).Titled("Номер");
+                                                columns.Add(model => model.DocDate).Titled("Дата").Css("column-10p text-center").Formatted("{0:d}");
+                                                columns.Add(model => model.ОтсрочкаДней).Titled("Отсрочка, дней").Css("text-center column-10");
+                                                columns.Add(model => model.ДатаОплаты).Titled("Дата оплаты").Css("column-10p text-center").Formatted("{0:d}");
+                                                columns.Add(model => model.СуммаДокумента).Titled("Сумма по документу").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+                                                columns.Add(model => model.СуммаТекущегоДолга).Titled("Сумма / ТДЗ").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+                                                columns.Add(model => model.СуммаПросроченногоДолга).Titled("Сумма / ПДЗ").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+                                            })
+                                            .Css("css-classes")
+                                            .AppendCss("table-hover")
+                                            .RowAttributed(model => new { @class = (model.СуммаДокумента != model.СуммаТекущегоДолга + model.СуммаПросроченногоДолга) ? "под_заказ" : (model.СуммаПросроченногоДолга > 0 ? "снят_с_производства" : "") })
+                                        )
+                                    }
+                                </td>
+                                <td colspan="@col2" valign="top">
+                                    @if (row.Model.ДокументыРеализации.Any())
+                                    {
+                                        @(Html
+                                            .Grid(row.Model.ДокументыРеализации)
+                                            .Build(columns =>
+                                            {
+                                                columns.Add(model => model.DocНазвание).Titled("Наименование");
+                                                columns.Add(model => model.DocNo).Titled("Номер");
+                                                columns.Add(model => model.DocDate).Titled("Дата").Css("column-10p text-center").Formatted("{0:d}");
+                                                columns.Add(model => model.ОтсрочкаДней).Titled("Отсрочка, дней").Css("text-center column-10");
+                                                columns.Add(model => model.ДатаОплаты).Titled("Дата оплаты").Css("column-10p text-center").Formatted("{0:d}");
+                                                columns.Add(model => model.СуммаДокумента).Titled("Сумма по документу").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+                                                columns.Add(model => model.СуммаТекущегоДолга).Titled("Сумма / ТДЗ").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+                                                columns.Add(model => model.СуммаПросроченногоДолга).Titled("Сумма / ПДЗ").Css("column-10p text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+                                            })
+                                            .Css("css-classes")
+                                            .AppendCss("table-hover")
+                                            .RowAttributed(model => new { @class = (model.СуммаДокумента != model.СуммаТекущегоДолга + model.СуммаПросроченногоДолга) ? "под_заказ" : (model.СуммаПросроченногоДолга > 0 ? "снят_с_производства" : "") })
+                                        )
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    }
+                }
+            }
+            else
+            {
+                <tr class="mvc-grid-empty-row">
+                    <td colspan="@Model.Columns.Count()">
+                        @Model.EmptyText
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    @if (Model.Pager != null)
+    {
+        @await Html.PartialAsync(Model.Pager.PartialViewName, Model.Pager)
+    }
+</div>

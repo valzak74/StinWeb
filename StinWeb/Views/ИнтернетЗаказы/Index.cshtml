@@ -1,0 +1,200 @@
+﻿@{
+    ViewBag.Title = "Журнал заказов";
+}
+
+<div class="card border-round" style="background-color: lightgray;">
+    <div class="card-header">
+        <div class="input-group-text" id="AliveBlock">
+            @Html.CheckBox("alive", true, new { @class = "form-check-input ml-0", id = "chkAlive", onchange = "AliveCheck()" }))
+            <span class="form-check-label ml-3" for="chkAlive">Только активные</span>
+        </div>
+        <div class="input-group input-group-sm" id="inputGroupPeriod">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Период</span>
+            </div>
+            <div id="reportrange" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">
+                <i class="fa fa-calendar"></i>&nbsp;
+                <span></span> <i class="fa fa-caret-down"></i>
+            </div>
+        </div>
+    </div>
+    @*<div class="card-body">
+        <button type="button" class="btn btn-success" onclick="ModalДокумент(false, undefined, 9899)">
+            <i class="fa fa-wrench fa-lg"></i> Прием в ремонт
+        </button>
+        <button type="button" class="btn btn-success" onclick="ModalДокумент(false, undefined, 10080)">
+            <i class="fa fa-truck fa-lg"></i> Перемещение изделий
+        </button>
+    </div>*@
+</div>
+
+@Html.AjaxGrid(Url.Action("ТаблицаЗаказов", "ИнтернетЗаказы", new { alive = true }))
+
+<script>
+    $(function () {
+
+        var start = moment();
+        var end = moment();
+
+        function cb(start, end) {
+            $('#reportrange span').html(start.format('DD.MM.YYYY') + ' - ' + end.format('DD.MM.YYYY'));
+        }
+
+        $('#reportrange').daterangepicker({
+            "showDropdowns": true,
+            "locale": {
+                "format": "DD.MM.YYYY",
+                "separator": " - ",
+                "applyLabel": "Выбрать",
+                "cancelLabel": "Отмена",
+                "fromLabel": "от",
+                "toLabel": "до",
+                "customRangeLabel": "Произвольный",
+                "weekLabel": "W",
+                "daysOfWeek": [
+                    "Вс",
+                    "Пн",
+                    "Вт",
+                    "Ср",
+                    "Чт",
+                    "Пт",
+                    "Сб"
+                ],
+                "monthNames": [
+                    "Январь",
+                    "Февраль",
+                    "Март",
+                    "Апрель",
+                    "Май",
+                    "Июнь",
+                    "Июль",
+                    "Август",
+                    "Сентябрь",
+                    "Октябрь",
+                    "Ноябрь",
+                    "Декабрь"
+                ],
+                "firstDay": 1
+            },
+            startDate: start,
+            endDate: end,
+            ranges: {
+                'Текущая дата': [moment(), moment()],
+                'Текущая неделя': [moment().startOf('week').add(1, 'days'), moment()],
+                'Текущий месяц': [moment().startOf('month'), moment()],
+                'Прошлый месяц': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+            }
+        }, cb);
+
+        cb(start, end);
+        $("#chkAlive").trigger("change");
+    });
+    $(function () {
+        setInterval(function () {
+            if (!$('body').find('.modal.show').length && !$('body').find('.popover.show').length) {
+                const gridОтчет = new MvcGrid(document.querySelector("div[data-name='gridОтчетИнтернетЗаявки']"));
+                gridОтчет.reload();
+            }
+        }, 60000);// refreshTimeout);
+    });
+    function ReloadGrid() {
+        const gridОтчет = new MvcGrid(document.querySelector("div[data-name='gridОтчетИнтернетЗаявки']"));
+        gridОтчет.set({
+            isAjax: true,
+            url: "ИнтернетЗаказы/ТаблицаЗаказов",
+            query: "startDate=" + DateTimeToLocalISOString($("#reportrange").data("daterangepicker").startDate._d)
+                + "&endDate=" + DateTimeToLocalISOString($("#reportrange").data("daterangepicker").endDate._d)
+                + "&alive=" + $("#chkAlive").is(':checked')
+        });
+        gridОтчет.reload();
+    }
+    $('#reportrange').on('apply.daterangepicker', function (ev, picker) {
+        //$('#tree').jstree(true).settings.core.data.data = function (node) {
+        //    return {
+        //        'id': node.id,
+        //        'вид': node.data ? node.data.вид : null,
+        //        'startDate': DateTimeToLocalISOString($("#reportrange").data("daterangepicker") == undefined ? moment().startOf('day') : $("#reportrange").data("daterangepicker").startDate._d),
+        //        'endDate': DateTimeToLocalISOString($("#reportrange").data("daterangepicker") == undefined ? moment().endOf('day') : $("#reportrange").data("daterangepicker").endDate._d),
+        //    };
+        //};
+        //$('#tree').jstree(true).refresh();
+        ReloadGrid();
+    //    const gridОтчет = new MvcGrid(document.querySelector("div[data-name='gridОтчетИнтернетЗаявки']"));
+    //    gridОтчет.set({
+    //        isAjax: true,
+    //        url: "ИнтернетЗаказы/ТаблицаЗаказов",
+    //        query: "startDate=" + DateTimeToLocalISOString(picker.startDate._d)
+    //            + "&endDate=" + DateTimeToLocalISOString(picker.endDate._d)
+    //            + "&alive=false"
+    //    });
+    //    gridОтчет.reload();
+    });
+    function AliveCheck() {
+        var alive = $("#chkAlive").is(':checked');
+        $("#inputGroupPeriod").attr("hidden", alive);
+        ReloadGrid();
+    }
+    //$('#tree').jstree({
+    //    "plugins": ["core", "search", "grid"],
+    //    "search": {
+    //        "case_insensitive": true,
+    //        "show_only_matches": true
+    //    },
+    //    "grid": {
+    //        "columns": [
+    //            { header: "Документ" },
+    //            {
+    //                header: "Артикул",
+    //                value: function (node) {
+    //                    if (node.data) {
+    //                        return node.data.artikl;
+    //                    }
+    //                }
+    //            },
+    //            {
+    //                header: "Н.Спрос",
+    //                columnClass: "jstree-grid-cell-r-align",
+    //                value: function (node) {
+    //                    if (node.data && node.data.суммаСпроса && node.data.суммаСпроса > 0) {
+    //                        return formatter.format(node.data.суммаСпроса);
+    //                    }
+    //                },
+    //            },
+    //            {
+    //                header: "Сумма",
+    //                columnClass: "jstree-grid-cell-r-align",
+    //                value: function (node) {
+    //                    if (node.data) {
+    //                        return formatter.format(node.data.сумма);
+    //                    }
+    //                }
+    //            }
+    //        ],
+    //    },
+    //    'core': {
+    //        'animation': 1,
+    //        'data': {
+    //            'url': function (node) {
+    //                return "ИнтернетЗаказы/ЖурналЗаказов";
+    //            },
+    //            'data': function (node) {
+    //                return {
+    //                    'id': node.id,
+    //                    'вид': node.data && node.data.вид ? node.data.вид : null,
+    //                    'startDate': DateTimeToLocalISOString($("#reportrange").data("daterangepicker") == undefined ? moment().startOf('day') : $("#reportrange").data("daterangepicker").startDate._d),
+    //                    'endDate': DateTimeToLocalISOString($("#reportrange").data("daterangepicker") == undefined ? moment().endOf('day') : $("#reportrange").data("daterangepicker").endDate._d),
+    //                };
+    //            }
+    //        }
+    //    }
+    //});
+
+    //$('#tree').on("dblclick.jstree", function (e) {
+    //    var instance = $.jstree.reference(this);
+    //    var node = instance.get_node(e.target);
+    //    if (node.icon == 'jstree-file') {
+    //        CallAdd(node.id, node.text, node.data.artikl, node.data.brend, node.data.price);
+    //    }
+    //});
+
+</script>

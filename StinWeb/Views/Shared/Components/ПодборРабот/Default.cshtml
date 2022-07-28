@@ -1,0 +1,130 @@
+﻿
+<div data-toggle="modal" class="modal fade" id="подборРабот" tabindex="-1" role="dialog" aria-labelledby="формаПодборРабот" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="формаПодборРабот">Подбор Работ</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="height: 550px;">
+                <div style="padding: 10px 10px; overflow: auto; height:350px;">
+                    <div id='treeview'></div>
+                </div>
+                <div style="padding: 10px 10px; overflow: auto; height:180px;">
+                    @await Component.InvokeAsync("Корзина", new { key = "ПодборРабот", modalVersion = true, showЦены = true })
+                </div>
+            </div>
+                <div class="modal-footer">
+                    <button type="button" id="btnSaveПодборРабот" class="btn btn-primary" onclick="btnSaveClickПодборРабот()">Ок</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+    </div>
+</div>
+<script>
+
+$('#treeview').jstree({
+    "plugins": ["core", "search", "grid"],
+    "search": {
+        "case_insensitive": true,
+        "show_only_matches": true
+    },
+    "grid": {
+        "columns": [
+            { header: "Работы" },
+            {
+                header: "Цена", value: function (node) {
+                    if (node.data) {
+                        return node.data.price;
+                    }
+                }
+            }
+        ],
+    },
+    'core': {
+        //'animation': 0,
+        'data': {
+            'url': function (node) {
+                return "/ПодборРабот/GetTableLevel";
+            },
+            'data': function (node) {
+                return {
+                    'id': node.id,
+                    'garantia': false
+                };
+            }
+        }
+    }
+});
+
+$('#treeview').on("dblclick.jstree", function (e) {
+    var instance = $.jstree.reference(this);
+    var node = instance.get_node(e.target);
+    if (node.icon == 'jstree-file') {
+        $.ajax({
+            url: "Корзина/ДобавитьВПодбор",
+            type: "post",
+            dataType: "xml",
+            data: { sessionKey: "ПодборРабот", id: node.id, наименование: node.text, цена: node.data.price, количество: 1 },
+            async: true,
+            cache: false,
+            success: function () {
+                var gridКорзина = new MvcGrid(document.querySelector("#ПодборРаботm"));
+                gridКорзина.set({
+                    isAjax: true,
+                    url: "Корзина/ПолучитьДанные",
+                    query: "key=ПодборРабот"
+                        + "&modalVersion=true"
+                        + "&showЦены=true"
+                });
+                gridКорзина.reload();
+            },
+        });
+
+    }
+});
+
+function btnClickПодбор(key) {
+    $("#подборРабот").modal("show");
+}
+function CallDelete(e, f) {
+    $.ajax({
+        url: "Корзина/УдалитьИзПодбора",
+        type: "post",
+        dataType: "xml",
+        data: { id: e },
+        complete: function () { new MvcGrid(document.querySelector(f)).reload(); }
+    });
+};
+$("#подборРабот").on("show.bs.modal", function (e) {
+    var grid = new MvcGrid(document.querySelector("#ПодборРаботm"));
+    if (!grid.isAjax)
+        grid.set({
+            isAjax: true,
+            url: "Корзина/ПолучитьДанные",
+            query: "key=ПодборРабот"
+                + "&modalVersion=true"
+                + "&showЦены=true"
+        });
+    grid.reload();
+});
+$("#подборРабот").on("hide.bs.modal", function (e) {
+    var grid = new MvcGrid(document.querySelector('#ПодборРабот'));
+    if (!grid.isAjax)
+        grid.set({
+            isAjax: true,
+            url: "Корзина/ПолучитьДанные",
+            query: "key=ПодборРабот"
+                + "&showЦены=true"
+        });
+    grid.reload();
+});
+
+function btnSaveClickПодборРабот() {
+    $("#подборРабот").modal("hide");
+};
+
+</script>
+

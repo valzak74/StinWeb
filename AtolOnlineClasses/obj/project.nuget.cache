@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "eq5xaDDY8QNpBtK7i34BIHUspriTgyzPEYY5dZTHg/Qg1pLmC3g2yD1MOT4NfqhMHtXuHeYcZB4Z3+e1BtU0Rg==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\AtolOnlineClasses\\AtolOnlineClasses.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Валентин\\.nuget\\packages\\newtonsoft.json\\13.0.1\\newtonsoft.json.13.0.1.nupkg.sha512"
+  ],
+  "logs": []
+}

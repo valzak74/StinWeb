@@ -1,0 +1,1032 @@
+﻿@model StinWeb.Models.DataManager.Документы.Мастерская.ФормаПриемВРемонт
+@using StinWeb.Models.DataManager.Документы
+@using StinWeb.Models.DataManager
+@using StinWeb.Models.DataManager.Справочники
+@using StinWeb.Models.DataManager.Extensions
+@using StinWeb.Lookups
+
+<div class="modal fade" id="выбДокумент" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 95%!important;" role="document">
+        <div class="modal-content" id="формаДокумента">
+            <div class="validation float-right text-danger" asp-validation-summary="ModelOnly"></div>
+            <div class="modal-header" style="height: 55px;">
+                <h4 id="общиеРеквизитыДокумента" style="color:darkred;font-weight:bold;">@Model.Общие.НазваниеВЖурнале № @Model.Общие.НомерДок от @Model.Общие.ДатаДок</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="overflow-y: scroll;height:75vh;">
+                @using (Html.BeginForm("СоздатьДокумент", "ПриемВРемонт", FormMethod.Post, new { id = "docForm" }))
+                {
+                    @Html.HiddenFor(m => m.Общие.Родитель, new { id = "родитель" })
+                    @Html.HiddenFor(m => m.Общие.ТипФормы, new { id = "типФормы" })
+                    @Html.Hidden("modelFailure", (Model.Ошибка != null && !Model.Ошибка.Skip) ? 1 : 0)
+                    @Html.HiddenFor(m => m.Общие.IdDoc, new { id = "idDoc" })
+                    @Html.HiddenFor(m => m.Общие.НомерДок, new { id = "номерДок" })
+                    @Html.HiddenFor(m => m.Общие.ДатаДок, new { id = "датаДок" })
+                    @if (Model.Общие.ДокОснование != null)
+                    {
+                        @Html.HiddenFor(m => m.Общие.ДокОснование.ВидДокумента10, new { id = "докОснованиеВид" })
+                        @Html.HiddenFor(m => m.Общие.ДокОснование.IdDoc, new { id = "докОснованиеIdDoc" })
+                    }
+                    else
+                    {
+                        @Html.Hidden("Общие.ДокОснование.ВидДокумента10", 0, new { id = "докОснованиеВид" })
+                        @Html.Hidden("Общие.ДокОснование.IdDoc", "", new { id = "докОснованиеIdDoc" })
+                    }
+                    @Html.HiddenFor(m => m.Общие.Автор.Id, new { id = "авторId" })
+                    @Html.HiddenFor(m => m.Общие.ВидДокумента10, new { id = "видДокумента10" })
+                    @Html.HiddenFor(m => m.Общие.ВидДокумента36, new { id = "видДокумента36" })
+                    @Html.HiddenFor(m => m.Общие.Фирма.Id, new { id = "фирмаId" })
+
+                    @Html.HiddenFor(m => m.НомерКвитанции, new { id = "номерКвитанции" })
+                    @Html.HiddenFor(m => m.ДатаКвитанции, new { id = "датаКвитанции" })
+                    @Html.HiddenFor(m => m.Претензия, new { id = "претензия" })
+                    @Html.HiddenFor(m => m.ДатаПриема, new { id = "датаПриема" })
+                    @Html.HiddenFor(m => m.СтатусПартииId, new { id = "статусПартииId" })
+                    @Html.Hidden("СтатусПартииIdOld", Model.СтатусПартииId, new { id = "статусПартииIdOld", @name = "СтатусПартииIdOld" })
+                    @if (Model.СкладОткуда != null)
+                        Html.HiddenFor(m => m.СкладОткуда.Id, new { id = "складОткудаId" });
+                    else
+                        Html.Hidden("СкладОткуда.Id", Common.ПустоеЗначение, new { id = "складОткудаId" });
+                    @Html.Hidden("СкладДляРемонта", ViewBag.СкладДляРемонта, new { id = "складДляРемонта" })
+                    @Html.Hidden("СкладСортировкиРемонтов", ViewBag.СкладСортировкиРемонтов, new { id = "складСортировкиРемонтов" })
+                    @if (Model.Общие.ДокОснование != null)
+                    {
+                        <h6 style="color:darkred;">Основание: @Model.Общие.ДокОснование.Наименование № @Model.Общие.ДокОснование.НомерДок от @Model.Общие.ДокОснование.ДатаДок</h6>
+                    }
+                    <h3 style="color:indigo;font-weight:bold;">Квитанция: @Model.КвитанцияId @(Model.Общие.ТипФормы == ТипыФормы.НаОсновании ? " от " + Model.ДатаПриема.ToShortDateString() : "")</h3>
+                    <h4 style="color:blue;font-weight:bold;">Этап: @Model.СтатусПартии</h4>
+                    <div class="input-group-text" id="expressFormBlock">
+                        @Html.CheckBoxFor(m => m.ExpressForm, HtmlHelpers.ConditionalReadOnly(Model.Общие.ТипФормы == ТипыФормы.Просмотр, new { @class = "form-check-input ml-0", id = "chkExpressForm", onchange = "ExpressFormCheck()" }))
+                        <span class="form-check-label ml-3" for="chkExpressForm">Экспресс-форма</span>
+                    </div>
+                    <div class="accordion">
+                        <div class="card">
+                            <div class="card-header" id="headingИзделие">
+                                <div class="d-flex">
+                                    <h5 class="mb-0">
+                                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseИзделие" aria-expanded="true" aria-controls="collapseИзделие">
+                                            <div id="информацияИзделия"></div>
+                                        </button>
+                                    </h5>
+                                    <div id="ОшибкиИзделия" class="validation float-right text-danger" asp-validation-summary="All"></div>
+                                </div>
+                            </div>
+                            <div id="collapseИзделие" class="card-body collapse @(Model.Общие.ТипФормы == ТипыФормы.Новый ? "show" : "")" aria-labelledby="headingИзделие" data-parent=".accordion">
+                                <div class="input-group input-group-sm mb-2">
+                                    <div class="input-group-prepend" data-toggle="collapse" data-target="#группаФильтров" aria-expanded="false" aria-controls="группаФильтров">
+                                        <span class="input-group-text">Изделие</span>
+                                    </div>
+                                    <div class="collapse" id="группаФильтров">
+                                        <div class="input-group input-group-sm">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">Фильтры</span>
+                                            </div>
+                                            <select class="custom-select" id="фПроизводитель" name="фПроизводитель"></select>
+                                            <input name="фАртикул" type="text" class="form-control text-center" placeholder="Артикул">
+                                        </div>
+                                    </div>
+                                    <div id="выбИзделие" class="mvc-lookup-sm" mvc-lookup-for="Изделие.Id" url="НоменклатураБезЗапчастей" filters="фАртикул,фПроизводитель" title="Номенклатура" placeholder="Выберите изделие" readonly="@(Model.Общие.ТипФормы == ТипыФормы.Просмотр)"></div>
+                                </div>
+                                <div class="input-group input-group-sm mb-2" id="inputGroupТипРемонта">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Статус ремонта</span>
+                                    </div>
+                                    @Html.DropDownListFor(m => m.Гарантия, (SelectList)ViewBag.ТипыРемонта, HtmlHelpers.ConditionalReadOnly(Model.Общие.ТипФормы == ТипыФормы.Просмотр, new { id = "выбГарантия", @class = "form-control col-md-2", onchange = "InfoTextИзделие();СменаТипаРемонта();" }))
+                                </div>
+                                <div class="input-group input-group-sm mb-2" id="inputGroupЗаводскойНомер">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Заводской номер</span>
+                                    </div>
+                                    <input id="заводскойНомер" asp-for="ЗаводскойНомер" type="text" class="form-control col-md-2" autocomplete="off" maxlength="20" onchange="InfoTextИзделие()" readonly="@(Model.Общие.ТипФормы == ТипыФормы.Просмотр)">
+                                </div>
+                                @Html.InputGroupFor(m => m.ДатаОбращения, new { @class = "mb-2", id = "inputGroupДатаОбращения" }, "Дата обращения :", "input", null, new { id = "датаОбращения", @class = "form-control", @type = "date", onkeypress = "if (event.keyCode == 13) { CheckDateYear(event); $('#датаОбращения').trigger('change'); return false; }", onchange = "InfoTextИзделие()" }, Model.Общие.ТипФормы == ТипыФормы.Просмотр)
+                                <div class="row collapse mb-2" id="collapseSellDate">
+                                    <div class="input-group input-group-sm col-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Дата продажи</span>
+                                        </div>
+                                        <input id="датаПродажи" asp-for="ДатаПродажи" type="date" class="form-control" onkeypress="if (event.keyCode == 13) { CheckDateYear(event); $('#датаПродажи').trigger('change'); return false; }" onchange="InfoTextИзделие()" readonly="@(Model.Общие.ТипФормы == ТипыФормы.Просмотр)">
+                                    </div>
+                                    <div class="input-group input-group-sm col-2">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Номер ремонта</span>
+                                        </div>
+                                        <input id="номерРемонта" asp-for="НомерРемонта" type="number" min="1" class="form-control" onchange="InfoTextИзделие()" readonly="@(Model.Общие.ТипФормы == ТипыФормы.Просмотр)">
+                                    </div>
+                                </div>
+                                @Html.InputGroupFor(m => m.СпособВозвращенияId, new { @class = "mb-2", id = "inputGroupСпособВозвращения" }, "Способ возвращения", "select", (SelectList)ViewBag.СпособВозвращения, new { id = "способВозвращения", @class = "form-control", onchange = "InfoTextИзделие()" }, Model.Общие.ТипФормы == ТипыФормы.Просмотр)
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header" id="headingОписаниеИзделия">
+                                <div class="d-flex">
+                                    <h5 class="mb-0">
+                                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseОписаниеИзделия" aria-expanded="false" aria-controls="collapseОписаниеИзделия">
+                                            <div id="информацияОписаниеИзделия"></div>
+                                        </button>
+                                    </h5>
+                                    <div id="ОшибкиОписанияИзделия" class="validation float-right text-danger" asp-validation-summary="All"></div>
+                                </div>
+                            </div>
+                            <div id="collapseОписаниеИзделия" class="card-body collapse" aria-labelledby="headingОписаниеИзделия" data-parent=".accordion">
+                                @Html.InputGroupFor(m => m.Неисправность.Id, new { @class = "mb-2", id = "ГруппаНеисправность1" }, "Неисправность", "lookup", new TemplateLookup<Неисправность>("lkНеисправность1", "", "Неисправность", "Неисправность"), new { id = "неисправность" }, Model.Общие.ТипФормы == ТипыФормы.Просмотр)
+                                @Html.InputGroupFor(m => m.Неисправность2.Id, new { @class = "collapse hide mb-2", id = "ГруппаНеисправность2" }, "Неисправность", "lookup", new TemplateLookup<Неисправность>("lkНеисправность2", "", "Неисправность", "Неисправность"), new { id = "неисправность2" }, Model.Общие.ТипФормы == ТипыФормы.Просмотр)
+                                @Html.InputGroupFor(m => m.Неисправность3.Id, new { @class = "collapse hide mb-2", id = "ГруппаНеисправность3" }, "Неисправность", "lookup", new TemplateLookup<Неисправность>("lkНеисправность3", "", "Неисправность", "Неисправность"), new { id = "неисправность3" }, Model.Общие.ТипФормы == ТипыФормы.Просмотр)
+                                @Html.InputGroupFor(m => m.Неисправность4.Id, new { @class = "collapse hide mb-2", id = "ГруппаНеисправность4" }, "Неисправность", "lookup", new TemplateLookup<Неисправность>("lkНеисправность4", "", "Неисправность", "Неисправность"), new { id = "неисправность4" }, Model.Общие.ТипФормы == ТипыФормы.Просмотр)
+                                @Html.InputGroupFor(m => m.Неисправность5.Id, new { @class = "collapse hide mb-2", id = "ГруппаНеисправность5" }, "Неисправность", "lookup", new TemplateLookup<Неисправность>("lkНеисправность5", "", "Неисправность", "Неисправность"), new { id = "неисправность5" }, Model.Общие.ТипФормы == ТипыФормы.Просмотр)
+                                @Html.InputGroupFor(m => m.ПриложенныйДокумент1.Id, new { @class = "mb-2", id = "ГруппаПриложенныйДокумент1" }, "Приложенный документ", "lookup", new TemplateLookup<ПриложенныйДокумент>("lkПриложенныйДокумент1", "", "Приложенный документ", "ПриложенныйДокумент"), new { id = "приложенныйДокумент1" }, Model.Общие.ТипФормы == ТипыФормы.Просмотр)
+                                @Html.InputGroupFor(m => m.ПриложенныйДокумент2.Id, new { @class = "collapse hide mb-2", id = "ГруппаПриложенныйДокумент2" }, "Приложенный документ", "lookup", new TemplateLookup<ПриложенныйДокумент>("lkПриложенныйДокумент2", "", "Приложенный документ", "ПриложенныйДокумент"), new { id = "приложенныйДокумент2" }, Model.Общие.ТипФормы == ТипыФормы.Просмотр)
+                                @Html.InputGroupFor(m => m.ПриложенныйДокумент3.Id, new { @class = "collapse hide mb-2", id = "ГруппаПриложенныйДокумент3" }, "Приложенный документ", "lookup", new TemplateLookup<ПриложенныйДокумент>("lkПриложенныйДокумент3", "", "Приложенный документ", "ПриложенныйДокумент"), new { id = "приложенныйДокумент3" }, Model.Общие.ТипФормы == ТипыФормы.Просмотр)
+                                @Html.InputGroupFor(m => m.ПриложенныйДокумент4.Id, new { @class = "collapse hide mb-2", id = "ГруппаПриложенныйДокумент4" }, "Приложенный документ", "lookup", new TemplateLookup<ПриложенныйДокумент>("lkПриложенныйДокумент4", "", "Приложенный документ", "ПриложенныйДокумент"), new { id = "приложенныйДокумент4" }, Model.Общие.ТипФормы == ТипыФормы.Просмотр)
+                                @Html.InputGroupFor(m => m.ПриложенныйДокумент5.Id, new { @class = "collapse hide mb-2", id = "ГруппаПриложенныйДокумент5" }, "Приложенный документ", "lookup", new TemplateLookup<ПриложенныйДокумент>("lkПриложенныйДокумент5", "", "Приложенный документ", "ПриложенныйДокумент"), new { id = "приложенныйДокумент5" }, Model.Общие.ТипФормы == ТипыФормы.Просмотр)
+                                @Html.InputGroupFor(m => m.Комплектность, new { @class = "mb-2", id = "inputGroupКомплектность" }, "Комплектность", "textarea", null, new { id = "комплектность", @class = "form-control", onchange = "InfoTextОписаниеИзделия()" }, Model.Общие.ТипФормы == ТипыФормы.Просмотр)
+                                @Html.InputGroupFor(m => m.ВнешнийВид, "mb-2", "Внешний вид", "textarea", null, new { id = "внешнийВид", @class = "form-control", onchange = "InfoTextОписаниеИзделия()" }, Model.Общие.ТипФормы == ТипыФормы.Просмотр)
+                                @Html.InputGroupFor(m => m.Общие.Комментарий, "mb-2", "Примечание", "textarea", null, new { id = "комментарий", @class = "form-control", onchange = "InfoTextОписаниеИзделия()" }, Model.Общие.ТипФормы == ТипыФормы.Просмотр)
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header" id="headingЗаказчик">
+                                <div class="d-flex">
+                                    <h5 class="mb-0">
+                                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseЗаказчик" aria-expanded="false" aria-controls="collapseЗаказчик">
+                                            <div id="информацияЗаказчика"></div>
+                                        </button>
+                                    </h5>
+                                    <div id="ОшибкиЗаказчика" class="validation float-right text-danger" asp-validation-summary="All"></div>
+                                </div>
+                            </div>
+                            <div id="collapseЗаказчик" class="card-body collapse" aria-labelledby="headingЗаказчик" data-parent=".accordion">
+                                <div class="input-group input-group-sm mb-2">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Заказчик</span>
+                                    </div>
+                                    <div id="заказчик" class="mvc-lookup-sm" mvc-lookup-for="Заказчик.Id" url="Контрагент" title="Заказчик" add-handler="true" readonly="@(Model.Общие.ТипФормы == ТипыФормы.Просмотр)"></div>
+                                </div>
+                                <input name="контрагентId" type="hidden" />
+                                @Html.InputGroupFor(m => m.Телефон.Id, new { @class = "mb-2", id = "inputGroupТелефон" }, "Телефон", "lookup", new TemplateLookup<Телефон>("lkТелефон", "", "Телефоны", "Телефон", new List<string>() { "контрагентId" }), new { id = "телефон", addHandler = "true" }, Model.Общие.ТипФормы == ТипыФормы.Просмотр)
+                                @Html.InputGroupFor(m => m.Email.Id, new { @class = "mb-2", id = "inputGroupEmail" }, "Email", "lookup", new TemplateLookup<Email>("lkEmail", "", "Электронная почта", "Email", new List<string>() { "контрагентId" }), new { id = "email", addHandler = "true" }, Model.Общие.ТипФормы == ТипыФормы.Просмотр)
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header" id="headingХранение">
+                                <div class="d-flex">
+                                    <h5 class="mb-0">
+                                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseХранение" aria-expanded="false" aria-controls="collapseХранение">
+                                            <div id="информацияХранения"></div>
+                                        </button>
+                                    </h5>
+                                    <div id="ОшибкиХранения" class="validation float-right text-danger" asp-validation-summary="All"></div>
+                                </div>
+                            </div>
+                            <div id="collapseХранение" class="card-body collapse" aria-labelledby="headingХранение" data-parent=".accordion">
+                                <div class="row mb-2">
+                                    <div class="input-group input-group-sm col-6">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Склад</span>
+                                        </div>
+                                        @Html.DropDownListFor(m => m.Склад.Id, (SelectList)ViewBag.СкладыДокумента, HtmlHelpers.ConditionalReadOnly(Model.Общие.ТипФормы == ТипыФормы.Просмотр, new { id = "складДокумента", @class = "form-control", onchange = "InfoTextХранение();ОбновитьПодСклады();RefreshDocName();ДоступностьАвансовыхРабот();" }))
+                                    </div>
+                                    <div class="input-group input-group-sm col-6">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">М.хран.</span>
+                                        </div>
+                                        @Html.DropDownListFor(m => m.ПодСклад.Id, (SelectList)ViewBag.ПодСкладыДокумента, HtmlHelpers.ConditionalReadOnly(Model.Общие.ТипФормы == ТипыФормы.Просмотр, new { id = "подСкладДокумента", @class = "form-control", onchange = "InfoTextХранение()" }))
+                                    </div>
+                                </div>
+                                <div class="input-group input-group-sm mb-2 collapse" id="collapseInputМастерДокумента">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Мастер</span>
+                                    </div>
+                                    @Html.DropDownListFor(m => m.Мастер.Id, (SelectList)ViewBag.МастераДокумента, HtmlHelpers.ConditionalReadOnly(Model.Общие.ТипФормы == ТипыФормы.Просмотр, new { id = "мастерДокумента", @class = "form-control", onchange = "InfoTextХранение()" }))
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card collapse" id="collapseCardАванс">
+                            <div class="card-header" id="headingАванс">
+                                <h5 class="mb-0">
+                                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseАванс" aria-expanded="false" aria-controls="collapseАванс">
+                                        Авансовая оплата работ
+                                    </button>
+                                </h5>
+                            </div>
+                            <div id="collapseАванс" class="collapse" aria-labelledby="headingАванс" data-parent=".accordion">
+                                <div class="card-body">
+                                    @await Component.InvokeAsync("Корзина", new { key = "ПодборРабот", showЦены = true })
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header" id="headingPhotos">
+                                <h5 class="mb-0">
+                                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapsePhotos" aria-expanded="false" aria-controls="collapsePhotos">
+                                        Фото изделия
+                                    </button>
+                                </h5>
+                            </div>
+                            <div id="collapsePhotos" class="collapse" aria-labelledby="headingPhotos" data-parent=".accordion">
+                                <div class="card-body" id="drop-area">
+                                    <p>Загрузите изображения с помощью диалога выбора файлов или перетащив нужные изображения в выделенную область</p>
+                                    <input asp-for="Photos" type="file" id="fileElem" multiple accept="image/*" onchange="handleFiles(this.files)">
+                                    <label class="btn btn-secondary" for="fileElem">Выбрать изображения</label>
+                                    @*<progress id="progress-bar" max=100 value=0></progress>*@
+                                    <div id="gallery"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button id="btnOk" type="button" class="btn btn-primary" onclick="Провести()" hidden="@(Model.Общие.ТипФормы == ТипыФормы.Просмотр)">
+                    <span class="spinner-grow spinner-grow-sm d-none" role="status" aria-hidden="true"></span>
+                    Провести
+                </button>
+                <button id="btnPrint" type="button" class="btn btn-success" onclick="Печать()" hidden="@(Model.Общие.ТипФормы != ТипыФормы.Просмотр)">
+                    <span class="spinner-grow spinner-grow-sm d-none" role="status" aria-hidden="true"></span>
+                    Печать
+                </button>
+                <button id="btnСтруктураПодчиненности" type="button" class="btn btn-success" onclick="СтруктураПодчиненности()" hidden="@(Model.Общие.ТипФормы != ТипыФормы.Просмотр)">
+                    <span class="spinner-grow spinner-grow-sm d-none" role="status" aria-hidden="true"></span>
+                    Структура подчиненности
+                </button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+@await Component.InvokeAsync("ПодборРабот")
+@await Component.InvokeAsync("НовыйКонтрагент")
+@await Component.InvokeAsync("НовыйТелефон")
+@await Component.InvokeAsync("НовыйEmail")
+
+<script>
+    var idИзделие = document.getElementById("выбИзделие");
+    var lookupИзделие = new MvcLookup(idИзделие);
+
+    var idПриложенныйДокумент1 = document.getElementById("приложенныйДокумент1");
+    var idПриложенныйДокумент2 = document.getElementById("приложенныйДокумент2");
+    var idПриложенныйДокумент3 = document.getElementById("приложенныйДокумент3");
+    var idПриложенныйДокумент4 = document.getElementById("приложенныйДокумент4");
+    var idПриложенныйДокумент5 = document.getElementById("приложенныйДокумент5");
+    var lookupПриложенныйДокумент1 = new MvcLookup(idПриложенныйДокумент1);
+    var lookupПриложенныйДокумент2 = new MvcLookup(idПриложенныйДокумент2);
+    var lookupПриложенныйДокумент3 = new MvcLookup(idПриложенныйДокумент3);
+    var lookupПриложенныйДокумент4 = new MvcLookup(idПриложенныйДокумент4);
+    var lookupПриложенныйДокумент5 = new MvcLookup(idПриложенныйДокумент5);
+
+    var idНеисправность = document.getElementById("неисправность");
+    var idНеисправность2 = document.getElementById("неисправность2");
+    var idНеисправность3 = document.getElementById("неисправность3");
+    var idНеисправность4 = document.getElementById("неисправность4");
+    var idНеисправность5 = document.getElementById("неисправность5");
+    var lookupНеисправность = new MvcLookup(idНеисправность);
+    var lookupНеисправность2 = new MvcLookup(idНеисправность2);
+    var lookupНеисправность3 = new MvcLookup(idНеисправность3);
+    var lookupНеисправность4 = new MvcLookup(idНеисправность4);
+    var lookupНеисправность5 = new MvcLookup(idНеисправность5);
+
+    var idЗаказчик = document.getElementById("заказчик");
+    var lookupЗаказчик = new MvcLookup(idЗаказчик);
+    var idТелефон = document.getElementById("телефон");
+    var lookupТелефон = new MvcLookup(idТелефон);
+    var idEmail = document.getElementById("email");
+    var lookupEmail = new MvcLookup(idEmail);
+
+    idПриложенныйДокумент1.addEventListener("lookupselect", e => {
+        $("#ГруппаПриложенныйДокумент2").collapse(e.detail.data[0] != undefined ? "show" : "hide");
+        if (e.detail.data[0] == undefined)
+            lookupПриложенныйДокумент2.select('', true);
+    });
+    idПриложенныйДокумент2.addEventListener("lookupselect", e => {
+        $("#ГруппаПриложенныйДокумент3").collapse(e.detail.data[0] != undefined ? "show" : "hide");
+        if (e.detail.data[0] == undefined)
+            lookupПриложенныйДокумент3.select('', true);
+    });
+    idПриложенныйДокумент3.addEventListener("lookupselect", e => {
+        $("#ГруппаПриложенныйДокумент4").collapse(e.detail.data[0] != undefined ? "show" : "hide");
+        if (e.detail.data[0] == undefined)
+            lookupПриложенныйДокумент4.select('', true);
+    });
+    idПриложенныйДокумент4.addEventListener("lookupselect", e => {
+        $("#ГруппаПриложенныйДокумент5").collapse(e.detail.data[0] != undefined ? "show" : "hide");
+        if (e.detail.data[0] == undefined)
+            lookupПриложенныйДокумент5.select('', true);
+    });
+    lookupПриложенныйДокумент1.search.addEventListener("change", () => {
+        InfoTextОписаниеИзделия();
+    });
+    lookupПриложенныйДокумент2.search.addEventListener("change", () => {
+        InfoTextОписаниеИзделия();
+    });
+    lookupПриложенныйДокумент3.search.addEventListener("change", () => {
+        InfoTextОписаниеИзделия();
+    });
+    lookupПриложенныйДокумент4.search.addEventListener("change", () => {
+        InfoTextОписаниеИзделия();
+    });
+    lookupПриложенныйДокумент5.search.addEventListener("change", () => {
+        InfoTextОписаниеИзделия();
+    });
+
+    idНеисправность.addEventListener("lookupselect", e => {
+        $("#ГруппаНеисправность2").collapse(e.detail.data[0] != undefined ? "show" : "hide");
+        if (e.detail.data[0] == undefined)
+            lookupНеисправность2.select('', true);
+    });
+    idНеисправность2.addEventListener("lookupselect", e => {
+        $("#ГруппаНеисправность3").collapse(e.detail.data[0] != undefined ? "show" : "hide");
+        if (e.detail.data[0] == undefined)
+            lookupНеисправность3.select('', true);
+    });
+    idНеисправность3.addEventListener("lookupselect", e => {
+        $("#ГруппаНеисправность4").collapse(e.detail.data[0] != undefined ? "show" : "hide");
+        if (e.detail.data[0] == undefined)
+            lookupНеисправность4.select('', true);
+    });
+    idНеисправность4.addEventListener("lookupselect", e => {
+        $("#ГруппаНеисправность5").collapse(e.detail.data[0] != undefined ? "show" : "hide");
+        if (e.detail.data[0] == undefined)
+            lookupНеисправность5.select('', true);
+    });
+
+    lookupНеисправность.search.addEventListener("change", () => {
+        InfoTextОписаниеИзделия();
+    });
+    lookupНеисправность2.search.addEventListener("change", () => {
+        InfoTextОписаниеИзделия();
+    });
+    lookupНеисправность3.search.addEventListener("change", () => {
+        InfoTextОписаниеИзделия();
+    });
+    lookupНеисправность4.search.addEventListener("change", () => {
+        InfoTextОписаниеИзделия();
+    });
+    lookupНеисправность5.search.addEventListener("change", () => {
+        InfoTextОписаниеИзделия();
+    });
+
+    lookupИзделие.search.addEventListener("change", () => {
+        InfoTextИзделие();
+    });
+
+    //idЗаказчик.addEventListener("lookupselect", e => {
+    //    if (e.detail.data[0] != undefined) {
+    //        $("[name='контрагентId']").val(e.detail.data[0].Id);
+    //        $("[name='контрагентId']").trigger("change");
+    //    }
+    //});
+    idЗаказчик.addEventListener("lookupadd", e => {
+        $("#контрагентНаименование").val(e.detail.lookup.search.value);
+        $("#контрагентlookupId").val("заказчик");
+        $("#новыйКонтрагент").modal("show");
+    });
+    idТелефон.addEventListener("lookupadd", e => {
+        $("[name='ТелефонНомер']").val(e.detail.lookup.search.value);
+        $("#телефонlookupId").val("телефон");
+        $("#телефонКонтрагентId").val(lookupЗаказчик.values[0].value);
+        $("#новыйТелефон").modal("show");
+    });
+    idEmail.addEventListener("lookupadd", e => {
+        $("[name='EmailАдрес']").val(e.detail.lookup.search.value);
+        $("#emaillookupId").val("email");
+        $("#emailКонтрагентId").val(lookupЗаказчик.values[0].value);
+        $("#новыйEmail").modal("show");
+    });
+    lookupЗаказчик.search.addEventListener("change", () => {
+        //if (lookupЗаказчик.selected[0] == undefined) {
+        //    lookupЗаказчик.values[0].value = "";
+        //}
+        var CustomerChanges = $("[name='контрагентId']").val() != undefined && $("[name='контрагентId']").val() != "";
+        $("[name='контрагентId']").val(lookupЗаказчик.values[0].value);
+        //$("[name='контрагентId']").trigger("change");
+        ОбновитьТелефоныEmail(CustomerChanges);
+        InfoTextЗаказчик();
+    });
+    lookupТелефон.search.addEventListener("change", () => {
+        InfoTextЗаказчик();
+    });
+    lookupEmail.search.addEventListener("change", () => {
+        InfoTextЗаказчик();
+    });
+
+    var docValidator = new Wellidate(document.getElementById("выбДокумент"), {
+        summary: {
+            container: "[data-valmsg-summary=true]",
+            show(result) {
+                if (this.container) {
+                    CreateManualSummary(result, "ОшибкиИзделия", ["Изделие.Id", "ЗаводскойНомер", "ДатаОбращения", "ДатаПродажи", "НомерРемонта"]);
+                    CreateManualSummary(result, "ОшибкиОписанияИзделия", ["Неисправность.Id", "ПриложенныйДокумент1.Id", "Комплектность", "ВнешнийВид"]);
+                    CreateManualSummary(result, "ОшибкиЗаказчика", ["Заказчик.Id", "Телефон.Id", "Email.Id"]);
+                    CreateManualSummary(result, "ОшибкиХранения", ["Склад.Id", "ПодСклад.Id", "Мастер.Id"]);
+                }
+            },
+            reset() {
+                this.show({
+                    isValid: true,
+                    invalid: [],
+                    valid: []
+                });
+            }
+        },
+        rules: {
+            "#датаОбращения": {
+                required: {
+                    trim: true,
+                    message: "Укажите дату обращения",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        const ЭтоСортировка = $("#статусПартииId").val() == "   ALM   ";
+                        var UseExpress = ЭтоСортировка && ($("#expressFormBlock").css("display") != "none") && $("#chkExpressForm").is(':checked');
+                        return this.element.valueAsDate.getTime() > minDate1C.getTime() || UseExpress;
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            },
+            "#датаПродажи": {
+                required: {
+                    trim: true,
+                    message: "Укажите дату продажи",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        const типРемонта = document.getElementById("выбГарантия");
+                        const претензия = document.getElementById("претензия");
+                        const ЭтоСортировка = $("#статусПартииId").val() == "   ALM   ";
+                        var UseExpress = ЭтоСортировка && ($("#expressFormBlock").css("display") != "none") && $("#chkExpressForm").is(':checked');
+                        if (типРемонта.value == 4)
+                            return this.element.valueAsDate.getTime() > minDate1C.getTime() || UseExpress || претензия.value == "True";
+                        else
+                            return true;
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            },
+            "#заводскойНомер": {
+                required: {
+                    trim: true,
+                    message: "Укажите заводской номер",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        const ЭтоСортировка = $("#статусПартииId").val() == "   ALM   ";
+                        var UseExpress = ЭтоСортировка && ($("#expressFormBlock").css("display") != "none") && $("#chkExpressForm").is(':checked');
+                        return (this.element.value != null && this.element.value.trim() != "") || UseExpress;
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+                length: {
+                    min: 1,
+                    max: 20,
+                    trim: true,
+                    message: "Заводской номер не должен превышать {0} знаков",
+                    formatMessage() {
+                        return this.message.replace("{0}", this.max);
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if (validatable.isValid) {
+                            const value = this.normalizeValue();
+                            const length = this;
+                            if (value != null && value != "") {
+                                return (length.min == null || length.min <= value.length) && (value.length <= length.max || length.max == null);
+                            }
+                            else
+                                return true;
+                        }
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            },
+            "#комплектность": {
+                required: {
+                    trim: true,
+                    message: "Укажите комплектность",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        const ЭтоСортировка = $("#статусПартииId").val() == "   ALM   ";
+                        var UseExpress = ЭтоСортировка && ($("#expressFormBlock").css("display") != "none") && $("#chkExpressForm").is(':checked');
+                        return (this.element.value != null && this.element.value.trim() != "") || UseExpress;
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+            },
+            ".mvc-lookup-value[name='Неисправность.Id']": {
+                required: {
+                    trim: true,
+                    message: "Укажите неисправность",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        const ЭтоСортировка = $("#статусПартииId").val() == "   ALM   ";
+                        var UseExpress = ЭтоСортировка && ($("#expressFormBlock").css("display") != "none") && $("#chkExpressForm").is(':checked');
+                        return (lookupНеисправность.selected[0] != undefined) || UseExpress;
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            },
+            ".mvc-lookup-value[name='ПриложенныйДокумент1.Id']": {
+                required: {
+                    trim: true,
+                    message: "Укажите приложенный документ",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        const РемонтПлатный = document.getElementById("выбГарантия").value == 0;
+                        const ЭтоСортировка = $("#статусПартииId").val() == "   ALM   ";
+                        var UseExpress = ЭтоСортировка && ($("#expressFormBlock").css("display") != "none") && $("#chkExpressForm").is(':checked');
+                        return (lookupПриложенныйДокумент1.selected[0] != undefined) || UseExpress || РемонтПлатный;
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            },
+            ".mvc-lookup-value[name='Телефон.Id']": {
+                required: {
+                    trim: true,
+                    message: "Укажите телефон",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        const ЭтоСортировка = $("#статусПартииId").val() == "   ALM   ";
+                        var UseExpress = ЭтоСортировка && ($("#expressFormBlock").css("display") != "none") && $("#chkExpressForm").is(':checked');
+                        return (lookupТелефон.selected[0] != undefined) || (lookupEmail.selected[0] != undefined) || UseExpress;
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            },
+            ".mvc-lookup-value[name='Email.Id']": {
+                required: {
+                    trim: true,
+                    message: "и/или адрес электронной почты",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        const ЭтоСортировка = $("#статусПартииId").val() == "   ALM   ";
+                        var UseExpress = ЭтоСортировка && ($("#expressFormBlock").css("display") != "none") && $("#chkExpressForm").is(':checked');
+                        return (lookupТелефон.selected[0] != undefined) || (lookupEmail.selected[0] != undefined) || UseExpress;
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            },
+            "#мастерДокумента": {
+                required: {
+                    trim: true,
+                    message: "Укажите мастера",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        const ЭтоСортировка = $("#статусПартииId").val() == "   ALM   ";
+                        var UseExpress = ЭтоСортировка && ($("#expressFormBlock").css("display") != "none") && $("#chkExpressForm").is(':checked');
+                        return $("#мастерДокумента option:selected").val() != "" || UseExpress;
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+            },
+        }
+    });
+
+    function RefreshDocName() {
+        var СтатусДокумента = $("#статусПартииIdOld").val();
+        if (СтатусДокумента == undefined || СтатусДокумента == "") {
+            $("#статусПартииId").val("   7OH   "); //Принят в ремонт
+        }
+        if (СтатусДокумента == undefined || СтатусДокумента == "" || СтатусДокумента == "   7OH   ") {
+            if ($("#складДокумента option:selected").val() == $("#складСортировкиРемонтов").val()) {
+                $("#статусПартииId").val("   ALM   "); //Сортировка
+            } else {
+                $("#статусПартииId").val("   7OH   "); //Принят в ремонт
+            }
+        }
+        var ВидДокОснование = $("#докОснованиеВид").val();
+        var ВыбГарантия = $("#выбГарантия option:selected").val();
+        var Название = ВидДокОснование == 9899 ? "Корректировка квитанции" :
+            (ВидДокОснование == 10080 && СтатусДокумента != "   7OH   ") ? "Прием из доставки" :
+            $("#статусПартииId").val() == "   ALM   " && $("#претензия").val() == "True" ? "Регистрация претензии" :
+            $("#статусПартииId").val() == "   ALM   " ? "Прием на сортировку" :
+                (ВыбГарантия == 1 ? "Прием в ремонт (по гарантии)" :
+                    ВыбГарантия == 2 ? "Прием в ремонт (предпродажный)" :
+                        ВыбГарантия == 3 ? "Прием в ремонт (за свой счет)" :
+                            ВыбГарантия == 4 ? "Прием в ремонт (на экспертизу)" :
+                                "Прием в ремонт (платный)");
+        $("#общиеРеквизитыДокумента").text(Название + " № " + $("#номерДок").val() + " от " + $("#датаДок").val());
+        ExpressFormCheck();
+    }
+    function ExpressFormCheck() {
+        var ЭтоСортировка = $("#статусПартииId").val() == "   ALM   ";
+        $("#expressFormBlock").attr("hidden", ($("#докОснованиеВид").val() == 9899) || !ЭтоСортировка);
+        var UseExpress = ЭтоСортировка && ($("#expressFormBlock").css("display") != "none") && $("#chkExpressForm").is(':checked');
+        var ЭтоПретензия = $("#претензия").val() == "True";
+        $("#inputGroupТипРемонта").attr("hidden", (UseExpress || ЭтоПретензия));
+        $("#inputGroupЗаводскойНомер").attr("hidden", UseExpress);
+        $("#inputGroupДатаОбращения").attr("hidden", UseExpress);
+        $("#collapseSellDate").attr("hidden", UseExpress);
+        $("#inputGroupСпособВозвращения").attr("hidden", UseExpress);
+
+        $("#ГруппаНеисправность1").attr("hidden", UseExpress);
+        $("#ГруппаНеисправность2").attr("hidden", UseExpress);
+        $("#ГруппаНеисправность3").attr("hidden", UseExpress);
+        $("#ГруппаНеисправность4").attr("hidden", UseExpress);
+        $("#ГруппаНеисправность5").attr("hidden", UseExpress);
+        $("#ГруппаПриложенныйДокумент1").attr("hidden", UseExpress);
+        $("#ГруппаПриложенныйДокумент2").attr("hidden", UseExpress);
+        $("#ГруппаПриложенныйДокумент3").attr("hidden", UseExpress);
+        $("#ГруппаПриложенныйДокумент4").attr("hidden", UseExpress);
+        $("#ГруппаПриложенныйДокумент5").attr("hidden", UseExpress);
+        $("#inputGroupКомплектность").attr("hidden", UseExpress);
+
+        $("#inputGroupТелефон").attr("hidden", UseExpress);
+        $("#inputGroupEmail").attr("hidden", UseExpress);
+
+        InfoTextИзделие();
+        InfoTextОписаниеИзделия();
+        InfoTextЗаказчик();
+    }
+    function InfoTextИзделие() {
+        var UseExpress = ($("#статусПартииId").val() == "   ALM   ") && ($("#expressFormBlock").css("display") != "none") && $("#chkExpressForm").is(':checked');
+
+        var типРемонта = $("#выбГарантия").val();
+        var info = "<p align='left'>Изделие: ";
+        var textИзделие = "<< НЕ ВЫБРАН >>";
+        if (lookupИзделие.selected[0] != undefined)
+            textИзделие = lookupИзделие.selected[0].Label;
+        info += textИзделие;
+        if (!UseExpress) {
+            if (типРемонта != undefined) {
+                info = info + "<br>Статус ремонта: " + $("#выбГарантия option:selected").text();
+            }
+            if ($("#заводскойНомер").val() != undefined && $("#заводскойНомер").val().trim() != "") {
+                info = info + "<br>Заводской номер: " + $("#заводскойНомер").val();
+            }
+            if ($("#датаОбращения").val() != undefined && document.getElementById("датаОбращения").valueAsDate.getTime() != minDate.getTime()) {
+                info += "<br>Дата обращения: " + formatterDate.format(document.getElementById("датаОбращения").valueAsDate);
+            }
+            if ((типРемонта != undefined) && (типРемонта == 4 || типРемонта == 1)) {
+                if ($("#датаПродажи").val() != undefined && document.getElementById("датаПродажи").valueAsDate.getTime() != minDate.getTime()) {
+                    info += "<br>Дата продажи: " + formatterDate.format(document.getElementById("датаПродажи").valueAsDate);
+                    if ($("#номерРемонта").val() > 0)
+                        info += "   Номер ремонта: " + $("#номерРемонта").val();
+                }
+            }
+            if ($("#способВозвращения").val() != undefined)
+                info += "<br>Способ возвращения: " + $("#способВозвращения option:selected").text();
+        }
+        info += "</p>";
+        $("#информацияИзделия").html(info);
+    }
+    function InfoTextОписаниеИзделия() {
+        var UseExpress = ($("#статусПартииId").val() == "   ALM   ") && ($("#expressFormBlock").css("display") != "none") && $("#chkExpressForm").is(':checked');
+        var info = "<p align='left'>Внешний вид: ";
+        var textВнешнийВид = "<< НЕ УКАЗАН >>";
+        if ($("#внешнийВид").val() != undefined && $("#внешнийВид").val().trim() != "")
+            textВнешнийВид = $("#внешнийВид").val();
+        info += textВнешнийВид;
+
+        if (!UseExpress) {
+            info += "<br>Неисправность: ";
+            var textНеисправность = "<< НЕ УКАЗАНА >>";
+            if (lookupНеисправность.selected[0] != undefined)
+                textНеисправность = lookupНеисправность.selected[0].Label;
+            info += textНеисправность;
+            if (lookupНеисправность2.selected[0] != undefined)
+                info += "<br>Неисправность: " + lookupНеисправность2.selected[0].Label;
+            if (lookupНеисправность3.selected[0] != undefined)
+                info += "<br>Неисправность: " + lookupНеисправность3.selected[0].Label;
+            if (lookupНеисправность4.selected[0] != undefined)
+                info += "<br>Неисправность: " + lookupНеисправность4.selected[0].Label;
+            if (lookupНеисправность5.selected[0] != undefined)
+                info += "<br>Неисправность: " + lookupНеисправность5.selected[0].Label;
+            info += "<br>Приложенный документ: ";
+            var textПриложенныйДокумент1 = "<< НЕ УКАЗАН >>";
+            if (lookupПриложенныйДокумент1.selected[0] != undefined)
+                textПриложенныйДокумент1 = lookupПриложенныйДокумент1.selected[0].Label;
+            info += textПриложенныйДокумент1;
+            if (lookupПриложенныйДокумент2.selected[0] != undefined)
+                info += "<br>Приложенный документ: " + lookupПриложенныйДокумент2.selected[0].Label;
+            if (lookupПриложенныйДокумент3.selected[0] != undefined)
+                info += "<br>Приложенный документ: " + lookupПриложенныйДокумент3.selected[0].Label;
+            if (lookupПриложенныйДокумент4.selected[0] != undefined)
+                info += "<br>Приложенный документ: " + lookupПриложенныйДокумент4.selected[0].Label;
+            if (lookupПриложенныйДокумент5.selected[0] != undefined)
+                info += "<br>Приложенный документ: " + lookupПриложенныйДокумент5.selected[0].Label;
+            info += "<br>Комплектация: ";
+            var textКомплектация = "<< НЕ УКАЗАНА >>";
+            if ($("#комплектность").val() != undefined && $("#комплектность").val().trim() != "")
+                textКомплектация = $("#комплектность").val();
+            info += textКомплектация;
+        }
+        if ($("#комментарий").val() != undefined && $("#комментарий").val().trim() != "") {
+            info += "<br>Примечание: " + $("#комментарий").val().trim();
+        }
+        info += "</p>";
+        $("#информацияОписаниеИзделия").html(info);
+    }
+    function InfoTextЗаказчик() {
+        var UseExpress = ($("#статусПартииId").val() == "   ALM   ") && ($("#expressFormBlock").css("display") != "none") && $("#chkExpressForm").is(':checked');
+
+        var info = "<p align='left'>Заказчик: ";
+        var textЗаказчик = "<< НЕ ВЫБРАН >>";
+        if (lookupЗаказчик.selected[0] != undefined)
+            textЗаказчик = lookupЗаказчик.selected[0].Label;
+        info += textЗаказчик;
+        if (!UseExpress) {
+            if (lookupТелефон.selected[0] != undefined)
+                info += "<br>Телефон: " + lookupТелефон.selected[0].Label;
+            if (lookupEmail.selected[0] != undefined)
+                info += "<br>Email: " + lookupEmail.selected[0].Label;
+        }
+        info += "</p>";
+        $("#информацияЗаказчика").html(info);
+    }
+    function InfoTextХранение() {
+        var info = "<p align='left'>Склад: ";
+        var idСклад = "";
+        var textСклад = "<< НЕ ВЫБРАН >>";
+        if ($("#складДокумента").val() != undefined) {
+            idСклад = $("#складДокумента option:selected").val();
+            textСклад = $("#складДокумента option:selected").text();
+        }
+        info += textСклад;
+        var textПодСклад = "<< НЕ ВЫБРАН >>";
+        if ($("#подСкладДокумента").val() != undefined) {
+            textПодСклад = $("#подСкладДокумента option:selected").text();
+        }
+        info += "<br>Место хранения: " + textПодСклад;
+        if (idСклад == $("#складДляРемонта").val()) {
+            var textМастер = "<< НЕ ВЫБРАН >>";
+            if ($("#мастерДокумента").val() != undefined) {
+                textМастер = $("#мастерДокумента option:selected").text();
+            }
+            info += "<br>Мастер: " + textМастер;
+
+        }
+        info += "</p>";
+        $("#информацияХранения").html(info);
+        $("#collapseInputМастерДокумента").collapse(idСклад == $("#складДляРемонта").val() ? "show" : "hide");
+    }
+    function FillBrends() {
+        $.ajax({
+            url: "Общий/ПолучитьФильтрПроизводителей",
+            type: "post",
+            datatype: "xml",
+            data: { толькоЗапчасти: 2 },
+            async: true,
+            cache: false,
+            success: function (data) {
+                $('#фПроизводитель').empty();
+                $('#фПроизводитель').append('<option selected> ЛЮБОЙ ПРОИЗВОДИТЕЛЬ </option>');
+                $.each(data, function (i) {
+                    $('#фПроизводитель').append('<option> ' + data[i] + '</option > ');
+                });
+            },
+            error: function (e, v, f) {
+                alert("ошибка выполнения!");
+            }
+        });
+    }
+    function СменаТипаРемонта() {
+        var e = $("#выбГарантия").val();
+        var p = $("#претензия").val() == "True";
+        $("#collapseSellDate").collapse(((e == 4 && !p) || e == 1) ? "show" : "hide");
+        ДоступностьАвансовыхРабот();
+    }
+    function ДоступностьАвансовыхРабот() {
+        $("#collapseCardАванс").collapse(($("#выбГарантия").val() == 0 && $("#докОснованиеIdDoc").val() == "" && $("#складДокумента option:selected").val() == $("#складДляРемонта").val() && $("#типФормы").val() != "Просмотр") ? "show" : "hide");
+    }
+    function ОбновитьТелефоныEmail(CustomerChanged) {
+        if (CustomerChanged) {
+            lookupТелефон.search.value = "";
+            lookupТелефон.values[0].value = "";
+            lookupEmail.search.value = "";
+            lookupEmail.values[0].value = "";
+        }
+        lookupТелефон.setReadonly(lookupЗаказчик.values[0].value == "" || lookupЗаказчик.readonly);
+        lookupEmail.setReadonly(lookupЗаказчик.values[0].value == "" || lookupЗаказчик.readonly);
+        if (!lookupТелефон.readonly)
+            lookupТелефон.reload(true);
+        if (!lookupEmail.readonly)
+            lookupEmail.reload(true);
+    }
+    function ОбновитьПодСклады() {
+        $.ajax({
+            url: "ПолучитьПодСклады",
+            type: "post",
+            datatype: "xml",
+            data: { СкладId: $("#складДокумента option:selected").val() },
+            async: true,
+            cache: false,
+            success: function (data) {
+                $('#подСкладДокумента').empty();
+                $.each(data, function (i) {
+                    $('#подСкладДокумента').append('<option value="' + data[i].id + '">' + data[i].наименование + '</option > ');
+                });
+                $('#подСкладДокумента').trigger("change");
+            },
+            error: function (e, v, f) {
+                alert("ошибка выполнения!");
+            }
+        });
+    }
+    function BtnOkEnabledDisabled() {
+        $("#btnOk").attr("disabled", $("#modelFailure").val() == 1);
+    }
+
+    function Провести() {
+        if (docValidator.form()) {
+            var form_data = new FormData($("#docForm")[0]);
+            $("#btnOk").attr("disabled", true);
+            $('.spinner-grow').removeClass('d-none');
+            $.ajax({
+                type: "POST",
+                url: "СоздатьПриемВРемонт",
+                data: form_data,
+                processData: false,
+                contentType: false,
+                async: true,
+                cache: false,
+                success: function (data) {
+                    if (data) {
+                        printPage(data, false);
+                    }
+                    $("#выбДокумент").modal("hide");
+                },
+                error: function (jqXHR, exception) {
+                    var msg = '';
+                    if (jqXHR.status === 0) {
+                        msg = 'Not connect.\n Verify Network.';
+                    } else if (jqXHR.status == 400) {
+                        msg = "Код : " + jqXHR.responseJSON.code + "\r\n" +
+                            jqXHR.responseJSON.description;
+                    } else if (jqXHR.status == 404) {
+                        msg = 'Requested page not found. [404]';
+                    } else if (jqXHR.status == 500) {
+                        msg = 'Internal Server Error [500].';
+                    } else if (jqXHR.status == 501) {
+                        msg = 'Internal Server Error [501].';
+                        if (jqXHR.responseText === 'timeout')
+                            msg = 'Блокировка ожидания. Повторите попытку...';
+                        else
+                            msg = msg + '\n' + jqXHR.responseText;
+                    } else if (jqXHR.status == 502) {
+                        msg = 'Internal Server Error [502].';
+                        if (jqXHR.responseText != "")
+                            msg = msg + '\n' + jqXHR.responseText;
+                    } else if (jqXHR.status == 503) {
+                        msg = 'Internal Server Error [503].';
+                        if (jqXHR.responseText != "")
+                            msg = msg + '\n' + jqXHR.responseText;
+                    } else if (exception === 'parsererror') {
+                        msg = 'Requested JSON parse failed.';
+                    } else if (exception === 'timeout') {
+                        msg = 'Time out error.';
+                    } else if (exception === 'abort') {
+                        msg = 'Ajax request aborted.';
+                    } else {
+                        msg = 'Uncaught Error.\n' + jqXHR.responseText;
+                    }
+                    alert(msg);
+                    $('.spinner-grow').addClass('d-none');
+                    $("#btnOk").attr("disabled", false);
+                }
+            });
+        }
+    }
+    function Печать() {
+        if (docValidator.form()) {
+            var form_data = new FormData($("#docForm")[0]);
+            $("#btnPrint").attr("disabled", true);
+            $('.spinner-grow').removeClass('d-none');
+            $.ajax({
+                type: "POST",
+                url: "ПечатьПриемВРемонт",
+                data: form_data,
+                processData: false,
+                contentType: false,
+                async: true,
+                cache: false,
+
+                success: function (data) {
+                    if (data) {
+                        printPage(data, false);
+                    }
+                    $('.spinner-grow').addClass('d-none');
+                    $("#btnPrint").attr("disabled", false);
+                },
+                error: function (jqXHR, exception) {
+                    var msg = '';
+                    if (jqXHR.status === 0) {
+                        msg = 'Not connect.\n Verify Network.';
+                    } else if (jqXHR.status == 400) {
+                        msg = "Код : " + jqXHR.responseJSON.code + "\r\n" +
+                            jqXHR.responseJSON.description;
+                    } else if (jqXHR.status == 404) {
+                        msg = 'Requested page not found. [404]';
+                    } else if (jqXHR.status == 500) {
+                        msg = 'Internal Server Error [500].';
+                    } else if (jqXHR.status == 501) {
+                        msg = 'Internal Server Error [501].';
+                        if (jqXHR.responseText === 'timeout')
+                            msg = 'Блокировка ожидания. Повторите попытку...';
+                        else
+                            msg = msg + '\n' + jqXHR.responseText;
+                    } else if (jqXHR.status == 502) {
+                        msg = 'Internal Server Error [502].';
+                        if (jqXHR.responseText != "")
+                            msg = msg + '\n' + jqXHR.responseText;
+                    } else if (jqXHR.status == 503) {
+                        msg = 'Internal Server Error [503].';
+                        if (jqXHR.responseText != "")
+                            msg = msg + '\n' + jqXHR.responseText;
+                    } else if (exception === 'parsererror') {
+                        msg = 'Requested JSON parse failed.';
+                    } else if (exception === 'timeout') {
+                        msg = 'Time out error.';
+                    } else if (exception === 'abort') {
+                        msg = 'Ajax request aborted.';
+                    } else {
+                        msg = 'Uncaught Error.\n' + jqXHR.responseText;
+                    }
+                    alert(msg);
+                    $('.spinner-grow').addClass('d-none');
+                    $("#btnPrint").attr("disabled", false);
+                }
+            });
+        }
+    }
+
+    $(document).ready(function () {
+        СменаТипаРемонта();
+        FillBrends();
+        ОбновитьТелефоныEmail(false);
+        RefreshDocName();
+        BtnOkEnabledDisabled();
+        //InfoTextИзделие();
+        //InfoTextОписаниеИзделия();
+        //InfoTextЗаказчик();
+        InfoTextХранение();
+    });
+    $('#выбДокумент').on('hidden.bs.modal', function (e) {
+        const gridЖурнал = new MvcGrid(document.querySelector("div[data-name='" + $("#родитель").val() + "']"));
+        gridЖурнал.reload();
+    });
+</script>

@@ -1,0 +1,27 @@
+﻿@model IQueryable<StinWeb.Models.DataManager.Отчеты.ЖурналДоставки>
+
+@(Html
+    .Grid(Model)
+    .Build(columns =>
+    {
+        columns.Add(model => model.ОбщиеРеквизиты.IdDoc).Named("IdDoc").Titled("IdDoc").Hidden();
+        columns.Add(model => model.ОбщиеРеквизиты.ВидДокумента10).Titled("ВидДокумента10");
+        columns.Add(model => model.ОбщиеРеквизиты.ВидДокумента36).Titled("ВидДокумента36");
+        columns.Add(model => model.ОбщиеРеквизиты.Наименование).Titled("Наименование");
+        columns.Add(model => model.ОбщиеРеквизиты.НомерДок).Titled("Номер");
+        columns.Add(model => model.ОбщиеРеквизиты.ДатаДок).Titled("Дата");
+        columns.Add(model => model.ОбщиеРеквизиты.Комментарий).Titled("Комментарий").Filterable(false).Sortable(false);
+        columns.Add(model => model.Остаток).Titled("Остаток").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматКоличества);
+    })
+    .Named("gridЖурналДоставки")
+    .AppendCss("table-hover")
+    //.RowAttributed(model => new { id = model.Id, @class = model.Статус == StinWeb.Models.DataManager.Справочники.СтатусыНоменклатуры.СнятСПроизводства ? "снят_с_производства" : model.Статус == StinWeb.Models.DataManager.Справочники.СтатусыНоменклатуры.ПодЗаказ ? "под_заказ" : null })
+    .Using(GridFilterMode.Header)
+    .Empty("No data found")
+    .Pageable(pager =>
+    {
+        pager.RowsPerPage = 12;
+    })
+    .Filterable()
+    .Sortable()
+)

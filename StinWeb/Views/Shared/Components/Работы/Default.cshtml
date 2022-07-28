@@ -1,0 +1,82 @@
+﻿@*@model IQueryable<StinWeb.Models.DataManager.Работа>
+@(Html
+    .Grid(Model)
+    .Build(columns =>
+    {
+        columns.Add(model => model.Id).Titled("Id").Hidden();
+        columns.Add(model => model.Артикул).Titled("Артикул");
+        columns.Add(model => model.Наименование).Titled("Наименование");
+    })
+    .Named("GridРаботы")
+    .AppendCss("table-hover")
+    .Using(GridFilterMode.Header)
+    .Empty("No data found")
+    .Pageable(pager =>
+    {
+        pager.RowsPerPage = 4;
+    })
+    .Filterable()
+    .Sortable()
+)*@
+<div id='treeview'></div>
+
+<script>
+$('#treeview').slimScroll({ height: '200px'});
+$('#treeview').jstree({
+    "search": {
+            "case_insensitive": true,
+            "show_only_matches": true
+    },
+    "plugins": ["search"],
+    'core': {
+        'animation': 0,
+        'data': {
+            'url': function (node) {
+                return "/Работы/GetChildren";
+            },
+            'data': function (node) {
+                return {
+                    'id': node.id,
+                    'izdelieId': '@ViewBag.ИзделиеId',
+                    'garantia': $('input:radio[name=ТипРемонта]:checked').val() == "Гарантийный"
+                };
+            }
+        }
+    }
+});
+
+//$('#treeview').on('changed.jstree', function (e, data) {
+//    console.log("=> selected node: " + data.node.id);
+//    console.log("=> selected node: " + data.node.text);
+//});
+
+//$('#treeview').bind("dblclick.jstree", function (e) {
+//    var node = $(e.target).closest("li");
+//    var id = node[0].id; //id of the selected node
+//    var tt = node[0].className;
+//    //if (node[0].children == false)
+//    alert(tt);
+//});
+
+$('#treeview').on("dblclick.jstree", function (e) {
+    var instance = $.jstree.reference(this);
+    var node = instance.get_node(e.target);
+    if (node.icon == 'jstree-file') {
+        $.ajax({
+            url: window.location.origin + "/КорзинаРабот/AddBasket",
+            type: "post",
+            dataType: "xml",
+            data: { id: node.id },
+            async: true,
+            //processData: false,
+            cache: false,
+            success: function (data) {
+                new MvcGrid(document.querySelector('#корзинаРабот')).reload();
+            },
+        });
+
+    }
+    //console.log(node);
+});
+
+</script>

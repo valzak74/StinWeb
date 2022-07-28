@@ -1,0 +1,36 @@
+﻿@model IQueryable<StinWeb.Models.DataManager.Справочники.Номенклатура>
+@(Html
+    .Grid(Model)
+    .Build(columns =>
+    {
+        columns.Add(model => model.Id).Titled("Id").Hidden();
+        columns.Add(model => model.Артикул).Titled("Артикул");
+        columns.Add(model => model.Производитель).Titled("Производитель");
+        columns.Add(model => model.Наименование).Titled("Наименование");
+    })
+    .Named("НоменклатураРаскладка")
+    .AppendCss("table-hover")
+    .Using(GridFilterMode.Header)
+    .Empty("No data found")
+    .Pageable(pager =>
+    {
+        pager.RowsPerPage = 18;
+    })
+    .Filterable()
+    .Sortable()
+
+)
+<script>
+    document.addEventListener("rowclick", e => {
+        if (e.detail.grid.name == "НоменклатураРаскладка") {
+            $('#НоменклатураId').text(e.detail.data["Артикул"] + " " + e.detail.data["Наименование"]);
+            $('#НоменклатураId').val(e.detail.data["Id"]);
+            RefreshImage(e.detail.data["Id"]);
+            @*var parent = $('embed#image').parent();
+            var newElement = "<embed src='@Url.Action("GetImage","Раскладки", new { id = "_valueId_"  })' id='image'  height='680' width='690'>";
+            newElement = newElement.replace("_valueId_", e.detail.data["Id"]);
+            $('embed#image').remove();
+            parent.append(newElement);*@
+        }
+    });
+</script>

@@ -1,0 +1,12 @@
+C:\Users\Валентин\source\repos\StinWeb\JsonExtensions\bin\Debug\net5.0\JsonExtensions.deps.json
+C:\Users\Валентин\source\repos\StinWeb\JsonExtensions\bin\Debug\net5.0\JsonExtensions.dll
+C:\Users\Валентин\source\repos\StinWeb\JsonExtensions\bin\Debug\net5.0\ref\JsonExtensions.dll
+C:\Users\Валентин\source\repos\StinWeb\JsonExtensions\bin\Debug\net5.0\JsonExtensions.pdb
+C:\Users\Валентин\source\repos\StinWeb\JsonExtensions\obj\Debug\net5.0\JsonExtensions.csproj.AssemblyReference.cache
+C:\Users\Валентин\source\repos\StinWeb\JsonExtensions\obj\Debug\net5.0\JsonExtensions.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Валентин\source\repos\StinWeb\JsonExtensions\obj\Debug\net5.0\JsonExtensions.AssemblyInfoInputs.cache
+C:\Users\Валентин\source\repos\StinWeb\JsonExtensions\obj\Debug\net5.0\JsonExtensions.AssemblyInfo.cs
+C:\Users\Валентин\source\repos\StinWeb\JsonExtensions\obj\Debug\net5.0\JsonExtensions.csproj.CoreCompileInputs.cache
+C:\Users\Валентин\source\repos\StinWeb\JsonExtensions\obj\Debug\net5.0\JsonExtensions.dll
+C:\Users\Валентин\source\repos\StinWeb\JsonExtensions\obj\Debug\net5.0\ref\JsonExtensions.dll
+C:\Users\Валентин\source\repos\StinWeb\JsonExtensions\obj\Debug\net5.0\JsonExtensions.pdb

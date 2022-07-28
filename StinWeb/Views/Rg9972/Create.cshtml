@@ -1,0 +1,83 @@
+﻿@model StinClasses.Models.Rg9972
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>Rg9972</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Period" class="control-label"></label>
+                <input asp-for="Period" class="form-control" />
+                <span asp-validation-for="Period" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Sp9958" class="control-label"></label>
+                <input asp-for="Sp9958" class="form-control" />
+                <span asp-validation-for="Sp9958" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Sp9960" class="control-label"></label>
+                <input asp-for="Sp9960" class="form-control" />
+                <span asp-validation-for="Sp9960" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Sp9961" class="control-label"></label>
+                <input asp-for="Sp9961" class="form-control" />
+                <span asp-validation-for="Sp9961" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Sp9963" class="control-label"></label>
+                <input asp-for="Sp9963" class="form-control" />
+                <span asp-validation-for="Sp9963" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Sp9964" class="control-label"></label>
+                <input asp-for="Sp9964" class="form-control" />
+                <span asp-validation-for="Sp9964" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Sp10083" class="control-label"></label>
+                <input asp-for="Sp10083" class="form-control" />
+                <span asp-validation-for="Sp10083" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Sp9967" class="control-label"></label>
+                <input asp-for="Sp9967" class="form-control" />
+                <span asp-validation-for="Sp9967" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Sp9969" class="control-label"></label>
+                <input asp-for="Sp9969" class="form-control" />
+                <span asp-validation-for="Sp9969" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Sp10084" class="control-label"></label>
+                <input asp-for="Sp10084" class="form-control" />
+                <span asp-validation-for="Sp10084" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Sp9970" class="control-label"></label>
+                <input asp-for="Sp9970" class="form-control" />
+                <span asp-validation-for="Sp9970" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

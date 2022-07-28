@@ -1,0 +1,1417 @@
+﻿@model StinWeb.Models.DataManager.Документы.ПриемВРемонт
+@{
+    ViewBag.Title = "Приём в ремонт";
+}
+<form id="main" name="Main" method="post">
+    <div id="mainPane" class="row splitter_container">
+        <div id="leftPane" class="accordion border-round">
+            <div class="card">
+                <input id="НомерДок" asp-for="НомерДок" type="hidden" value="@ViewBag.DocNo" />
+                <input asp-for="КвитанцияId" type="hidden" value="@ViewBag.НомерКвитанции" />
+                <h3>@ViewBag.НомерКвитанции</h3>
+                <div class="card-header" id="headingИзделие">
+                    <div class="d-flex">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseИзделие" aria-expanded="true" aria-controls="collapseИзделие">
+                                Параметры изделия
+                            </button>
+                        </h5>
+                        <div id="ОшибкиИзделия" class="validation float-right text-danger" asp-validation-summary="All"></div>
+                    </div>
+                </div>
+                <div id="collapseИзделие" class="collapse show" aria-labelledby="headingИзделие" data-parent=".accordion">
+                    <div class="card-body">
+                        <div class="input-group mb-2">
+                            <div class="collapse show" id="группаФильтров">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Фильтры</span>
+                                    </div>
+                                    <input name="фАртикул" type="text" class="form-control text-center" placeholder="Артикул">
+                                    <select class="custom-select" id="фПроизводитель" name="фПроизводитель"></select>
+                                </div>
+                            </div>
+                            <div id="изделие" mvc-lookup-for="Изделие.Id" url="НоменклатураБезЗапчастей" filters="фАртикул,фПроизводитель" title="Номенклатура" placeholder="Изделие" data-toggle="collapse" data-target="#группаФильтров" aria-expanded="true" aria-controls="группаФильтров"></div>
+                        </div>
+                        <div class="input-group mb-2">
+                            <div class="input-group-prepend">
+                                <label class="input-group-text" for="типРемонта">Тип ремонта</label>
+                            </div>
+                            <select class="custom-select" id="типРемонта" asp-for="ТипРемонта" onchange="TypeRemontChange(this.value)">
+                                <option value="4" selected>Экспертиза</option>
+                                <option value="0">Платный</option>
+                                <option value="2">Предпродажный</option>
+                            </select>
+                        </div>
+                        <div class="input-group mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Заводской номер</span>
+                            </div>
+                            <input id="заводскойНомер" asp-for="ЗаводскойНомер" type="text" class="form-control" autocomplete="off">
+                        </div>
+                        <div class="row collapse mb-2" id="collapseSellDate">
+                            <div class="input-group col-6">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Дата продажи</span>
+                                </div>
+                                <input id="датаПродажи" asp-for="ДатаПродажи" type="date" class="form-control" onkeypress="if(event.keyCode==13){CheckDateYear(event);return false;}">
+                            </div>
+                            <div class="input-group col-6">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Номер ремонта</span>
+                                </div>
+                                <input asp-for="НомерРемонта" type="number" min="1" value="1" class="form-control">
+                            </div>
+                        </div>
+                        <div class="input-group mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Комплектность</span>
+                            </div>
+                            <textarea asp-for="Комплектность" class="form-control"></textarea>
+                        </div>
+                        <div class="input-group mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Неисправность</span>
+                            </div>
+                            <div class="col-9">
+                                <div id="неисправность" mvc-lookup-for="Неисправность.Id" url="Неисправность" title="Неисправность"></div>
+                            </div>
+                        </div>
+                        <div class="input-group mb-2 collapse hide" id="ГруппаНеисправность2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Неисправность</span>
+                            </div>
+                            <div class="col-9">
+                                <div id="неисправность2" mvc-lookup-for="Неисправность2.Id" url="Неисправность" title="Неисправность"></div>
+                            </div>
+                        </div>
+                        <div class="input-group mb-2 collapse hide" id="ГруппаНеисправность3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Неисправность</span>
+                            </div>
+                            <div class="col-9">
+                                <div id="неисправность3" mvc-lookup-for="Неисправность3.Id" url="Неисправность" title="Неисправность"></div>
+                            </div>
+                        </div>
+                        <div class="input-group mb-2 collapse hide" id="ГруппаНеисправность4">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Неисправность</span>
+                            </div>
+                            <div class="col-9">
+                                <div id="неисправность4" mvc-lookup-for="Неисправность4.Id" url="Неисправность" title="Неисправность"></div>
+                            </div>
+                        </div>
+                        <div class="input-group mb-2 collapse hide" id="ГруппаНеисправность5">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Неисправность</span>
+                            </div>
+                            <div class="col-9">
+                                <div id="неисправность5" mvc-lookup-for="Неисправность5.Id" url="Неисправность" title="Неисправность"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header" id="headingЗаказчик">
+                    <div class="d-flex">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseЗаказчик" aria-expanded="false" aria-controls="collapseЗаказчик">
+                                Параметры заказчика
+                            </button>
+                        </h5>
+                        <div id="ОшибкиЗаказчика" class="validation float-right text-danger" asp-validation-summary="All"></div>
+                    </div>
+                </div>
+                <div id="collapseЗаказчик" class="collapse" aria-labelledby="headingЗаказчик" data-parent=".accordion">
+                    <div class="card-body">
+                        <div class="input-group mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Заказчик</span>
+                            </div>
+                            <div class="col-10">
+                                <div id="заказчик" mvc-lookup-for="Заказчик.Id" url="Контрагент" title="Заказчик" add-handler="true"></div>
+                            </div>
+                        </div>
+                        <div class="input-group mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Телефон</span>
+                            </div>
+                            <select asp-for="Телефон" class="selectpicker" id="телефон" data-width="80%">
+                            </select>
+                        </div>
+                        <div class="input-group mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Email</span>
+                            </div>
+                            <select asp-for="Email" class="selectpicker" id="email" data-width="80%">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header" id="headingХранение">
+                    <div class="d-flex">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseХранение" aria-expanded="false" aria-controls="collapseХранение">
+                                Параметры хранения
+                            </button>
+                        </h5>
+                        <div id="ОшибкиХранения" class="validation float-right text-danger" asp-validation-summary="All"></div>
+                    </div>
+                </div>
+                <div id="collapseХранение" class="collapse" aria-labelledby="headingХранение" data-parent=".accordion">
+                    <div class="card-body">
+                        <div class="row mb-2">
+                            <div class="input-group col-6">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Склад</span>
+                                </div>
+                                <select asp-for="Склад.Id" class="custom-select" id="склад">
+                                    <option value="     DS  " selected>Экран</option>
+                                </select>
+                            </div>
+                            <div class="input-group col-6">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">М.хран.</span>
+                                </div>
+                                <select asp-for="ПодСклад.Id" class="custom-select" id="подСклад">
+                                    <option value="    1ZD  " selected>3. Экран Мастерская</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Мастер</span>
+                            </div>
+                            <select asp-for="Мастер" class="form-control selectpicker" id="мастер" data-size="2" data-live-search="true" data-width="80%"></select>
+                        </div>
+                        <div class="input-group mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Комментарий</span>
+                            </div>
+                            <textarea asp-for="Комментарий" class="form-control" rows="3" id="комментарий"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card collapse" id="collapseCardАванс">
+                <div class="card-header" id="headingАванс">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseАванс" aria-expanded="false" aria-controls="collapseАванс">
+                            Авансовая оплата работ
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapseАванс" class="collapse" aria-labelledby="headingАванс" data-parent=".accordion">
+                    <div class="card-body">
+                        @*<div>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="btnПодборУдалить();">Удалить все</button>
+                            <button type="button" class="btn btn-sm btn-outline-success float-right" onclick="btnClickПодбор();">Подбор</button>
+                        </div>*@
+                        @*@Html.AjaxGrid(Url.Action("IndexКорзинаРабот","ПодборРабот", new { viewName = "_IndexВыбранныеРаботы" }))*@
+                        @await Component.InvokeAsync("Корзина", new { key = "ПодборРабот", showЦены = true })
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header" id="headingPhotos">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapsePhotos" aria-expanded="false" aria-controls="collapsePhotos">
+                            Фото изделия
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapsePhotos" class="collapse" aria-labelledby="headingPhotos" data-parent=".accordion">
+                    <div class="card-body" id="drop-area">
+                        <p>Загрузите изображения с помощью диалога выбора файлов или перетащив нужные изображения в выделенную область</p>
+                        <input asp-for="Photos" type="file" id="fileElem" multiple accept="image/*" onchange="handleFiles(this.files)">
+                        <label class="btn btn-secondary" for="fileElem">Выбрать изображения</label>
+                        @*<progress id="progress-bar" max=100 value=0></progress>*@
+                        <div id="gallery"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body row">
+                    <button id="btnOk" class="btn btn-primary" type="submit" asp-action="CreateDoc">
+                        <span class="spinner-grow spinner-grow-sm d-none" role="status" aria-hidden="true"></span>
+                        Провести
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="rightPane" class="border-round">
+            <div class="d-flex justify-content-around">
+                <div class="d-inline-block">
+                    <label class="btn btn-primary" for="my-file-selector">
+                        <input id="my-file-selector" type="file" style="display:none" onchange="btnLoadClick()">
+                        Загрузить
+                    </label>
+                </div>
+                <div class="d-inline-block">
+                    <button id="btnDelete" class="btn btn-secondary" type="button" onclick="btnDeleteClick()">Удалить</button>
+                </div>
+            </div>
+            <div class="image-embed-container">
+                <iframe id="image" src="@Url.Action("GetImage","Раскладки", new { id = "" })#view=fitH" frameborder="0" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+</form>
+<div class="modal fade" id="новыйЗаказчик" tabindex="-1" role="dialog" aria-labelledby="вводНовогоЗаказчика" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="вводНовогоЗаказчика">Новый заказчик</h5>
+                <div id="ОшибкиНовогоЗаказчика" class="validation float-right text-danger" asp-validation-summary="All"></div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <label>
+                        <input type="radio" name="ВидКонтрагента" id="видКонтрагента" value="1" checked="checked" aria-label="видКонтрагента" aria-describedby="radio-видКонтрагента">
+                        Физическое лицо
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        <input type="radio" name="ВидКонтрагента" id="видКонтрагента" value="2" aria-label="видКонтрагента" aria-describedby="radio-видКонтрагента">
+                        Юридическое лицо
+                    </label>
+                </div>
+                <div class="input-group input-group-sm mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Наименование</span>
+                    </div>
+                    <input id="заказчикНаименование" name="ЗаказчикНаименование" type="text" class="form-control" aria-label="заказчикНаименование" aria-describedby="inputзаказчикНаименование">
+                </div>
+                <div class="row mb-3 collapse" id="инн">
+                    <div class="input-group input-group-sm col-6">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">ИНН</span>
+                        </div>
+                        <input id="заказчикИНН" name="ЗаказчикИНН" type="text" class="form-control" data-inputmask="'mask': '9999999999[99]'" aria-label="заказчикИНН" aria-describedby="inputзаказчикИНН">
+                    </div>
+                    <div class="input-group input-group-sm col-6">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">КПП</span>
+                        </div>
+                        <input id="заказчикКПП" name="ЗаказчикКПП" type="text" class="form-control" data-inputmask="'mask': '999999999'" aria-label="заказчикКПП" aria-describedby="inputзаказчикКПП">
+                    </div>
+                </div>
+                <div class="input-group input-group-sm mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Адрес</span>
+                    </div>
+                    <input id="заказчикАдрес" type="text" class="form-control" aria-label="заказчикАдрес" aria-describedby="inputзаказчикАдрес">
+                </div>
+                <div class="input-group input-group-sm mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Телефон</span>
+                    </div>
+                    <input id="заказчикТелефон" name="ЗаказчикТелефон" type="text" class="form-control" data-inputmask="'mask': '+7 999 999 99 99'" aria-label="заказчикТелефон" aria-describedby="inputзаказчикТелефон">
+                </div>
+                <div class="input-group input-group-sm mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Email</span>
+                    </div>
+                    <input id="заказчикEmail" name="ЗаказчикEmail" type="text" class="form-control" data-inputmask="'alias': 'email'" aria-label="заказчикEmail" aria-describedby="inputзаказчикEmail">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btnSave" class="btn btn-primary" onclick="btnSaveClick()">Save changes</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@await Component.InvokeAsync("ПодборРабот")
+<style>
+    #drop-area {
+        border: 2px dashed #ccc;
+        border-radius: 20px;
+/*        width: 100vn;
+*/        font-family: sans-serif;
+        margin: auto;
+        padding: 20px;
+    }
+
+        #drop-area.highlight {
+            border-color: purple;
+        }
+
+    p {
+        margin-top: 0;
+    }
+
+    #gallery {
+        margin-top: 10px;
+    }
+
+        #gallery img {
+            width: 150px;
+            margin-bottom: 10px;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+    #fileElem {
+        display: none;
+    }
+    .card-header {
+        padding: 0;
+    }
+    .card-body {
+        padding: 0.5rem;
+    }
+</style>
+<script>
+    //drag&drop start
+    let dropArea = document.getElementById('drop-area');
+    let uploadProgress = [];
+    let progressBar = document.getElementById('progress-bar');
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false)
+    });
+    function preventDefaults(e) {
+        e.preventDefault()
+        e.stopPropagation()
+    };
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, highlight, false)
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, unhighlight, false)
+    });
+    function highlight(e) {
+        dropArea.classList.add('highlight')
+    };
+    function unhighlight(e) {
+        dropArea.classList.remove('highlight')
+    };
+    dropArea.addEventListener('drop', handleDrop, false);
+    function handleDrop(e) {
+        let dt = e.dataTransfer;
+        let files = dt.files;
+        var input = document.getElementById("fileElem");
+        input.files = files;
+        handleFiles(files);
+    };
+    function handleFiles(files) {
+        files = [...files];
+        //initializeProgress(files.length)
+        //files.forEach(uploadFile)
+        files.forEach(previewFile);
+    };
+    function uploadFile(file, i) {
+        var url = 'ВАШ URL ДЛЯ ЗАГРУЗКИ ФАЙЛОВ'
+        var xhr = new XMLHttpRequest()
+        var formData = new FormData()
+        xhr.open('POST', url, true)
+        // Добавили следующие слушатели
+        xhr.upload.addEventListener("progress", function (e) {
+            updateProgress(i, (e.loaded * 100.0 / e.total) || 100)
+        })
+        xhr.addEventListener('readystatechange', function (e) {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                // Готово. Сообщаем пользователю
+            }
+            else if (xhr.readyState == 4 && xhr.status != 200) {
+                // Ошибка. Сообщаем пользователю
+            }
+        })
+        formData.append('file', file)
+        xhr.send(formData)
+    };
+    function previewFile(file) {
+        let reader = new FileReader()
+        reader.readAsDataURL(file)
+        reader.onloadend = function () {
+            let img = document.createElement('img')
+            img.src = reader.result
+            document.getElementById('gallery').appendChild(img)
+        }
+    };
+    function initializeProgress(numFiles) {
+        progressBar.value = 0
+        uploadProgress = []
+        for (let i = numFiles; i > 0; i--) {
+            uploadProgress.push(0)
+        }
+    };
+    function updateProgress(fileNumber, percent) {
+        uploadProgress[fileNumber] = percent
+        let total = uploadProgress.reduce((tot, curr) => tot + curr, 0) / uploadProgress.length
+        progressBar.value = total
+    };
+    //drag&drop end
+    //$("#leftPane").slimScroll({ height: '100%' });
+    $("#rightPane").slimScroll({ height: '100%' });
+    var splitter = $('#mainPane').split({
+        orientation: 'vertical',
+        limit: 10,
+        position: '60%', // if there is no percentage it interpret it as pixels
+        //onDrag: function (event) {
+        //    console.log(splitter.position());
+        //}
+    });
+
+    var pageValidator = new Wellidate(document.querySelector("form"), {
+        summary: {
+            container: "[data-valmsg-summary=true]",
+            show(result) {
+                if (this.container) {
+                    CreateManualSummary(result, "ОшибкиИзделия", ["Изделие.Id", "ЗаводскойНомер", "ДатаПродажи", "НомерРемонта", "Комплектность", "Неисправность.Id"]);
+                    CreateManualSummary(result, "ОшибкиЗаказчика", ["Заказчик.Id", "Телефон", "Email"]);
+                    CreateManualSummary(result, "ОшибкиХранения", ["Склад.Id", "ПодСклад.Id", "Мастер"]);
+                }
+            },
+            reset() {
+                this.show({
+                    isValid: true,
+                    invalid: [],
+                    valid: []
+                });
+            }
+        },
+        rules: {
+            ".mvc-lookup-value[name='Неисправность.Id']": {
+                required: {
+                    trim: true,
+                    message: "Укажите неисправность",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        return lookupНеисправность.selected[0] != undefined;
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            },
+            "#датаПродажи": {
+                required: {
+                    trim: true,
+                    message: "Укажите дату продажи",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        const типРемонта = document.getElementById("типРемонта");
+                        if (типРемонта.value == 4)
+                            return this.element.value != null && this.element.value != "";
+                        else
+                            return true;
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            },
+            "#заводскойНомер": {
+                length: {
+                    min: 1,
+                    max: 20,
+                    trim: true,
+                    message: "Заводской номер не должен превышать {0} знаков",
+                    formatMessage() {
+                        return this.message.replace("{0}", this.max);
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if (validatable.isValid) {
+                            const value = this.normalizeValue();
+                            const length = this;
+                            if (value != null && value != "") {
+                                return (length.min == null || length.min <= value.length) && (value.length <= length.max || length.max == null);
+                            }
+                            else
+                                return true;
+                        }
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            },
+            "#телефон": {
+                required: {
+                    trim: true,
+                    message: "Укажите телефон",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        const email = document.getElementById("email");
+                        return (this.element.value != null && this.element.value != "") || (email.value != null && email.value != "")
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+                digits: {
+                    trim: true,
+                    message: "Телефон должен содержать только цифры",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if (validatable.isValid) {
+                            const value = $("#телефон").find("option:selected").text().trim();
+                            if (value != null && value != "")
+                                return /^\d*$/.test(value);
+                            else
+                                return true;
+                        }
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+                length: {
+                    min: 10,
+                    max: 10,
+                    trim: true,
+                    message: "Номер телефона должен содержать {0} знаков",
+                    formatMessage() {
+                        return this.message.replace("{0}", this.min);
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if (validatable.isValid) {
+                            const value = $("#телефон").find("option:selected").text().trim();
+                            const length = this;
+                            if (value != null && value != "") {
+                                return (length.min == null || length.min <= value.length) && (value.length <= length.max || length.max == null);
+                            }
+                            else
+                                return true;
+                        }
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            },
+            "#email": {
+                required: {
+                    trim: true,
+                    message: " и/или email",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        const phone = document.getElementById("телефон");
+                        return (this.element.value != null && this.element.value != "") || (phone.value != null && phone.value != "");
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+                email: {
+                    trim: true,
+                    message: "Введите правильный email",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if (validatable.isValid) {
+                            const value = $("#email").find("option:selected").text().trim();
+                            if (value != null && value != "") {
+                                return /^$|^([\w\.\-]+)@@([\w\-]+)((\.(\w){2,3})+)$/.test(value);
+                            }
+                            else
+                                return true;
+                        }
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            },
+        }
+    });
+    var newZakValidator = new Wellidate(document.getElementById("новыйЗаказчик"), {
+        summary: {
+            container: "[data-valmsg-summary=true]",
+            show(result) {
+                if (this.container) {
+                    CreateManualSummary(result, "ОшибкиНовогоЗаказчика", ["ЗаказчикНаименование", "ЗаказчикИНН", "ЗаказчикКПП", "ЗаказчикТелефон", "ЗаказчикEmail"]);
+                }
+            },
+            reset() {
+                this.show({
+                    isValid: true,
+                    invalid: [],
+                    valid: []
+                });
+            }
+        },
+        rules: {
+            "#заказчикНаименование": {
+                required: {
+                    trim: true,
+                    message: "Укажите наименование",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        return this.element.value != null && this.element.value != "";
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            },
+            "#заказчикИНН": {
+                required: {
+                    trim: true,
+                    message: "Укажите ИНН",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        if ($("input:radio[name=ВидКонтрагента]:checked").val() == 2)
+                            return this.element.value != null && this.element.value != "";
+                        else
+                            return true;
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+                length: {
+                    min: 10,
+                    max: 12,
+                    trim: true,
+                    message: "ИНН должен содержать {0} или {1} знаков",
+                    formatMessage() {
+                        return this.message.replace("{0}", this.min).replace("{1}", this.max);
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if (validatable.isValid) {
+                            var value = this.element.value.replace(/^_+|_+$/, "");
+                            if ($("input:radio[name=ВидКонтрагента]:checked").val() == 2)
+                                return value.length == this.min || value.length == this.max;
+                            else
+                                return true;
+                        }
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+                //length10: {
+                //    min: 10,
+                //    trim: true,
+                //    message: "ИНН должен содержать {0} знаков при наличии КПП",
+                //    formatMessage() {
+                //        return this.message.replace("{0}", this.min);
+                //    },
+                //    isEnabled() {
+                //        return true;
+                //    },
+                //    isValid(validatable) {
+                //        if (validatable.isValid) {
+                //            if ($("input:radio[name=ВидКонтрагента]:checked").val() == 2) {
+                //                var value = this.element.value.replace(/^_+|_+$/, "");
+                //                const кпп = document.getElementById("заказчикКПП");
+                //                var кпп_value = кпп.value.replace(/^_+|_+$/, "");
+                //                if (кпп_value != "")
+                //                    return value.length == this.min;
+                //                else
+                //                    return true;
+                //            }
+                //            else
+                //                return true;
+                //        }
+                //    },
+                //    normalizeValue() {
+                //        return this.trim ? this.element.value.trim() : this.element.value;
+                //    }
+                //},
+                //length12: {
+                //    max: 12,
+                //    trim: true,
+                //    message: "ИНН должен содержать {0} знаков при отсутствии КПП",
+                //    formatMessage() {
+                //        return this.message.replace("{0}", this.max);
+                //    },
+                //    isEnabled() {
+                //        return true;
+                //    },
+                //    isValid(validatable) {
+                //        if (validatable.isValid) {
+                //            if ($("input:radio[name=ВидКонтрагента]:checked").val() == 2) {
+                //                var value = this.element.value.replace(/^_+|_+$/, "");
+                //                const кпп = document.getElementById("заказчикКПП");
+                //                var кпп_value = кпп.value.replace(/^_+|_+$/, "");
+                //                if (кпп_value == "")
+                //                    return value.length == this.max;
+                //                else
+                //                    return true;
+                //            }
+                //            else
+                //                return true;
+                //        }
+                //    },
+                //    normalizeValue() {
+                //        return this.trim ? this.element.value.trim() : this.element.value;
+                //    }
+                //},
+                remote: {
+                    url: "/ПриемВРемонт/ПроверкаИНН",
+                    additionalFields: "",
+                    type: "post",
+                    trim: true,
+                    message: "Please fix this field.",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if ($("input:radio[name=ВидКонтрагента]:checked").val() == 2 && ($('#заказчикИНН').val().length == 12 || ($('#заказчикИНН').val().length == 10 && $('#заказчикКПП').val().replaceAll("_", "").length == 9))) {
+                            const remote = this;
+
+                            if (remote.controller) {
+                                remote.controller.abort();
+                            }
+
+                            clearTimeout(remote.start);
+                            remote.start = setTimeout(() => {
+                                if (validatable.isValid) {
+                                    remote.controller = new AbortController();
+                                    var data = new FormData();
+                                    data.append("ИНН", $('#заказчикИНН').val());
+                                    data.append("КПП", $('#заказчикКПП').val());
+
+                                    fetch(remote.url, {
+                                        method: remote.type,
+                                        headers: { "X-Requested-With": "XMLHttpRequest" },
+                                        body: data
+                                    }).then(response => {
+                                        if (validatable.isValid && response.ok) {
+                                            return response.json();
+                                        }
+                                        return "";
+                                    }).then(response => {
+                                        if (response) {
+                                            remote.apply(validatable, response);
+                                        }
+                                    });
+
+                                    remote.prepare(validatable);
+
+                                    validatable.pending();
+                                }
+                            }, 1);
+                        }
+                        return true;
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    },
+                    prepare(validatable) {
+                    },
+                    apply(validatable, response) {
+                        if (response != "") {
+                            if (response.isValid)
+                                validatable.success(response.message);
+                            else
+                                validatable.error("remote", response.message);
+                        }
+                        else
+                            validatable.error("remote", "wrong response");
+                        RefreshSummary("ОшибкиНовогоЗаказчика", ["ЗаказчикНаименование", "ЗаказчикИНН", "ЗаказчикКПП", "ЗаказчикТелефон", "ЗаказчикEmail"]);
+                    }
+                }
+            },
+            "#заказчикКПП": {
+                required: {
+                    max: 10,
+                    trim: true,
+                    message: "Укажите КПП",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if (validatable.isValid) {
+                            var value = this.element.value.replace(/^_+|_+$/, "");
+                            const инн = document.getElementById("заказчикИНН");
+                            var инн_value = инн.value.replace(/^_+|_+$/, "");
+                            return инн_value == "" || инн_value.length != this.max || (инн_value.length == this.max && value != "");
+                        }
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+                not_required: {
+                    max: 10,
+                    trim: true,
+                    message: "КПП должен быть пустым",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if (validatable.isValid) {
+                            var value = $("#заказчикКПП").val().replaceAll("_", "");
+                            const инн = $("#заказчикИНН").val().replaceAll("_", "");
+                            return инн == "" || value == "" || !(инн.length != this.max && value != "");
+                        }
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+                length: {
+                    min: 9,
+                    trim: true,
+                    message: "КПП должен содержать {0} знаков",
+                    formatMessage() {
+                        return this.message.replace("{0}", this.min);
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if (validatable.isValid) {
+                            var value = this.element.value.replace(/^_+|_+$/, "");
+                            if (value != "")
+                                return (this.min == value.length);
+                            else
+                                return true;
+                        }
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+                remote: {
+                    url: "/ПриемВРемонт/ПроверкаИНН",
+                    additionalFields: "",
+                    type: "post",
+                    trim: true,
+                    message: "Please fix this field.",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if ($("input:radio[name=ВидКонтрагента]:checked").val() == 2 && ($('#заказчикИНН').val().replaceAll("_", "").length == 10 && $('#заказчикКПП').val().replaceAll("_", "").length == 9)) {
+                            const remote = this;
+
+                            if (remote.controller) {
+                                remote.controller.abort();
+                            }
+
+                            clearTimeout(remote.start);
+                            remote.start = setTimeout(() => {
+                                if (validatable.isValid) {
+                                    remote.controller = new AbortController();
+                                    var data = new FormData();
+                                    data.append("ИНН", $('#заказчикИНН').val());
+                                    data.append("КПП", $('#заказчикКПП').val());
+
+                                    fetch(remote.url, {
+                                        method: remote.type,
+                                        headers: { "X-Requested-With": "XMLHttpRequest" },
+                                        body: data
+                                    }).then(response => {
+                                        if (validatable.isValid && response.ok) {
+                                            return response.json();
+                                        }
+                                        return "";
+                                    }).then(response => {
+                                        if (response) {
+                                            remote.apply(validatable, response);
+                                        }
+                                    });
+
+                                    remote.prepare(validatable);
+
+                                    validatable.pending();
+                                }
+                            }, 1);
+                        }
+                        return true;
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    },
+                    prepare(validatable) {
+                    },
+                    apply(validatable, response) {
+                        if (response != "") {
+                            if (response.isValid)
+                                validatable.success(response.message);
+                            else
+                                validatable.error("remote", response.message);
+                        }
+                        else
+                            validatable.error("remote", "wrong response");
+                        RefreshSummary("ОшибкиНовогоЗаказчика", ["ЗаказчикНаименование", "ЗаказчикИНН", "ЗаказчикКПП", "ЗаказчикТелефон", "ЗаказчикEmail"]);
+                    }
+                }
+            },
+            "#заказчикТелефон": {
+                required: {
+                    trim: true,
+                    message: "Укажите телефон",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        const email = document.getElementById("заказчикEmail");
+                        return (this.element.value != null && this.element.value != "") || (email.value != null && email.value != "")
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+                length: {
+                    min: 10,
+                    trim: true,
+                    message: "Телефон должен содержать {0} знаков",
+                    formatMessage() {
+                        return this.message.replace("{0}", this.min);
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if (validatable.isValid) {
+                            var value = this.element.value.replace("+7", "").replaceAll("_", "").replaceAll(" ", "").trim();
+                            if (value != "")
+                                return (this.min == value.length);
+                            else
+                                return true;
+                        }
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            },
+            "#заказчикEmail": {
+                required: {
+                    trim: true,
+                    message: " и/или email",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        const phone = document.getElementById("заказчикТелефон");
+                        return (this.element.value != null && this.element.value != "") || (phone.value != null && phone.value != "")
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+                email: {
+                    trim: true,
+                    message: "Введите правильный email",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if (validatable.isValid) {
+                            var value = this.element.value.replaceAll("_", "").replaceAll(" ", "").trim();
+                            if (value != "")
+                                return /^$|^([\w\.\-]+)@@([\w\-]+)((\.(\w){2,3})+)$/.test(value);
+                            else
+                                return true;
+                        }
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            }
+        }
+    });
+
+    const lookupИзделие = document.getElementById('изделие');
+    const lookupЗаказчик = document.getElementById('заказчик');
+    const idНеисправность = document.getElementById("неисправность");
+    const idНеисправность2 = document.getElementById("неисправность2");
+    const idНеисправность3 = document.getElementById("неисправность3");
+    const idНеисправность4 = document.getElementById("неисправность4");
+    const idНеисправность5 = document.getElementById("неисправность5");
+    const lookupНеисправность = new MvcLookup(idНеисправность);
+    const lookupНеисправность2 = new MvcLookup(idНеисправность2);
+    const lookupНеисправность3 = new MvcLookup(idНеисправность3);
+    const lookupНеисправность4 = new MvcLookup(idНеисправность4);
+    const lookupНеисправность5 = new MvcLookup(idНеисправность5);
+
+    idНеисправность.addEventListener("lookupselect", e => {
+        $("#ГруппаНеисправность2").collapse(e.detail.data[0] != undefined ? "show" : "hide");
+        if (e.detail.data[0] == undefined)
+            lookupНеисправность2.select('', true);
+    });
+    idНеисправность2.addEventListener("lookupselect", e => {
+        $("#ГруппаНеисправность3").collapse(e.detail.data[0] != undefined ? "show" : "hide");
+        if (e.detail.data[0] == undefined)
+            lookupНеисправность3.select('', true);
+    });
+    idНеисправность3.addEventListener("lookupselect", e => {
+        $("#ГруппаНеисправность4").collapse(e.detail.data[0] != undefined ? "show" : "hide");
+        if (e.detail.data[0] == undefined)
+            lookupНеисправность4.select('', true);
+    });
+    idНеисправность4.addEventListener("lookupselect", e => {
+        $("#ГруппаНеисправность5").collapse(e.detail.data[0] != undefined ? "show" : "hide");
+        if (e.detail.data[0] == undefined)
+            lookupНеисправность5.select('', true);
+    });
+
+    lookupИзделие.addEventListener("lookupselect", e => {
+        if (e.detail.data != null && e.detail.data[0] != undefined)
+            RefreshImage(e.detail.data[0].Id);
+    });
+    lookupЗаказчик.addEventListener("lookupselect", e => {
+        if (e.detail.data != null && e.detail.data[0] != undefined)
+            RefreshSelect(e.detail.data[0].Id);
+    });
+    lookupЗаказчик.addEventListener("lookupadd", e => {
+        $("#заказчикНаименование").val(e.detail.lookup.search.value);
+        $("#новыйЗаказчик").modal("show");
+    });
+
+    $(document).ready(function () {
+        TypeRemontChange($("#типРемонта").val());
+        FillBrends();
+        FillMaster();
+        $("#main").submit(function (e) {
+            e.preventDefault();
+            var form_data = new FormData($("#main")[0]);
+            if (pageValidator.form()) {
+                $("#btnOk").attr("disabled", true);
+                $('.spinner-grow').removeClass('d-none');
+                $.ajax({
+                    type: "POST",
+                    url: "/ПриемВРемонт/CreateDoc",
+                    data: form_data,
+                    processData: false,
+                    contentType: false,
+                    async: true,
+                    cache: false,
+                    success: function (data) {
+                        printPage(data, false);
+                        document.location.href = "/";
+                        //var byteCharacters = atob(data);
+                        //var byteNumbers = new Array(byteCharacters.length);
+                        //for (var i = 0; i < byteCharacters.length; i++) {
+                        //    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                        //}
+                        //var byteArray = new Uint8Array(byteNumbers);
+                        //var file = new Blob([byteArray], { type: 'html/text' });
+                        ////var file = new Blob([byteArray], { type: 'application/pdf;base64' });
+                        //var fileURL = URL.createObjectURL(file);
+                        //printPage(fileURL);
+                    },
+                    error: function (jqXHR, exception) {
+                        var msg = '';
+                        if (jqXHR.status === 0) {
+                            msg = 'Not connect.\n Verify Network.';
+                        } else if (jqXHR.status == 404) {
+                            msg = 'Requested page not found. [404]';
+                        } else if (jqXHR.status == 500) {
+                            msg = 'Internal Server Error [500].';
+                        } else if (jqXHR.status == 501) {
+                            msg = 'Internal Server Error [501].';
+                            if (jqXHR.responseText === 'timeout')
+                                msg = 'Блокировка ожидания. Повторите попытку...';
+                            else
+                                msg = msg + '\n' + jqXHR.responseText;
+                        } else if (jqXHR.status == 502) {
+                            msg = 'Internal Server Error [502].';
+                            if (jqXHR.responseText != "")
+                                msg = msg + '\n' + jqXHR.responseText;
+                        } else if (jqXHR.status == 503) {
+                            msg = 'Internal Server Error [503].';
+                            if (jqXHR.responseText != "")
+                                msg = msg + '\n' + jqXHR.responseText;
+                        } else if (exception === 'parsererror') {
+                            msg = 'Requested JSON parse failed.';
+                        } else if (exception === 'timeout') {
+                            msg = 'Time out error.';
+                        } else if (exception === 'abort') {
+                            msg = 'Ajax request aborted.';
+                        } else {
+                            msg = 'Uncaught Error.\n' + jqXHR.responseText;
+                        }
+                        alert(msg);
+                        $('.spinner-grow').addClass('d-none');
+                        $("#btnOk").attr("disabled", false);
+                    }
+                });
+            }
+        });
+    });
+function TypeRemontChange(e) {
+    $("#collapseSellDate").collapse(e != 4 ? "hide" : "show");
+    $("#collapseCardАванс").collapse(e == 0 ? "show" : "hide");
+};
+
+function FillBrends() {
+    $.ajax({
+        url: "/ПриемВРемонт/ПолучитьПроизводителей",
+        type: "post",
+        datatype: "xml",
+        async: true,
+        cache: false,
+        success: function (data) {
+            $('#фПроизводитель').empty();
+            $('#фПроизводитель').append('<option selected> ЛЮБОЙ ПРОИЗВОДИТЕЛЬ </option>');
+            $.each(data, function (i) {
+                $('#фПроизводитель').append('<option> ' + data[i].наименование + '</option > ');
+            });
+        },
+        error: function (e, v, f) {
+            alert("ошибка выполнения!");
+        }
+    });
+};
+function FillMaster() {
+    $.ajax({
+        url: "/ПриемВРемонт/ПолучитьМастеров",
+        type: "post",
+        datatype: "xml",
+        async: true,
+        cache: false,
+        success: function (data) {
+            $('#мастер').empty();
+            $.each(data, function (i) {
+                $('#мастер').append('<option value="' + data[i].id + '" > ' + data[i].наименование + '</option > ');
+            });
+            $("#мастер")
+                .selectpicker('refresh');
+        },
+        error: function (e, v, f) {
+            alert("ошибка выполнения!");
+        }
+    });
+};
+function RefreshSelect(data) {
+    $.ajax({
+        url: "/ПриемВРемонт/ПолучитьТелефонEmail",
+        type: "post",
+        datatype: "xml",
+        data: { КонтрагентId: data },
+        async: true,
+        cache: false,
+        success: function (data) {
+            $('#телефон').find('option:not(.addItem, .divider)').remove();
+            $('#email').find('option:not(.addItem, .divider)').remove();
+            var phones = 0;
+            var emails = 0;
+            var selectName = "";
+            $.each(data, function (i) {
+                var addString = "";
+                if (data[i].таблица == "phones") {
+                    selectName = "#телефон";
+                    phones = phones + 1;
+                    if (phones == 1)
+                        addString = "selected='selected'";
+                }
+                else {
+                    selectName = "#email";
+                    emails = emails + 1;
+                    if (emails == 1)
+                        addString = "selected='selected'";
+                }
+
+                $(selectName).prepend('<option value="' + data[i].id + '" ' + addString + '> ' + data[i].наименование + '</option > ');
+            });
+            $("#телефон")
+                .selectpicker('refresh');
+            $("#email")
+                .selectpicker('refresh');
+        },
+        error: function (e, v, f) {
+            alert("ошибка выполнения!");
+        }
+    });
+};
+function RefreshImage(data) {
+    var parent = $('iframe#image').parent();
+    var newElement = "<iframe src='@Url.Action("GetImage","Раскладки", new { id = "_valueId_"  })#view=fitH' id='image' frameborder='0' allowfullscreen></iframe>";
+    newElement = newElement.replace("_valueId_", data);
+    $('iframe#image').remove();
+    parent.append(newElement);
+};
+function btnLoadClick() {
+    const lookupИзделие = new MvcLookup(document.getElementById('изделие'));
+    var изделиеId = lookupИзделие.selected[0].Id;
+    var formData = new FormData();
+    formData.append("НоменклатураId", изделиеId);
+    var input = document.getElementById("my-file-selector");
+    formData.append("source", input.files[0]);
+
+    $.ajax({
+        url: "/Раскладки/OnBtnLoad",
+        type: "post",
+        datatype: "xml",
+        data: formData,
+        processData: false,
+        contentType: false,
+        async: true,
+        cache: false,
+        success: function (data) {
+            RefreshImage(изделиеId);
+        },
+        error: function (e, v, f) {
+            alert("ошибка выполнения!");
+        },
+    });
+};
+function btnDeleteClick() {
+    $.ajax({
+        url: "/Раскладки/OnBtnDelete",
+        type: "post",
+        datatype: "xml",
+        data: { id: $('#НоменклатураId').val() },
+        async: true,
+        cache: false,
+        success: function (data) {
+            RefreshImage($('#НоменклатураId').val());
+        },
+        error: function (e, v, f) {
+            alert("ошибка выполнения!");
+        }
+    });
+};
+
+$('input[type=radio][name=ВидКонтрагента]').on('change', function () {
+    $("#инн").collapse($("input:radio[name=ВидКонтрагента]:checked").val() == 1 ? "hide" : "show");
+});
+
+function btnSaveClick() {
+    if (newZakValidator.form()) {
+        var proceed = true;
+        if ($("input:radio[name=ВидКонтрагента]:checked").val() == 2)
+            $.ajax({
+                url: "/ПриемВРемонт/ПроверкаИНН",
+                type: "post",
+                datatype: "xml",
+                data: {
+                    ИНН: $('#заказчикИНН').val(),
+                    КПП: $('#заказчикКПП').val(),
+                },
+                async: false,
+                cache: false,
+                success: function (data) {
+                    console.log(data);
+                    proceed = data.isValid;
+                },
+                error: function (e, v, f) {
+                    proceed = false;
+                    alert("ошибка выполнения проверки");
+                }
+            });
+        if (proceed)
+            $.ajax({
+                url: "/ПриемВРемонт/НовыйЗаказчик",
+                type: "post",
+                datatype: "xml",
+                data: {
+                    ВидКонтрагента: $("input:radio[name=ВидКонтрагента]:checked").val(),
+                    Наименование: $('#заказчикНаименование').val(),
+                    ИНН: $('#заказчикИНН').val(),
+                    КПП: $('#заказчикКПП').val(),
+                    Адрес: $('#заказчикАдрес').val(),
+                    Телефон: $('#заказчикТелефон').val(),
+                    Email: $('#заказчикEmail').val()
+                },
+                async: true,
+                cache: false,
+                success: function (data) {
+                    $("#новыйЗаказчик").modal("hide");
+                    var lookupЗ = new MvcLookup(lookupЗаказчик);
+                    lookupЗ.values[0].value = data.id;
+                    lookupЗ.reload();
+                },
+                error: function (e, v, f) {
+                    alert("ошибка выполнения: " + e.message + "!");
+                }
+            });
+    }
+}
+
+window.onbeforeunload = function (event) {
+    var message = 'Данные не сохранены. Уверены, что хотите уйти';
+    if (typeof event == 'undefined') {
+        event = window.event;
+    }
+    if (event) {
+        event.returnValue = message;
+    }
+    return message;
+};
+$(function () {
+    $("#btnOk").click(function () {
+        window.onbeforeunload = null;
+    });
+});
+
+</script>
+
+@*@section Scripts {
+        @{await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}*@

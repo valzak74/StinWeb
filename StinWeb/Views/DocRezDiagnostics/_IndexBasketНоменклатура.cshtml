@@ -1,0 +1,23 @@
+﻿@model List<StinWeb.Models.DataManager.BasketНоменклатура>
+@(Html
+    .Grid(Model)
+    .Build(columns =>
+    {
+        columns.Add(model => model.Номенклатура.Id).Titled("НоменклатураId").Hidden();
+        columns.Add(model => model.Номенклатура).Titled("Номенклатура").Hidden();
+        columns.Add(model => model.Номенклатура.Артикул).Titled("Артикул");
+        columns.Add(model => model.Номенклатура.Наименование).Titled("Наименование");
+        columns.Add(model => model.Quantity).Titled("Кол-во");
+    })
+    .Named("GridBasketНоменклатура")
+    .Id("basketНоменклатура")
+    .AppendCss("table-hover")
+    .Using(GridFilterMode.Header)
+    .Empty("No data found")
+    .Pageable(pager =>
+    {
+        pager.RowsPerPage = 4;
+    })
+    .Filterable()
+    .Sortable()
+)

@@ -1,0 +1,12 @@
+C:\Users\Валентин\source\repos\StinWeb\ExcelExtensions\bin\Release\net6.0\ExcelHelper.deps.json
+C:\Users\Валентин\source\repos\StinWeb\ExcelExtensions\bin\Release\net6.0\ExcelHelper.dll
+C:\Users\Валентин\source\repos\StinWeb\ExcelExtensions\bin\Release\net6.0\ExcelHelper.pdb
+C:\Users\Валентин\source\repos\StinWeb\ExcelExtensions\obj\Release\net6.0\ExcelHelper.csproj.AssemblyReference.cache
+C:\Users\Валентин\source\repos\StinWeb\ExcelExtensions\obj\Release\net6.0\ExcelHelper.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Валентин\source\repos\StinWeb\ExcelExtensions\obj\Release\net6.0\ExcelHelper.AssemblyInfoInputs.cache
+C:\Users\Валентин\source\repos\StinWeb\ExcelExtensions\obj\Release\net6.0\ExcelHelper.AssemblyInfo.cs
+C:\Users\Валентин\source\repos\StinWeb\ExcelExtensions\obj\Release\net6.0\ExcelHelper.csproj.CoreCompileInputs.cache
+C:\Users\Валентин\source\repos\StinWeb\ExcelExtensions\obj\Release\net6.0\ExcelHelper.dll
+C:\Users\Валентин\source\repos\StinWeb\ExcelExtensions\obj\Release\net6.0\refint\ExcelHelper.dll
+C:\Users\Валентин\source\repos\StinWeb\ExcelExtensions\obj\Release\net6.0\ExcelHelper.pdb
+C:\Users\Валентин\source\repos\StinWeb\ExcelExtensions\obj\Release\net6.0\ref\ExcelHelper.dll

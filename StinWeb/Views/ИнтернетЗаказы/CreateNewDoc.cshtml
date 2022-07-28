@@ -1,0 +1,758 @@
+﻿@using StinWeb.Models.DataManager.Документы
+@model StinWeb.Models.DataManager.Документы.ИнтернетЗаказ
+
+@{
+    ViewBag.Title = "Интернет-заказ";
+}
+
+<div>
+    @using (Html.BeginForm("CreateDoc", "ИнтернетЗаказы", FormMethod.Post, new { id = "docForm" }))
+    {
+        @Html.HiddenFor(m => m.DocId, new { id = "docId" })
+        @Html.HiddenFor(m => m.НомерДок, new { id = "номерДок" })
+        @Html.HiddenFor(m => m.ДатаДок, new { id = "docDate" })
+        @Html.HiddenFor(m => m.Пользователь.Id, new { id = "docUser" })
+        @Html.Hidden("глубинаКредита", 0, new { id = "глубинаКредита", onchange = "ГлубинаКредитаChanged()" })
+        @Html.Hidden("totalRows", 0)
+        <h4 id="номерДокумента" style="color:darkred;font-weight:bold;">Предварительная заявка № @Model.НомерДок от @Model.ДатаДок.ToString("dd.MM.yyyy")</h4>
+        <div class="card">
+            <div class="card-body row">
+                <button id="btnOk" class="btn btn-primary btn-sm" type="submit" asp-action="CreateDoc">
+                    <span class="spinner-grow spinner-grow-sm d-none" role="status" aria-hidden="true"></span>
+                    Провести
+                </button>
+                <div id="ОшибкиТабличнойЧасти" class="validation float-right text-danger" asp-validation-summary="All"></div>
+            </div>
+        </div>
+        <div class="accordion">
+            <div class="card">
+                <div class="card-header" id="headingФирма">
+                    <div class="d-flex">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseФирма" aria-expanded="false" aria-controls="collapseФирма">
+                                <div id="информацияФирма"></div>
+                            </button>
+                        </h5>
+                        <div id="ОшибкиФирма" class="validation float-right text-danger" asp-validation-summary="All"></div>
+                    </div>
+                </div>
+                <div id="collapseФирма" class="card-body collapse" aria-labelledby="headingФирма" data-parent=".accordion">
+                    <div class="input-group input-group-sm">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Фирма</span>
+                        </div>
+                        @Html.DropDownListFor(m => m.Фирма.Id, (SelectList)ViewBag.Фирмы, new { id = "выбФирма", @class = "form-control col-md-2" })
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header" id="headingСклад">
+                    <div class="d-flex">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseСклад" aria-expanded="false" aria-controls="collapseСклад">
+                                <div id="информацияСклад"></div>
+                            </button>
+                        </h5>
+                        <div id="ОшибкиСклад" class="validation float-right text-danger" asp-validation-summary="All"></div>
+                    </div>
+                </div>
+                <div id="collapseСклад" class="card-body collapse" aria-labelledby="headingСклад" data-parent=".accordion">
+                    <div class="input-group input-group-sm">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Склад</span>
+                        </div>
+                        @Html.DropDownListFor(m => m.Склад.Id, (SelectList)ViewBag.Склады, new { id = "выбСклад", @class = "form-control col-md-2" })
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header" id="headingКонтрагент">
+                    <div class="d-flex">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseКонтрагент" aria-expanded="true" aria-controls="collapseКонтрагент">
+                                <div id="информацияКонтрагент"></div>
+                            </button>
+                        </h5>
+                        <div id="ОшибкиКонтрагент" class="validation float-right text-danger" asp-validation-summary="All"></div>
+                    </div>
+                </div>
+                <div id="collapseКонтрагент" class="card-body collapse show" aria-labelledby="headingКонтрагент" data-parent=".accordion">
+                    <div class="col-6 float-left">
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Контрагент</span>
+                            </div>
+                            <div id="выбКонтрагент" class="mvc-lookup-sm" mvc-lookup-for="Контрагент.Id" url="ВыбратьКонтрагента" title="Контрагент" add-handler="true"></div>
+                        </div>
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Договор</span>
+                            </div>
+                            @Html.DropDownListFor(m => m.Договор.Id, Enumerable.Empty<SelectListItem>(), new { id = "выбДоговор", @class = "form-control" })
+                        </div>
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Дисконтная карта</span>
+                            </div>
+                            <div id="выбСкидКарта" class="mvc-lookup-sm" mvc-lookup-for="СкидКарта.Id" url="ВыбратьСкидКарту" title="Дисконтные карты" add-handler="true"></div>
+                        </div>
+                    </div>
+                    <div class="row col-6">
+                        <div id="инфоУсловия">
+                            @{await Html.RenderPartialAsync("_IndexИнфоУсловия", new StinWeb.Models.DataManager.Справочники.ИнфоУсловия());}
+                        </div>
+                        <div id="инфоДолги">
+                            @{await Html.RenderPartialAsync("_IndexИнфоДолги", new StinWeb.Models.DataManager.Справочники.Долги());}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header" id="headingДополнительно">
+                    <div class="d-flex">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseДополнительно" aria-expanded="false" aria-controls="collapseДополнительно">
+                                <div id="информацияДополнительно"></div>
+                            </button>
+                        </h5>
+                        <div id="ОшибкиДополнительно" class="validation float-right text-danger" asp-validation-summary="All"></div>
+                    </div>
+                </div>
+                <div id="collapseДополнительно" class="card-body row collapse" aria-labelledby="headingДополнительно" data-parent=".accordion">
+                    <div class="info-area">
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Дата отгрузки</span>
+                            </div>
+                            <input id="датаОтгрузки" asp-for="ДатаОтгрузки" type="date" class="form-control" onchange="GetInformationAdditional(); ГлубинаКредитаChanged();" onkeypress="if(event.keyCode==13){CheckDateYear(event);return false;}">
+                        </div>
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Дата оплаты</span>
+                            </div>
+                            <input id="датаОплаты" asp-for="ДатаОплаты" type="date" class="form-control" onchange="GetInformationAdditional()" onkeypress="if(event.keyCode==13){CheckDateYear(event);return false;}">
+                        </div>
+                    </div>
+                    <div class="info-area">
+                        <input type="radio" id="типСамовывоз" asp-for="Доставка" value="false" data-toggle="collapse" data-target="#самовывозDiv,#доставкаDiv" onclick="GetInformationAdditional(); RecalcSelectedTovar();" /> Самовывоз <br />
+                        <input type="radio" id="типДоставка" asp-for="Доставка" value="true" data-toggle="collapse" data-target="#самовывозDiv,#доставкаDiv" onclick="GetInformationAdditional(); RecalcSelectedTovar();" /> Доставка
+                        <div class="collapse @(Model.Доставка ? "" : "show")" id="самовывозDiv">
+                            <div class="input-group input-group-sm mb-2">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Место выдачи</span>
+                                </div>
+                                <select id="типСамовывоза" asp-for="ТипСамовывоза" asp-items="Html.GetEnumSelectList<ТипыСамовывоза>()" class="form-control" onchange="GetInformationAdditional()"></select>
+                            </div>
+                        </div>
+                        <div class="collapse @(Model.Доставка ? "show" : "")" id="доставкаDiv">
+                            <div class="input-group input-group-sm mb-2">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Тип доставки</span>
+                                </div>
+                                <select id="типДоставки" asp-for="ТипДоставки" asp-items="Html.GetEnumSelectList<ТипыДоставки>()" class="form-control" onchange="GetInformationAdditional(); RecalcSelectedTovar();"></select>
+                            </div>
+                            <div class="input-group input-group-sm mb-2">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Адрес доставки</span>
+                                </div>
+                                <input id="адресДоставки" asp-for="АдресДоставки" type="text" class="form-control">
+                            </div>
+                            <div class="input-group input-group-sm mb-2">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Номер маршрута</span>
+                                </div>
+                                <input id="номерМаршрута" asp-for="НомерМаршрута.Наименование" type="text" class="form-control" onchange="GetInformationAdditional()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <div class="input-group mb-2">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Комментарий</span>
+                    </div>
+                    <textarea asp-for="Комментарий" class="form-control" rows="3" id="комментарий"></textarea>
+                </div>
+            </div>
+        </div>
+        <nav>
+            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                <a class="nav-item nav-link active" id="nav-home-tab" data-toggle="tab" href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true">Табличная Часть</a>
+                <a class="nav-item nav-link" id="nav-free-tab" data-toggle="tab" href="#nav-free" role="tab" aria-controls="nav-free" aria-selected="false">Свободная Форма</a>
+            </div>
+        </nav>
+        <div class="tab-content" id="nav-tabContent">
+            <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+                @Html.AjaxGrid(Url.Action("IndexКорзина", "Home", new { sessionKey = "мнТабличнаяЧасть" }))
+            </div>
+            <div class="tab-pane fade" id="nav-free" role="tabpanel" aria-labelledby="nav-free-tab">
+                @Html.AjaxGrid(Url.Action("IndexКорзина", "Home", new { sessionKey = "мнСвободнаяЧасть" }))
+            </div>
+        </div>
+    }
+</div>
+        @await Component.InvokeAsync("ПодборНоменклатуры", new { sessionKey = "мнТабличнаяЧасть" })
+        <div id="containerИзменениеЦены">
+            @await Component.InvokeAsync("ИзменениеЦены")
+        </div>
+
+        <script>
+            var ВыбСклад = "";
+            var ВыбДоговор = "";
+            var ВыбСкидКарта = "";
+            var ВыбКонтрагент = "";
+            var TmpКонтрагент = "";
+            var ВыбДоставка = false;
+            var ВыбТипДоставка = -1;
+
+            const idФирма = document.getElementById("выбФирма");
+            const idСклад = document.getElementById("выбСклад");
+            const idКонтрагент = document.getElementById("выбКонтрагент");
+            const lookupКонтрагент = new MvcLookup(idКонтрагент);
+            const idДоговор = document.getElementById("выбДоговор");
+            const idСкидКарта = document.getElementById("выбСкидКарта");
+            const lookupСкидКарта = new MvcLookup(idСкидКарта);
+
+            var pageValidator = new Wellidate(document.querySelector("form"), {
+                summary: {
+                    container: "[data-valmsg-summary=true]",
+                    show(result) {
+                        if (this.container) {
+                            CreateManualSummary(result, "ОшибкиТабличнойЧасти", ["totalRows", "Комментарий"]);
+                            CreateManualSummary(result, "ОшибкиФирма", ["Фирма.Id"]);
+                            CreateManualSummary(result, "ОшибкиСклад", ["Склад.Id"]);
+                            CreateManualSummary(result, "ОшибкиКонтрагент", ["Контрагент.Id", "Договор.Id", "СкидКарта.Id"]);
+                            CreateManualSummary(result, "ОшибкиДополнительно", ["ДатаОтгрузки", "ДатаОплаты", "Доставка", "АдресДоставки", "НомерМаршрута.Наименование"]);
+                        }
+                    },
+                    reset() {
+                        this.show({
+                            isValid: true,
+                            invalid: [],
+                            valid: []
+                        });
+                    }
+                },
+                rules: {
+                    "#выбДоговор": {
+                        required: {
+                            trim: true,
+                            message: "Укажите Договор",
+                            formatMessage() {
+                                return this.message;
+                            },
+                            isEnabled() {
+                                return true;
+                            },
+                            isValid() {
+                                return (this.element.value != null && this.element.value != "");
+                            },
+                            normalizeValue() {
+                                return this.trim ? this.element.value.trim() : this.element.value;
+                            }
+                        },
+                    },
+                    "#адресДоставки": {
+                        required: {
+                            trim: true,
+                            message: "Укажите адрес доставки",
+                            formatMessage() {
+                                return this.message;
+                            },
+                            isEnabled() {
+                                return true;
+                            },
+                            isValid() {
+                                return true;
+                                //if (document.querySelector("input[name=Доставка]:checked").value == "true") {
+                                //    return (this.element.value != null && this.element.value != "");
+                                //} else {
+                                //    return true;
+                                //}
+                            },
+                            normalizeValue() {
+                                return this.trim ? this.element.value.trim() : this.element.value;
+                            }
+                        },
+                    },
+                    "#номерМаршрута": {
+                        required: {
+                            trim: true,
+                            message: "Укажите номер маршрута",
+                            formatMessage() {
+                                return this.message;
+                            },
+                            isEnabled() {
+                                return true;
+                            },
+                            isValid() {
+                                if (document.querySelector("input[name=Доставка]:checked").value == "true") {
+                                    return (this.element.value != null && this.element.value != "");
+                                } else {
+                                    return true;
+                                }
+                            },
+                            normalizeValue() {
+                                return this.trim ? this.element.value.trim() : this.element.value;
+                            }
+                        },
+                        length: {
+                            max: 10,
+                            trim: true,
+                            message: "Номер маршрута должен содержать не более {0} знаков",
+                            formatMessage() {
+                                return this.message.replace("{0}", this.max);
+                            },
+                            isEnabled() {
+                                return true;
+                            },
+                            isValid(validatable) {
+                                if (validatable.isValid) {
+                                    if (document.querySelector("input[name=Доставка]:checked").value == "true") {
+                                        const value = this.normalizeValue();
+                                        if (value != null && value != "") {
+                                            return value.length <= this.max;
+                                        } else
+                                            return true;
+                                    }
+                                    else
+                                        return true;
+                                }
+                            },
+                            normalizeValue() {
+                                return this.trim ? this.element.value.trim() : this.element.value;
+                            }
+                        },
+                    },
+                    "#totalRows": {
+                        required: {
+                            trim: true,
+                            message: "Документ не содержит строк",
+                            formatMessage() {
+                                return this.message;
+                            },
+                            isEnabled() {
+                                return true;
+                            },
+                            isValid() {
+                                return $("#мнТабличнаяЧасть table").find("tr.mvc-grid-empty-row").length == 0;
+                            },
+                            normalizeValue() {
+                                return this.trim ? this.element.value.trim() : this.element.value;
+                            }
+                        },
+                    },
+                    "#комментарий": {
+                        length: {
+                            max: 150,
+                            trim: true,
+                            message: "Комментарий должен содержать не более {0} знаков",
+                            formatMessage() {
+                                return this.message.replace("{0}", this.max);
+                            },
+                            isEnabled() {
+                                return true;
+                            },
+                            isValid() {
+                                const value = this.normalizeValue();
+                                if (value != null && value != "") {
+                                    return value.length <= this.max;
+                                } else
+                                    return true;
+                            },
+                            normalizeValue() {
+                                return this.trim ? this.element.value.trim() : this.element.value;
+                            }
+                        },
+                    },
+                }
+            });
+
+            $("#docForm").submit(function (e) {
+                e.preventDefault();
+                var form_data = new FormData($("#docForm")[0]);
+                if (pageValidator.form()) {
+                    $("#btnOk").attr("disabled", true);
+                    $('.spinner-grow').removeClass('d-none');
+                    $.ajax({
+                        type: "POST",
+                        url: "CreateDoc",
+                        data: form_data,
+                        processData: false,
+                        contentType: false,
+                        async: true,
+                        cache: false,
+                        success: function (data) {
+                            if (data == "OK")
+                                alert("Предварительная заявка " + $("#номерДок").val() + " успешно создана и проведена");
+                            window.onbeforeunload = null;
+                            document.location.href = "/";
+                        },
+                        error: function (jqXHR, exception) {
+                            var msg = '';
+                            if (jqXHR.status === 0) {
+                                msg = 'Not connect.\n Verify Network.';
+                            } else if (jqXHR.status == 404) {
+                                msg = 'Requested page not found. [404]';
+                            } else if (jqXHR.status == 500) {
+                                msg = 'Internal Server Error [500].';
+                            } else if (jqXHR.status == 501) {
+                                msg = 'Internal Server Error [501].';
+                                if (jqXHR.responseText === 'timeout')
+                                    msg = 'Блокировка ожидания. Повторите попытку...';
+                                else
+                                    msg = msg + '\n' + jqXHR.responseText;
+                            } else if (jqXHR.status == 502) {
+                                msg = 'Internal Server Error [502].';
+                                if (jqXHR.responseText != "")
+                                    msg = msg + '\n' + jqXHR.responseText;
+                            } else if (jqXHR.status == 503) {
+                                msg = 'Internal Server Error [503].';
+                                if (jqXHR.responseText != "")
+                                    msg = msg + '\n' + jqXHR.responseText;
+                            } else if (exception === 'parsererror') {
+                                msg = 'Requested JSON parse failed.';
+                            } else if (exception === 'timeout') {
+                                msg = 'Time out error.';
+                            } else if (exception === 'abort') {
+                                msg = 'Ajax request aborted.';
+                            } else {
+                                msg = 'Uncaught Error.\n' + jqXHR.responseText;
+                            }
+                            alert(msg);
+                            //$('.spinner-grow').addClass('d-none');
+                            //$("#btnOk").attr("disabled", false);
+                            window.onbeforeunload = null;
+                            document.location.href = "/";
+                        }
+                    });
+                }
+            });
+
+            idФирма.onchange = function () {
+                var obj = "Фирма: " + $("#выбФирма option:selected").text();
+                $("#информацияФирма").html(obj);
+                $.ajax({
+                    url: "ОбновитьНомерДокумента",
+                    type: "post",
+                    datatype: "xml",
+                    data: {
+                        номерДок: $("#номерДок").val(),
+                        фирмаId: $("#выбФирма").val(),
+                    },
+                    async: true,
+                    cache: false,
+                    success: function (obj) {
+                        if (obj) {  // check if data is defined
+                            $("#номерДок").val(obj);
+                            var info = "Предварительная заявка № " + obj + " от " + $("#docDate").val().slice(0, 10);
+                            $("#номерДокумента").html(info);
+                        }
+                    },
+                    error: function (e, v, f) {
+                        alert("ошибка выполнения!");
+                    }
+                });
+                RefreshСписокДоговоров();
+            }
+            $("#выбФирма").trigger("change");
+            idСклад.onchange = function () {
+                var obj = "Склад: " + $("#выбСклад option:selected").text();
+                $("#информацияСклад").html(obj);
+            }
+            $("#выбСклад").trigger("change");
+            function GetInformationCustomer() {
+                var info = "Контрагент: ";
+                var textCustomer = "<< НЕ ВЫБРАН >>";
+                if (lookupКонтрагент.selected[0] != undefined) {
+                    textCustomer = lookupКонтрагент.selected[0].Label;
+                }
+                info = info + textCustomer;
+                if ($("#выбДоговор").val() != undefined) {
+                    info = info + ", Договор: " + $("#выбДоговор option:selected").text();
+                }
+                if (lookupСкидКарта.selected[0] != undefined) {
+                    info = info + ", Карта: " + lookupСкидКарта.selected[0].Label;
+                }
+                $("#информацияКонтрагент").html(info);
+            }
+            function GetInformationAdditional() {
+                var info = "Дополнительно: отгрузка " + DateTimeToDDMMYYYY(new Date($("#датаОтгрузки").val())) + ", оплата " + DateTimeToDDMMYYYY(new Date($("#датаОплаты").val()));
+                if (document.querySelector("input[name=Доставка]:checked").value == "true") {
+                    info = info + ", доставка " + $("#типДоставки option:selected").text();
+                    if ($("#номерМаршрута").val() != undefined && $("#номерМаршрута").val() != "") {
+                        info = info + ", маршрут " + $("#номерМаршрута").val();
+                    }
+                }
+                else {
+                    info = info + ", самовывоз " + $("#типСамовывоза option:selected").text();
+                }
+                $("#информацияДополнительно").html(info);
+            }
+            function RefreshСписокДоговоров() {
+                if (TmpКонтрагент != undefined && TmpКонтрагент != "") {
+                    $.ajax({
+                        url: "СписокДоговоровКонтрагента",
+                        type: "post",
+                        datatype: "xml",
+                        data: { контрагентId: TmpКонтрагент, фирмаId: $("#выбФирма").val() },
+                        async: true,
+                        cache: false,
+                        success: function (data) {
+                            $("#выбДоговор").empty();
+                            if (data.length == 0) {
+                                $("#выбДоговор").append(
+                                    $('<option>', {
+                                        value: "new",
+                                        text: "Розничные условия"
+                                    }, '</option>'));
+                            }
+                            else if (data.length > 1) {
+                                $("#выбДоговор").append(
+                                    $('<option>', {
+                                        value: "",
+                                        text: "<< НЕ ВЫБРАН >>"
+                                    }, '</option>'));
+                            }
+                            $.each(data, function (index, item) {
+                                $("#выбДоговор").append(
+                                    $('<option>', {
+                                        value: item.value,
+                                        text: item.text
+                                    }, '</option>'));
+                            });
+                            $("#выбДоговор").trigger("change");
+                        },
+                        error: function (e, v, f) {
+                            alert("ошибка выполнения!");
+                        }
+                    });
+                }
+            }
+            idКонтрагент.addEventListener("lookupselect", e => {
+                var newКонтрагент = e.detail.data[0];
+                if (newКонтрагент != TmpКонтрагент) {
+                    if (newКонтрагент == undefined) {
+                        TmpКонтрагент = "";
+                    }
+                    else {
+                        TmpКонтрагент = newКонтрагент.Id;
+                    }
+                    RefreshСписокДоговоров();
+                }
+            });
+            lookupКонтрагент.search.addEventListener("change", () => {
+                var objSpinner = "<span class='spinner-border spinner-border-sm text-info' role='status' aria-hidden='true'></span>";
+                $("#инфоМенеджер").html(objSpinner);
+                $("#инфоГруппа").html(objSpinner);
+                $("#инфоОбщийДолг").html(objSpinner);
+                $("#инфоВтомЧисле").remove();
+                $("#инфоТекущийДолг").remove();
+                $("#инфоПросроченныйДолг").remove();
+                $.ajax({
+                    url: "ИнфоДолгиКонтрагента",
+                    type: "post",
+                    datatype: "xml",
+                    data: {
+                        контрагентId: (lookupКонтрагент.selected[0] != undefined ? lookupКонтрагент.selected[0].Id : undefined),
+                    },
+                    async: true,
+                    cache: false,
+                    success: function (obj) {
+                        if (obj) {  // check if data is defined
+                            $("#инфоДолги").html(obj);
+                        }
+                    },
+                    error: function (e, v, f) {
+                        alert("ошибка выполнения!");
+                    }
+                });
+            });
+            function ГлубинаКредитаChanged() {
+                var result = new Date($("#датаОтгрузки").val());
+                result.setDate(result.getDate() + Number($("#глубинаКредита").val()));
+                $("#датаОплаты").val(result.toISOString().slice(0, 10));
+                $("#датаОплаты").trigger("change");
+            }
+            function RecalcSelectedTovar() {
+                if ($("#выбДоговор").val() != undefined && $("#выбДоговор").val() != "") {
+                    const tabPart = document.querySelector("#мнТабличнаяЧасть");
+                    EnableBusyScreen(tabPart);
+                    $.ajax({
+                        url: "ПересчитатьСтрокиДокумента",
+                        type: "post",
+                        datatype: "xml",
+                        data: {
+                            key: "мнТабличнаяЧасть",
+                            договорId: $("#выбДоговор").val(),
+                            картаId: lookupСкидКарта.selected[0] == undefined ? "" : lookupСкидКарта.selected[0].Id,
+                            доставка: document.querySelector("input[name=Доставка]:checked").value == "true",
+                            типДоставки: $("#типДоставки").val()
+                        },
+                        async: true,
+                        cache: false,
+                        success: function () {
+                            new MvcGrid(tabPart).reload();
+                        },
+                        error: function (e, v, f) {
+                            alert("ошибка выполнения!");
+                        }
+                    });
+                }
+            }
+            idДоговор.onchange = function () {
+                GetInformationCustomer();
+                RecalcSelectedTovar();
+                $.ajax({
+                    url: "УсловияДоговораКонтрагента",
+                    type: "post",
+                    datatype: "xml",
+                    data: {
+                        договорId: $("#выбДоговор").val(),
+                        картаId: lookupСкидКарта.selected[0] == undefined ? "" : lookupСкидКарта.selected[0].Id
+                    },
+                    async: true,
+                    cache: false,
+                    success: function (obj) {
+                        if (obj) {  // check if data is defined
+                            $("#инфоУсловия").html(obj);
+                        }
+                    },
+                    error: function (e, v, f) {
+                        alert("ошибка выполнения!");
+                    }
+                });
+                $.ajax({
+                    url: "УсловияДоговораГлубинаОтсрочки",
+                    type: "post",
+                    datatype: "xml",
+                    data: {
+                        договорId: $("#выбДоговор").val(),
+                    },
+                    async: true,
+                    cache: false,
+                    success: function (obj) {
+                        $("#глубинаКредита").val(obj);
+                        $("#глубинаКредита").trigger("change");
+                    },
+                    error: function (e, v, f) {
+                        alert("ошибка выполнения!");
+                    }
+                });
+            };
+            idСкидКарта.addEventListener("lookupselect", e => {
+                $.ajax({
+                    url: "УсловияДоговораКонтрагента",
+                    type: "post",
+                    datatype: "xml",
+                    data: {
+                        договорId: $("#выбДоговор").val(),
+                        картаId: (e.detail.data[0] == undefined ? undefined : e.detail.data[0].Id)
+                    },
+                    async: true,
+                    cache: false,
+                    success: function (obj) {
+                        if (obj) {  // check if data is defined
+                            $("#инфоУсловия").html(obj);
+                        }
+                    },
+                    error: function (e, v, f) {
+                        alert("ошибка выполнения!");
+                    }
+                });
+            });
+            lookupСкидКарта.search.addEventListener("change", () => {
+                GetInformationCustomer();
+                RecalcSelectedTovar();
+            });
+
+            GetInformationCustomer();
+            GetInformationAdditional();
+
+            function ParamsChanged() {
+                var result = false;
+                if (ВыбСклад != $("#выбСклад").val()) {
+                    result = true;
+                    ВыбСклад = $("#выбСклад").val();
+                }
+                if (ВыбДоговор != $("#выбДоговор").val()) {
+                    result = true;
+                    ВыбДоговор = $("#выбДоговор").val();
+                }
+                if (lookupСкидКарта.selected[0] != undefined && ВыбСкидКарта != lookupСкидКарта.selected[0].Id) {
+                    result = true;
+                    ВыбСкидКарта = lookupСкидКарта.selected[0].Id;
+                }
+                if (lookupСкидКарта.selected[0] == undefined && ВыбСкидКарта != undefined) {
+                    result = true;
+                    ВыбСкидКарта = undefined;
+                }
+                var tmpДоставка = document.querySelector("input[name=Доставка]:checked").value == "true";
+                if (ВыбДоставка != tmpДоставка) {
+                    result = true;
+                    ВыбДоставка = document.querySelector("input[name=Доставка]:checked").value == "true";
+                }
+                if (ВыбДоставка && ВыбТипДоставка != $("#типДоставки").val()) {
+                    result = true;
+                    ВыбТипДоставка = $("#типДоставки").val();
+                }
+                return result;
+            }
+            function btnClickПодбор(key) {
+                if (key === "мнТабличнаяЧасть") {
+                    new MvcGrid(document.querySelector("#мнТабличнаяЧастьm")).reload();
+                    $("#подборНоменклатуры").modal("show");
+                    if (ParamsChanged()) {
+                        var q = "manual=1"
+                            + "&фирмаId=" + ($("#выбФирма").val() == undefined ? "" : $("#выбФирма").val().replaceAll(' ', '_'))
+                            + "&складId=" + ($("#выбСклад").val() == undefined ? "" : $("#выбСклад").val().replaceAll(' ', '_'))
+                            + "&договорId=" + ($("#выбДоговор").val() == undefined ? "" : $("#выбДоговор").val().replaceAll(' ', '_'))
+                            + "&картаId=" + (lookupСкидКарта.selected[0] == undefined ? "" : lookupСкидКарта.selected[0].Id.replaceAll(' ', '_'))
+                            + "&доставка=" + (document.querySelector("input[name=Доставка]:checked").value == "true")
+                            + "&типДоставки=" + ($("#типДоставки").val())
+                        element = document.querySelector("div[data-name='gridПодборНоменклатура']");
+                        if (element != undefined)
+                            new MvcGrid(element, { query: q, loadingDelay: 300 }).reload();
+                    }
+                }
+                else
+                    alert('Not Ready yet');
+            }
+
+            function ChooseNewCost(tovarId, cost) {
+                EnableBusyScreen();
+                $.get("CallChangeCost", {
+                    TovarId: tovarId.replaceAll(' ', '_'),
+                    текущееЗначение: cost.replaceAll(' ', '_'),
+                    договорId: ($("#выбДоговор").val() == undefined ? "" : $("#выбДоговор").val().replaceAll(' ', '_')),
+                    типЦен: ($("#инфоТипЦен").text() == undefined ? "" : $("#инфоТипЦен").text().replaceAll(' ', '_')),
+                    картаId: (lookupСкидКарта.selected[0] == undefined ? "" : lookupСкидКарта.selected[0].Id.replaceAll(' ', '_')),
+                    доставка: (document.querySelector("input[name=Доставка]:checked").value == "true"),
+                    типДоставки: ($("#типДоставки").val())
+                }, function (data) {
+                    DisableBusyScreen();
+                    $("#containerИзменениеЦены").html(data);
+                    $("#изменениеЦены").modal("show");
+                });
+            }
+            document.addEventListener("rowdblclick", e => {
+                if (e.detail.grid.element.id == "мнТабличнаяЧасть") {
+                    ChooseNewCost(e.detail.data["Id"], e.detail.data["Цена"]);
+                }
+            });
+
+            window.onbeforeunload = function (event) {
+                var message = 'Данные не сохранены. Уверены, что хотите уйти';
+                if (typeof event == 'undefined') {
+                    event = window.event;
+                }
+                if (event) {
+                    event.returnValue = message;
+                }
+                return message;
+            }
+
+        </script>

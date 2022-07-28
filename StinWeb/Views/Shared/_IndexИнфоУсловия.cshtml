@@ -1,0 +1,57 @@
+﻿@model StinWeb.Models.DataManager.Справочники.ИнфоУсловия
+
+<div class="info-area w-100">
+    <label>Тип цен:</label>
+    <label id="инфоТипЦен" class="font-weight-bold">@Model.ТипЦен</label><br />
+    @if (Model.ДисконтнаяКарта != null)
+    {
+        @if (Model.ДисконтнаяКарта.Закрыта)
+        {
+            <label>Карта заблокирована!!!</label><br />
+        }
+        <label>ФИО: </label><label>@Model.ДисконтнаяКарта.ФИО</label><br />
+        <label>Накоплено: </label><label>@Model.ДисконтнаяКарта.Накоплено.ToString("#,##0.00;-#,##0.00;0") руб.</label><br />
+        <label>Скидка: </label><label>@Model.ДисконтнаяКарта.ПроцентСкидки.ToString("#0.###;наценка #0.###;0") %</label><br />
+        @if (Model.ДисконтнаяКарта.СледующийПредел != 0)
+        {
+            @if (Model.ДисконтнаяКарта.СледующийПредел == -1)
+            {
+                <label>Максимальная скидка!</label><br />
+            }
+            else
+            {
+                <label>следующий рубеж: </label><label>@Model.ДисконтнаяКарта.СледующийПредел.ToString("#,##0.00;-#,##0.00;0") руб.</label><br />
+                <label>следующая скидка: </label><label>@Model.ДисконтнаяКарта.СледующаяСкидка.ToString("#0.###;наценка #0.###;0") %</label><br />
+            }
+        }
+    }
+    @if (Model.ПроцентСкидкиЗаОтсрочку != 0)
+    {
+        <p>@Model.ПроцентСкидкиЗаОтсрочку.ToString("#0.###;наценка за отсрочку #0.###;''") %</p>
+    }
+    @if (Model.ПроцентСкидкиЗаДоставку != 0)
+    {
+        <p>@Model.ПроцентСкидкиЗаДоставку.ToString("#0.###;наценка за доставку #0.###;''") %</p>
+    }
+    @if (Model.Экспорт)
+    {
+        <p class="font-weight-bold">Экспорт - НДС 0%</p>
+    }
+    @if (Model.УсловияБрендов.Count > 0)
+    {
+        @(Html
+            .Grid(Model.УсловияБрендов)
+            .Build(columns =>
+            {
+                columns.Add(model => model.Наименование).Titled("Бренд");
+                columns.Add(model => model.ПроцентСкидки).Titled("%").Css("text-right column-10").Formatted("{0:#0.###;наценка #0.###;''}");
+                if (Model.УсловияБрендов.Any(x => x.БеспОтсрочка == true))
+                    columns.Add(model => model.БеспОтсрочка).Titled("Б.Отср.").Css("text-center column-10").RenderedAs(m => m.БеспОтсрочка == true ? $"<img src=\"/images/Success.svg\" />" : null).Encoded(false);
+                if (Model.УсловияБрендов.Any(x => x.БеспДоставка == true))
+                    columns.Add(model => model.БеспДоставка).Titled("Б.Дост.").Css("text-center column-10").RenderedAs(m => m.БеспДоставка == true ? $"<img src=\"/images/Success.svg\" />" : null).Encoded(false);
+            })
+            .AppendCss("table-striped")
+            .Empty("No data found")
+        )
+    }
+</div>

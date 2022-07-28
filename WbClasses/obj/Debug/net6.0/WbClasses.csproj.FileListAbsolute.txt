@@ -1,0 +1,17 @@
+C:\Users\Валентин\source\repos\StinWeb\WbClasses\bin\Debug\net6.0\WbClasses.deps.json
+C:\Users\Валентин\source\repos\StinWeb\WbClasses\bin\Debug\net6.0\WbClasses.dll
+C:\Users\Валентин\source\repos\StinWeb\WbClasses\bin\Debug\net6.0\WbClasses.pdb
+C:\Users\Валентин\source\repos\StinWeb\WbClasses\bin\Debug\net6.0\HttpExtensions.dll
+C:\Users\Валентин\source\repos\StinWeb\WbClasses\bin\Debug\net6.0\JsonExtensions.dll
+C:\Users\Валентин\source\repos\StinWeb\WbClasses\bin\Debug\net6.0\HttpExtensions.pdb
+C:\Users\Валентин\source\repos\StinWeb\WbClasses\bin\Debug\net6.0\JsonExtensions.pdb
+C:\Users\Валентин\source\repos\StinWeb\WbClasses\obj\Debug\net6.0\WbClasses.csproj.AssemblyReference.cache
+C:\Users\Валентин\source\repos\StinWeb\WbClasses\obj\Debug\net6.0\WbClasses.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Валентин\source\repos\StinWeb\WbClasses\obj\Debug\net6.0\WbClasses.AssemblyInfoInputs.cache
+C:\Users\Валентин\source\repos\StinWeb\WbClasses\obj\Debug\net6.0\WbClasses.AssemblyInfo.cs
+C:\Users\Валентин\source\repos\StinWeb\WbClasses\obj\Debug\net6.0\WbClasses.csproj.CoreCompileInputs.cache
+C:\Users\Валентин\source\repos\StinWeb\WbClasses\obj\Debug\net6.0\WbClasses.csproj.CopyComplete
+C:\Users\Валентин\source\repos\StinWeb\WbClasses\obj\Debug\net6.0\WbClasses.dll
+C:\Users\Валентин\source\repos\StinWeb\WbClasses\obj\Debug\net6.0\refint\WbClasses.dll
+C:\Users\Валентин\source\repos\StinWeb\WbClasses\obj\Debug\net6.0\WbClasses.pdb
+C:\Users\Валентин\source\repos\StinWeb\WbClasses\obj\Debug\net6.0\ref\WbClasses.dll

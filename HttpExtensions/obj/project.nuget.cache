@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "VKi5nYU+KEgBusSFMSdJY/ShqOIfNK+ZZSd6VHJlirSWdAT9C6b+N5Kt2YMWTmgvhXSo6fKV7PQtk7u2Le3pzA==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Валентин\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\6.0.1\\microsoft.extensions.logging.abstractions.6.0.1.nupkg.sha512",
+    "C:\\Users\\Валентин\\.nuget\\packages\\newtonsoft.json\\13.0.1\\newtonsoft.json.13.0.1.nupkg.sha512"
+  ],
+  "logs": []
+}

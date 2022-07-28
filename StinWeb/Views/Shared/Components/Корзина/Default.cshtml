@@ -1,0 +1,40 @@
+﻿@model StinWeb.Models.DataManager.ДанныеКорзины
+@using StinWeb.Models.DataManager.Extensions
+
+@(Html
+    .Grid(Model.Данные)
+    .Build(columns =>
+    {
+    if (Model.modalVersion)
+        columns.Add(model => $"<img src=\"/images/Fail.svg\"" + (@Model.isReadOnly ? "" : "onclick=\"DeleteRow(this, '" + @Model.Key + "','" + model.Id + "');\"") + " />")
+            .Css("text-center column-10")
+            .Encoded(false);
+        else
+        columns.Add(model => $"<img src=\"/images/Fail.svg\"" + (@Model.isReadOnly ? "" : "onclick=\"DeleteRow(this, '" + @Model.Key + "','" + model.Id + "');\"") + " />")
+        .Titled(Html.Button("+", HtmlHelpers.ConditionalDisable(Model.isReadOnly, new { @type = "button", @class = "btn btn-sm btn-outline-success", onclick = "btnClickПодбор('" + @Model.Key + "');" })))
+        .Css("text-center column-10")
+        .Encoded(false);
+    columns.Add().RenderedAs((model, row) => row + 1).Titled("#").Css("text-center  column-10");
+    columns.Add(model => model.Id).Hidden();
+    if (Model.ShowАртикул)
+        columns.Add(model => model.Артикул).Titled("Артикул");
+    columns.Add(model => model.Наименование).Titled("Наименование");
+    if (Model.ShowПроизводитель)
+        columns.Add(model => model.Производитель).Titled("Производитель");
+    if (Model.ShowЕдиницы)
+    {
+        columns.Add(model => model.ЕдиницаId).Hidden();
+        columns.Add(model => model.ЕдиницаНаименование).Titled("Ед.");
+    }
+    columns.Add(model => model.Quantity).Titled("Кол-во").Css("column-10p").Css("text-right");
+    if (Model.ShowЦены)
+    {
+        columns.Add(model => model.Цена).Titled("Цена").Css("column-10p").Css("text-right").Formatted("{0:C}");
+        columns.Add(model => model.Сумма).Titled("Сумма").Css("column-10p").Css("text-right").Formatted("{0:C}");
+    }
+})
+    .Id(Model.Key + (Model.modalVersion ? "m" : ""))
+    .AppendCss("table-hover")
+    .Empty("No data found")
+    .UsingFooter(Model.ShowЦены ? "_IndexКорзинаFooter" : "")
+)

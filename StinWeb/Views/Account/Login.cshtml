@@ -1,0 +1,73 @@
+﻿@model StinWeb.Models.DataManager.Справочники.User
+
+<section id="cover">
+    <div id="cover-caption">
+        <div id="container" class="container">
+            <div class="row">
+                <div class="col-sm-10 offset-sm-1 text-center">
+                    <h1 class="display-4">Добро пожаловать</h1>
+                    <p>на web-площадку компании СТИН</p>
+                    <div class="info-form">
+                        <form id="main" asp-action="Login" asp-controller="Account" asp-anti-forgery="true" class="form-inline justify-content-center">
+                            <div class="form-group">
+                                <label class="sr-only">Пользователь:</label>
+                                <input id="name" name="Name" type="text" class="form-control" placeholder="Имя пользователя">
+                            </div>
+                            <div class="form-group">
+                                <label class="sr-only">Пароль</label>
+                                <input id="password" name="Password" type="password" class="form-control" placeholder="Пароль">
+                            </div>
+                            <button id="button" type="submit" class="btn btn-success ">
+                                <span class="spinner-grow spinner-grow-sm d-none" role="status" aria-hidden="true"></span>
+                                Поехали!
+                            </button>
+                            <div class="validation float-right text-danger" asp-validation-summary="ModelOnly"></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script>
+    var pageValidator = new Wellidate(document.querySelector("form"), {
+        rules: {
+            "#name": {
+                required: {
+                    trim: true,
+                    message: "Укажите имя пользователя",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        return this.element.value != null && this.element.value != "";
+                    },
+                }
+            },
+            "#password": {
+                required: {
+                    trim: true,
+                    message: "Укажите пароль",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        return this.element.value != null && this.element.value != "";
+                    },
+                }
+            }
+        }
+    });
+    $("#main").submit(function (e) {
+        if (pageValidator.form()) {
+            $("#button").attr("disabled", true);
+            $('.spinner-grow').removeClass('d-none');
+        }
+    });
+</script>

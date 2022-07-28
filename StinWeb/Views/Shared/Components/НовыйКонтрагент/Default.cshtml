@@ -1,0 +1,498 @@
+﻿
+<div class="modal fade" id="новыйКонтрагент" tabindex="-1" role="dialog" aria-labelledby="вводНовогоКонтрагента" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="вводНовогоКонтрагента">Новый контрагент</h5>
+                <div id="ОшибкиНовогоКонтрагента" class="validation float-right text-danger" asp-validation-summary="All"></div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @Html.Hidden("контрагентlookupId","", new { id = "контрагентlookupId" })
+                <div>
+                    <label>
+                        <input type="radio" name="ВидКонтрагента" id="видКонтрагента" value="1" checked="checked" aria-label="видКонтрагента" aria-describedby="radio-видКонтрагента">
+                        Физическое лицо
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        <input type="radio" name="ВидКонтрагента" id="видКонтрагента" value="2" aria-label="видКонтрагента" aria-describedby="radio-видКонтрагента">
+                        Юридическое лицо
+                    </label>
+                </div>
+                <div class="input-group input-group-sm mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Наименование</span>
+                    </div>
+                    <input id="контрагентНаименование" name="КонтрагентНаименование" type="text" class="form-control" aria-label="контрагентНаименование" aria-describedby="inputконтрагентНаименование">
+                </div>
+                <div class="row mb-3 collapse" id="инн">
+                    <div class="input-group input-group-sm col-6">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">ИНН</span>
+                        </div>
+                        <input id="контрагентИНН" name="КонтрагентИНН" type="text" class="form-control" data-inputmask="'mask': '9999999999[99]'" aria-label="контрагентИНН" aria-describedby="inputконтрагентИНН">
+                    </div>
+                    <div class="input-group input-group-sm col-6">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">КПП</span>
+                        </div>
+                        <input id="контрагентКПП" name="КонтрагентКПП" type="text" class="form-control" data-inputmask="'mask': '999999999'" aria-label="контрагентКПП" aria-describedby="inputконтрагентКПП">
+                    </div>
+                </div>
+                <div class="input-group input-group-sm mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Адрес</span>
+                    </div>
+                    <input id="контрагентАдрес" type="text" class="form-control" aria-label="контрагентАдрес" aria-describedby="inputконтрагентАдрес">
+                </div>
+                <div class="input-group input-group-sm mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Телефон</span>
+                    </div>
+                    <input id="контрагентТелефон" name="КонтрагентТелефон" type="text" class="form-control" data-inputmask="'mask': '+7 999 999 99 99'" aria-label="контрагентТелефон" aria-describedby="inputконтрагентТелефон">
+                </div>
+                <div class="input-group input-group-sm mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Email</span>
+                    </div>
+                    <input id="контрагентEmail" name="КонтрагентEmail" type="text" class="form-control" data-inputmask="'alias': 'email'" aria-label="контрагентEmail" aria-describedby="inputконтрагентEmail">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btnSave" class="btn btn-primary" onclick="btnНовыйКонтрагентSaveClick()">Сохранить</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var newCustomerValidator = new Wellidate(document.getElementById("новыйКонтрагент"), {
+        summary: {
+            container: "[data-valmsg-summary=true]",
+            show(result) {
+                if (this.container) {
+                    CreateManualSummary(result, "ОшибкиНовогоКонтрагента", ["КонтрагентНаименование", "КонтрагентИНН", "КонтрагентКПП", "КонтрагентТелефон", "КонтрагентEmail"]);
+                }
+            },
+            reset() {
+                this.show({
+                    isValid: true,
+                    invalid: [],
+                    valid: []
+                });
+            }
+        },
+        rules: {
+            "#контрагентНаименование": {
+                required: {
+                    trim: true,
+                    message: "Укажите наименование",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        return this.element.value != null && this.element.value != "";
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            },
+            "#контрагентИНН": {
+                required: {
+                    trim: true,
+                    message: "Укажите ИНН",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        if ($("input:radio[name=ВидКонтрагента]:checked").val() == 2)
+                            return this.element.value != null && this.element.value != "";
+                        else
+                            return true;
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+                length: {
+                    min: 10,
+                    max: 12,
+                    trim: true,
+                    message: "ИНН должен содержать {0} или {1} знаков",
+                    formatMessage() {
+                        return this.message.replace("{0}", this.min).replace("{1}", this.max);
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if (validatable.isValid) {
+                            var value = this.element.value.replace(/^_+|_+$/, "");
+                            if ($("input:radio[name=ВидКонтрагента]:checked").val() == 2)
+                                return value.length == this.min || value.length == this.max;
+                            else
+                                return true;
+                        }
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+                remote: {
+                    url: "ПроверкаДублированияИНН",
+                    additionalFields: "",
+                    type: "post",
+                    trim: true,
+                    message: "Please fix this field.",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if ($("input:radio[name=ВидКонтрагента]:checked").val() == 2 && ($('#контрагентИНН').val().length == 12 || ($('#контрагентИНН').val().length == 10 && $('#контрагентКПП').val().replaceAll("_", "").length == 9))) {
+                            const remote = this;
+
+                            if (remote.controller) {
+                                remote.controller.abort();
+                            }
+
+                            clearTimeout(remote.start);
+                            remote.start = setTimeout(() => {
+                                if (validatable.isValid) {
+                                    remote.controller = new AbortController();
+                                    var data = new FormData();
+                                    data.append("ИНН", $('#контрагентИНН').val());
+                                    data.append("КПП", $('#контрагентКПП').val());
+
+                                    fetch(remote.url, {
+                                        method: remote.type,
+                                        headers: { "X-Requested-With": "XMLHttpRequest" },
+                                        body: data
+                                    }).then(response => {
+                                        if (validatable.isValid && response.ok) {
+                                            return response.json();
+                                        }
+                                        return "";
+                                    }).then(response => {
+                                        if (response) {
+                                            remote.apply(validatable, response);
+                                        }
+                                    });
+
+                                    remote.prepare(validatable);
+
+                                    validatable.pending();
+                                }
+                            }, 1);
+                        }
+                        return true;
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    },
+                    prepare(validatable) {
+                    },
+                    apply(validatable, response) {
+                        if (response != "") {
+                            if (response.isValid)
+                                validatable.success(response.message);
+                            else
+                                validatable.error("remote", response.message);
+                        }
+                        else
+                            validatable.error("remote", "wrong response");
+                        RefreshSummary("ОшибкиНовогоКонтрагент", ["КонтрагентНаименование", "КонтрагентИНН", "КонтрагентКПП", "КонтрагентТелефон", "КонтрагентEmail"]);
+                    }
+                }
+            },
+            "#контрагентКПП": {
+                required: {
+                    max: 10,
+                    trim: true,
+                    message: "Укажите КПП",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if (validatable.isValid) {
+                            var value = this.element.value.replace(/^_+|_+$/, "");
+                            const инн = document.getElementById("контрагентИНН");
+                            var инн_value = инн.value.replace(/^_+|_+$/, "");
+                            return инн_value == "" || инн_value.length != this.max || (инн_value.length == this.max && value != "");
+                        }
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+                not_required: {
+                    max: 10,
+                    trim: true,
+                    message: "КПП должен быть пустым",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if (validatable.isValid) {
+                            var value = $("#контрагентКПП").val().replaceAll("_", "");
+                            const инн = $("#контрагентИНН").val().replaceAll("_", "");
+                            return инн == "" || value == "" || !(инн.length != this.max && value != "");
+                        }
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+                length: {
+                    min: 9,
+                    trim: true,
+                    message: "КПП должен содержать {0} знаков",
+                    formatMessage() {
+                        return this.message.replace("{0}", this.min);
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if (validatable.isValid) {
+                            var value = this.element.value.replace(/^_+|_+$/, "");
+                            if (value != "")
+                                return (this.min == value.length);
+                            else
+                                return true;
+                        }
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+                remote: {
+                    url: "ПроверкаДублированияИНН",
+                    additionalFields: "",
+                    type: "post",
+                    trim: true,
+                    message: "Please fix this field.",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if ($("input:radio[name=ВидКонтрагента]:checked").val() == 2 && ($('#контрагентИНН').val().replaceAll("_", "").length == 10 && $('#контрагентКПП').val().replaceAll("_", "").length == 9)) {
+                            const remote = this;
+
+                            if (remote.controller) {
+                                remote.controller.abort();
+                            }
+
+                            clearTimeout(remote.start);
+                            remote.start = setTimeout(() => {
+                                if (validatable.isValid) {
+                                    remote.controller = new AbortController();
+                                    var data = new FormData();
+                                    data.append("ИНН", $('#контрагентИНН').val());
+                                    data.append("КПП", $('#контрагентКПП').val());
+
+                                    fetch(remote.url, {
+                                        method: remote.type,
+                                        headers: { "X-Requested-With": "XMLHttpRequest" },
+                                        body: data
+                                    }).then(response => {
+                                        if (validatable.isValid && response.ok) {
+                                            return response.json();
+                                        }
+                                        return "";
+                                    }).then(response => {
+                                        if (response) {
+                                            remote.apply(validatable, response);
+                                        }
+                                    });
+
+                                    remote.prepare(validatable);
+
+                                    validatable.pending();
+                                }
+                            }, 1);
+                        }
+                        return true;
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    },
+                    prepare(validatable) {
+                    },
+                    apply(validatable, response) {
+                        if (response != "") {
+                            if (response.isValid)
+                                validatable.success(response.message);
+                            else
+                                validatable.error("remote", response.message);
+                        }
+                        else
+                            validatable.error("remote", "wrong response");
+                        RefreshSummary("ОшибкиНовогоКонтрагента", ["КонтрагентНаименование", "КонтрагентИНН", "КонтрагентКПП", "КонтрагентТелефон", "КонтрагентEmail"]);
+                    }
+                }
+            },
+            "#контрагентТелефон": {
+                required: {
+                    trim: true,
+                    message: "Укажите телефон",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        const email = document.getElementById("контрагентEmail");
+                        return (this.element.value != null && this.element.value != "") || (email.value != null && email.value != "")
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+                length: {
+                    min: 10,
+                    trim: true,
+                    message: "Телефон должен содержать {0} знаков",
+                    formatMessage() {
+                        return this.message.replace("{0}", this.min);
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if (validatable.isValid) {
+                            var value = this.element.value.replace("+7", "").replaceAll("_", "").replaceAll(" ", "").trim();
+                            if (value != "")
+                                return (this.min == value.length);
+                            else
+                                return true;
+                        }
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            },
+            "#контрагентEmail": {
+                required: {
+                    trim: true,
+                    message: " и/или email",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        const phone = document.getElementById("контрагентТелефон");
+                        return (this.element.value != null && this.element.value != "") || (phone.value != null && phone.value != "")
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+                email: {
+                    trim: true,
+                    message: "Введите правильный email",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if (validatable.isValid) {
+                            var value = this.element.value.replaceAll("_", "").replaceAll(" ", "").trim();
+                            if (value != "")
+                                return /^$|^([\w\.\-]+)@@([\w\-]+)((\.(\w){2,3})+)$/.test(value);
+                            else
+                                return true;
+                        }
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            }
+        }
+    });
+    $('input[type=radio][name=ВидКонтрагента]').on('change', function () {
+        $("#инн").collapse($("input:radio[name=ВидКонтрагента]:checked").val() == 1 ? "hide" : "show");
+    });
+    function btnНовыйКонтрагентSaveClick() {
+        if (newCustomerValidator.form()) {
+            var proceed = true;
+            if ($("input:radio[name=ВидКонтрагента]:checked").val() == 2)
+                $.ajax({
+                    url: "ПроверкаДублированияИНН",
+                    type: "post",
+                    datatype: "xml",
+                    data: {
+                        ИНН: $('#контрагентИНН').val(),
+                        КПП: $('#контрагентКПП').val(),
+                    },
+                    async: false,
+                    cache: false,
+                    success: function (data) {
+                        proceed = data.isValid;
+                    },
+                    error: function (e, v, f) {
+                        proceed = false;
+                        alert("ошибка выполнения проверки");
+                    }
+                });
+            if (proceed)
+                $.ajax({
+                    url: "НовыйКонтрагент",
+                    type: "post",
+                    datatype: "xml",
+                    data: {
+                        ВидКонтрагента: $("input:radio[name=ВидКонтрагента]:checked").val(),
+                        Наименование: $('#контрагентНаименование').val(),
+                        ИНН: $('#контрагентИНН').val(),
+                        КПП: $('#контрагентКПП').val(),
+                        Адрес: $('#контрагентАдрес').val(),
+                        Телефон: $('#контрагентТелефон').val(),
+                        Email: $('#контрагентEmail').val()
+                    },
+                    async: true,
+                    cache: false,
+                    success: function (data) {
+                        var elementId = $("#контрагентlookupId").val();
+                        var lookup = new MvcLookup(document.getElementById(elementId));
+                        lookup.values[0].value = data.id;
+                        lookup.reload();
+                        $("#новыйКонтрагент").modal("hide");
+                    },
+                    error: function (e, v, f) {
+                        alert("ошибка выполнения: " + e.message + "!");
+                    }
+                });
+        }
+    }
+
+</script>

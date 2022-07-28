@@ -1,0 +1,254 @@
+﻿@model string
+
+<div class="modal fade" id="подборНоменклатуры" tabindex="-1" role="dialog" aria-labelledby="формаПодборНоменклатуры" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 95%!important;" role="document" id="modalWindow">
+        <div class="modal-content">
+            <div class="modal-header" style="height: 65px;">
+                <div>
+                    <div class="custom-control custom-radio">
+                        <input type="radio" id="customRadio1" name="визуализация" value="таблица" class="custom-control-input" data-toggle="collapse" data-target="#tableview,#treeview" checked>
+                        <label class="custom-control-label" for="customRadio1">таблица</label>
+                    </div>
+                    <div class="custom-control custom-radio">
+                        <input type="radio" id="customRadio2" name="визуализация" value="дерево" class="custom-control-input" data-toggle="collapse" data-target="#tableview,#treeview">
+                        <label class="custom-control-label" for="customRadio2">дерево</label>
+                    </div>
+                </div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="height: 630px;">
+                <div id="body" class="row splitter_container">
+                    <div id="подборWindow">
+                        <div style="padding: 10px 10px; overflow: auto; height:430px;">
+                            <input id="fastSearch" class="form-control-sm mb-1" placeholder="быстрый поиск..." type="text" autocomplete="off" />
+                            <div class="collapse show" id="tableview">
+                                @Html.AjaxGrid(Url.Action("IndexНоменклатура", "ПодборНоменклатуры"))
+                            </div>
+                            <div class="collapse" id="treeview">
+                                <div id='tree'></div>
+                            </div>
+                        </div>
+                        <div style="padding: 10px 10px; overflow: auto; height:150px;">
+                            @Html.AjaxGrid(Url.Action("IndexКорзина", "Home", new { sessionKey = Model, modal = true }))
+                        </div>
+                    </div>
+                    <div id="инфоНоменклатуры">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="выборКоличества" class="modal fade" data-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="alertdialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span id="новыйТовар">Новый товар</span>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input id="Id" type="hidden" />
+                <input id="Descr" type="hidden" />
+                <input id="Artikl" type="hidden" />
+                <input id="Brend" type="hidden" />
+                <input id="Price" type="hidden" />
+                <div class="input-group input-group-sm">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Количество:</span>
+                    </div>
+                    <input id="вводКолВо" type="number" min="1" class="form-control w-25" aria-label="вводКоличества" aria-describedby="inputвводКоличества" onkeypress="if(event.keyCode==13){btnAdd();return false;}">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-info" type="button" onclick="btnAdd();">Ok</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var vertSplitter = $("#body").width($(window).width() * 0.93).split({
+    orientation: "vertical",
+    limit: 10,
+    position: "80%",
+});
+var splitter = $('#подборWindow').height(610).split({
+    orientation: 'horizontal',
+    limit: 10,
+    position: '79%', // if there is no percentage it interpret it as pixels
+    //onDrag: function (event) {
+    //    console.log(splitter.position());
+    //}
+});
+
+var delayTimer;
+function doSearch() {
+    const grid = new MvcGrid(document.querySelector("div[data-name='gridПодборНоменклатура']"));
+    grid.url.searchParams.set("search", document.getElementById("fastSearch").value);
+    grid.reload();
+}
+document.getElementById("fastSearch").addEventListener("input", function () {
+    clearTimeout(delayTimer);
+    delayTimer = setTimeout(function () {
+        doSearch();
+    }, 800); 
+}); 
+
+$("#подборНоменклатуры").on('keydown', function (e) {
+    var key = e.which || e.keyCode;
+    if (!$("#fastSearch").is(":focus") && ((key >= 48 && key <= 90) || (key >= 96 && key <= 111) || (key >= 188 && key <= 192) || (key >= 219 && key <= 222))) {
+        $("#fastSearch").val('');
+        $("#fastSearch").focus();
+    }
+});
+
+$('#tree').jstree({
+    "plugins": ["core", "search", "grid"],
+    "search": {
+        "case_insensitive": true,
+        "show_only_matches": true
+    },
+    "grid": {
+        "columns": [
+            { header: "Наименование" },
+            {
+                header: "Артикул", value: function (node) {
+                    if (node.data) {
+                        return node.data.artikl;
+                    }
+                }
+            },
+            {
+                header: "Производитель", value: function (node) {
+                    if (node.data) {
+                        return node.data.brend;
+                    }
+                }
+            },
+            {
+                header: "Цена", value: function (node) {
+                    if (node.data) {
+                        return node.data.price;
+                    }
+                }
+            }
+        ],
+    },
+    'core': {
+        //'animation': 0,
+        'data': {
+            'url': function (node) {
+                return "/ПодборНоменклатуры/GetTableLevel";
+            },
+            'data': function (node) {
+                return {
+                    'id': node.id,
+                };
+            }
+        }
+    }
+});
+
+$('#tree').on("dblclick.jstree", function (e) {
+    var instance = $.jstree.reference(this);
+    var node = instance.get_node(e.target);
+    if (node.icon == 'jstree-file') {
+        CallAdd(node.id, node.text, node.data.artikl, node.data.brend, node.data.price);
+    }
+});
+
+document.addEventListener("rowdblclick", e => {
+    if (e.detail.grid.name == "gridПодборНоменклатура") {
+        CallAdd(e.detail.data["Id"], e.detail.data["Наименование"], e.detail.data["Артикул"], e.detail.data["Производитель"], e.detail.data["Цена.Клиента"]);
+    }
+});
+
+function CallDelete(e, f) {
+    $.ajax({
+        url: "/ПодборНоменклатуры/УдалитьИзПодбора",
+        type: "post",
+        dataType: "xml",
+        data: { id: e },
+        complete: function () { new MvcGrid(document.querySelector(f)).reload(); }
+    });
+};
+
+function CallAdd(id, descr, artikl, brend, price) {
+    $("#Id").val(id);
+    $("#Descr").val(descr);
+    $("#Artikl").val(artikl);
+    $("#Brend").val(brend);
+    $("#Price").val(price);
+    $("#новыйТовар").html(descr);
+    $("#вводКолВо").val(1);
+    $("#выборКоличества").modal("show");
+};
+
+function btnAdd() {
+    $.ajax({
+        url: "/ПодборНоменклатуры/ДобавитьВПодбор",
+        type: "post",
+        dataType: "xml",
+        data: {
+            sessionKey: '@Html.Raw(Model)',
+            id: $("#Id").val(),
+            наименование: $("#Descr").val(),
+            артикул: $("#Artikl").val(),
+            производитель: $("#Brend").val(),
+            цена: $("#Price").val(),
+            количество: $("#вводКолВо").val()
+        },
+        async: true,
+        cache: false,
+        success: function () {
+            new MvcGrid(document.querySelector('#@Html.Raw(Model)' + 'm')).reload();
+        },
+    });
+    $("#выборКоличества").modal("hide");
+    $("#подборНоменклатуры").focus();
+};
+
+function getInfo(id) {
+    if (id != undefined) {
+        $.ajax({
+            url: "/ПодборНоменклатуры/ИнфоНоменклатуры",
+            type: "post",
+            datatype: "xml",
+            data: {
+                Id: id
+            },
+            async: true,
+            cache: false,
+            success: function (obj) {
+                if (obj) {  // check if data is defined
+                    $("#инфоНоменклатуры").html(obj);
+                }
+            },
+            error: function (e, v, f) {
+                $("#инфоНоменклатуры").html("");
+            }
+        });
+    }
+}
+
+$(document).on("mouseenter", "div[data-name='gridПодборНоменклатура'] tr", function () {
+    clearTimeout(delayTimer);
+    var row_id = $(this).attr("id");
+    delayTimer = setTimeout(function () {
+        getInfo(row_id);
+    }, 300); 
+});
+
+$('#подборНоменклатуры').on('shown', function () {
+    new MvcGrid(document.querySelector("#@Html.Raw(Model)" + "m")).reload();
+});
+$('#подборНоменклатуры').on('hidden.bs.modal', function () {
+    new MvcGrid(document.querySelector("#@Html.Raw(Model)")).reload();
+});
+SetControlActive("modal", "выборКоличества", "вводКолВо");
+</script>
+

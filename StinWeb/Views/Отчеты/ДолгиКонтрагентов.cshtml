@@ -1,0 +1,216 @@
+﻿@using System.Security.Claims
+
+@{
+    ViewBag.Title = "Отчет \"Долги Контрагентов\"";
+}
+<form id="main">
+    <div class="card accordion border-round" style="background-color: lightgray;">
+        <div id="headingSettings" class="card-header">
+            <div class="d-flex">
+                <h5 class="mb-0">
+                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseSettings" aria-expanded="true" aria-controls="collapseSettings">
+                        Параметры отчёта
+                    </button>
+                    <button id="btnOk" class="btn btn-primary" type="button" onclick="Execute();">
+                        <span class="spinner-grow spinner-grow-sm d-none" role="status" aria-hidden="true"></span>
+                        Сформировать
+                    </button>
+                </h5>
+                <div id="ошибкиОтчета" class="validation float-right text-danger" asp-validation-summary="All"></div>
+            </div>
+        </div>
+        <div id="collapseSettings" class="card-body collapse show" aria-labelledby="headingSettings" data-parent=".accordion">
+            @Html.Hidden("buttonClicked", "0")
+            <div class="row mb-2">
+                <div class="input-group input-group-sm col-6">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Менеджер</span>
+                    </div>
+                    <div id="выбМенеджер" class="mvc-lookup-sm" mvc-lookup="ManagerId" url="ДолгиКонтрагентов/ВыбратьМенеджера" title="Менеджер"></div>
+                </div>
+                <div class="input-group input-group-sm col-6">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Группировка по:</span>
+                    </div>
+                    @Html.DropDownList("группировки", (SelectList)ViewBag.ВариантыГруппировки, new { id = "выбГруппировка", @class = "form-control" })
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="input-group input-group-sm col-6">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Группа контрагентов</span>
+                    </div>
+                    <div id="выбГруппа" class="mvc-lookup-sm" mvc-lookup="CustomerGroupId" url="ДолгиКонтрагентов/ВыбратьГруппуКонтрагентов" title="Группа контрагентов"></div>
+                </div>
+                <div class="input-group input-group-sm col-6">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Сортировка:</span>
+                    </div>
+                    <select class="custom-select" id="типОтчета">
+                        @if ((new[] { "Бухгалтерия", "Закупки" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
+                        {
+                            <option value=0>Покупатели -> Поставщики</option>
+                            <option value=1 selected>Поставщики -> Покупатели</option>
+                        }
+                        else
+                        {
+                            <option value=0 selected>Покупатели -> Поставщики</option>
+                            <option value=1>Поставщики -> Покупатели</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="input-group input-group-sm col-6">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Контрагент</span>
+                    </div>
+                    <div id="выбКонтрагент" class="mvc-lookup-sm" mvc-lookup="Id" url="ДолгиКонтрагентов/ВыбратьКонтрагента" title="Контрагент"></div>
+                </div>
+                <div class="input-group input-group-sm col-6">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Сохранить в Excel:</span>
+                    </div>
+                    <select class="custom-select" id="saveExcel">
+                        <option value=1>Да</option>
+                        <option value=0 selected>Нет</option>
+                    </select>
+                </div>
+            </div>
+            <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" id="onlyMissed">
+                <label class="custom-control-label" for="onlyMissed">Просроченные</label>
+            </div>
+            <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" id="onlyFailedDocs">
+                <label class="custom-control-label" for="onlyFailedDocs">Долг не равен сумме найденных документов</label>
+            </div>
+
+        </div>
+    </div>
+    <div id="reportContainer">
+        @Html.AjaxGrid(Url.Action("IndexReport"))
+    </div>
+</form>
+<script>
+    var ВыбМенеджер = "";
+    var ВыбГруппа = "";
+    var ВыбКонтрагент = "";
+    const idМенеджер = document.getElementById("выбМенеджер");
+    const idГруппа = document.getElementById("выбГруппа");
+    const idКонтрагент = document.getElementById("выбКонтрагент");
+    idМенеджер.addEventListener("lookupselect", e => {
+        var newValue = e.detail.data[0];
+        if (newValue == undefined) {
+            ВыбМенеджер = "";
+        }
+        else {
+            ВыбМенеджер = newValue.Id;
+        }
+    });
+    idГруппа.addEventListener("lookupselect", e => {
+        var newValue = e.detail.data[0];
+        if (newValue == undefined) {
+            ВыбГруппа = "";
+        }
+        else {
+            ВыбГруппа = newValue.Id;
+        }
+    });
+    idКонтрагент.addEventListener("lookupselect", e => {
+        var newКонтрагент = e.detail.data[0];
+        if (newКонтрагент == undefined) {
+            ВыбКонтрагент = "";
+        }
+        else {
+            ВыбКонтрагент = newКонтрагент.Id;
+        }
+    });
+    function Execute() {
+        $("#buttonClicked").val("1");
+        $("#btnOk").attr("disabled", true);
+        $('.spinner-grow').removeClass('d-none');
+        $("#collapseSettings").collapse("hide");
+        var groupType = $("#выбГруппировка").val();
+        if ($("#saveExcel").val() == 1) {
+            $.ajax({
+                url: "ДолгиКонтрагентов/IndexReport",
+                type: "post",
+                datatype: "xml",
+                data: {
+                    manual: $("#buttonClicked").val(),
+                    sorting: $("#типОтчета").val(),
+                    needGroup: groupType != 3,
+                    needCustomer: groupType == 0 || groupType == 1 || groupType == 3,
+                    needDocument: groupType == 0,
+                    checkedManager: ВыбМенеджер != undefined || ВыбМенеджер != "" ? ВыбМенеджер.replaceAll(" ", "_") : "",
+                    checkedGroup: ВыбГруппа != undefined || ВыбГруппа != "" ? ВыбГруппа.replaceAll(" ", "_") : "",
+                    checkedCustomer: ВыбКонтрагент != undefined || ВыбКонтрагент != "" ? ВыбКонтрагент.replaceAll(" ", "_") : "",
+                    needExcel: true,
+                    onlyMissed: $("#onlyMissed").prop('checked'),
+                    onlyFailedDocs: $("#onlyFailedDocs").prop('checked'),
+                },
+                async: true,
+                cache: true,
+                xhrFields: {
+                    responseType: 'blob' // to avoid binary data being mangled on charset conversion
+                },
+                success: function (blob, status, xhr) {
+                    // check for a filename
+                    var filename = "";
+                    var disposition = xhr.getResponseHeader('Content-Disposition');
+                    if (disposition && disposition.indexOf('attachment') !== -1) {
+                        var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                        var matches = filenameRegex.exec(disposition);
+                        if (matches != null && matches[1]) filename = decodeURIComponent(matches[1].replace(/['"]/g, ''));
+                    }
+
+                    if (typeof window.navigator.msSaveBlob !== 'undefined') {
+                        // IE workaround for "HTML7007: One or more blob URLs were revoked by closing the blob for which they were created. These URLs will no longer resolve as the data backing the URL has been freed."
+                        window.navigator.msSaveBlob(blob, filename);
+                    } else {
+                        var URL = window.URL || window.webkitURL;
+                        var downloadUrl = URL.createObjectURL(blob);
+
+                        if (filename) {
+                            // use HTML5 a[download] attribute to specify filename
+                            var a = document.createElement("a");
+                            // safari doesn't support this yet
+                            if (typeof a.download === 'undefined') {
+                                window.location.href = downloadUrl;
+                            } else {
+                                a.href = downloadUrl;
+                                a.download = filename;
+                                document.body.appendChild(a);
+                                a.click();
+                            }
+                        } else {
+                            window.location.href = downloadUrl;
+                        }
+
+                        setTimeout(function () { URL.revokeObjectURL(downloadUrl); }, 100); // cleanup
+                    }
+                },
+                error: function (e, v, f) {
+                    alert("ошибка выполнения!");
+                }
+            });
+        }
+        new MvcGrid(document.querySelector("#reportData"), {
+            query: "manual=" + $("#buttonClicked").val() +
+                "&sorting=" + $("#типОтчета").val() +
+                (groupType != 3 ? "&needGroup=true" : "") +
+                (groupType == 0 || groupType == 1 || groupType == 3 ? "&needCustomer=true" : "") +
+                (groupType == 0 ? "&needDocument=true" : "") +
+                (ВыбМенеджер != undefined || ВыбМенеджер != "" ? "&checkedManager=" + ВыбМенеджер.replaceAll(" ","_") : "") +
+                (ВыбГруппа != undefined || ВыбГруппа != "" ? "&checkedGroup=" + ВыбГруппа.replaceAll(" ", "_") : "") +
+                (ВыбКонтрагент != undefined || ВыбКонтрагент != "" ? "&checkedCustomer=" + ВыбКонтрагент.replaceAll(" ", "_") : "") +
+                ($("#onlyMissed").prop('checked') ? "&onlyMissed=true" : "") +
+                ($("#onlyFailedDocs").prop('checked') ? "&onlyFailedDocs=true" : "")
+            ,
+            loadingDelay: 300
+        }).reload();
+        $('.spinner-grow').addClass('d-none');
+        $("#btnOk").attr("disabled", false);
+    }
+</script>

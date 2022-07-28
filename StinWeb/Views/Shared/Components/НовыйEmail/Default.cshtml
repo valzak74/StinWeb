@@ -1,0 +1,114 @@
+﻿<div class="modal fade" id="новыйEmail" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Новый адрес Email</h5>
+                <div id="ОшибкиНовогоEmail" class="validation float-right text-danger" asp-validation-summary="All"></div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @Html.Hidden("emaillookupId", "", new { id = "emaillookupId" })
+                @Html.Hidden("emailКонтрагентId", "", new { id = "emailКонтрагентId" })
+                <div class="input-group input-group-sm mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Email</span>
+                    </div>
+                    <input name="НовыйEmail" type="text" class="form-control" data-inputmask="'alias': 'email'">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btnSave" class="btn btn-primary" onclick="btnНовыйEmailSaveClick()">Сохранить</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var newEmailValidator = new Wellidate(document.getElementById("новыйEmail"), {
+        summary: {
+            container: "[data-valmsg-summary=true]",
+            show(result) {
+                if (this.container) {
+                    CreateManualSummary(result, "ОшибкиНовогоEmail", ["НовыйEmail"]);
+                }
+            },
+            reset() {
+                this.show({
+                    isValid: true,
+                    invalid: [],
+                    valid: []
+                });
+            }
+        },
+        rules: {
+            "[name='НовыйEmail']": {
+                required: {
+                    trim: true,
+                    message: "Укажите email адрес",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid() {
+                        return (this.element.value != null && this.element.value != "") 
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                },
+                email: {
+                    trim: true,
+                    message: "Введите правильный email",
+                    formatMessage() {
+                        return this.message;
+                    },
+                    isEnabled() {
+                        return true;
+                    },
+                    isValid(validatable) {
+                        if (validatable.isValid) {
+                            var value = this.element.value.replaceAll("_", "").replaceAll(" ", "").trim();
+                            if (value != "")
+                                return /^$|^([\w\.\-]+)@@([\w\-]+)((\.(\w){2,3})+)$/.test(value);
+                            else
+                                return true;
+                        }
+                    },
+                    normalizeValue() {
+                        return this.trim ? this.element.value.trim() : this.element.value;
+                    }
+                }
+            },
+        }
+    });
+    function btnНовыйEmailSaveClick() {
+        if (newEmailValidator.form()) {
+            $.ajax({
+                url: "НовыйEmail",
+                type: "post",
+                datatype: "xml",
+                data: {
+                    контрагентId: $("#emailКонтрагентId").val(),
+                    адресEmail: $("[name='НовыйEmail']").val(),
+                },
+                async: true,
+                cache: false,
+                success: function (data) {
+                    var elementId = $("#emaillookupId").val();
+                    var lookup = new MvcLookup(document.getElementById(elementId));
+                    lookup.values[0].value = data.id;
+                    lookup.reload();
+                    $("#новыйEmail").modal("hide");
+                },
+                error: function (e, v, f) {
+                    alert("ошибка выполнения: " + e.message + "!");
+                }
+            });
+        }
+    }
+</script>

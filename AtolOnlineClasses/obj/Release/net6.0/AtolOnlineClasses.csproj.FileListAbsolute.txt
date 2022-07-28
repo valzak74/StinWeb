@@ -1,0 +1,15 @@
+C:\Users\Валентин\source\repos\StinWeb\AtolOnlineClasses\bin\Release\net6.0\AtolOnlineClasses.deps.json
+C:\Users\Валентин\source\repos\StinWeb\AtolOnlineClasses\bin\Release\net6.0\AtolOnlineClasses.dll
+C:\Users\Валентин\source\repos\StinWeb\AtolOnlineClasses\bin\Release\net6.0\AtolOnlineClasses.pdb
+C:\Users\Валентин\source\repos\StinWeb\AtolOnlineClasses\bin\Release\net6.0\JsonExtensions.dll
+C:\Users\Валентин\source\repos\StinWeb\AtolOnlineClasses\bin\Release\net6.0\JsonExtensions.pdb
+C:\Users\Валентин\source\repos\StinWeb\AtolOnlineClasses\obj\Release\net6.0\AtolOnlineClasses.csproj.AssemblyReference.cache
+C:\Users\Валентин\source\repos\StinWeb\AtolOnlineClasses\obj\Release\net6.0\AtolOnlineClasses.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Валентин\source\repos\StinWeb\AtolOnlineClasses\obj\Release\net6.0\AtolOnlineClasses.AssemblyInfoInputs.cache
+C:\Users\Валентин\source\repos\StinWeb\AtolOnlineClasses\obj\Release\net6.0\AtolOnlineClasses.AssemblyInfo.cs
+C:\Users\Валентин\source\repos\StinWeb\AtolOnlineClasses\obj\Release\net6.0\AtolOnlineClasses.csproj.CoreCompileInputs.cache
+C:\Users\Валентин\source\repos\StinWeb\AtolOnlineClasses\obj\Release\net6.0\AtolOnlineClasses.csproj.CopyComplete
+C:\Users\Валентин\source\repos\StinWeb\AtolOnlineClasses\obj\Release\net6.0\AtolOnlineClasses.dll
+C:\Users\Валентин\source\repos\StinWeb\AtolOnlineClasses\obj\Release\net6.0\ref\AtolOnlineClasses.dll
+C:\Users\Валентин\source\repos\StinWeb\AtolOnlineClasses\obj\Release\net6.0\AtolOnlineClasses.pdb
+C:\Users\Валентин\source\repos\StinWeb\AtolOnlineClasses\obj\Release\net6.0\refint\AtolOnlineClasses.dll

@@ -1,0 +1,348 @@
+﻿@using StinWeb.Lookups
+@using StinWeb.Models.DataManager.Extensions
+@using StinWeb.Models.DataManager.Справочники
+
+@{
+    ViewBag.Title = "Обработка \"Матрица товаров для маркетплейс\"";
+}
+
+<ul class="nav nav-tabs" id="tabOptions" role="tablist">
+  <li class="nav-item">
+    <a class="nav-link active" id="tabExport" data-toggle="tab" href="#exportContent" role="tab" aria-controls="export" aria-selected="true">Выгрузить</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" id="tabImport" data-toggle="tab" href="#importContent" role="tab" aria-controls="import" aria-selected="false">Загрузить</a>
+  </li>
+</ul>
+<div class="tab-content" id="tabOptionsContent">
+  <div class="tab-pane fade show active" id="exportContent" role="tabpanel" aria-labelledby="tabExport">
+      <div class="card">
+        <div class="card-header">
+            <div class="input-group input-group-sm" id="inputGroupPeriod">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Период</span>
+                </div>
+                <div id="reportrange" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">
+                    <i class="fa fa-calendar"></i>&nbsp;
+                    <span></span> <i class="fa fa-caret-down"></i>
+                </div>
+            </div>
+        </div>
+        @Html.InputGroup("mb-2", "Фирма :", null, "lookup", "SelectedFirma", new TemplateLookup<Campaign>("lkFirma", "Выберите фирму", "Фирма", "MarketplaceMatrix/Firma"), new { id = "selectedFirma" })
+        @Html.InputGroup("mb-2", "Магазин маркетплейс :", null, "lookup", "CampaignId", new TemplateLookup<Campaign>("lkCampaign", "Выберите магазин", "Магазин маркетплейса", "MarketplaceMatrix/Campaign", new List<string> { "SelectedFirma" }), new { id = "campaignId" })
+        @Html.Button("<span class=\"spinner-grow spinner-grow-sm d-none\" role=\"status\" aria-hidden=\"true\" id=\"busy\"></span>Сформировать", HtmlHelpers.ConditionalDisable(true, new { id = "btnExport", @type = "button", @class = "btn btn-sm btn-primary", onclick = "btnExportClick();" }))
+      </div>
+  </div>
+  <div class="tab-pane fade" id="importContent" role="tabpanel" aria-labelledby="tabImport">
+      <div class="card">
+          <div class="card-header">
+            <div class="input-group input-group-sm mb-2">
+                <div class="custom-file">
+                    <input type="file" accept=".xls,.xlsx" class="custom-file-input" id="importFile">
+                    <label class="custom-file-label" for="importFile">Выберите файл</label>
+                </div>
+            </div>
+            @Html.Button("<span class=\"spinner-grow spinner-grow-sm d-none\" role=\"status\" aria-hidden=\"true\" id=\"busyImport\"></span>Загрузить", HtmlHelpers.ConditionalDisable(true, new { id = "btnImport", @type = "button", @class = "btn btn-sm btn-primary", onclick = "btnImportClick();" }))
+          </div>
+      </div>
+  </div>
+</div>
+
+<script>
+    $(function () {
+
+        var start = moment().startOf('month');
+        var end = moment();
+
+        function cb(start, end) {
+            $('#reportrange span').html(start.format('DD.MM.YYYY') + ' - ' + end.format('DD.MM.YYYY'));
+        }
+
+        $('#reportrange').daterangepicker({
+            "showDropdowns": true,
+            "locale": {
+                "format": "DD.MM.YYYY",
+                "separator": " - ",
+                "applyLabel": "Выбрать",
+                "cancelLabel": "Отмена",
+                "fromLabel": "от",
+                "toLabel": "до",
+                "customRangeLabel": "Произвольный",
+                "weekLabel": "W",
+                "daysOfWeek": [
+                    "Вс",
+                    "Пн",
+                    "Вт",
+                    "Ср",
+                    "Чт",
+                    "Пт",
+                    "Сб"
+                ],
+                "monthNames": [
+                    "Январь",
+                    "Февраль",
+                    "Март",
+                    "Апрель",
+                    "Май",
+                    "Июнь",
+                    "Июль",
+                    "Август",
+                    "Сентябрь",
+                    "Октябрь",
+                    "Ноябрь",
+                    "Декабрь"
+                ],
+                "firstDay": 1
+            },
+            startDate: start,
+            endDate: end,
+            ranges: {
+                'Текущая дата': [moment(), moment()],
+                'Текущая неделя': [moment().startOf('week').add(1, 'days'), moment()],
+                'Текущий месяц': [moment().startOf('month'), moment()],
+                'Прошлый месяц': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+            }
+        }, cb);
+
+        cb(start, end);
+    });
+    var idFirma = document.getElementById("selectedFirma");
+    var idCampaignId = document.getElementById("campaignId");
+    var lookupFirma = new MvcLookup(idFirma);
+    var lookupCampaignId = new MvcLookup(idCampaignId);
+    //lookupFirma.selectFirst(true);
+
+    idFirma.addEventListener("filterchange", e => {
+        e.detail.lookup.selectSingle(true);
+    });
+
+    idCampaignId.addEventListener("lookupselect", e => {
+        $("#btnExport").prop("disabled", !(e.detail.data && e.detail.data.length));
+    });
+
+    document.querySelector('.custom-file-input').addEventListener('change', function (e) {
+        var fileName = document.getElementById("importFile").files[0].name;
+        var nextSibling = e.target.nextElementSibling
+        nextSibling.innerText = fileName
+        $("#btnImport").prop("disabled", fileName == undefined);
+    });
+
+    function btnExportClick() {
+        $.ajax({
+            url: "MarketplaceMatrix/ExportData",
+            type: "post",
+            datatype: "xml",
+            data: {
+                firmaId: (lookupFirma.selected[0] != undefined ? lookupFirma.selected[0].Id : undefined),
+                marketId: (lookupCampaignId.selected[0] != undefined ? lookupCampaignId.selected[0].Id : undefined),
+                startDate: DateTimeToLocalISOString($("#reportrange").data("daterangepicker").startDate._d),
+                endDate: DateTimeToLocalISOString($("#reportrange").data("daterangepicker").endDate._d)
+            },
+            processData: true,
+            //contentType: false,
+            async: true,
+            cache: false,
+            //xhrFields: {
+            //    responseType: 'blob' // to avoid binary data being mangled on charset conversion
+            //},
+            xhr: function() {
+                var xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState == 2) {
+                        if (xhr.status == 200) {
+                            xhr.responseType = "blob";
+                        } else {
+                            xhr.responseType = "text";
+                        }
+                    }
+                };
+                return xhr;
+            },
+            beforeSend: function () {
+                $("#btnExport").attr("disabled", true);
+                $("#busy").removeClass('d-none');
+            },
+            complete: function () {
+                $("#busy").addClass('d-none');
+                $("#btnExport").attr("disabled", false);
+            },
+            success: function (blob, status, xhr) {
+                // check for a filename
+                var filename = "";
+                var disposition = xhr.getResponseHeader('Content-Disposition');
+                if (disposition && disposition.indexOf('attachment') !== -1) {
+                    var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                    var matches = filenameRegex.exec(disposition);
+                    if (matches != null && matches[1]) filename = decodeURIComponent(matches[1].replace(/['"]/g, ''));
+                }
+
+                if (typeof window.navigator.msSaveBlob !== 'undefined') {
+                    // IE workaround for "HTML7007: One or more blob URLs were revoked by closing the blob for which they were created. These URLs will no longer resolve as the data backing the URL has been freed."
+                    window.navigator.msSaveBlob(blob, filename);
+                } else {
+                    var URL = window.URL || window.webkitURL;
+                    var downloadUrl = URL.createObjectURL(blob);
+
+                    if (filename) {
+                        // use HTML5 a[download] attribute to specify filename
+                        var a = document.createElement("a");
+                        // safari doesn't support this yet
+                        if (typeof a.download === 'undefined') {
+                            window.location.href = downloadUrl;
+                        } else {
+                            a.href = downloadUrl;
+                            a.download = filename;
+                            document.body.appendChild(a);
+                            a.click();
+                        }
+                    } else {
+                        window.location.href = downloadUrl;
+                    }
+
+                    setTimeout(function () { URL.revokeObjectURL(downloadUrl); }, 100); // cleanup
+                }
+            },
+            error: function (jqXHR, exception, f) {
+                var msg = '';
+                if (jqXHR.status === 0) {
+                    msg = 'Not connect.\n Verify Network.';
+                } else if (jqXHR.status == 404) {
+                    msg = 'Requested page not found. [404]';
+                } else if (jqXHR.status == 500) {
+                    msg = 'Internal Server Error [500].';
+                } else if (jqXHR.status == 501) {
+                    msg = 'Internal Server Error [501].';
+                    if (jqXHR.responseText === 'timeout')
+                        msg = 'Блокировка ожидания. Повторите попытку...';
+                    else
+                        msg = msg + '\n' + jqXHR.responseText;
+                } else if (jqXHR.status == 502) {
+                    msg = 'Internal Server Error [502].';
+                    if (jqXHR.responseText != "")
+                        msg = msg + '\n' + jqXHR.responseText;
+                } else if (jqXHR.status == 503) {
+                    msg = 'Internal Server Error [503].';
+                    if (jqXHR.responseText != "")
+                        msg = msg + '\n' + jqXHR.responseText;
+                } else if (exception === 'parsererror') {
+                    msg = 'Requested JSON parse failed.';
+                } else if (exception === 'timeout') {
+                    msg = 'Time out error.';
+                } else if (exception === 'abort') {
+                    msg = 'Ajax request aborted.';
+                } else {
+                    msg = 'Uncaught Error.\n' + jqXHR.responseText;
+                }
+                alert(msg);
+            }
+        });
+    }
+    function btnImportClick() {
+        var formData = new FormData();
+        formData.append("sourceFile", document.getElementById("importFile").files[0]);
+        formData.append("sheetName", "");
+        $.ajax({
+            url: "MarketplaceMatrix/ImportData",
+            type: "post",
+            datatype: "xml",
+            data: formData,
+            processData: false,
+            contentType: false,
+            async: true,
+            cache: false,
+            //xhrFields: {
+            //    responseType: 'blob' // to avoid binary data being mangled on charset conversion
+            //},
+            xhr: function() {
+                var xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState == 2) {
+                        if (xhr.status == 200) {
+                            xhr.responseType = "blob";
+                        } else {
+                            xhr.responseType = "text";
+                        }
+                    }
+                };
+                return xhr;
+            },
+            beforeSend: function () {
+                $("#btnImport").attr("disabled", true);
+                $("#busyImport").removeClass('d-none');
+            },
+            complete: function () {
+                $("#busyImport").addClass('d-none');
+                $("#btnImport").attr("disabled", false);
+            },
+            success: function (blob, status, xhr) {
+                // check for a filename
+                var filename = "";
+                var disposition = xhr.getResponseHeader('Content-Disposition');
+                if (disposition && disposition.indexOf('attachment') !== -1) {
+                    var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                    var matches = filenameRegex.exec(disposition);
+                    if (matches != null && matches[1]) filename = decodeURIComponent(matches[1].replace(/['"]/g, ''));
+                }
+
+                if (typeof window.navigator.msSaveBlob !== 'undefined') {
+                    // IE workaround for "HTML7007: One or more blob URLs were revoked by closing the blob for which they were created. These URLs will no longer resolve as the data backing the URL has been freed."
+                    window.navigator.msSaveBlob(blob, filename);
+                } else {
+                    var URL = window.URL || window.webkitURL;
+                    var downloadUrl = URL.createObjectURL(blob);
+
+                    if (filename) {
+                        // use HTML5 a[download] attribute to specify filename
+                        var a = document.createElement("a");
+                        // safari doesn't support this yet
+                        if (typeof a.download === 'undefined') {
+                            window.location.href = downloadUrl;
+                        } else {
+                            a.href = downloadUrl;
+                            a.download = filename;
+                            document.body.appendChild(a);
+                            a.click();
+                        }
+                    } else {
+                        window.location.href = downloadUrl;
+                    }
+
+                    setTimeout(function () { URL.revokeObjectURL(downloadUrl); }, 100); // cleanup
+                }
+            },
+            error: function (jqXHR, exception, f) {
+                var msg = '';
+                if (jqXHR.status === 0) {
+                    msg = 'Not connect.\n Verify Network.';
+                } else if (jqXHR.status == 404) {
+                    msg = 'Requested page not found. [404]';
+                } else if (jqXHR.status == 500) {
+                    msg = 'Internal Server Error [500].';
+                } else if (jqXHR.status == 501) {
+                    msg = 'Internal Server Error [501].';
+                    if (jqXHR.responseText === 'timeout')
+                        msg = 'Блокировка ожидания. Повторите попытку...';
+                    else
+                        msg = msg + '\n' + jqXHR.responseText;
+                } else if (jqXHR.status == 502) {
+                    msg = 'Internal Server Error [502].';
+                    if (jqXHR.responseText != "")
+                        msg = msg + '\n' + jqXHR.responseText;
+                } else if (jqXHR.status == 503) {
+                    msg = 'Internal Server Error [503].';
+                    if (jqXHR.responseText != "")
+                        msg = msg + '\n' + jqXHR.responseText;
+                } else if (exception === 'parsererror') {
+                    msg = 'Requested JSON parse failed.';
+                } else if (exception === 'timeout') {
+                    msg = 'Time out error.';
+                } else if (exception === 'abort') {
+                    msg = 'Ajax request aborted.';
+                } else {
+                    msg = 'Uncaught Error.\n' + jqXHR.responseText;
+                }
+                alert(msg);
+            }
+        });
+    }
+</script>

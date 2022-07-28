@@ -1,0 +1,51 @@
+﻿@model IQueryable<StinWeb.Models.DataManager.Отчеты.ЗаказКлиента>
+@(Html
+    .Grid(Model)
+    .Build(columns =>
+    {
+        //columns.Add(model => $"<img src=\"/images/" + (model.Удален ? "blog-post-delete-icon-24.png" : (model.Проведен ? "page-accept-icon-24.png" : "page-icon-24.png")) + "\" />")
+        //.Css("text-center column-10")
+        //.Encoded(false);
+        columns.Add(model => model.Корень.IdDoc).Named("IdDoc").Titled("IdDoc").Hidden();
+        //columns.Add(model => model.ВидДокумента10).Titled("ВидДокумента10").Hidden();
+        //columns.Add(model => model.ВидДокумента36).Titled("ВидДокумента36").Hidden();
+        //columns.Add(model => model.Наименование).Titled("Наименование").Hidden();
+        columns.Add(model => model.НомерЗаказа).Titled("№");
+        columns.Add(model => model.ДатаЗаказа == DateTime.MinValue ? "" : model.ДатаЗаказа.ToShortDateString()).Titled("Дата");
+        columns.Add(model => model.Корень.Менеджер.Наименование).Titled("Менеджер");
+        columns.Add(model => model.Корень.Контрагент.Наименование).Titled("Контрагент");
+        //columns.Add(model => model.Корень.IdDoc).Titled("Id");
+        columns.Add(model => model.Корень.НомерДок).Titled("НомерДок");
+        columns.Add(model => model.Корень.ДатаДок).Titled("ДатаДок");
+        columns.Add(model => model.ЗаявкаНаСогласование).Titled("На Согласование").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+        columns.Add(model => model.ЗаявкаСогласованная).Titled("Согласовано").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+        columns.Add(model => model.ЗаявкаОдобренная).Titled("Одобрено").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+        //columns.Add(model => model.ОтменаЗаявки).Titled("Отмена").Filterable(false).Sortable(false);
+        columns.Add(model => model.СчетНаОплату).Titled("Счет").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+        columns.Add(model => model.ОтменаЗаявки ? $"<img src=\"/images/Fail.svg\" />" : "")
+                .Titled("Отмена")
+                .Css("text-center column-10")
+                .Encoded(false);
+        columns.Add(model => model.ОплатаОжидание).Titled("Ожидание оплаты").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+        //columns.Add(model => model.ОплатаОтменено > 0 && model.ОплатаВыполнено == 0).Titled("оплата отменена").Filterable(false).Sortable(false);
+        columns.Add(model => model.ОплатаОтменено > 0 && model.ОплатаВыполнено == 0 ? $"<img src=\"/images/Fail.svg\" />" : "")
+                .Titled("Оплата отменена")
+                .Css("text-center column-10")
+                .Encoded(false);
+        columns.Add(model => model.ОплатаВыполнено).Titled("Оплачено").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+        columns.Add(model => model.Набор).Titled("Набор").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+        columns.Add(model => model.ОтменаНабора).Titled("Отмена набора").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+        columns.Add(model => model.Продажа).Titled("Продажа").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+    })
+    .Named("gridОтчетИнтернетЗаявки")
+    .AppendCss("table-hover")
+    .RowAttributed(model => new { id = model.Корень.IdDoc, @class = model.ЗаявкаИсполненная ? "голубая" : model.ОтменаЗаявки ? "снят_с_производства" : model.ОплатаВыполнено > 0 ? "под_заказ" : null })
+    .Using(GridFilterMode.Header)
+    .Empty("No data found")
+    .Pageable(pager =>
+    {
+        pager.RowsPerPage = 25;
+    })
+    .Filterable()
+    .Sortable()
+)

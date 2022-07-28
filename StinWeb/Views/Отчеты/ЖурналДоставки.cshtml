@@ -1,0 +1,220 @@
+﻿
+@{
+    ViewBag.Title = "Журнал \"Доставка\"";
+}
+<div class="card border-round" style="background-color: lightgray;">
+    <div class="card-body">
+        <div class="float-left input-group input-group-sm col-6">
+            <div class="input-group-prepend">
+                <span class="input-group-text">На склад</span>
+            </div>
+            @Html.DropDownList("склады", (SelectList)ViewBag.Склады, new { id = "выбСклад", @class = "form-control" })
+        </div>
+        <div class="float-right">
+            <div class="custom-control custom-radio">
+                <input type="radio" id="общий" name="режим" value="0" class="custom-control-input" checked>
+                <label class="custom-control-label" for="общий">Общий</label>
+            </div>
+            <div class="custom-control custom-radio">
+                <input type="radio" id="поМастерской" name="режим" value="1" class="custom-control-input">
+                <label class="custom-control-label" for="поМастерской">По мастерской</label>
+            </div>
+            <div class="custom-control custom-radio">
+                <input type="radio" id="поТовару" name="режим" value="2" class="custom-control-input">
+                <label class="custom-control-label" for="поТовару">По товару</label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ul id="div-popover" style="display:none">
+    @Html.Hidden("idDoc", "")
+    <li><a id="опцияПросмотр" href="#">Просмотр документа</a></li>
+    <li><a id="опцияВводНаОсновании" href="#">Ввести на основании</a></li>
+</ul>
+
+@Html.AjaxGrid(Url.Action("Сформировать", "ЖурналДоставки", new { складId = (ViewBag.Склады as SelectList).SelectedValue.ToString() }))
+
+
+@Html.Hidden("идентификаторДокумента", "", new { id = "идентификаторДокумента" })
+@Html.Hidden("видДокумента", "", new { id = "видДокумента", option = "" })
+
+<div id="docContent"></div>
+
+<script>
+
+    var insidePopover = false;
+
+    function attachEvents(tr) {
+        $('.popover').on('mouseenter', function () {
+            insidePopover = true;
+        });
+        $('.popover').on('mouseleave', function () {
+            insidePopover = false;
+            $(tr).popover('hide');
+        });
+    }
+
+    //$('table').on('mouseenter', 'tr', function () {
+    //    var tr = $(this);
+    //    setTimeout(function () {
+    //        if (!insidePopover) {
+
+    //            $(tr).popover('show');
+    //            attachEvents(tr);
+    //        }
+    //    }, 200);
+    //});
+
+    $(document).on('mouseleave', 'tr', function () {
+        $(this).find('td').each(function () {
+            var popoverId = $(this).attr('aria-describedby');
+            if (popoverId != undefined && popoverId.startsWith('popover')) {
+                var td = $(this);
+                setTimeout(function () {
+                    if (!insidePopover) td.popover('hide');
+                }, 200);
+            }
+        });
+    });
+
+    function TablePopover(element, idDoc) {
+        if ($(element).attr('havePopover') != 'true') {
+            $(element).attr('havePopover', 'true');
+            $(element).popover({
+                html: true,
+                trigger: "manual",
+                placement: "bottom",
+                container: element,
+                content: function () {
+                    $("#idDoc").val(idDoc);
+                    return $("#div-popover").html();
+                }
+            });
+            $(element).on('shown.bs.popover', function () {
+                var popoverIdDoc = $('#idDoc').val();
+                $("#идентификаторДокумента").val(popoverIdDoc);
+                $('#опцияПросмотр').click(function () {
+                    $(element).popover('hide');
+                    ПолучитьВидДокумента10("Просмотр");
+                });
+                $('#опцияВводНаОсновании').click(function () {
+                    $(element).popover('hide');
+                    ПолучитьВидДокумента10("ВводНаОсновании");
+                    });
+            });
+            $(element).on('hidden.bs.popover', function () {
+                insidePopover = false;
+            });
+        }
+        setTimeout(function () {
+            if (!insidePopover) {
+                $(element).popover('show');
+                attachEvents(element);
+            }
+        }, 200);
+    }
+
+    $(function () {
+        setInterval(function () {
+            if (!$('body').find('.modal.show').length && !$('body').find('.popover.show').length) {
+                const gridЖурнал = new MvcGrid(document.querySelector("div[data-name='gridЖурналДоставки']"));
+                gridЖурнал.reload();
+            }
+        }, refreshTimeout);
+    });
+
+    document.addEventListener("rowdblclick", e => {
+        if (e.detail.grid.name == "gridЖурналДоставки") {
+            $("#идентификаторДокумента").val(e.detail.data["IdDoc"]);
+            ПолучитьВидДокумента10("Просмотр");
+        }
+    });
+    document.addEventListener("rowrightclick", e => {
+        if (e.detail.grid.name == "gridЖурналДоставки") {
+            TablePopover(e.detail.originalEvent.target, e.detail.data["IdDoc"]);
+        }
+    });
+
+    function ПолучитьВидДокумента10(option) {
+        var id = $("#идентификаторДокумента").val();
+        if (id != undefined) {
+            $.ajax({
+                url: "ПолучитьОбщиеПараметрыДокумента",
+                type: "post",
+                datatype: "xml",
+                data: {
+                    IdDoc: id
+                },
+                async: true,
+                cache: false,
+                success: function (obj) {
+                    if (obj) {  // check if data is defined
+                        $("#видДокумента").val(obj.видДокумента10);
+                        $("#видДокумента").attr("option", option);
+                        $("#видДокумента").trigger("change");
+                    }
+                },
+                error: function (e, v, f) {
+                    alert("ошибка выполнения!");
+                }
+            });
+        }
+    }
+
+    $("#выбСклад").on("change", function () {
+        const gridЖурнал = new MvcGrid(document.querySelector("div[data-name='gridЖурналДоставки']"));
+        gridЖурнал.url.searchParams.set("складId", $("#выбСклад").val());
+        gridЖурнал.reload();
+    });
+    $('input[type=radio][name=режим]').change(function () {
+        const gridЖурнал = new MvcGrid(document.querySelector("div[data-name='gridЖурналДоставки']"));
+        gridЖурнал.url.searchParams.set("режим", this.value);
+        gridЖурнал.reload();
+    });
+    $("#видДокумента").on("change", function () {
+        var ДокId = $("#идентификаторДокумента").val();
+        var ВидДок = $("#видДокумента").val();
+        var ДокОснованиеId = "";
+        var ВидДокОснование = "0";
+        var option = $("#формаДокумента").attr("option");
+        if (option == "Просмотр") {
+
+        } else { //Ввод на основании
+            if (ВидДок == "10080") {
+                //ПеремещениеИзделий
+                ВидДокОснование = ВидДок;
+                ДокОснованиеId = $("#идентификаторДокумента").val();
+                ВидДок = "9899";
+                ДокId = "";
+            }
+        }
+        EnableBusyScreen();
+        $.ajax({
+            url: "ПолучитьФормуДокумента",
+            type: "post",
+            datatype: "xml",
+            data: {
+                родитель: "gridЖурналДоставки",
+                просмотр: option == "Просмотр",
+                idDoc: ДокId,
+                видДок: ВидДок,
+                докОснованиеId: ДокОснованиеId,
+                видДокОснование: ВидДокОснование
+            },
+            async: true,
+            cache: false,
+            success: function (obj) {
+                if (obj) {  // check if data is defined
+                    $("#docContent").html(obj);
+                    $("#выбДокумент").modal("show");
+                }
+                DisableBusyScreen();
+            },
+            error: function (e, v, f) {
+                alert("ошибка выполнения!");
+            }
+        });
+    });
+
+</script>

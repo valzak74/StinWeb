@@ -1,0 +1,21 @@
+﻿@model IQueryable<StinWeb.Models.DataManager.Справочники.Номенклатура>
+
+@(Html
+    .Grid(Model)
+    .Build(columns =>
+    {
+        columns.Add(model => model.Id).Titled("Id").Hidden();
+        columns.Add(model => model.Артикул).Titled("Артикул");
+        columns.Add(model => model.Наименование).Titled("Наименование");
+    })
+    .Named("GridНоменклатура")
+    .AppendCss("table-hover")
+    .Using(GridFilterMode.Header)
+    .Empty("No data found")
+    .Pageable(pager =>
+    {
+        pager.RowsPerPage = 4;
+    })
+    .Filterable()
+    .Sortable()
+)

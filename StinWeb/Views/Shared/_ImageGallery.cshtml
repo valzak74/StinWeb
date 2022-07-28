@@ -1,0 +1,12 @@
+﻿@model IQueryable<StinClasses.Models.VzTovarImage>
+
+<div id="parameters">
+    <h5>@ViewBag.Название</h5>
+    <h6>@ViewBag.Характеристики</h6>
+</div>
+<div id="gallery">
+    @foreach (var item in Model)
+    {
+        <img class="img-thumbnail w-100" src="/ПодборНоменклатуры/GetImage?rowId=@item.RowId" />
+    }
+</div>

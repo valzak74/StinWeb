@@ -1,0 +1,141 @@
+﻿@model StinWeb.ViewComponents.ДанныеИзменениеЦены
+@using System.Globalization;
+
+<div id="изменениеЦены" class="modal fade" data-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="alertdialog">
+        <div class="modal-content">
+            @Html.HiddenFor(m => m.Номенклатура.Id, new { id = "выбНоменклатураЦенаId" })
+            @Html.HiddenFor(m => m.ТекущаяЦена, new { id = "текЦена" })
+            @Html.HiddenFor(m => m.РозничнаяЦена, new { id = "рознЦена" })
+            @Html.HiddenFor(m => m.ОсобаяЦена, new { id = "особЦена" })
+            @Html.HiddenFor(m => m.СПрознЦена, new { id = "спРознЦена" })
+            @Html.HiddenFor(m => m.ОптоваяЦена, new { id = "оптЦена" })
+            @Html.HiddenFor(m => m.СПоптЦена, new { id = "спОптЦена" })
+            @Html.HiddenFor(m => m.ПороговаяЦена, new { id = "порогЦена" })
+            <div class="modal-header">
+                <span>@Model.Номенклатура.Наименование</span>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group input-group-sm mb-2">
+                    @Html.DropDownListFor(m => m.Вариант, Model.Варианты, new { id = "выбВариант", @class = "form-control" })
+                </div>
+                <div id="ручноеИзменение" class="input-group input-group-sm mb-2 collapse">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Значение</span>
+                    </div>
+                    @Html.TextBox("ТекущаяЦена", string.Format(new CultureInfo("en-US"),"{0:0.00}",Model.ТекущаяЦена), new { id = "значениеЦена", type = "number", min = string.Format(new CultureInfo("en-US"),"{0:0.00}",Model.ПороговаяЦена), @class = "form-control" })
+                </div>
+                <div id="изменениеПроцент" class="input-group input-group-sm mb-2 collapse">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Процент</span>
+                    </div>
+                    <input id="значениеПроцент" type="number" value="0" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <label id="результатЦена" class="font-weight-bold"></label>
+                <button id="btnСохранитьЦену" type="button" class="btn btn-primary btn-sm">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var idВариант = document.getElementById("выбВариант");
+    var idзначениеЦена = document.getElementById("значениеЦена");
+    var idзначениеПроцент = document.getElementById("значениеПроцент");
+    var idbtnСохранитьЦену = document.getElementById("btnСохранитьЦену");
+    idВариант.onchange = function () {
+        var вариант = $("#выбВариант option:selected").val();
+        if (вариант == 7) {
+            $("#ручноеИзменение").collapse("show");
+            $("#изменениеПроцент").collapse("hide");
+        } else if (вариант == 8) {
+            $("#ручноеИзменение").collapse("hide");
+            $("#изменениеПроцент").collapse("show");
+        } else {
+            $("#ручноеИзменение").collapse("hide");
+            $("#изменениеПроцент").collapse("hide");
+        }
+        var типЦены = "";
+        switch (вариант) {
+            case "0":
+                типЦены = "текЦена";
+                break;
+            case "1":
+                типЦены = "рознЦена";
+                break;
+            case "2":
+                типЦены = "особЦена";
+                break;
+            case "3":
+                типЦены = "спРознЦена";
+                break;
+            case "4":
+                типЦены = "оптЦена";
+                break;
+            case "5":
+                типЦены = "спОптЦена";
+                break;
+            case "6":
+                типЦены = "порогЦена";
+                break;
+            default:
+                типЦены = "текЦена";
+                break;
+        }
+        var значение = new Number($("#" + типЦены).val().replace(",", ".").replace(" ", ""));
+        $("#результатЦена").text(formatter.format(значение));
+    }
+    idзначениеЦена.onchange = function () {
+        var значение = new Number($("#значениеЦена").val());
+        var порог = new Number($("#порогЦена").val().replace(",", ".").replace(" ", ""));
+        if (значение < порог) {
+            значение = порог;
+            $("#значениеЦена").val(значение);
+        }
+        $(this).val(parseFloat(значение).toFixed(2));
+        $("#результатЦена").text(formatter.format(значение));
+    }
+    idзначениеПроцент.onchange = function () {
+        var значение = new Number($("#значениеПроцент").val());
+        var значениеТекЦена = new Number($("#текЦена").val().replace(",", ".").replace(" ",""));
+        var значениеПорогЦена = new Number($("#порогЦена").val().replace(",", ".").replace(" ", ""));
+        if (значение != 0) {
+            значение = (1 + значение / 100) * значениеТекЦена;
+        } else {
+            значение = значениеТекЦена;
+        }
+        if (значение < значениеПорогЦена) {
+            значение = значениеПорогЦена;
+            $("#значениеЦена").val(значение);
+        }
+        $("#результатЦена").text(formatter.format(значение));
+    }
+    idbtnСохранитьЦену.onclick = function () {
+        $.ajax({
+            url: "ОбновитьЦенуВыбраннойНоменклатуры",
+            type: "post",
+            datatype: "xml",
+            data: {
+                key: $("#выбНоменклатураЦенаId").val(),
+                значение: $("#результатЦена").text(),
+            },
+            async: true,
+            cache: false,
+            success: function () {
+                $("#изменениеЦены").modal("hide");
+                new MvcGrid(document.querySelector("#мнТабличнаяЧасть")).reload();
+            },
+            error: function (e, v, f) {
+                alert("ошибка выполнения!");
+            }
+        });
+    }
+    SetControlActive("collapse", "ручноеИзменение", "значениеЦена");
+    SetControlActive("collapse", "изменениеПроцент", "значениеПроцент");
+    $("#выбВариант").trigger("change");
+</script>

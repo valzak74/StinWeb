@@ -1,0 +1,276 @@
+is_global = true
+build_property.TargetFramework = net6.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = StinWeb
+build_property.RootNamespace = StinWeb
+build_property.ProjectDir = C:\Users\Валентин\source\repos\StinWeb\StinWeb\
+build_property.RazorLangVersion = 6.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\Users\Валентин\source\repos\StinWeb\StinWeb
+build_property._RazorSourceGeneratorDebug = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Account/Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxMb2dpbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/DocRezDiagnostics/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRG9jUmV6RGlhZ25vc3RpY3NcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/DocRezDiagnostics/_IndexBasketНоменклатура.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRG9jUmV6RGlhZ25vc3RpY3NcX0luZGV4QmFza2V00J3QvtC80LXQvdC60LvQsNGC0YPRgNCwLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Home/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Home/Privacy.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Rg9972/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmc5OTcyXENyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Rg9972/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmc5OTcyXERlbGV0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Rg9972/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmc5OTcyXERldGFpbHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Rg9972/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmc5OTcyXEVkaXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Rg9972/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmc5OTcyXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Rg9972/IndexDiagnostics.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmc5OTcyXEluZGV4RGlhZ25vc3RpY3MuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Sc84/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2M4NFxDcmVhdGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Sc84/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2M4NFxEZWxldGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Sc84/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2M4NFxEZXRhaWxzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Sc84/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2M4NFxFZGl0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Sc84/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2M4NFxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/BasketНоменклатура/Default.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNcQmFza2V00J3QvtC80LXQvdC60LvQsNGC0YPRgNCwXERlZmF1bHQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/Rg9972Details/Default.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNcUmc5OTcyRGV0YWlsc1xEZWZhdWx0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/ВыборТипаРемонта/Default.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNc0JLRi9Cx0L7RgNCi0LjQv9Cw0KDQtdC80L7QvdGC0LBcRGVmYXVsdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/Документы/Default.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNc0JTQvtC60YPQvNC10L3RgtGLXERlZmF1bHQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/Документы/АктВыполненныхРабот.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNc0JTQvtC60YPQvNC10L3RgtGLXNCQ0LrRgtCS0YvQv9C+0LvQvdC10L3QvdGL0YXQoNCw0LHQvtGCLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/Документы/ИзменениеСтатуса.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNc0JTQvtC60YPQvNC10L3RgtGLXNCY0LfQvNC10L3QtdC90LjQtdCh0YLQsNGC0YPRgdCwLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/Документы/ПеремещениеИзделий.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNc0JTQvtC60YPQvNC10L3RgtGLXNCf0LXRgNC10LzQtdGJ0LXQvdC40LXQmNC30LTQtdC70LjQuS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/Документы/ПриемВРемонт.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNc0JTQvtC60YPQvNC10L3RgtGLXNCf0YDQuNC10LzQktCg0LXQvNC+0L3Rgi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/ЖурналОбщий/Default.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNc0JbRg9GA0L3QsNC70J7QsdGJ0LjQuVxEZWZhdWx0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/ИзменениеЦены/Default.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNc0JjQt9C80LXQvdC10L3QuNC10KbQtdC90YtcRGVmYXVsdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/Корзина/Default.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNc0JrQvtGA0LfQuNC90LBcRGVmYXVsdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/НовыйEmail/Default.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNc0J3QvtCy0YvQuUVtYWlsXERlZmF1bHQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/НовыйКонтрагент/Default.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNc0J3QvtCy0YvQudCa0L7QvdGC0YDQsNCz0LXQvdGCXERlZmF1bHQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/НовыйТелефон/Default.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNc0J3QvtCy0YvQudCi0LXQu9C10YTQvtC9XERlZmF1bHQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/Номенклатура/Default.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNc0J3QvtC80LXQvdC60LvQsNGC0YPRgNCwXERlZmF1bHQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/НоменклатураРаскладка/Default.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNc0J3QvtC80LXQvdC60LvQsNGC0YPRgNCw0KDQsNGB0LrQu9Cw0LTQutCwXERlZmF1bHQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/ПодборНоменклатуры/Default.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNc0J/QvtC00LHQvtGA0J3QvtC80LXQvdC60LvQsNGC0YPRgNGLXERlZmF1bHQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/ПодборРабот/Default.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNc0J/QvtC00LHQvtGA0KDQsNCx0L7RglxEZWZhdWx0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/Работы/Default.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNc0KDQsNCx0L7RgtGLXERlZmF1bHQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/СтруктураПодчиненности/Default.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNc0KHRgtGA0YPQutGC0YPRgNCw0J/QvtC00YfQuNC90LXQvdC90L7RgdGC0LhcRGVmYXVsdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/MvcGrid/_Grid.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXE12Y0dyaWRcX0dyaWQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/MvcGrid/_Pager.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXE12Y0dyaWRcX1BhZ2VyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/MvcLookup/_Dialog.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXE12Y0xvb2t1cFxfRGlhbG9nLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/_ExtendedPager.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9FeHRlbmRlZFBhZ2VyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/_ImageGallery.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9JbWFnZUdhbGxlcnkuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/_IndexИнфоДолги.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9JbmRleNCY0L3RhNC+0JTQvtC70LPQuC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/_IndexИнфоУсловия.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9JbmRleNCY0L3RhNC+0KPRgdC70L7QstC40Y8uY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/_IndexКорзина.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9JbmRleNCa0L7RgNC30LjQvdCwLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/_IndexКорзинаFooter.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9JbmRleNCa0L7RgNC30LjQvdCwRm9vdGVyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/_IndexНоменклатура.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9JbmRleNCd0L7QvNC10L3QutC70LDRgtGD0YDQsC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/_ValidationScriptsPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/_ДолгиКонтрагентовNested.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF/QlNC+0LvQs9C40JrQvtC90YLRgNCw0LPQtdC90YLQvtCyTmVzdGVkLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/_ЖурналДоставки.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF/QltGD0YDQvdCw0LvQlNC+0YHRgtCw0LLQutC4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/ИнтернетЗаказы/Console.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3Nc0JjQvdGC0LXRgNC90LXRgtCX0LDQutCw0LfRi1xDb25zb2xlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/ИнтернетЗаказы/CreateNewDoc.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3Nc0JjQvdGC0LXRgNC90LXRgtCX0LDQutCw0LfRi1xDcmVhdGVOZXdEb2MuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/ИнтернетЗаказы/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3Nc0JjQvdGC0LXRgNC90LXRgtCX0LDQutCw0LfRi1xJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/ИнтернетЗаказы/Orders.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3Nc0JjQvdGC0LXRgNC90LXRgtCX0LDQutCw0LfRi1xPcmRlcnMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/ИнтернетЗаказы/Zayavki.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3Nc0JjQvdGC0LXRgNC90LXRgtCX0LDQutCw0LfRi1xaYXlhdmtpLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Обработки/ЗагрузкаИзExcel.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3Nc0J7QsdGA0LDQsdC+0YLQutC4XNCX0LDQs9GA0YPQt9C60LDQmNC3RXhjZWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Отчеты/ДолгиКонтрагентов.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3Nc0J7RgtGH0LXRgtGLXNCU0L7Qu9Cz0LjQmtC+0L3RgtGA0LDQs9C10L3RgtC+0LIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Отчеты/ДолгиКонтрагентовФормаОтчета.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3Nc0J7RgtGH0LXRgtGLXNCU0L7Qu9Cz0LjQmtC+0L3RgtGA0LDQs9C10L3RgtC+0LLQpNC+0YDQvNCw0J7RgtGH0LXRgtCwLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Отчеты/Журнал.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3Nc0J7RgtGH0LXRgtGLXNCW0YPRgNC90LDQuy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Отчеты/ЖурналДоставки.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3Nc0J7RgtGH0LXRgtGLXNCW0YPRgNC90LDQu9CU0L7RgdGC0LDQstC60LguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/ПриемВРемонт/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3Nc0J/RgNC40LXQvNCS0KDQtdC80L7QvdGCXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Раскладки/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3Nc0KDQsNGB0LrQu9Cw0LTQutC4XEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 

@@ -1,0 +1,81 @@
+﻿@{
+    ViewBag.Title = "Раскладки";
+    <div id="mainPane" class="row splitter_container">
+        <div class="border-round">
+            @await Component.InvokeAsync("НоменклатураРаскладка")
+        </div>
+        <div id="rightPane" class="border-round">
+            <h3 id="НоменклатураId">не выбран</h3>
+            <div class="row">
+                <div class="col-2">
+                    <label class="btn btn-primary" for="my-file-selector">
+                        <input id="my-file-selector" type="file" style="display:none" onchange="btnLoadClick()">
+                        Загрузить
+                    </label>
+                </div>
+                <div class="col-8"></div>
+                <div class="col-2">
+                    <button id="btnDelete" class="btn btn-secondary" type="button" onclick="btnDeleteClick()">Удалить</button>
+                </div>
+            </div>
+            <div class="image-embed-container">
+                <iframe id="image" src="@Url.Action("GetImage","Раскладки", new { id = "" })#view=fitH" frameborder="0" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+    <script>
+        $("#rightPane").slimScroll({ height: '100%' });
+        var splitter = $('#mainPane').split({
+            orientation: 'vertical',
+            limit: 10,
+            position: '50%',
+        });
+
+        function RefreshImage(data) {
+            var parent = $('iframe#image').parent();
+            var newElement = "<iframe src='@Url.Action("GetImage","Раскладки", new { id = "_valueId_"  })#view=fitH' id='image' frameborder='0' allowfullscreen></iframe>";
+            newElement = newElement.replace("_valueId_", data);
+            $('iframe#image').remove();
+            parent.append(newElement);
+        };
+        function btnLoadClick() {
+            var formData = new FormData();
+            formData.append("НоменклатураId", $('#НоменклатураId').val());
+            var input = document.getElementById("my-file-selector");
+            formData.append("source", input.files[0]);
+
+            $.ajax({
+                url: "/Раскладки/OnBtnLoad",
+                type: "post",
+                datatype: "xml",
+                data: formData,
+                processData: false,
+                contentType: false,
+                async: true,
+                cache: false,
+                success: function (data) {
+                    RefreshImage($('#НоменклатураId').val());
+                },
+                error: function (e, v, f) {
+                    alert("ошибка выполнения!");
+                }
+        });
+        };
+        function btnDeleteClick() {
+            $.ajax({
+                url: "/Раскладки/OnBtnDelete",
+                type: "post",
+                datatype: "xml",
+                data: { id: $('#НоменклатураId').val() },
+                async: true,
+                cache: false,
+                success: function (data) {
+                    RefreshImage($('#НоменклатураId').val());
+                },
+                error: function (e, v, f) {
+                    alert("ошибка выполнения!");
+                }
+            });
+        };
+    </script>
+}

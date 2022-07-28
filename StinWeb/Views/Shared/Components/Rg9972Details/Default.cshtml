@@ -1,0 +1,23 @@
+﻿@model StinWeb.Models.DataManager.ПартииМастерской
+
+<h3>Подробности</h3>
+<table>
+    <tbody>
+        <tr>
+            <td><strong>Квитанция</strong></td>
+            <td><strong>@Model.Квитанция</strong></td>
+        </tr>
+        <tr>
+            <td>Изделие</td>
+            <td>@Model.Артикул @Model.Изделие</td>
+        </tr>
+        <tr>
+            <td>ТипРемонта</td>
+            <td>@Model.ТипРемонта</td>
+        </tr>
+        <tr>
+            <td>Заказчик</td>
+            <td>@Model.Заказчик</td>
+        </tr>
+    </tbody>
+</table>

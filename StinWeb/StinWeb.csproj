@@ -1,0 +1,63 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="DbEntities\**" />
+    <Compile Remove="wwwroot\dist\**" />
+    <Content Remove="DbEntities\**" />
+    <Content Remove="wwwroot\dist\**" />
+    <EmbeddedResource Remove="DbEntities\**" />
+    <EmbeddedResource Remove="wwwroot\dist\**" />
+    <None Remove="DbEntities\**" />
+    <None Remove="wwwroot\dist\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Models\Repository\not-found-image.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="bootstrap-select" Version="1.13.5" />
+    <PackageReference Include="inputmask" Version="5.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="6.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="6.0.5" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="NonFactors.Grid.Core.Mvc6" Version="6.2.2" />
+    <PackageReference Include="NonFactors.Lookup.Core.Mvc6" Version="5.1.2" />
+    <PackageReference Include="NPOI" Version="2.5.1" />
+    <PackageReference Include="PDFsharp-MigraDoc" Version="1.50.5147" />
+    <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\inputmask\bindings\inputmask.binding.js" />
+    <None Include="wwwroot\inputmask\inputmask.js" />
+    <None Include="wwwroot\inputmask\inputmask.min.js" />
+    <None Include="wwwroot\inputmask\jquery.inputmask.js" />
+    <None Include="wwwroot\inputmask\jquery.inputmask.min.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ExcelExtensions\ExcelHelper.csproj" />
+    <ProjectReference Include="..\HttpExtensions\HttpExtensions.csproj" />
+    <ProjectReference Include="..\OzonClasses\OzonClasses.csproj" />
+    <ProjectReference Include="..\StinClasses\StinClasses.csproj" />
+    <ProjectReference Include="..\YandexClasses\YandexClasses.csproj" />
+  </ItemGroup>
+
+</Project>

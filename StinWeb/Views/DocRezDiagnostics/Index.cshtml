@@ -1,0 +1,63 @@
+﻿@{
+    ViewBag.Title = "Диагностика";
+    <div id="mainPane" class="row splitter_container">
+        <div>
+            <div class="row">
+                <div class="col-md-6 border-round">
+                    @await Component.InvokeAsync("Rg9972Details", new { id = ViewBag.Квитанция })
+                </div>
+                <div class="col-6 border-round">
+                    @await Component.InvokeAsync("ВыборТипаРемонта")
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 border-round">
+                    @await Component.InvokeAsync("Номенклатура")
+                </div>
+                <div id="divOne" class="col-md-6 border-round">
+                    @await Component.InvokeAsync("BasketНоменклатура")
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 border-round">
+                    @await Component.InvokeAsync("Работы")
+                </div>
+                <div class="col-md-6 border-round">
+                    @await Component.InvokeAsync("КорзинаРабот")
+                </div>
+            </div>
+        </div>
+        <div id="rightPane" class="image-embed-container border-round">
+            @*<embed src="@Url.Action("GetImage","DocRezDiagnostics", new { id = ViewBag.ИзделиеId })" />*@
+            <iframe src="@Url.Action("GetImage","Раскладки", new { id = ViewBag.ИзделиеId })#view=fitH" frameborder="0" allowfullscreen></iframe>
+        </div>
+    </div>
+    <div class="row border-round">
+        <button id="btnOk" class="btn btn-primary" type="button" onclick="btnOkClick()">Ok</button>
+    </div>
+    <script>
+        $("#rightPane").slimScroll({ height: '100%' });
+        var splitter = $('#mainPane').split({
+            orientation: 'vertical',
+            limit: 10,
+            position: '50%',
+        });
+
+    function btnOkClick() {
+        $.ajax({
+            url: window.location.origin + "/DocRezDiagnostics/OnBtnOk",
+            type: "post",
+            datatype: "json",
+            data: { Квитанция: '@ViewBag.Квитанция', Гарантийный: $('input:radio[name=ТипРемонта]:checked').val() == "Гарантийный", Требуется: $.trim($('textarea[name=Требуется]').val()) },
+            async: true,
+            cache: false,
+            success: function (data) {
+                document.location = window.location.origin + "/Rg9972/IndexDiagnostics";
+            },
+            error: function (e, v, f) {
+                alert("ошибка выполнения!");
+            }
+        });
+    };
+    </script>
+}

@@ -1,0 +1,1966 @@
+﻿using System;
+using System.Globalization;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using StinWeb.Models.DataManager;
+using StinWeb.Models.DataManager.Справочники;
+using System.Security.Claims;
+using StinWeb.Models.Repository.Справочники;
+using StinWeb.Models.DataManager.Отчеты;
+using StinWeb.Models.DataManager.Документы;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using NonFactors.Mvc.Lookup;
+using StinWeb.Lookups;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
+using Microsoft.AspNetCore.Hosting;
+using System.Net.Http;
+using StinClasses.Models;
+using JsonExtensions;
+using HttpExtensions;
+using System.Threading;
+
+namespace StinWeb.Controllers
+{
+    public class ИнтернетЗаказы : Controller
+    {
+        private IHttpService _httpService;
+        private StinDbContext _context;
+        private UserRepository _userRepository;
+        private ФирмаRepository _фирмаRepository;
+        private СкладRepository _складRepository;
+        private КонтрагентRepository _контрагентRepository;
+        private НоменклатураRepository _номенклатураRepository;
+        private string MaxIddoc;
+        private string MaxDateTimeIddoc;
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        private StinClasses.Справочники.IOrder _order;
+        private StinClasses.Справочники.IНоменклатура _номенклатура;
+        private StinClasses.Документы.IНабор _набор;
+        private StinClasses.Регистры.IРегистрНаборНаСкладе _регистрНабор;
+
+        public ИнтернетЗаказы(StinDbContext context, IWebHostEnvironment webHostEnvironment, IHttpService httpService)
+        {
+            _httpService = httpService;
+            _context = context;
+            _userRepository = new UserRepository(context);
+            _фирмаRepository = new ФирмаRepository(context);
+            _складRepository = new СкладRepository(context);
+            _контрагентRepository = new КонтрагентRepository(context);
+            _номенклатураRepository = new НоменклатураRepository(context);
+            _order = new StinClasses.Справочники.OrderEntity(context);
+            _номенклатура = new StinClasses.Справочники.НоменклатураEntity(context);
+            _набор = new StinClasses.Документы.Набор(context);
+            _регистрНабор = new StinClasses.Регистры.Регистр_НаборНаСкладе(context);
+            _webHostEnvironment = webHostEnvironment;
+        }
+        public IActionResult Index()
+        {
+            return View();
+        }
+        [Authorize]
+        public async Task<IActionResult> CreateNewDoc()
+        {
+            if (_context.NeedToOpenPeriod())
+                return Redirect("/Home/Error?Description=ПериодНеОткрыт");
+            HttpContext.Session.SetObjectAsJson("мнТабличнаяЧасть", null);
+            var Пользователь = await _userRepository.GetUserByRowIdAsync(Int32.Parse(User.FindFirstValue("UserRowId")));
+
+            var doc = new ИнтернетЗаказ(Пользователь, Пользователь.ОсновнаяФирма, null, Пользователь.ОсновнойСклад);
+
+            ViewBag.Фирмы = new SelectList(_фирмаRepository.СписокСвоихФирм(), "Id", "Наименование");
+            ViewBag.Склады = new SelectList(_складRepository.ПолучитьРазрешенныеСклады(Пользователь.Id), "Id", "Наименование");
+
+            return View(doc);
+        }
+        [Authorize]
+        public async Task<IActionResult> Console()
+        {
+            var Пользователь = await _userRepository.GetUserByRowIdAsync(Int32.Parse(User.FindFirstValue("UserRowId")));
+
+            var CampaignIds = _context.Sc14042s
+                .Where(x => !x.Ismark && (x.Sp14164.Trim().ToUpper() == "FBS"))
+                .OrderBy(x => x.Sp14155).ThenBy(x => x.Descr)
+                .Select(x => new { CampaignId = x.Code.Trim(), Description = x.Sp14155.Trim() + " " + x.Descr.Trim() });
+            ViewBag.CampaignIds = new SelectList(CampaignIds, "CampaignId", "Description");
+
+            var типыОплат = new List<Tuple<int, string>>();
+            типыОплат.Add(new ((int)StinClasses.ReceiverPaymentType.Наличными, "Наличными"));
+            типыОплат.Add(new((int)StinClasses.ReceiverPaymentType.БанковскойКартой, "Банковской картой"));
+            ViewBag.PaymentTypes = new SelectList(типыОплат.AsEnumerable(), "Item1", "Item2");
+
+            ViewBag.ЭтоВодитель = Пользователь.Department.ToLower().Trim() == "водители";
+            ViewBag.DriverId = Пользователь.Role.Replace(" ","_");
+            ViewBag.СкладыСтрокой = string.Join(',', _складRepository.ПолучитьРазрешенныеСклады(Пользователь.Id).Select(x => x.Id));
+            ViewBag.DefaultEmail = Startup.sConfiguration["Settings:DefaultEmailforCashReceipt"];
+            return View("Console");
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetReceptionTransferAct(string campaignId, CancellationToken cancellationToken)
+        {
+            var data = await _context.Sc14042s.Where(x => x.Code.Trim() == campaignId).Select(x => new
+            {
+                тип = x.Sp14155.ToUpper().Trim(),
+                clientId = x.Sp14053.Trim(),
+                token = x.Sp14054.Trim(),
+                authApi = x.Sp14077.Trim()
+            }).FirstOrDefaultAsync(cancellationToken);
+            if (data != null)
+            {
+                var currentTime = DateTime.Now.TimeOfDay;
+                if (!TimeSpan.TryParse("16:00", out TimeSpan limitTime))
+                {
+                    limitTime = TimeSpan.MaxValue;
+                }
+                if (data.тип == "ЯНДЕКС")
+                {
+                    var request = new YandexClasses.FirstMileShipmentsRequest();
+                    if (currentTime > limitTime)
+                    {
+                        request.DateFrom = DateTime.Today.AddDays(1);
+                        request.DateTo = DateTime.Today.AddDays(1);
+                    }
+                    else
+                    {
+                        request.DateFrom = DateTime.Today;
+                        request.DateTo = DateTime.Today;
+                    }
+                    string err = "";
+                    var result = await YandexClasses.YandexOperators.Exchange<YandexClasses.FirstMileShipmentsResponse>(_httpService,
+                        string.Format(Startup.sConfiguration["Settings:UrlFirstMileShipments"], campaignId),
+                        HttpMethod.Put,
+                        data.clientId,
+                        data.token,
+                        request, 
+                        cancellationToken);
+                    //string context = request.SerializeObject();
+                    //var result = await YandexClasses.YandexOperators.YandexExchange(null, string.Format(Startup.sConfiguration["Settings:UrlFirstMileShipments"], campaignId), HttpMethod.Put, data.clientId, data.token, context);
+                    if ((result.Item1 == YandexClasses.ResponseStatus.ERROR) && !string.IsNullOrEmpty(result.Item3))
+                        err += result.Item3;
+                    if ((result.Item1 == YandexClasses.ResponseStatus.OK) && (result.Item2 != null))
+                    {
+                        var firstMileShipmentsResponse = result.Item2;
+                        if ((firstMileShipmentsResponse.Status == YandexClasses.ResponseStatus.OK) &&
+                            (firstMileShipmentsResponse.Result != null) &&
+                            (firstMileShipmentsResponse.Result.Shipments != null) &&
+                            (firstMileShipmentsResponse.Result.Shipments.Count > 0))
+                        {
+                            string shipmentId = firstMileShipmentsResponse.Result.Shipments[0].Id.ToString();
+                            string externalId = firstMileShipmentsResponse.Result.Shipments[0].ExternalId;
+                            var resultInfo = await YandexClasses.YandexOperators.Exchange<YandexClasses.FirstMileShipmentInfoResponse>(_httpService,
+                                string.Format(Startup.sConfiguration["Settings:UrlFirstMileShipmentInfo"], campaignId, shipmentId),
+                                HttpMethod.Get,
+                                data.clientId,
+                                data.token,
+                                null, 
+                                cancellationToken);
+                            //await YandexClasses.YandexOperators.YandexExchange(null, string.Format(Startup.sConfiguration["Settings:UrlFirstMileShipmentInfo"], campaignId, shipmentId), HttpMethod.Get, data.clientId, data.token, null);
+                            if ((resultInfo.Item1 == YandexClasses.ResponseStatus.ERROR) && !string.IsNullOrEmpty(resultInfo.Item3))
+                                err += resultInfo.Item3;
+                            if ((resultInfo.Item1 == YandexClasses.ResponseStatus.OK) && (result.Item2 != null))
+                            {
+                                var info = resultInfo.Item2;
+                                if ((info.Status == YandexClasses.ResponseStatus.OK) &&
+                                    (info.Result != null) &&
+                                    (info.Result.AvailableActions != null) &&
+                                    (info.Result.AvailableActions.Count > 0))
+                                {
+                                    bool canDownload = !info.Result.AvailableActions.Contains(YandexClasses.LogisticsActions.CONFIRM);
+                                    if (!canDownload)
+                                    {
+                                        var requestConfirm = new YandexClasses.FirstMileConfirmRequest();
+                                        requestConfirm.ExternalShipmentId = externalId;
+                                        requestConfirm.OrderIds = await (from x in _context.Sc13994s
+                                                                         join m in _context.Sc14042s on x.Sp14038 equals m.Id
+                                                                         where (m.Sp14077.Trim() == data.authApi) &&
+                                                                            (x.Sp13982 != 5) &&
+                                                                            info.Result.OrderIds.Select(y => y.ToString()).Contains(x.Code.Trim())
+                                                                         select Convert.ToInt64(x.Code.Trim())).ToListAsync();
+                                        var resultConfirm = await YandexClasses.YandexOperators.Exchange<YandexClasses.ErrorResponse>(_httpService,
+                                            string.Format(Startup.sConfiguration["Settings:UrlFirstMileShipmentConfirm"], campaignId, shipmentId),
+                                            HttpMethod.Post,
+                                            data.clientId,
+                                            data.token,
+                                            requestConfirm,
+                                            cancellationToken);
+                                        if ((resultConfirm.Item1 == YandexClasses.ResponseStatus.ERROR) && !string.IsNullOrEmpty(resultConfirm.Item3))
+                                            err += resultConfirm.Item3;
+                                        canDownload = (resultConfirm.Item1 == YandexClasses.ResponseStatus.OK) &&
+                                            (resultConfirm.Item2 != null) &&
+                                            (resultConfirm.Item2.Status == YandexClasses.ResponseStatus.OK);
+                                        //context = requestConfirm.SerializeObject();
+                                        //result = await YandexClasses.YandexOperators.YandexExchange(null, string.Format(Startup.sConfiguration["Settings:UrlFirstMileShipmentConfirm"], campaignId, shipmentId), HttpMethod.Post, data.clientId, data.token, context);
+                                    }
+                                    if (canDownload)
+                                    {
+                                        var resultDownload = await YandexClasses.YandexOperators.Exchange<byte[]>(_httpService,
+                                            string.Format(Startup.sConfiguration["Settings:UrlReceptionTransferAct"], campaignId, shipmentId),
+                                            HttpMethod.Get,
+                                            data.clientId,
+                                            data.token,
+                                            null,
+                                            cancellationToken);
+                                        //result = await YandexClasses.YandexOperators.YandexExchange(null, string.Format(Startup.sConfiguration["Settings:UrlReceptionTransferAct"], campaignId, shipmentId), HttpMethod.Get, data.clientId, data.token, null);
+                                        if ((resultDownload.Item1 == YandexClasses.ResponseStatus.ERROR) && !string.IsNullOrEmpty(resultDownload.Item3))
+                                            err += resultDownload.Item3;
+                                        if ((resultDownload.Item1 == YandexClasses.ResponseStatus.OK) && (resultDownload.Item2 != null))
+                                        {
+                                            return File(resultDownload.Item2, "application/pdf");
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return BadRequest(new ExceptionData { Code = -4, Description = err });
+                }
+                else if (data.тип == "OZON")
+                {
+                    if (!long.TryParse(campaignId, out long deliveryMethodId))
+                        deliveryMethodId = 0;
+                    var ozonResult = await OzonClasses.OzonOperators.GetAct(_httpService, data.clientId, data.token,
+                        limitTime,
+                        deliveryMethodId,
+                        cancellationToken);
+                    if (ozonResult.Item1 != null)
+                        return File(ozonResult.Item1, "application/pdf");
+                    if (ozonResult.Item2 != null)
+                        return BadRequest(new ExceptionData { Code = -100, Description = ozonResult.Item2 });
+                }
+                return BadRequest(new ExceptionData { Code = -100, Description = "Unhandling exception" });
+            }
+            else
+                return BadRequest(new ExceptionData { Code = -100, Description = "No data for " + campaignId });
+        }
+        [HttpGet]
+        public IActionResult OrdersConsole(bool isDriver, string driverId)
+        {
+            if (!string.IsNullOrWhiteSpace(driverId))
+            {
+                driverId = driverId.Replace("_", " ");
+                driverId = StinClasses.Common.FormatTo1CId(driverId);
+            }
+            DateTime limitDate = DateTime.Today.AddDays(-3);
+            DateTime limitSelfDate = DateTime.Today.AddDays(-6);
+            DateTime dateRegTA = _context.GetRegTA();
+            var dataReg = (
+                        (from r in _context.Rg4667s //ЗаказыЗаявки
+                         join doc in _context.Dh2457s on r.Sp4664 equals doc.Iddoc
+                         join m in _context.Sc11555s on doc.Sp11556 equals m.Code into _m
+                         from m in _m.DefaultIfEmpty()
+                         where r.Period == dateRegTA &&
+                             doc.Sp13995 != Common.ПустоеЗначение &&
+                             (isDriver ? ((m != null) && (m.Sp11669 == driverId)) : true)
+                         group new { r, doc } by new { orderId = doc.Sp13995, маршрутName = doc.Sp11557, складId = doc.Sp4437 } into gr
+                         where gr.Sum(x => x.r.Sp4666) != 0
+                         select new { orderId = gr.Key.orderId, маршрутName = Convert.ToString(gr.Key.маршрутName.Trim()), складId = Convert.ToString(gr.Key.складId), statusOrder = 1 })
+                        .Concat
+                        (from r in _context.Rg4674s //Заявки
+                         join doc in _context.Dh2457s on r.Sp4671 equals doc.Iddoc
+                         join m in _context.Sc11555s on doc.Sp11556 equals m.Code into _m
+                         from m in _m.DefaultIfEmpty()
+                         where r.Period == dateRegTA &&
+                             doc.Sp13995 != Common.ПустоеЗначение &&
+                             (isDriver ? ((m != null) && (m.Sp11669 == driverId)) : true)
+                         group new { r, doc } by new { orderId = doc.Sp13995, маршрутName = doc.Sp11557, складId = doc.Sp4437 } into gr
+                         where gr.Sum(x => x.r.Sp4672) != 0
+                         select new { orderId = gr.Key.orderId, маршрутName = Convert.ToString(gr.Key.маршрутName.Trim()), складId = Convert.ToString(gr.Key.складId), statusOrder = 2 })
+                        .Concat
+                        (from r in _context.Rg11973s //НаборНаСкладе
+                         join doc in _context.Dh11948s on r.Sp11970 equals doc.Iddoc
+                         join m in _context.Sc11555s on doc.Sp11934 equals m.Code into _m
+                         from m in _m.DefaultIfEmpty()
+                         where r.Period == dateRegTA &&
+                              doc.Sp14003 != Common.ПустоеЗначение &&
+                              (isDriver ? ((m != null) && (m.Sp11669 == driverId)) : true)
+                         group new { r, doc } by new { orderId = doc.Sp14003, маршрутName = doc.Sp11935, status = doc.Sp11938, складId = r.Sp11967 } into gr
+                         where gr.Sum(x => x.r.Sp11972) != 0
+                         select new { orderId = gr.Key.orderId, маршрутName = Convert.ToString(gr.Key.маршрутName.Trim()), складId = Convert.ToString(gr.Key.складId), statusOrder = gr.Key.status == 1 ? 4 : 3 }));
+            if (!isDriver)
+            {
+                dataReg = dataReg.Concat(from o in _context.Sc13994s
+                                         where !o.Ismark && (o.Sp13982 == 5) &&
+                                            (((o.Sp13988 == (decimal)StinClasses.StinDeliveryType.PICKUP) &&
+                                            (o.Sp13990 >= limitSelfDate) &&
+                                            ((StinClasses.StinDeliveryPartnerType)o.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP)) ||
+                                            (o.Sp13990 >= limitDate))
+                                         select new { orderId = o.Id, маршрутName = string.Empty, складId = string.Empty, statusOrder = 5 });
+            }
+            var data = from r in dataReg
+                       join sklad in _context.Sc55s on r.складId equals sklad.Id into _sklad
+                       from sklad in _sklad.DefaultIfEmpty()
+                       join order in _context.Sc13994s on r.orderId equals order.Id
+                       join market in _context.Sc14042s on order.Sp14038 equals market.Id
+                       join превЗаявка in _context.Dh12747s on order.Id equals превЗаявка.Sp14007
+                       join binary in _context.VzOrderBinaries.Where(x => x.Extension.Trim().ToUpper() == "LABELS") on order.Id equals binary.Id into _binary
+                       from binary in _binary.DefaultIfEmpty()
+                       select new
+                       {
+                           Id = order.Id,
+                           Тип = market.Sp14155.ToUpper().Trim(),
+                           MarketplaceId = order.Code.Trim(),
+                           MarketplaceType = order.Descr.Trim(),
+                           ShipmentDate = order.Sp13990,
+                           ПредварительнаяЗаявкаНомер = order.Sp13981.Trim(),
+                           CustomerNotes = order.Sp14122,
+                           Address = ((!string.IsNullOrWhiteSpace(order.Sp14125) ? order.Sp14125.Trim() + ", " : "") +
+                                    (!string.IsNullOrWhiteSpace(order.Sp14127) ? "ул." + order.Sp14127.Trim() + ", " : "") +
+                                    (!string.IsNullOrWhiteSpace(order.Sp14128) ? "д." + order.Sp14128.Trim() + ", " : "") +
+                                    (!string.IsNullOrWhiteSpace(order.Sp14129) ? "корп." + order.Sp14129.Trim() + ", " : "") +
+                                    (!string.IsNullOrWhiteSpace(order.Sp14130) ? "п." + order.Sp14130.Trim() + ", " : "") +
+                                    (!string.IsNullOrWhiteSpace(order.Sp14131) ? "домофон " + order.Sp14131.Trim() + ", " : "") +
+                                    (!string.IsNullOrWhiteSpace(order.Sp14132) ? "эт." + order.Sp14132.Trim() + ", " : "") +
+                                    (!string.IsNullOrWhiteSpace(order.Sp14133) ? "кв." + order.Sp14133.Trim() + ", " : "")).Trim(),
+                           СкладId = (sklad != null ? sklad.Id : ""),
+                           Склад = (sklad != null ? sklad.Descr.Trim() : ""),
+                           Статус = (int)order.Sp13982,
+                           состояние = r.statusOrder,
+                           Recipient = !string.IsNullOrWhiteSpace(order.Sp14119) ? order.Sp14119.Trim() : (
+                                    (!string.IsNullOrWhiteSpace(order.Sp14116) ? order.Sp14116.Trim() + " " : "") +
+                                    (!string.IsNullOrWhiteSpace(order.Sp14117) ? order.Sp14117.Trim() + " " : "") +
+                                    (!string.IsNullOrWhiteSpace(order.Sp14118) ? order.Sp14118.Trim() : "")).Trim(),
+                           Phone = string.IsNullOrWhiteSpace(order.Sp14120) ? "" : order.Sp14120.Trim(),
+                           МаршрутНаименование = r.маршрутName,
+                           isFBS = (StinClasses.StinDeliveryPartnerType)order.Sp13985 != StinClasses.StinDeliveryPartnerType.SHOP,
+                           ТипДоставки = (((StinClasses.StinDeliveryPartnerType)order.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinDeliveryType)order.Sp13988 == StinClasses.StinDeliveryType.PICKUP)) ? "Самовывоз" : "Доставка",
+                           Сумма = превЗаявка.Sp12741,
+                           СуммаКОплате = (((StinClasses.StinDeliveryPartnerType)order.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinPaymentType)order.Sp13983 == StinClasses.StinPaymentType.POSTPAID)) ? (превЗаявка.Sp12741 - order.Sp14135) : 0,
+                           NeedToGetPayment = ((StinClasses.StinDeliveryPartnerType)order.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinPaymentType)order.Sp13983 == StinClasses.StinPaymentType.POSTPAID),
+                           ИнформацияAPI = order.Sp14055,
+                           Printed = order.Sp14192 == 1,
+                           Labels = binary != null ? binary.Id : null
+                       };
+            var dataE = data.AsEnumerable();
+            var dataResult = dataE
+                .GroupBy(x => new
+                {
+                    x.Id,
+                    x.Тип,
+                    x.MarketplaceId,
+                    x.MarketplaceType,
+                    x.ShipmentDate,
+                    x.ПредварительнаяЗаявкаНомер,
+                    x.CustomerNotes,
+                    x.Address,
+                    x.Статус,
+                    x.Recipient,
+                    x.Phone,
+                    x.isFBS,
+                    x.ТипДоставки,
+                    x.Сумма,
+                    x.СуммаКОплате,
+                    x.NeedToGetPayment,
+                    x.ИнформацияAPI,
+                    x.Printed,
+                    x.Labels
+                })
+                .Select(gr => new MarketplaceOrder
+                {
+                    Id = gr.Key.Id,
+                    Тип = gr.Key.Тип,
+                    MarketplaceId = gr.Key.MarketplaceId,
+                    MarketplaceType = gr.Key.MarketplaceType,
+                    ShipmentDate = gr.Key.ShipmentDate,
+                    ПредварительнаяЗаявкаНомер = gr.Key.ПредварительнаяЗаявкаНомер,
+                    CustomerNotes = gr.Key.CustomerNotes,
+                    Address = gr.Key.Address,
+                    Статус = gr.Key.Статус,
+                    Recipient = gr.Key.Recipient,
+                    Phone = gr.Key.Phone,
+                    isFBS = gr.Key.isFBS,
+                    ТипДоставки = gr.Key.ТипДоставки,
+                    Сумма = gr.Key.Сумма,
+                    СуммаКОплате = gr.Key.СуммаКОплате,
+                    NeedToGetPayment = gr.Key.NeedToGetPayment,
+                    ИнформацияAPI = gr.Key.ИнформацияAPI,
+                    Labels = gr.Key.Labels,
+                    СкладIds = string.Join(", ", gr.Select(y => y.СкладId).Distinct()),
+                    Склады = string.Join(", ", gr.Select(y => y.Склад).Distinct()),
+                    МаршрутНаименование = string.Join(", ", gr.Select(y => y.МаршрутНаименование).Distinct()),
+                    StatusDescription = gr.Min(o => o.состояние) == 1 ? "Заказ(одобрен)" :
+                             gr.Min(o => o.состояние) == 2 ? "Резерв" :
+                             gr.Min(o => o.состояние) == 3 ? "Набор" :
+                             gr.Min(o => o.состояние) == 5 ? "Отменен" :
+                             gr.Min(o => o.состояние) == 4 ? "Готов" + 
+                                 (gr.Key.Статус == 1 ? "/Груз сформирован" :
+                                 (gr.Key.Статус == 2 ? "/Этикетки получены" :
+                                 (gr.Key.Статус == 3 ? "/Готов к отгрузке" :
+                                 (gr.Key.Статус == 9 ? "/" + gr.Key.ТипДоставки :
+                                 (gr.Key.Статус == 7 ? "/Поступил запрос на отмену" :
+                                 (gr.Key.Статус == 13 ? "/Спорный" :
+                                 (gr.Key.Статус < 0 ? "/" + gr.Key.Статус.ToString() : ""))))))) :
+                                 "Состояние " + gr.Min(o => o.состояние).ToString(),
+                    Printed = gr.Key.Printed,
+                });
+
+            return PartialView("~/Views/ИнтернетЗаказы/Orders.cshtml", dataResult.AsQueryable());
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetLabelsPdf(string id)
+        {
+            if (!string.IsNullOrEmpty(id))
+                id = id.Replace('_', ' ');
+            var f = await (from b in _context.VzOrderBinaries
+                           where b.Id == id && b.Extension == "LABELS"
+                           select b.Binary).FirstOrDefaultAsync();
+            if (f != null && f.Length > 0)
+                return File(f, "application/pdf");
+            else
+            {
+                string webRootPath = _webHostEnvironment.WebRootPath;
+                string contentRootPath = _webHostEnvironment.ContentRootPath;
+
+                string path = System.IO.Path.Combine(webRootPath, "lib", "images", "not-found-image.jpg");
+                return File(System.IO.File.ReadAllBytes(path), "image/png");
+            }
+        }
+        [HttpGet]
+        public IActionResult GetMultiLabelsPdf(string[] ids)
+        {
+            var orderIds = ids.Select(x => x.Replace('_',' ')).ToList();
+            var files = from b in _context.VzOrderBinaries
+                        where orderIds.Contains(b.Id) && b.Extension == "LABELS"
+                        select b.Binary;
+            using var outputStream = new System.IO.MemoryStream();
+            using PdfSharp.Pdf.PdfDocument output = new PdfSharp.Pdf.PdfDocument(outputStream);
+            foreach (var f in files)
+            {
+                using (System.IO.Stream stream = new System.IO.MemoryStream(f))
+                {
+                    using (PdfSharp.Pdf.PdfDocument pdfFile = PdfSharp.Pdf.IO.PdfReader.Open(stream, PdfSharp.Pdf.IO.PdfDocumentOpenMode.Import))
+                    {
+                        foreach (var page in pdfFile.Pages)
+                        {
+                            output.AddPage(page);
+                        }
+                    }
+                }
+            }
+            output.Save(outputStream);
+            return File(outputStream.ToArray(), "application/pdf");
+        }
+        private async Task<string> SendOrderShippedAsync(string orderId, StinClasses.ReceiverPaymentType receiverPaymentType, string receiverEmail, string receiverPhone)
+        {
+            string functionResult = "";
+            var order = await _order.ПолучитьOrder(orderId);
+            if ((order != null) && (order.Тип == "ЯНДЕКС"))
+            {
+                using var httpClientHandler = new HttpClientHandler();
+                httpClientHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+                using var client = new HttpClient(httpClientHandler);
+                var url = Startup.sConfiguration["Settings:UrlYandexApi"] + "/order/int_status_shipped";
+                var request = new HttpRequestMessage(HttpMethod.Post, url);
+                request.Headers.Add("User-Agent", "HttpClientFactory-StinClient");
+                request.Headers.Add("Authorization", Startup.sConfiguration["Settings:UrlYandexApiAuthorization"]);
+
+                var requestedOrderId = new StinClasses.RequestedOrderId();
+                requestedOrderId.Id = orderId;
+                requestedOrderId.UserId = User.FindFirstValue("UserId");
+                requestedOrderId.PaymentType = receiverPaymentType;
+                requestedOrderId.ReceiverEmail = receiverEmail;
+                requestedOrderId.ReceiverPhone = receiverPhone;
+
+                request.Content = new StringContent(requestedOrderId.SerializeObject(), System.Text.Encoding.UTF8, "application/json");
+                try
+                {
+                    var response = await client.SendAsync(request);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        if (response.Content != null)
+                        {
+                            functionResult += await response.Content.ReadAsStringAsync();
+                        }
+                    }
+                    else
+                    {
+                        functionResult += "Bad request for orderId = " + orderId;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    functionResult += ex.Message + " " + ex.InnerException;
+                }
+            }
+            return functionResult;
+        }
+        [HttpPost]
+        public async Task<IActionResult> СформироватьОтгрузочныеДокументы(string orderId, int intReceiverPaymentType, string receiverEmail, string receiverPhone)
+        {
+            if (!string.IsNullOrWhiteSpace(receiverPhone))
+            {
+                receiverPhone = receiverPhone.Replace(" ", "");
+                if (receiverPhone.StartsWith("+7"))
+                    receiverPhone = receiverPhone.Substring(2);
+            }
+            var result = await SendOrderShippedAsync(orderId, (StinClasses.ReceiverPaymentType)intReceiverPaymentType, receiverEmail, receiverPhone);
+            if (string.IsNullOrEmpty(result))
+                return Ok();
+            return BadRequest(result);
+        }
+        [HttpPost]
+        public async Task<IActionResult> СформироватьМультиОтгрузочныеДокументы(string[] ids)
+        {
+            string functionResult = "";
+            foreach (var orderId in ids.Select(x => x.Replace('_', ' ')))
+            {
+                functionResult = await SendOrderShippedAsync(orderId, StinClasses.ReceiverPaymentType.NotFound, "", "");
+                if (!string.IsNullOrEmpty(functionResult))
+                    break;
+            }
+            if (string.IsNullOrEmpty(functionResult))
+                return Ok();
+            return BadRequest(functionResult);
+        }
+        [HttpPost]
+        public async Task<IActionResult> ПередатьОтправлениеКОтгрузке(string orderId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var data = await (
+                    from m in _context.Sc14042s
+                    join o in _context.Sc13994s on m.Id equals o.Sp14038
+                    where o.Id == orderId
+                    select new
+                    {
+                        тип = m.Sp14155.ToUpper().Trim(),
+                        clientId = m.Sp14053.Trim(),
+                        token = m.Sp14054.Trim(),
+                        postingNumber = o.Code.Trim()
+                    })
+                    .FirstOrDefaultAsync(cancellationToken);
+                if ((data != null) && (data.тип == "OZON"))
+                {
+                    var ozonResult = await OzonClasses.OzonOperators.AddToDelivery(_httpService, data.clientId, data.token,
+                        data.postingNumber,
+                        cancellationToken);
+                    if (ozonResult.Item1 != null)
+                    {
+                        if (ozonResult.Item1.Value)
+                        {
+                            await _order.ОбновитьOrderStatus(orderId, 3);
+                            return Ok();
+                        }
+                        else
+                            return BadRequest(new ExceptionData { Code = -100, Description = "Add to delivery result is false" });
+                    }
+                    if (ozonResult.Item2 != null)
+                        return BadRequest(new ExceptionData { Code = -100, Description = ozonResult.Item2 });
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ExceptionData { Code = -100, Description = "AddToDelivery : " + ex.Message });
+            }
+            return BadRequest(new ExceptionData { Code = -100, Description = "AddToDelivery : Unhandling exception" });
+        }
+        [HttpPost]
+        public async Task<IActionResult> ПечатьНабор(string[] ids, CancellationToken cancellationToken)
+        {
+            string message = "";
+            var printedOrderIds = new List<string>();
+            var data = Enumerable.Repeat(new 
+            {
+                НомерДок = "",
+                ДатаДок = "",
+                Маршрут = "",
+                КолДокументов = "",
+                OrderNo = "",
+                Поставщик = "",
+                Покупатель = "",
+                Склад = "",
+                ТаблЧасть = Enumerable.Repeat(new
+                {
+                    Ном = "",
+                    Товар = "",
+                    Производитель = "",
+                    Артикул = "",
+                    Количество = "",
+                    Единица = "",
+                    Цена = "",
+                    Сумма = ""
+                }, 0).ToList(),
+                Итого = "",
+                КолСтрок = "",
+                СуммаПрописью = ""
+            }, 0).ToList();
+            foreach (var orderId in ids.Select(x => x.Replace('_', ' ')))
+            {
+                var активныеНаборы = await _набор.ПолучитьСписокАктивныхНаборов(orderId, false);
+                foreach (var формаНабор in активныеНаборы)
+                {
+                    var таблЧасть = Enumerable.Repeat(new
+                    {
+                        Ном = "",
+                        Товар = "",
+                        Производитель = "",
+                        Артикул = "",
+                        Количество = "",
+                        Единица = "",
+                        Цена = "",
+                        Сумма = ""
+                    }, 0).ToList();
+                    var СписокФирм = формаНабор.ТабличнаяЧасть.Select(x => x.ФирмаНоменклатуры.Id).Distinct().ToList();
+                    var НоменклатураIds = формаНабор.ТабличнаяЧасть.Select(x => x.Номенклатура.Id).Distinct().ToList();
+                    var наборНаСкладе_Остатки = await _регистрНабор.ПолучитьОстаткиAsync(DateTime.Now, null, false,
+                        СписокФирм, формаНабор.Склад.Id, формаНабор.Договор.Id, НоменклатураIds, формаНабор.Общие.IdDoc);
+                    var groupedОстатки = наборНаСкладе_Остатки.GroupBy(x => x.НоменклатураId).Select(gr => new { НоменклатураId = gr.Key, Остаток = gr.Sum(s => s.Количество) });
+                    int номСтроки = 0; decimal итого = 0;
+                    var nomQuantums = new Dictionary<string, decimal>();
+                    if ((формаНабор.Order?.Модель == "FBY") || (формаНабор.Order?.Модель == "FBS"))
+                    {
+                        nomQuantums = await _номенклатура.ПолучитьКвант(формаНабор.ТабличнаяЧасть.Select(x => x.Номенклатура.Code).ToList(), cancellationToken);
+                    }
+                    foreach (var row in формаНабор.ТабличнаяЧасть)
+                    {
+                        if (groupedОстатки.Any(x => (x.НоменклатураId == row.Номенклатура.Id) && (x.Остаток > 0)))
+                        {
+                            var остатокПоРегистру = groupedОстатки.Where(x => x.НоменклатураId == row.Номенклатура.Id).Sum(x => x.Остаток) / row.Единица.Коэффициент;
+                            var можноОтпустить = Math.Max(Math.Min(row.Количество, остатокПоРегистру), 0);
+                            if (можноОтпустить > 0)
+                            {
+                                номСтроки++;
+                                var сумма = row.Количество == можноОтпустить ? row.Сумма : (row.Количество * row.Цена);
+                                итого = итого + сумма;
+                                var quantum = (int)nomQuantums.Where(q => q.Key == row.Номенклатура.Id).Select(q => q.Value).FirstOrDefault();
+                                таблЧасть.Add(new
+                                {
+                                    Ном = номСтроки.ToString("0", CultureInfo.InvariantCulture),
+                                    Товар = row.Номенклатура.Наименование + (((quantum > 1) && (можноОтпустить >= quantum)) ? " (пакуй по " + quantum.ToString("0", CultureInfo.InvariantCulture) + " " + row.Единица.Наименование + ")" : ""),
+                                    Производитель = row.Номенклатура.Производитель.Наименование,
+                                    Артикул = row.Номенклатура.Артикул,
+                                    Количество = можноОтпустить.ToString("0", CultureInfo.InvariantCulture),
+                                    Единица = row.Единица.Наименование,
+                                    Цена = row.Цена.ToString("0.00", CultureInfo.InvariantCulture),
+                                    Сумма = сумма.ToString("0.00", CultureInfo.InvariantCulture)
+                                });
+                                groupedОстатки = groupedОстатки
+                                    .Select(item => new
+                                    {
+                                        НоменклатураId = item.НоменклатураId,
+                                        Остаток = item.НоменклатураId == row.Номенклатура.Id ? item.Остаток - (можноОтпустить * row.Единица.Коэффициент) : item.Остаток
+                                    });
+                            }
+                        }
+                    }
+                    data.Add(new
+                    {
+                        НомерДок = формаНабор.Общие.НомерДок,
+                        ДатаДок = формаНабор.Общие.ДатаДок.ToString("dd.MM.yyyy"),
+                        Маршрут = формаНабор.Маршрут?.Наименование ?? "",
+                        КолДокументов = "Док-тов = " + формаНабор.ТабличнаяЧасть.Select(x => x.ФирмаНоменклатуры.Id).Distinct().Count().ToString(),
+                        OrderNo = формаНабор.Order?.MarketplaceId ?? "",
+                        Поставщик = формаНабор.Общие.Фирма.Наименование,
+                        Покупатель = формаНабор.Контрагент?.Наименование ?? "",
+                        Склад = (формаНабор.Склад?.Наименование ?? "") + "/" + (формаНабор.ПодСклад?.Наименование ?? ""),
+                        ТаблЧасть = таблЧасть,
+                        Итого = итого.ToString("0.00", CultureInfo.InvariantCulture),
+                        КолСтрок = номСтроки.ToString("0", CultureInfo.InvariantCulture),
+                        СуммаПрописью = итого.Прописью()
+                    });
+                    if (!printedOrderIds.Contains(orderId))
+                        printedOrderIds.Add(orderId);
+                }
+            }
+            int limitДокументовНаСтранице = 2;
+            int docCount = 0;
+            foreach (var item in data)
+            {
+                docCount++;
+                if (docCount <= limitДокументовНаСтранице)
+                    message = message.CreateOrUpdateHtmlPrintPage("Набор", item, false);
+                else
+                {
+                    message = message.CreateOrUpdateHtmlPrintPage("Набор", item);
+                    docCount = 1;
+                }
+            }
+            if (printedOrderIds.Count > 0)
+            {
+                int tryCount = 5;
+                TimeSpan sleepPeriod = TimeSpan.FromSeconds(1);
+                while (true)
+                {
+                    using var tran = await _context.Database.BeginTransactionAsync();
+                    try
+                    {
+                        await _order.SetOrdersPrinted(printedOrderIds);
+
+                        if (_context.Database.CurrentTransaction != null)
+                            tran.Commit();
+                        break;
+                    }
+                    catch
+                    {
+                        if (_context.Database.CurrentTransaction != null)
+                            _context.Database.CurrentTransaction.Rollback();
+                        if (--tryCount == 0)
+                        {
+                            break;
+                        }
+                        await Task.Delay(sleepPeriod);
+                    }
+                }
+            }
+            return Ok(message);
+        }
+        [HttpPost]
+        public async Task<IActionResult> ПодтвердитьОтмену(string orderId)
+        {
+            using var httpClientHandler = new HttpClientHandler();
+            httpClientHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+            using var client = new HttpClient(httpClientHandler);
+            var url = Startup.sConfiguration["Settings:UrlYandexApi"] + "/order/int_status_cancelled_user_changed_mind";
+            var request = new HttpRequestMessage(HttpMethod.Post, url);
+            request.Headers.Add("User-Agent", "HttpClientFactory-StinClient");
+            request.Headers.Add("Authorization", Startup.sConfiguration["Settings:UrlYandexApiAuthorization"]);
+            var requestedOrderId = new StinClasses.RequestedOrderId();
+            requestedOrderId.Id = orderId;
+            requestedOrderId.UserId = User.FindFirstValue("UserId");
+            string content = Newtonsoft.Json.JsonConvert.SerializeObject(requestedOrderId,
+               Newtonsoft.Json.Formatting.None,
+               new Newtonsoft.Json.JsonSerializerSettings
+               {
+                   ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+               });
+            //var content = $"{{\"docId\": \"{orderId}\" }}";
+            if (!string.IsNullOrEmpty(content))
+            {
+                request.Content = new StringContent(content, System.Text.Encoding.UTF8, "application/json");
+            }
+            try
+            {
+                var response = await client.SendAsync(request);
+                if (response.IsSuccessStatusCode)
+                {
+                    if (response.Content != null)
+                    {
+                        var functionResult = await response.Content.ReadAsStringAsync();
+                        return Ok(functionResult);
+                    }
+                    return Ok();
+                }
+                else
+                {
+                    return BadRequest("Bad request");
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message + " " + ex.InnerException);
+            }
+        }
+        [HttpPost]
+        public IActionResult GetOrderDetails(string orderId)
+        {
+            HttpContext.Session.SetObjectAsJson("мнТабличнаяЧасть", null);
+
+            return ViewComponent("Order", new
+            {
+                orderId 
+            });
+        }
+        [HttpGet]
+        public IActionResult ТаблицаЗаказов(DateTime startDate, DateTime endDate, bool alive)
+        {
+            IQueryable<VzZayavki> result0;
+            //var result0 = Enumerable.Repeat(new { z = new VzZayavki(), ispoln = false }, 0).AsQueryable();
+            if (alive)
+            {
+                DateTime dateRegTA = _context.GetRegTA();
+                var reg = (from r in _context.Rg4674s
+                           where r.Period == dateRegTA
+                           group r by r.Sp4671 into gr
+                           where gr.Sum(x => x.Sp4672) != 0 || gr.Sum(x => x.Sp4673) != 0
+                           select new { zDoc = gr.Key })
+                          .Concat
+                          (from r in _context.Rg4667s
+                           where r.Period == dateRegTA
+                           group r by r.Sp4664 into gr
+                           where gr.Sum(x => x.Sp4666) != 0
+                           select new { zDoc = gr.Key }
+                           );
+                var regN = from r in _context.Rg11973s
+                           where r.Period == dateRegTA
+                           group r by r.Sp11970 into gr
+                           where gr.Sum(x => x.Sp11972) != 0
+                           select new { docN = gr.Key };
+
+                result0 = (from z in _context.VzZayavkis
+                           join inv in _context.VzInvoices on z.IdDoc equals inv.ZIdDoc
+                           join r in reg on inv.IdDoc equals r.zDoc
+                           select z)
+                           .Concat(
+                           from z in _context.VzZayavkis
+                           join nab in _context.VzNabors on z.IdDoc equals nab.ZIdDoc
+                           join r in regN on nab.IdDoc equals r.docN
+                           select z);
+            }
+            else
+            {
+                if (startDate == DateTime.MinValue)
+                    startDate = DateTime.Now.Date;
+                if (endDate == DateTime.MinValue)
+                    endDate = DateTime.Now;
+                //string j_startDateTime = startDate.JournalDateTime();
+                //string j_endDateTime = endDate.JournalDateTime();
+                //DateTime dateRegTA = _context.GetRegTA();
+                //var reg = from r in _context.Rg4674s
+                //          where r.Period == dateRegTA
+                //          group r by r.Sp4671 into gr
+                //          where gr.Sum(x => x.Sp4672) != 0 || gr.Sum(x => x.Sp4673) != 0
+                //          select new { zDoc = gr.Key };
+                result0 = from z in _context.VzZayavkis
+                              //join inv in _context.VzInvoices on z.IdDoc equals inv.ZIdDoc
+                              //join r in reg on inv.IdDoc equals r.zDoc into _r
+                              //from r in _r.DefaultIfEmpty()
+                          where z.DocDate >= startDate && z.DocDate <= endDate
+                          select z;
+            }
+            var result = from z in result0
+                         join j in _context._1sjourns on z.IdDoc equals j.Iddoc
+                         orderby z.DocDate
+                         select new ЗаказКлиента
+                         {
+                             НомерЗаказа = z.ZNo.Trim(),
+                             ДатаЗаказа = z.ZDate.HasValue ? new DateTime(z.ZDate.Value.Ticks) : DateTime.MinValue,
+                             Корень = new СчетЗаказа
+                             {
+                                 IdDoc = z.IdDoc,
+                                 ДатаДок = z.DocDate,
+                                 НомерДок = j.Docno,
+                                 Контрагент = new Контрагент
+                                 {
+                                     Id = z.DocCustomer,
+                                     Наименование = z.DocCustomerName
+                                 },
+                                 Менеджер = new Менеджер
+                                 {
+                                     Id = z.DocManager,
+                                     Наименование = z.DocManagerName
+                                 }
+                             },
+                             СчетНаОплату = z.VzInvoices.Where(i => i.DocType == "   3O2   ").OrderByDescending(o => o.DocDate).Select(s => s.DocSumma).FirstOrDefault(),
+                             ЗаявкаНаСогласование = z.VzInvoices.Where(i => i.DocType == "   3O3   ").OrderByDescending(o => o.DocDate).Select(s => s.DocSumma).FirstOrDefault(),
+                             ЗаявкаСогласованная = z.VzInvoices.Where(i => i.DocType == "   AD6   ").OrderByDescending(o => o.DocDate).Select(s => s.DocSumma).FirstOrDefault(),
+                             ЗаявкаОдобренная = z.VzInvoices.Where(i => i.DocType == "   APG   ").OrderByDescending(o => o.DocDate).Select(s => s.DocSumma).FirstOrDefault(),
+                             ЗаявкаИсполненная = true,
+                             ОтменаЗаявки = z.VzCancelZayavkis.Count > 0,
+                             Набор = z.VzNabors.Sum(s => s.DocSumma),
+                             ОтменаНабора = z.VzCancelNabors.Sum(c => c.DocSumma),
+                             Продажа = z.VzProdagis.Sum(x => x.DocSumma),
+                             ОплатаОжидание = z.VzPayments.Where(x => x.DocType == 13849 && (x.DocStatus == "   AOW   " || x.DocStatus == "   AOX   ")).Sum(x => x.DocSumma),
+                             ОплатаВыполнено = z.VzPayments.Where(x => x.DocType == 2196).Sum(x => x.DocSumma),
+                             ОплатаОтменено = z.VzPayments.Where(x => x.DocType == 13849 && x.DocStatus == "   AOZ   ").Sum(x => x.DocSumma),
+                         };
+
+            return PartialView("~/Views/ИнтернетЗаказы/Zayavki.cshtml", result);
+        }
+        public JsonResult ЖурналЗаказов(string id, int вид, DateTime startDate, DateTime endDate)
+        {
+            if (id != "#" && вид > 0)
+            {
+                var tree = from t in _context.fn_GetTreeById(id.Replace("_", " "), false)
+                           join j in _context._1sjourns on t.Iddoc equals j.Iddoc
+                           where j.Closed == 1
+                           select new 
+                           { 
+                               t.Iddoc,
+                               t.Parentid,
+                               j.Iddocdef
+                           };
+                var treeList = tree.ToList();
+                var ПродажиMdId = new List<int> { 1611, 3114 };
+                var ПродажиIdDoc = treeList.Where(x => ПродажиMdId.Contains(x.Iddocdef)).Select(x => x.Iddoc);
+                var Продажи = (from j in _context._1sjourns.Where(x => ПродажиIdDoc.Contains(x.Iddoc))
+                               join docРеализация in _context.Dh1611s on j.Iddoc equals docРеализация.Iddoc into _docРеализация
+                               from docРеализация in _docРеализация.DefaultIfEmpty()
+                               join docОтчетККМ in _context.Dh3114s on j.Iddoc equals docОтчетККМ.Iddoc into _docОтчетККМ
+                               from docОтчетККМ in _docОтчетККМ.DefaultIfEmpty()
+                               select new
+                               {
+                                   id = "Продажа",
+                                   сумма = docРеализация != null ? docРеализация.Sp1604 :
+                                           docОтчетККМ != null ? docОтчетККМ.Sp3107 :
+                                           0
+                               })
+                              .AsEnumerable();
+                var parentIds = treeList.Select(y => y.Parentid);
+                var validIds = treeList.Where(x => !parentIds.Contains(x.Iddoc)).Select(x => x.Iddoc);
+                var result = (from j in _context._1sjourns.Where(x => validIds.Contains(x.Iddoc))
+                              join docSpros in _context.Dh12784s on j.Iddoc equals docSpros.Iddoc into _docSpros
+                              from docSpros in _docSpros.DefaultIfEmpty()
+                              join docСчет in _context.Dh2457s.Where(x => x.Sp4760 == "   3O2   ") on j.Iddoc equals docСчет.Iddoc into _docСчет
+                              from docСчет in _docСчет.DefaultIfEmpty()
+                              join docНСчет in _context.Dh2457s.Where(x => x.Sp4760 == "   3O1   ") on j.Iddoc equals docНСчет.Iddoc into _docНСчет
+                              from docНСчет in _docНСчет.DefaultIfEmpty()
+                              join docЗаякаНаСогл in _context.Dh2457s.Where(x => x.Sp4760 == "   3O3   ") on j.Iddoc equals docЗаякаНаСогл.Iddoc into _docЗаякаНаСогл
+                              from docЗаякаНаСогл in _docЗаякаНаСогл.DefaultIfEmpty()
+                              join docЗаякаСогл in _context.Dh2457s.Where(x => x.Sp4760 == "   AD6   ") on j.Iddoc equals docЗаякаСогл.Iddoc into _docЗаякаСогл
+                              from docЗаякаСогл in _docЗаякаСогл.DefaultIfEmpty()
+                              join docЗаякаОдобр in _context.Dh2457s.Where(x => x.Sp4760 == "   APG   ") on j.Iddoc equals docЗаякаОдобр.Iddoc into _docЗаякаОдобр
+                              from docЗаякаОдобр in _docЗаякаОдобр.DefaultIfEmpty()
+                              join docНабор in _context.Dh11948s on j.Iddoc equals docНабор.Iddoc into _docНабор
+                              from docНабор in _docНабор.DefaultIfEmpty()
+                              //join docРеализация in _context.Dh1611s on j.Iddoc equals docРеализация.Iddoc into _docРеализация
+                              //from docРеализация in _docРеализация.DefaultIfEmpty()
+                              //join docОтчетККМ in _context.Dh3114s on j.Iddoc equals docОтчетККМ.Iddoc into _docОтчетККМ
+                              //from docОтчетККМ in _docОтчетККМ.DefaultIfEmpty()
+                              //join docЧекККМ in _context.Dh3046s on j.Iddoc equals docЧекККМ.Iddoc into _docЧекККМ
+                              //from docЧекККМ in _docЧекККМ.DefaultIfEmpty()
+
+                              select new
+                              {
+                                  id = docСчет != null ? "СчетНаОплату" :
+                                       docНСчет != null ? "НеподтвержденныйСчет" :
+                                       docЗаякаНаСогл != null ? "ЗаявкаНаСогл" :
+                                       docЗаякаСогл != null ? "ЗаякаСогл" :
+                                       docЗаякаОдобр != null ? "ЗаякаОдобр" :
+                                       //(docРеализация != null || docОтчетККМ != null || docЧекККМ != null) ? "Продажа" :
+                                       j.Iddocdef.ToString(),
+                                  сумма = docСчет != null ? docСчет.Sp2451 :
+                                          docНСчет != null ? docНСчет.Sp2451 :
+                                          docЗаякаНаСогл != null ? docЗаякаНаСогл.Sp2451 :
+                                          docЗаякаСогл != null ? docЗаякаСогл.Sp2451 :
+                                          docЗаякаОдобр != null ? docЗаякаОдобр.Sp2451 :
+                                          docSpros != null ? docSpros.Sp12778 :
+                                          docНабор != null ? docНабор.Sp11946 :
+                                          //docРеализация != null ? docРеализация.Sp1604 :
+                                          //docОтчетККМ != null ? docОтчетККМ.Sp3107 :
+                                          //docЧекККМ != null ? docЧекККМ.Sp13055 :
+                                          0
+                              })
+                              .AsEnumerable();
+                result = result.Concat(Продажи);
+
+                return Json((from t in result
+                          group t by t.id into gr
+                          select new
+                          {
+                              id = gr.Key,
+                              parent = id,
+                              text = gr.Key == "СчетНаОплату" ? "Счета на оплату" :
+                                   gr.Key == "НеподтвержденныйСчет" ? "Неподтвержденные счета" :
+                                   gr.Key == "ЗаявкаНаСогл" ? "Заявки (на согласование)" :
+                                   gr.Key == "ЗаякаСогл" ? "Заявки (согласованные)" :
+                                   gr.Key == "ЗаякаОдобр" ? "Заяки (одобренные)" :
+                                   gr.Key == "12784" ? "Неудовлетворенный спрос" :
+                                   gr.Key == "11948" ? "Набор" :
+                                   gr.Key == "Продажа" ? "Продажи" :
+                                   "Прочее",
+                              children = false,
+                              icon = "jstree-file",
+                              data = new
+                              {
+                                  priority = gr.Key == "12784" ? 10 :
+                                           gr.Key == "НеподтвержденныйСчет" ? 20 :
+                                           gr.Key == "СчетНаОплату" ? 30 :
+                                           gr.Key == "ЗаявкаНаСогл" ? 40 :
+                                           gr.Key == "ЗаякаСогл" ? 50 :
+                                           gr.Key == "ЗаякаОдобр" ? 60 :
+                                           gr.Key == "11948" ? 100 :
+                                           gr.Key == "Продажа" ? 150 :
+                                           1000,
+                                  сумма = gr.Sum(x => x.сумма),
+                              }
+                          })
+                          .OrderBy(x => x.data.priority));
+            }
+            else
+            {
+                if (startDate == DateTime.MinValue)
+                    startDate = DateTime.Now.Date;
+                if (endDate == DateTime.MinValue)
+                    endDate = DateTime.Now;
+                string j_startDateTime = startDate.JournalDateTime();
+                string j_endDateTime = endDate.JournalDateTime();
+
+                var ПредварительнаяЗаявка = (from doc in _context.Dh12747s 
+                                             join j in _context._1sjourns on doc.Iddoc equals j.Iddoc
+                                             join docSpros in _context.Dh12784s on doc.Iddoc equals docSpros.Sp12748.Substring(4,9) into _docSpros
+                                             from docSpros in _docSpros.DefaultIfEmpty()
+                                             where j.Iddocdef == 12747 &&
+                                              j.DateTimeIddoc.CompareTo(j_startDateTime) >= 0 &&
+                                              j.DateTimeIddoc.CompareTo(j_endDateTime) <= 0
+                                             orderby j.DateTimeIddoc
+                                             select new
+                                             {
+                                                 id = j.Iddoc.Replace(' ', '_'),
+                                                 parent = "#",
+                                                 text = "Предварительная заявка №" + j.Docno + " от " + 
+                                                    j.DateTimeIddoc.Substring(6, 2) + "." +
+                                                    j.DateTimeIddoc.Substring(4, 2) + "." +
+                                                    j.DateTimeIddoc.Substring(0, 4) + ".",
+                                                 children = j.Closed == 1,
+                                                 icon = j.Closed == 1 ? "" : "jstree-file",
+                                                 data = new
+                                                 {
+                                                     вид = j.Iddocdef,
+                                                     датаДок = j.DateTimeIddoc,
+                                                     суммаСпроса = docSpros != null ? docSpros.Sp12778 : 0m,
+                                                     сумма = doc.Sp12741,
+                                                 }
+                                             })
+                                             .OrderBy(x => x.data.датаДок)
+                                             .AsEnumerable();
+
+                return Json(ПредварительнаяЗаявка);
+            }
+        }
+        public async Task<string> ЗаписатьДокумент(ИнтернетЗаказ doc)
+        {
+            string message = "";
+            doc.Фирма = _фирмаRepository.GetEntityById(doc.Фирма.Id);
+            doc.Склад = _складRepository.GetEntityById(doc.Склад.Id);
+            doc.Контрагент = _контрагентRepository.GetEntityById(doc.Контрагент.Id);
+            УсловияДоговора условияДоговора = await _контрагентRepository.ПолучитьУсловияДоговораКонтрагентаAsync(doc.Договор.Id);
+            doc.ТипЦен = new ТипЦен { Id = условияДоговора.ТипЦенId, Наименование = условияДоговора.ТипЦен };
+            decimal ПроцентСкидки = условияДоговора.СкидкаОтсрочка + (doc.Доставка ? await _контрагентRepository.ПолучитьПроцентСкидкиЗаДоставкуAsync(doc.Договор.Id, (int)doc.ТипДоставки) : 0);
+            doc.Скидка = await _контрагентRepository.ПолучитьСпрСкидкиПоПроцентуAsync(ПроцентСкидки);
+            List<Корзина> корзина = HttpContext.Session.GetObjectFromJson<List<Корзина>>("мнТабличнаяЧасть");
+            using (var docTran = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    Common.UnLockDocNo(_context, "12747", doc.НомерДок);
+                    if (doc.Доставка && !string.IsNullOrEmpty(doc.НомерМаршрута.Наименование))
+                    {
+                        Маршрут маршрут = _context.СоздатьЭлементМаршрута();
+                        doc.НомерМаршрута.Id = маршрут.Id;
+                        doc.НомерМаршрута.Code = маршрут.Code;
+                    }
+                    DateTime docDateTime = DateTime.Now;
+
+                    _1sjourn j = Common.GetEntityJourn(_context, 0, 0, 4588, 12747, null, "ПредварительнаяЗаявка",
+                        doc.НомерДок, docDateTime,
+                        doc.Фирма.Id,
+                        doc.Пользователь.Id,
+                        doc.Склад.Наименование,
+                        doc.Контрагент.Наименование);
+                    await _context._1sjourns.AddAsync(j);
+
+                    doc.DocId = j.Iddoc;
+                    doc.ДатаДок = docDateTime;
+                    Dh12747 docHeader = new Dh12747
+                    {
+                        Iddoc = j.Iddoc,
+                        Sp12711 = Common.ПустоеЗначениеИд13,//докОснование
+                        Sp12712 = doc.Фирма.Счет.Id, //БанковскийСчет
+                        Sp12713 = doc.Контрагент.Id,
+                        Sp12714 = doc.Договор.Id,
+                        Sp12715 = Common.ВалютаРубль,
+                        Sp12716 = 1, //Курс
+                        Sp12717 = doc.Фирма.ЮрЛицо.УчитыватьНДС,
+                        Sp12718 = 1, //СуммаВклНДС
+                        Sp12719 = 0, //УчитыватьНП
+                        Sp12720 = 0, //СуммаВклНП
+                        Sp12721 = корзина.Sum(x => x.Сумма), //СуммаВзаиморасчетов
+                        Sp12722 = doc.ТипЦен.Id, //ТипЦен
+                        Sp12723 = doc.Скидка.Id, //Скидка
+                        Sp12724 = doc.ДатаОплаты,
+                        Sp12725 = doc.ДатаОтгрузки,
+                        Sp12726 = doc.Склад.Id,
+                        Sp12727 = Common.СпособыРезервирования.FirstOrDefault(x => x.Value == "Резервировать только из текущего остатка").Key,
+                        Sp12728 = (doc.СкидКарта.Id == null ? Common.ПустоеЗначение : doc.СкидКарта.Id),
+                        Sp12729 = 1, //ПоСтандарту
+                        Sp12730 = 0, //ДанаДопСкидка
+                        Sp12731 = Common.СпособыОтгрузки.FirstOrDefault(x => x.Value == doc.CпособОтгрузки).Key,
+                        Sp12732 = "", //НомерКвитанции
+                        Sp12733 = 0, //ДатаКвитанции
+                        Sp12734 = (doc.Доставка ? doc.НомерМаршрута.Code : ""), //ИндМаршрута
+                        Sp12735 = (doc.Доставка ? doc.НомерМаршрута.Наименование : ""), //НомерМаршрута
+                        Sp14007 = Common.ПустоеЗначение,
+                        Sp12741 = 0, //Сумма
+                        Sp12743 = 0, //СуммаНДС
+                        Sp12745 = 0, //СуммаНП
+                        Sp660 = string.IsNullOrEmpty(doc.Комментарий) ? "" : doc.Комментарий
+                    };
+                    await _context.Dh12747s.AddAsync(docHeader);
+
+                    short lineNo = 1;
+                    foreach (Корзина item in корзина)
+                    {
+                        Единицы ОсновнаяЕдиница = await _номенклатураRepository.ОсновнаяЕдиницаAsync(item.Id);
+                        СтавкаНДС ставкаНДС = await _номенклатураRepository.СтавкаНДСAsync(item.Id);
+                        Dt12747 docRow = new Dt12747
+                        {
+                            Iddoc = j.Iddoc,
+                            Lineno = lineNo++,
+                            Sp12736 = item.Id,
+                            Sp12737 = item.Quantity,
+                            Sp12738 = ОсновнаяЕдиница.Id,
+                            Sp12739 = ОсновнаяЕдиница.Коэффициент,
+                            Sp12740 = item.Цена,
+                            Sp12741 = item.Сумма,
+                            Sp12742 = ставкаНДС.Id,
+                            Sp12743 = item.Сумма * (ставкаНДС.Процент/(100 + ставкаНДС.Процент)),
+                            Sp12744 = Common.ПустоеЗначение,
+                            Sp12745 = 0,
+                            Sp13041 = 0
+                        };
+                        await _context.Dt12747s.AddAsync(docRow);
+                    }
+                    await _context.SaveChangesAsync();
+                    await Common.РегистрацияИзмененийРаспределеннойИБAsync(_context, 12747, j.Iddoc);
+
+                    await _context.Database.ExecuteSqlRawAsync(
+                        "exec _1sp_DH12747_UpdateTotals @num36",
+                        new SqlParameter("@num36", j.Iddoc)
+                        );
+                    await _context.SaveChangesAsync();
+
+                    docTran.Commit();
+                    message = "OK";
+                }
+                catch (SqlException ex)
+                {
+                    docTran.Rollback();
+                    if (ex.Number == -2)
+                        return "timeout";
+                    else
+                        return ex.Message + Environment.NewLine + ex.InnerException;
+                }
+                catch (Exception ex)
+                {
+                    docTran.Rollback();
+                    return ex.Message + Environment.NewLine + ex.InnerException;
+                }
+            }
+            return message;
+        }
+        public async Task<string> СоздатьДокументСчет(ИнтернетЗаказ doc, Dictionary<string,List<ДанныеТабличнойЧасти>> переченьНаличия, List<string> СписокФирм, List<string> СписокСкладов)
+        {
+            string message = "";
+            DateTime dateReg = Common.GetRegTA(_context);
+            List<string> СписокТоваров = new List<string>();
+            foreach (string склId in переченьНаличия.Keys)
+            {
+                СписокТоваров.AddRange(переченьНаличия[склId].Select(x => x.Номенклатура.Id));
+            }
+            IEnumerable<ТаблицаСвободныхОстатков> ТзОстатки = _номенклатураRepository.ПодготовитьОстатки(dateReg, СписокФирм, СписокСкладов, СписокТоваров).AsEnumerable();
+
+            foreach (string склId in переченьНаличия.Keys)
+            {
+                List<ДанныеТабличнойЧасти> данныеТабличнойЧасти = переченьНаличия[склId];
+                DateTime docDateTime = doc.ДатаДок.AddSeconds(1);
+                DateTime docDate = docDateTime.Date;
+                _1sjourn j = Common.GetEntityJourn(_context, 1, 0, 4588, 2457, null, "ЗаявкаПокупателя",
+                    null, docDateTime,
+                    doc.Фирма.Id,
+                    doc.Пользователь.Id,
+                    doc.Склад.Наименование,
+                    doc.Контрагент.Наименование);
+                //await _context._1sjourns.AddAsync(j);
+                //DateTime docDate = DateTime.ParseExact(j.DateTimeIddoc.Substring(0, 8), "yyyyMMdd", CultureInfo.InvariantCulture);
+
+                Dh2457 docHeader = new Dh2457
+                {
+                    Iddoc = j.Iddoc,
+                    Sp4433 = Common.Encode36(12747).PadLeft(4) + doc.DocId,
+                    Sp2621 = doc.Фирма.Счет.Id,
+                    Sp2434 = doc.Контрагент.Id,
+                    Sp2435 = doc.Договор.Id,
+                    Sp2436 = Common.ВалютаРубль,
+                    Sp2437 = 1, //Курс
+                    Sp2439 = doc.Фирма.ЮрЛицо.УчитыватьНДС,
+                    Sp2440 = 1, //СуммаВклНДС
+                    Sp2441 = 0, //УчитыватьНП
+                    Sp2442 = 0, //СуммаВклНП
+                    Sp2443 = данныеТабличнойЧасти.Sum(x => x.Сумма), //СуммаВзаиморасчетов
+                    Sp2444 = doc.ТипЦен.Id, //ТипЦен
+                    Sp2445 = doc.Скидка.Id, //Скидка
+                    Sp2438 = doc.ДатаОплаты,
+                    Sp4434 = doc.ДатаОтгрузки,
+                    Sp4437 = склId,
+                    Sp4760 = Common.ВидыОперации.FirstOrDefault(x => x.Value == "Счет на оплату").Key,//ВидОперации
+                    Sp7943 = Common.СпособыРезервирования.FirstOrDefault(x => x.Value == "Резервировать только из текущего остатка").Key,
+                    Sp8681 = (doc.СкидКарта.Id == null ? Common.ПустоеЗначение : doc.СкидКарта.Id),
+                    Sp8835 = 1, //ПоСтандарту
+                    Sp8910 = 0, //ДанаДопСкидка
+                    Sp10382 = Common.СпособыОтгрузки.FirstOrDefault(x => x.Value == doc.CпособОтгрузки).Key,
+                    Sp10864 = "", //НомерКвитанции
+                    Sp10865 = 0, //ДатаКвитанции
+                    Sp11556 = (doc.Доставка ? doc.НомерМаршрута.Code : ""), //ИндМаршрута
+                    Sp11557 = (doc.Доставка ? doc.НомерМаршрута.Наименование : ""), //НомерМаршрута
+                    Sp2451 = 0, //Сумма
+                    Sp2452 = 0, //СуммаНДС
+                    Sp2453 = 0, //СуммаНП
+                    Sp660 = string.IsNullOrEmpty(doc.Комментарий) ? "" : doc.Комментарий,
+                };
+                await _context.Dh2457s.AddAsync(docHeader);
+                short lineNo = 1;
+                int КоличествоДвижений = 0;
+                bool Приход = true;
+                foreach (ДанныеТабличнойЧасти item in данныеТабличнойЧасти)
+                {
+                    СтавкаНДС ставкаНДС = await _номенклатураRepository.СтавкаНДСAsync(item.Номенклатура.Id);
+                    Dt2457 docRow = new Dt2457
+                    {
+                        Iddoc = j.Iddoc,
+                        Lineno = lineNo++,
+                        Sp2446 = item.Номенклатура.Id,
+                        Sp2447 = Math.Round(item.Количество / item.Номенклатура.Единица.Коэффициент, 3),
+                        Sp2448 = item.Номенклатура.Единица.Id,
+                        Sp2449 = item.Номенклатура.Единица.Коэффициент,
+                        Sp2450 = item.Цена,
+                        Sp2451 = item.Сумма,
+                        Sp2454 = ставкаНДС.Id,
+                        Sp2452 = item.Сумма * (ставкаНДС.Процент / (100 + ставкаНДС.Процент)),
+                        Sp2455 = Common.ПустоеЗначение,
+                        Sp2453 = 0,
+                    };
+                    await _context.Dt2457s.AddAsync(docRow);
+
+                    decimal Зарезервировать = item.Количество;
+                    if (Зарезервировать > 0)
+                        foreach (string фирмаId in СписокФирм)
+                        {
+                            decimal Остаток = ТзОстатки
+                                .Where(x => x.Фирма.Id == фирмаId && x.Склад.Id == склId && x.Номенклатура.Id == item.Номенклатура.Id)
+                                .Sum(x => x.СвободныйОстаток);
+                            decimal МожноЗарезервировать = Math.Min(Остаток, Зарезервировать);
+                            if (МожноЗарезервировать > 0)
+                            {
+                                КоличествоДвижений++;
+                                //РезервыТМЦ
+                                j.Rf4480 = true;
+                                await _context.Database.ExecuteSqlRawAsync("exec _1sp_RA4480_WriteDocAct @num36,0,@ActNo,@DebetCredit," +
+                                    "@Фирма,@Номенклатура,@Склад,@ДоговорПокупателя,@ЗаявкаПокупателя,@Количество," +
+                                    "@docDate,@CurPeriod,1,0",
+                                    new SqlParameter("@num36", j.Iddoc),
+                                    new SqlParameter("@ActNo", КоличествоДвижений),
+                                    new SqlParameter("@DebetCredit", Приход ? 0 : 1),
+                                    new SqlParameter("@Фирма", фирмаId),
+                                    new SqlParameter("@Номенклатура", item.Номенклатура.Id),
+                                    new SqlParameter("@Склад", склId),
+                                    new SqlParameter("@ДоговорПокупателя", doc.Договор.Id),
+                                    new SqlParameter("@ЗаявкаПокупателя", j.Iddoc),
+                                    new SqlParameter("@Количество", МожноЗарезервировать),
+                                    new SqlParameter("@docDate", docDate.ToShortDateString()),
+                                    new SqlParameter("@CurPeriod", dateReg.ToShortDateString()));
+                                
+                                КоличествоДвижений++;
+                                //Заявки
+                                j.Rf4674 = true;
+                                await _context.Database.ExecuteSqlRawAsync("exec _1sp_RA4674_WriteDocAct @num36,0,@ActNo,@DebetCredit," +
+                                    "@Фирма,@Номенклатура,@ДоговорПокупателя,@ЗаявкаПокупателя,@КоличествоРасход,@СтоимостьРасход," +
+                                    "@docDate,@CurPeriod,1,0",
+                                    new SqlParameter("@num36", j.Iddoc),
+                                    new SqlParameter("@ActNo", КоличествоДвижений),
+                                    new SqlParameter("@DebetCredit", Приход ? 0 : 1),
+                                    new SqlParameter("@Фирма", фирмаId),
+                                    new SqlParameter("@Номенклатура", item.Номенклатура.Id),
+                                    new SqlParameter("@ДоговорПокупателя", doc.Договор.Id),
+                                    new SqlParameter("@ЗаявкаПокупателя", j.Iddoc),
+                                    new SqlParameter("@КоличествоРасход", МожноЗарезервировать),
+                                    new SqlParameter("@СтоимостьРасход", (МожноЗарезервировать / item.Номенклатура.Единица.Коэффициент) * item.Цена),
+                                    new SqlParameter("@docDate", docDate.ToShortDateString()),
+                                    new SqlParameter("@CurPeriod", dateReg.ToShortDateString()));
+                                Зарезервировать = Зарезервировать - МожноЗарезервировать;
+                            }
+                            if (Зарезервировать <= 0)
+                                break;
+                        }
+                    if (Зарезервировать > 0)
+                    {
+                        if (!string.IsNullOrEmpty(message))
+                            message += Environment.NewLine;
+                        message += "На складе нет нужного свободного количества ТМЦ ";
+                        if (!string.IsNullOrEmpty(item.Номенклатура.Артикул))
+                            message += "(" + item.Номенклатура.Артикул + ") ";
+                        if (!string.IsNullOrEmpty(item.Номенклатура.Наименование))
+                            message += item.Номенклатура.Наименование;
+                        else
+                            message += "'" + item.Номенклатура.Id + "'";
+                    }
+                }
+                if (doc.Доставка && !string.IsNullOrEmpty(doc.НомерМаршрута.Id) && !string.IsNullOrEmpty(doc.НомерМаршрута.Наименование))
+                {
+                    КоличествоДвижений++;
+                    await _context._1sconsts.AddAsync(_context.ИзменитьПериодическиеРеквизиты(doc.НомерМаршрута.Id, 11552, j.Iddoc, docDateTime, Common.Encode36(2457).PadLeft(4) + j.Iddoc, КоличествоДвижений));
+                    КоличествоДвижений++;
+                    await _context._1sconsts.AddAsync(_context.ИзменитьПериодическиеРеквизиты(doc.НомерМаршрута.Id, 11553, j.Iddoc, docDateTime, doc.НомерМаршрута.Наименование, КоличествоДвижений));
+                }
+                j.Actcnt = КоличествоДвижений;
+                await _context._1sjourns.AddAsync(j);
+
+                await _context.SaveChangesAsync();
+                await Common.РегистрацияИзмененийРаспределеннойИБAsync(_context, 2457, j.Iddoc);
+                await Common.ОбновитьПодчиненныеДокументы(_context, Common.Encode36(12747).PadLeft(4) + doc.DocId, j.DateTimeIddoc, j.Iddoc);
+
+                await _context.Database.ExecuteSqlRawAsync(
+                    "exec _1sp_DH2457_UpdateTotals @num36",
+                    new SqlParameter("@num36", j.Iddoc)
+                    );
+
+                //await Common.ОбновитьВремяТА(_context, j.Iddoc, j.DateTimeIddoc);
+                //await Common.ОбновитьПоследовательность(_context, j.DateTimeIddoc);
+                MaxIddoc = j.Iddoc;
+                MaxDateTimeIddoc = j.DateTimeIddoc;
+            }
+            return message;
+        }
+        public async Task<string> СоздатьДокументСпрос(ИнтернетЗаказ doc, List<ДанныеТабличнойЧасти> СпросТаблица)
+        {
+            string message = "";
+            DateTime dateReg = Common.GetRegTA(_context);
+            DateTime docDateTime = doc.ДатаДок.AddSeconds(1);
+            DateTime docDate = docDateTime.Date;
+            _1sjourn j = Common.GetEntityJourn(_context, 1, 0, 4588, 12784, null, "Спрос",
+                null, docDateTime,
+                doc.Фирма.Id,
+                doc.Пользователь.Id,
+                doc.Склад.Наименование,
+                doc.Контрагент.Наименование);
+
+            Dh12784 docHeader = new Dh12784
+            {
+                Iddoc = j.Iddoc,
+                Sp12748 = Common.Encode36(12747).PadLeft(4) + doc.DocId,
+                Sp12749 = doc.Фирма.Счет.Id,
+                Sp12750 = doc.Контрагент.Id,
+                Sp12751 = doc.Договор.Id,
+                Sp12752 = Common.ВалютаРубль,
+                Sp12753 = 1, //Курс
+                Sp12754 = doc.Фирма.ЮрЛицо.УчитыватьНДС,
+                Sp12755 = 1, //СуммаВклНДС
+                Sp12756 = 0, //УчитыватьНП
+                Sp12757 = 0, //СуммаВклНП
+                Sp12758 = СпросТаблица.Sum(x => x.Сумма), //СуммаВзаиморасчетов
+                Sp12759 = doc.ТипЦен.Id, //ТипЦен
+                Sp12760 = doc.Скидка.Id, //Скидка
+                Sp12761 = doc.ДатаОплаты,
+                Sp12762 = doc.ДатаОтгрузки,
+                Sp12763 = doc.Склад.Id,
+                Sp12764 = Common.СпособыРезервирования.FirstOrDefault(x => x.Value == "Резервировать только из текущего остатка").Key,
+                Sp12765 = (doc.СкидКарта.Id == null ? Common.ПустоеЗначение : doc.СкидКарта.Id),
+                Sp12766 = 1, //ПоСтандарту
+                Sp12767 = 0, //ДанаДопСкидка
+                Sp12768 = Common.СпособыОтгрузки.FirstOrDefault(x => x.Value == doc.CпособОтгрузки).Key,
+                Sp12769 = "", //НомерКвитанции
+                Sp12770 = 0, //ДатаКвитанции
+                Sp12771 = "", //ИндМаршрута
+                Sp12772 = "", //НомерМаршрута
+                Sp12778 = 0, //Сумма
+                Sp12780 = 0, //СуммаНДС
+                Sp12782 = 0, //СуммаНП
+                Sp660 = string.IsNullOrEmpty(doc.Комментарий) ? "" : doc.Комментарий,
+            };
+            await _context.Dh12784s.AddAsync(docHeader);
+            short lineNo = 1;
+            int КоличествоДвижений = 0;
+            bool Приход = true;
+            foreach (ДанныеТабличнойЧасти item in СпросТаблица)
+            {
+                СтавкаНДС ставкаНДС = await _номенклатураRepository.СтавкаНДСAsync(item.Номенклатура.Id);
+                Dt12784 docRow = new Dt12784
+                {
+                    Iddoc = j.Iddoc,
+                    Lineno = lineNo++,
+                    Sp12773 = item.Номенклатура.Id,
+                    Sp12774 = Math.Round(item.Количество / item.Номенклатура.Единица.Коэффициент, 3),
+                    Sp12775 = item.Номенклатура.Единица.Id,
+                    Sp12776 = item.Номенклатура.Единица.Коэффициент,
+                    Sp12777 = item.Цена,
+                    Sp12778 = item.Сумма,
+                    Sp12779 = ставкаНДС.Id,
+                    Sp12780 = item.Сумма * (ставкаНДС.Процент / (100 + ставкаНДС.Процент)),
+                    Sp12781 = Common.ПустоеЗначение,
+                    Sp12782 = 0,
+                };
+                await _context.Dt12784s.AddAsync(docRow);
+
+                КоличествоДвижений++;
+                //Спрос
+                j.Rf12791 = true;
+                await _context.Database.ExecuteSqlRawAsync("exec _1sp_RA12791_WriteDocAct @num36,0,@ActNo,@DebetCredit," +
+                    "@Номенклатура,@Покупатель,@Склад,@Количество,@Стоимость," +
+                    "@docDate,@CurPeriod,1,0",
+                    new SqlParameter("@num36", j.Iddoc),
+                    new SqlParameter("@ActNo", КоличествоДвижений),
+                    new SqlParameter("@DebetCredit", Приход ? 0 : 1),
+                    new SqlParameter("@Номенклатура", item.Номенклатура.Id),
+                    new SqlParameter("@Покупатель", doc.Контрагент.Id),
+                    new SqlParameter("@Склад", doc.Склад.Id),
+                    new SqlParameter("@Количество", item.Количество),
+                    new SqlParameter("@Стоимость", item.Сумма),
+                    new SqlParameter("@docDate", docDate.ToShortDateString()),
+                    new SqlParameter("@CurPeriod", dateReg.ToShortDateString()));
+
+                КоличествоДвижений++;
+                //СпросОстатки
+                j.Rf12815 = true;
+                await _context.Database.ExecuteSqlRawAsync("exec _1sp_RA12815_WriteDocAct @num36,0,@ActNo,@DebetCredit," +
+                    "@Номенклатура,@Покупатель,@Склад,@Фирма,@Количество," +
+                    "@docDate,@CurPeriod,1,0",
+                    new SqlParameter("@num36", j.Iddoc),
+                    new SqlParameter("@ActNo", КоличествоДвижений),
+                    new SqlParameter("@DebetCredit", Приход ? 0 : 1),
+                    new SqlParameter("@Номенклатура", item.Номенклатура.Id),
+                    new SqlParameter("@Покупатель", doc.Контрагент.Id),
+                    new SqlParameter("@Склад", doc.Склад.Id),
+                    new SqlParameter("@Фирма", doc.Фирма.Id),
+                    new SqlParameter("@Количество", item.Количество),
+                    new SqlParameter("@docDate", docDate.ToShortDateString()),
+                    new SqlParameter("@CurPeriod", dateReg.ToShortDateString()));
+            }
+            j.Actcnt = КоличествоДвижений;
+            await _context._1sjourns.AddAsync(j);
+
+            await _context.SaveChangesAsync();
+            await Common.РегистрацияИзмененийРаспределеннойИБAsync(_context, 12784, j.Iddoc);
+            await Common.ОбновитьПодчиненныеДокументы(_context, Common.Encode36(12747).PadLeft(4) + doc.DocId, j.DateTimeIddoc, j.Iddoc);
+
+            await _context.Database.ExecuteSqlRawAsync(
+                "exec _1sp_DH12784_UpdateTotals @num36",
+                new SqlParameter("@num36", j.Iddoc)
+                );
+
+            //await Common.ОбновитьВремяТА(_context, j.Iddoc, j.DateTimeIddoc);
+            //await Common.ОбновитьПоследовательность(_context, j.DateTimeIddoc);
+            MaxIddoc = j.Iddoc;
+            MaxDateTimeIddoc = j.DateTimeIddoc;
+
+            return message;
+        }
+        public async Task<string> СоздатьДокументЗаявкаДилера(ИнтернетЗаказ doc, Фирма ФирмаАлко, List<Корзина> ТаблицаДилерскойЗаявки)
+        {
+            string message = "";
+            DateTime dateReg = Common.GetRegTA(_context);
+            DateTime docDateTime = doc.ДатаДок.AddSeconds(1);
+            DateTime docDate = docDateTime.Date;
+
+            _1sjourn j = Common.GetEntityJourn(_context, 1, 0, 4588, 2457, null, "ЗаявкаПокупателя",
+                null, docDateTime,
+                ФирмаАлко.Id,
+                doc.Пользователь.Id,
+                doc.Склад.Наименование,
+                doc.Контрагент.Наименование);
+
+            Dh2457 docHeader = new Dh2457
+            {
+                Iddoc = j.Iddoc,
+                Sp4433 = Common.Encode36(12747).PadLeft(4) + doc.DocId,
+                Sp2621 = ФирмаАлко.Счет.Id,
+                Sp2434 = doc.Контрагент.Id,
+                Sp2435 = doc.Договор.Id,
+                Sp2436 = Common.ВалютаРубль,
+                Sp2437 = 1, //Курс
+                Sp2439 = ФирмаАлко.ЮрЛицо.УчитыватьНДС,
+                Sp2440 = 1, //СуммаВклНДС
+                Sp2441 = 0, //УчитыватьНП
+                Sp2442 = 0, //СуммаВклНП
+                Sp2443 = ТаблицаДилерскойЗаявки.Sum(x => x.Сумма), //СуммаВзаиморасчетов
+                Sp2444 = doc.ТипЦен.Id, //ТипЦен
+                Sp2445 = doc.Скидка.Id, //Скидка
+                Sp2438 = doc.ДатаОплаты,
+                Sp4434 = doc.ДатаОтгрузки,
+                Sp4437 = doc.Склад.Id,
+                Sp4760 = Common.ВидыОперации.FirstOrDefault(x => x.Value == "Заявка дилера").Key,//ВидОперации
+                Sp7943 = Common.СпособыРезервирования.FirstOrDefault(x => x.Value == "Резервировать только из текущего остатка").Key,
+                Sp8681 = (doc.СкидКарта.Id == null ? Common.ПустоеЗначение : doc.СкидКарта.Id),
+                Sp8835 = 1, //ПоСтандарту
+                Sp8910 = 0, //ДанаДопСкидка
+                Sp10382 = Common.СпособыОтгрузки.FirstOrDefault(x => x.Value == doc.CпособОтгрузки).Key,
+                Sp10864 = "", //НомерКвитанции
+                Sp10865 = 0, //ДатаКвитанции
+                Sp11556 = (doc.Доставка ? doc.НомерМаршрута.Code : ""), //ИндМаршрута
+                Sp11557 = (doc.Доставка ? doc.НомерМаршрута.Наименование : ""), //НомерМаршрута
+                Sp2451 = 0, //Сумма
+                Sp2452 = 0, //СуммаНДС
+                Sp2453 = 0, //СуммаНП
+                Sp660 = string.IsNullOrEmpty(doc.Комментарий) ? "" : doc.Комментарий,
+            };
+            await _context.Dh2457s.AddAsync(docHeader);
+
+            short lineNo = 1;
+            int КоличествоДвижений = 0;
+            bool Приход = true;
+            IEnumerable<ТаблицаСвободныхОстатков> ТзОстатки = _номенклатураRepository.ПодготовитьОстатки(
+                dateReg, 
+                new List<string>() { ФирмаАлко.Id }, 
+                new List<string>() { doc.Склад.Id },
+                ТаблицаДилерскойЗаявки.Select(x => x.Id).ToList())
+                .AsEnumerable();
+
+            foreach (Корзина item in ТаблицаДилерскойЗаявки)
+            {
+                Единицы ОсновнаяЕдиница = await _номенклатураRepository.ОсновнаяЕдиницаAsync(item.Id);
+                СтавкаНДС ставкаНДС = await _номенклатураRepository.СтавкаНДСAsync(item.Id);
+                Dt2457 docRow = new Dt2457
+                {
+                    Iddoc = j.Iddoc,
+                    Lineno = lineNo++,
+                    Sp2446 = item.Id,
+                    Sp2447 = item.Quantity,
+                    Sp2448 = ОсновнаяЕдиница.Id,
+                    Sp2449 = ОсновнаяЕдиница.Коэффициент,
+                    Sp2450 = item.Цена,
+                    Sp2451 = item.Сумма,
+                    Sp2454 = ставкаНДС.Id,
+                    Sp2452 = item.Сумма * (ставкаНДС.Процент / (100 + ставкаНДС.Процент)),
+                    Sp2455 = Common.ПустоеЗначение,
+                    Sp2453 = 0,
+                };
+                await _context.Dt2457s.AddAsync(docRow);
+
+                decimal Зарезервировать = item.Quantity * ОсновнаяЕдиница.Коэффициент;
+                if (Зарезервировать > 0)
+                {
+                    decimal Остаток = ТзОстатки
+                        .Where(x => x.Фирма.Id == ФирмаАлко.Id && x.Склад.Id == doc.Склад.Id && x.Номенклатура.Id == item.Id)
+                        .Sum(x => x.СвободныйОстаток);
+                    decimal МожноЗарезервировать = Math.Min(Остаток, Зарезервировать);
+                    if (МожноЗарезервировать > 0)
+                    {
+                        КоличествоДвижений++;
+                        //РезервыТМЦ
+                        j.Rf4480 = true;
+                        await _context.Database.ExecuteSqlRawAsync("exec _1sp_RA4480_WriteDocAct @num36,0,@ActNo,@DebetCredit," +
+                            "@Фирма,@Номенклатура,@Склад,@ДоговорПокупателя,@ЗаявкаПокупателя,@Количество," +
+                            "@docDate,@CurPeriod,1,0",
+                            new SqlParameter("@num36", j.Iddoc),
+                            new SqlParameter("@ActNo", КоличествоДвижений),
+                            new SqlParameter("@DebetCredit", Приход ? 0 : 1),
+                            new SqlParameter("@Фирма", ФирмаАлко.Id),
+                            new SqlParameter("@Номенклатура", item.Id),
+                            new SqlParameter("@Склад", doc.Склад.Id),
+                            new SqlParameter("@ДоговорПокупателя", doc.Договор.Id),
+                            new SqlParameter("@ЗаявкаПокупателя", j.Iddoc),
+                            new SqlParameter("@Количество", МожноЗарезервировать),
+                            new SqlParameter("@docDate", docDate.ToShortDateString()),
+                            new SqlParameter("@CurPeriod", dateReg.ToShortDateString()));
+
+                        КоличествоДвижений++;
+                        //Заявки
+                        j.Rf4674 = true;
+                        await _context.Database.ExecuteSqlRawAsync("exec _1sp_RA4674_WriteDocAct @num36,0,@ActNo,@DebetCredit," +
+                            "@Фирма,@Номенклатура,@ДоговорПокупателя,@ЗаявкаПокупателя,@КоличествоРасход,@СтоимостьРасход," +
+                            "@docDate,@CurPeriod,1,0",
+                            new SqlParameter("@num36", j.Iddoc),
+                            new SqlParameter("@ActNo", КоличествоДвижений),
+                            new SqlParameter("@DebetCredit", Приход ? 0 : 1),
+                            new SqlParameter("@Фирма", ФирмаАлко.Id),
+                            new SqlParameter("@Номенклатура", item.Id),
+                            new SqlParameter("@ДоговорПокупателя", doc.Договор.Id),
+                            new SqlParameter("@ЗаявкаПокупателя", j.Iddoc),
+                            new SqlParameter("@КоличествоРасход", МожноЗарезервировать),
+                            new SqlParameter("@СтоимостьРасход", (МожноЗарезервировать / ОсновнаяЕдиница.Коэффициент) * item.Цена),
+                            new SqlParameter("@docDate", docDate.ToShortDateString()),
+                            new SqlParameter("@CurPeriod", dateReg.ToShortDateString()));
+                        Зарезервировать = Зарезервировать - МожноЗарезервировать;
+                    }
+                }
+                if (Зарезервировать > 0)
+                {
+                    if (!string.IsNullOrEmpty(message))
+                        message += Environment.NewLine;
+                    message += "На складе нет нужного свободного количества ТМЦ ";
+                    if (!string.IsNullOrEmpty(item.Артикул))
+                        message += "(" + item.Артикул + ") ";
+                    if (!string.IsNullOrEmpty(item.Наименование))
+                        message += item.Наименование;
+                    else
+                        message += "'" + item.Id + "'";
+                }
+            }
+            if (doc.Доставка && !string.IsNullOrEmpty(doc.НомерМаршрута.Id) && !string.IsNullOrEmpty(doc.НомерМаршрута.Наименование))
+            {
+                КоличествоДвижений++;
+                await _context._1sconsts.AddAsync(_context.ИзменитьПериодическиеРеквизиты(doc.НомерМаршрута.Id, 11552, j.Iddoc, docDateTime, Common.Encode36(2457).PadLeft(4) + j.Iddoc, КоличествоДвижений));
+                КоличествоДвижений++;
+                await _context._1sconsts.AddAsync(_context.ИзменитьПериодическиеРеквизиты(doc.НомерМаршрута.Id, 11553, j.Iddoc, docDateTime, doc.НомерМаршрута.Наименование, КоличествоДвижений));
+            }
+            j.Actcnt = КоличествоДвижений;
+            await _context._1sjourns.AddAsync(j);
+
+            await _context.SaveChangesAsync();
+            await Common.РегистрацияИзмененийРаспределеннойИБAsync(_context, 2457, j.Iddoc);
+            await Common.ОбновитьПодчиненныеДокументы(_context, Common.Encode36(12747).PadLeft(4) + doc.DocId, j.DateTimeIddoc, j.Iddoc);
+
+            await _context.Database.ExecuteSqlRawAsync(
+                "exec _1sp_DH2457_UpdateTotals @num36",
+                new SqlParameter("@num36", j.Iddoc)
+                );
+
+            MaxIddoc = j.Iddoc;
+            MaxDateTimeIddoc = j.DateTimeIddoc;
+
+            return message;
+        }
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> CreateDoc(ИнтернетЗаказ doc)
+        {
+            string message = await ЗаписатьДокумент(doc);
+            if (message == "OK")
+            {
+                #region temp 
+                List<string> СписокСкладов = new List<string>() { doc.Склад.Id };
+                #endregion temp
+                message = "";
+                List<Корзина> корзина = HttpContext.Session.GetObjectFromJson<List<Корзина>>("мнТабличнаяЧасть");
+                Common.SetObjectAsJson(HttpContext.Session, "мнТабличнаяЧасть", null);
+
+                Фирма ФирмаАлко = null;
+                Контрагент КонтрагентАлко = null;
+                IEnumerable<Номенклатура> СписокТоваровДилера = Enumerable.Empty<Номенклатура>();
+                if (await _контрагентRepository.ПроверкаНаДилераAsync(doc.Контрагент.Id, "Дилер АЛ-КО КОБЕР", "ДА"))
+                {
+                    string АлкоИНН = "7701190698";
+                    КонтрагентАлко = await _контрагентRepository.ПолучитьПоИННAsync(АлкоИНН) ?? new Контрагент { Id = "" };
+                    СписокТоваровДилера = _номенклатураRepository.ПолучитьНоменклатуруПоАгентуПроизводителя(КонтрагентАлко.Id, корзина.Select(x => x.Id)).AsEnumerable();
+                    if (СписокТоваровДилера != null && СписокТоваровДилера.Count() > 0)
+                        ФирмаАлко = await _фирмаRepository.ПолучитьПоИННAsync(АлкоИНН);
+                }
+                List<string> СписокФирм = await _фирмаRepository.ПолучитьСписокРазрешенныхФирмAsync(doc.Фирма.Id);
+                List<Корзина> ТаблицаДилерскойЗаявки = new List<Корзина>();
+                Dictionary<string, List<ДанныеТабличнойЧасти>> ПереченьНаличия = new Dictionary<string, List<ДанныеТабличнойЧасти>>();
+                List<ДанныеТабличнойЧасти> СпросТаблица = new List<ДанныеТабличнойЧасти>();
+                DateTime dateReg = Common.GetRegTA(_context);
+                using (var docTran = await _context.Database.BeginTransactionAsync())
+                {
+                    try
+                    {
+                        var СпросОстатки = _context.Rg12815s.Where(x => x.Period == dateReg &&
+                            x.Sp12812 == doc.Контрагент.Id &&
+                            x.Sp12813 == doc.Склад.Id &&
+                            x.Sp12818 == doc.Фирма.Id)
+                            .DefaultIfEmpty()
+                            .ToList();
+
+                        _1sjourn j = await _context._1sjourns.FirstOrDefaultAsync(x => x.Iddoc == doc.DocId);
+                        j.Closed = 1;
+                        j.Actcnt = (СпросОстатки != null ? СпросОстатки.Count() : 0);
+                        j.Rf12815 = СпросОстатки != null; //СпросОстатки
+                        _context.Update(j);
+                        await _context.SaveChangesAsync();
+                        int КоличествоДвижений = 0;
+                        bool Приход = false;
+                        DateTime docDate = DateTime.ParseExact(j.DateTimeIddoc.Substring(0, 8), "yyyyMMdd", CultureInfo.InvariantCulture);
+
+                        if (СпросОстатки != null)
+                            foreach (var r in СпросОстатки)
+                            {
+                                if (r != null)
+                                {
+                                    КоличествоДвижений++;
+                                    await _context.Database.ExecuteSqlRawAsync("exec _1sp_RA12815_WriteDocAct @num36,0,@ActNo,@DebetCredit," +
+                                        "@Номенклатура,@Покупатель,@Склад,@Фирма,@Количество," +
+                                        "@docDate,@CurPeriod,1,0",
+                                        new SqlParameter("@num36", j.Iddoc),
+                                        new SqlParameter("@ActNo", КоличествоДвижений),
+                                        new SqlParameter("@DebetCredit", Приход ? 0 : 1),
+                                        new SqlParameter("@Номенклатура", r.Sp12811),
+                                        new SqlParameter("@Покупатель", r.Sp12812),
+                                        new SqlParameter("@Склад", r.Sp12813),
+                                        new SqlParameter("@Фирма", r.Sp12818),
+                                        new SqlParameter("@Количество", r.Sp12814),
+                                        new SqlParameter("@docDate", docDate.ToShortDateString()),
+                                        new SqlParameter("@CurPeriod", dateReg.ToShortDateString()));
+                                }
+                            }
+                        //await Common.ОбновитьВремяТА(_context, j.Iddoc, j.DateTimeIddoc);
+                        //await Common.ОбновитьПоследовательность(_context, j.DateTimeIddoc);
+                        //await _context.SaveChangesAsync();
+                        MaxIddoc = j.Iddoc;
+                        MaxDateTimeIddoc = j.DateTimeIddoc;
+
+                        IEnumerable<ТаблицаСвободныхОстатков> ТзОстатки = _номенклатураRepository.ПодготовитьСвободныеОстатки(Common.min1cDate, СписокФирм, СписокСкладов, корзина.Select(x => x.Id).ToList()).AsEnumerable();
+                        foreach (Корзина item in корзина)
+                        {
+                            if (СписокТоваровДилера.Any(x => x.Id == item.Id))
+                            {
+                                ТаблицаДилерскойЗаявки.Add(item);
+                            }
+                            else
+                            {
+                                Единицы ОсновнаяЕдиница = await _номенклатураRepository.ОсновнаяЕдиницаAsync(item.Id);
+                                decimal ТекОстатокСуммы = item.Сумма;
+                                decimal Отпустить = item.Quantity * ОсновнаяЕдиница.Коэффициент;
+                                if (Отпустить > 0)
+                                {
+                                    foreach (string склId in СписокСкладов)
+                                    {
+                                        decimal СвободныйОстаток = ТзОстатки
+                                            .Where(x => x.Склад.Id == склId && x.Номенклатура.Id == item.Id)
+                                            .Sum(x => x.СвободныйОстаток);
+                                        decimal МожноОтпустить = Math.Min(Отпустить, СвободныйОстаток);
+                                        if (МожноОтпустить > 0)
+                                        {
+                                            decimal ОстатокВОсновныхЕдиницах = МожноОтпустить / ОсновнаяЕдиница.Коэффициент;
+                                            decimal ЦелыйОстатокВОсновныхЕдиницах = decimal.Round(ОстатокВОсновныхЕдиницах);
+                                            if (ОстатокВОсновныхЕдиницах != ЦелыйОстатокВОсновныхЕдиницах)
+                                                МожноОтпустить = ЦелыйОстатокВОсновныхЕдиницах * ОсновнаяЕдиница.Коэффициент;
+                                            if (!ПереченьНаличия.ContainsKey(склId))
+                                                ПереченьНаличия.Add(склId, new List<ДанныеТабличнойЧасти>());
+                                            decimal ДобСумма = ТекОстатокСуммы;
+                                            if (МожноОтпустить != Отпустить)
+                                                ДобСумма = Math.Round(item.Сумма / (item.Quantity * ОсновнаяЕдиница.Коэффициент) * МожноОтпустить, 2);
+                                            ПереченьНаличия[склId].Add(new ДанныеТабличнойЧасти
+                                            {
+                                                Номенклатура = new Номенклатура
+                                                {
+                                                    Id = item.Id,
+                                                    Наименование = item.Наименование,
+                                                    Артикул = item.Артикул,
+                                                    Единица = new Единицы { Id = ОсновнаяЕдиница.Id, Коэффициент = ОсновнаяЕдиница.Коэффициент },
+                                                },
+                                                Количество = МожноОтпустить,
+                                                Цена = item.Цена,
+                                                Сумма = ДобСумма,
+                                            });
+                                            ТекОстатокСуммы = ТекОстатокСуммы - ДобСумма;
+                                            Отпустить = Отпустить - МожноОтпустить;
+                                            if (Отпустить <= 0)
+                                                break;
+                                        }
+                                    }
+                                }
+                                if (Отпустить > 0)
+                                {
+                                    СпросТаблица.Add(new ДанныеТабличнойЧасти
+                                    {
+                                        Номенклатура = new Номенклатура
+                                        {
+                                            Id = item.Id,
+                                            Наименование = item.Наименование,
+                                            Артикул = item.Артикул,
+                                            Единица = new Единицы { Id = ОсновнаяЕдиница.Id, Коэффициент = ОсновнаяЕдиница.Коэффициент },
+                                        },
+                                        Количество = Отпустить,
+                                        Цена = item.Цена,
+                                        Сумма = ТекОстатокСуммы,
+                                    });
+                                }
+                            }
+                        }
+                        //Аналоги
+                        if (СпросТаблица.Count() > 0)
+                        {
+                            List<Номенклатура> СписокТоваров = new List<Номенклатура>();
+                            foreach (Номенклатура н in СпросТаблица.Select(x => x.Номенклатура))
+                            {
+                                СписокТоваров.AddRange(await _номенклатураRepository.АналогиНоменклатурыAsync(н.Id));
+                            }
+                            if (СписокТоваров.Count > 0)
+                            {
+                                ТзОстатки = _номенклатураRepository.ПодготовитьСвободныеОстатки(Common.min1cDate, СписокФирм, СписокСкладов, СписокТоваров.Select(x => x.Id).ToList()).AsEnumerable();
+                                if (ТзОстатки.Count() > 0)
+                                {
+                                    foreach (ДанныеТабличнойЧасти row in СпросТаблица)
+                                    {
+                                        decimal Отпустить = row.Количество;
+                                        List<Номенклатура> аналоги = await _номенклатураRepository.АналогиНоменклатурыAsync(row.Номенклатура.Id);
+                                        foreach (Номенклатура н in аналоги)
+                                        {
+                                            Единицы ОсновнаяЕдиница = await _номенклатураRepository.ОсновнаяЕдиницаAsync(н.Id);
+                                            foreach (string склId in СписокСкладов)
+                                            {
+                                                decimal СвободныйОстаток = ТзОстатки
+                                                    .Where(x => x.Склад.Id == склId && x.Номенклатура.Id == н.Id)
+                                                    .Sum(x => x.СвободныйОстаток);
+                                                if (ПереченьНаличия.ContainsKey(склId))
+                                                    СвободныйОстаток = Math.Max(СвободныйОстаток - ПереченьНаличия[склId].Where(x => x.Номенклатура.Id == н.Id).Sum(y => y.Количество), 0);
+                                                decimal МожноОтпустить = Math.Min(Отпустить, СвободныйОстаток);
+                                                decimal ОстатокВОсновныхЕдиницах = МожноОтпустить / ОсновнаяЕдиница.Коэффициент;
+                                                decimal ЦелыйОстатокВОсновныхЕдиницах = decimal.Round(ОстатокВОсновныхЕдиницах);
+                                                if (ОстатокВОсновныхЕдиницах != ЦелыйОстатокВОсновныхЕдиницах)
+                                                    МожноОтпустить = ЦелыйОстатокВОсновныхЕдиницах * ОсновнаяЕдиница.Коэффициент;
+                                                if (МожноОтпустить > 0)
+                                                {
+                                                    if (!ПереченьНаличия.ContainsKey(склId))
+                                                        ПереченьНаличия.Add(склId, new List<ДанныеТабличнойЧасти>());
+                                                    ДанныеТабличнойЧасти строка = ПереченьНаличия[склId].FirstOrDefault(x => x.Номенклатура.Id == н.Id);
+                                                    if (строка != null)
+                                                    {
+                                                        строка.Количество += МожноОтпустить;
+                                                        строка.Сумма = строка.Цена * строка.Количество / ОсновнаяЕдиница.Коэффициент;
+                                                    }
+                                                    else
+                                                    {
+                                                        var НоменклатураЦена = (await _номенклатураRepository.НоменклатураЦенаКлиентаAsync(new List<string> { н.Id }, doc.Договор.Id, doc.СкидКарта.Id, doc.Доставка, (int)doc.ТипДоставки, null)).FirstOrDefault(x => x.Id == н.Id).Цена.Клиента;
+                                                        ПереченьНаличия[склId].Add(new ДанныеТабличнойЧасти
+                                                        {
+                                                            Номенклатура = new Номенклатура
+                                                            {
+                                                                Id = н.Id,
+                                                                Единица = new Единицы { Id = ОсновнаяЕдиница.Id, Коэффициент = ОсновнаяЕдиница.Коэффициент },
+                                                            },
+                                                            Количество = МожноОтпустить,
+                                                            Цена = НоменклатураЦена,
+                                                            Сумма = НоменклатураЦена * МожноОтпустить / ОсновнаяЕдиница.Коэффициент,
+                                                        });
+                                                    }
+                                                    row.Количество = row.Количество - МожноОтпустить;
+                                                    row.Сумма = row.Цена * row.Количество / ОсновнаяЕдиница.Коэффициент;
+                                                    Отпустить = Отпустить - МожноОтпустить;
+                                                    if (Отпустить <= 0)
+                                                        break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            СпросТаблица.RemoveAll(x => x.Количество <= 0);
+                        }
+                        string результат = "";
+                        if (ПереченьНаличия.Count > 0)
+                        {
+                            результат = await СоздатьДокументСчет(doc, ПереченьНаличия, СписокФирм, СписокСкладов);
+                            if (!string.IsNullOrEmpty(результат))
+                            {
+                                docTran.Rollback();
+                                message += (!string.IsNullOrEmpty(message) ? Environment.NewLine : "") + результат;
+                            }
+                        }
+                        if (string.IsNullOrEmpty(message) && СпросТаблица.Count > 0)
+                        {
+                            результат = await СоздатьДокументСпрос(doc, СпросТаблица);
+                            if (!string.IsNullOrEmpty(результат))
+                            {
+                                docTran.Rollback();
+                                message += (!string.IsNullOrEmpty(message) ? Environment.NewLine : "") + результат;
+                            }
+                        }
+                        if (string.IsNullOrEmpty(message) && ТаблицаДилерскойЗаявки.Count > 0)
+                        {
+                            результат = await СоздатьДокументЗаявкаДилера(doc, ФирмаАлко, ТаблицаДилерскойЗаявки);
+                            if (!string.IsNullOrEmpty(результат))
+                            {
+                                docTran.Rollback();
+                                message += (!string.IsNullOrEmpty(message) ? Environment.NewLine : "") + результат;
+                            }
+                        }
+
+                        if (string.IsNullOrEmpty(message))
+                        {
+                            await Common.ОбновитьВремяТА(_context, MaxIddoc, MaxDateTimeIddoc);
+                            await Common.ОбновитьПоследовательность(_context, MaxDateTimeIddoc);
+                            await _context.ОбновитьСетевуюАктивность();
+                            docTran.Commit();
+                            message = "OK";
+                        }
+                    }
+                    catch (SqlException ex)
+                    {
+                        docTran.Rollback();
+                        if (ex.Number == -2)
+                            message += Environment.NewLine + "timeout";
+                        else
+                            message += Environment.NewLine + ex.Message + Environment.NewLine + ex.InnerException;
+                    }
+                    catch (Exception ex)
+                    {
+                        docTran.Rollback();
+                        message += Environment.NewLine + ex.Message + Environment.NewLine + ex.InnerException;
+                    }
+                }
+            }
+            return Ok(message);
+        }
+        public IActionResult CallChangeCost(string TovarId, string текущееЗначение, string договорId, string типЦен, string картаId, bool доставка, int типДоставки)
+        {
+            return ViewComponent("ИзменениеЦены", new { 
+                номенклатураId = TovarId, 
+                текущееЗначение = текущееЗначение,
+                договорId = договорId,
+                типЦен = типЦен,
+                картаId = картаId,
+                доставка = доставка,
+                типДоставки = типДоставки
+            });
+        }
+        [HttpPost]
+        public IActionResult ОбновитьЦенуВыбраннойНоменклатуры(string key, string значение)
+        {
+            if (!string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(значение))
+            {
+                var корзина = HttpContext.Session.GetObjectFromJson<List<Корзина>>("мнТабличнаяЧасть");
+                if (корзина != null)
+                {
+                    var item = корзина.FirstOrDefault(x => x.Id == key);
+                    if (item != null)
+                    {
+                        item.Цена = decimal.Parse(значение.Replace('\u00A0', ' '), NumberStyles.AllowCurrencySymbol | NumberStyles.Number);
+                        HttpContext.Session.AddOrUpdateObjectAsJson("мнТабличнаяЧасть", item, false);
+                    }
+                }
+            }
+            return Ok();
+        }
+        [HttpPost]
+        public async Task<IActionResult> ПересчитатьСтрокиДокументаAsync(string key, string договорId, string картаId, bool доставка, int типДоставки)
+        {
+            var корзина = HttpContext.Session.GetObjectFromJson<List<Корзина>>(key);
+            if (корзина != null)
+            {
+                var TovarList = корзина.Select(x => x.Id).ToList();
+                var gg = await _номенклатураRepository.НоменклатураЦенаКлиентаAsync(TovarList, договорId, картаId, доставка, типДоставки, null);
+                foreach (var item in корзина)
+                {
+                    item.Цена = (await gg.FirstOrDefaultAsync(x => x.Id == item.Id)).Цена.Клиента;
+                    HttpContext.Session.AddOrUpdateObjectAsJson(key, item, false);
+                }    
+            }
+            return Ok();
+        }
+        [HttpPost]
+        public IActionResult ОбновитьНомерДокумента(string номерДок, string фирмаId)
+        {
+            if (!string.IsNullOrEmpty(номерДок))
+                Common.UnLockDocNo(_context, "12747", номерДок);
+            string docNo = Common.LockDocNo(_context, "12747", 10, фирмаId);
+            return Ok(docNo);
+        }
+        [HttpGet]
+        public JsonResult ВыбратьКонтрагента(LookupFilter filter)
+        {
+            return Json(new КонтрагентLookup(_context) { Filter = filter }.GetData());
+        }
+        [HttpGet]
+        public JsonResult ВыбратьСкидКарту(LookupFilter filter)
+        {
+            return Json(new СкидКартаLookup(_context) { Filter = filter }.GetData());
+        }
+        [HttpPost]
+        public async Task<IActionResult> СписокДоговоровКонтрагента(string контрагентId, string фирмаId)
+        {
+            var договоры = await _контрагентRepository.ПолучитьДоговорыКонтрагентаAsync(контрагентId, фирмаId);
+            return Ok(new SelectList(договоры, "Id", "Наименование"));
+        }
+        [HttpPost]
+        public async Task<IActionResult> УсловияДоговораКонтрагентаAsync(string договорId, string картаId)
+        {
+            return PartialView("_IndexИнфоУсловия", await _контрагентRepository.ПолучитьИнфоУсловияAsync(договорId, картаId));
+        }
+        [HttpPost]
+        public async Task<IActionResult> УсловияДоговораГлубинаОтсрочкиAsync(string договорId)
+        {
+            return Ok(await _контрагентRepository.ПолучитьГлубинуКредитаПоДоговоруAsync(договорId));
+        }
+        [HttpPost]
+        public async Task<IActionResult> ИнфоДолгиКонтрагентаAsync(string контрагентId)
+        {
+            Долги результат = new Долги();
+            if (!string.IsNullOrEmpty(контрагентId))
+                результат = (await _контрагентRepository.ДолгиКонтрагентовПросрочкаAsync(null, null, null, контрагентId, false, true, true, false, false)).FirstOrDefault();
+            if (результат == null)
+                результат = new Долги();
+            return PartialView("_IndexИнфоДолги", результат);
+        }
+        protected override void Dispose(bool disposing)
+        {
+            _userRepository.Dispose();
+            _фирмаRepository.Dispose();
+            _складRepository.Dispose();
+            _контрагентRepository.Dispose();
+            _номенклатураRepository.Dispose();
+            _context.Dispose();
+            base.Dispose(disposing);
+        }
+    }
+}

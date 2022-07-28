@@ -1,0 +1,62 @@
+﻿@model IQueryable<StinWeb.Models.DataManager.Отчеты.MarketplaceOrder>
+
+@(Html
+    .Grid(Model)
+    .Build(columns =>
+    {
+    columns.Add(model => (model.isFBS && (model.StatusDescription != "Отменен")) ? Html.CheckBox("Chk" + model.Id.Replace(' ','_')) : Html.CheckBox("Chk" + model.Id.Replace(' ','_'),false,new{disabled = true})).Named("Chk").Titled(Html.CheckBox("CheckAll",false,new{ onclick="CheckAllClick(this)"})).Css("text-center column-1");
+    columns.Add(model => model.Id).Named("Id").Titled("Id").Hidden();
+    columns.Add(model => model.NeedToGetPayment).Named("NeedToGetPayment").Titled("NeedToGetPayment").Hidden();
+    columns.Add(model => !model.NeedToGetPayment ? $"<img src=\"/images/Success.svg\" />" : "")
+               .Named("Оплачено")
+               .Titled("Оплачено")
+               .Css("text-center column-10")
+               .Encoded(false);
+    columns.Add(model => model.MarketplaceType).Named("Тип").Titled("Тип");
+    columns.Add(model => model.MarketplaceId).Named("#").Titled("#");
+    columns.Add(model => model.ПредварительнаяЗаявкаНомер).Named("№").Titled("№");
+    columns.Add(model => model.Сумма).Named("Сумма").Titled("Сумма").Css("column-10p").Css("text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+    columns.Add(model => model.СуммаКОплате).Named("К Оплате").Titled("К Оплате").Css("column-10p").Css("text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+    columns.Add(model => model.ShipmentDate).Named("Дата отгрузки").Titled("Дата отгрузки").Formatted("{0:d}");
+    columns.Add(model => model.Recipient).Named("ФИО").Titled("ФИО");
+    columns.Add(model => model.Phone).Named("Телефон").Titled("Телефон");
+    columns.Add(model => model.Address).Named("Адрес").Titled("Адрес");
+    columns.Add(model => model.CustomerNotes).Named("Пожелания заказчика").Titled("Пожелания заказчика");
+    columns.Add(model => model.StatusDescription).Named("Статус").Titled("Статус");
+    columns.Add(model => model.СкладIds).Named("StockIds").Titled("StockIds").Hidden();
+    columns.Add(model => model.Склады).Named("Склад").Titled("Склад");
+    columns.Add(model => model.ТипДоставки).Named("Тип доставки").Titled("Тип доставки");
+    columns.Add(model => model.МаршрутНаименование).Named("Маршрут").Titled("Маршрут");
+    columns.Add(model => model.ИнформацияAPI).Named("Информация").Titled("Информация");
+    columns.Add(model => ((model.Labels != null) && (model.Labels.Length > 0)) ? $"<i class=\"fa fa-file-pdf-o\" style=\"font-size:18px;color:red\" onclick='GetLabels(\"" + model.Id + "\")'></i>" : "")
+        .Named("Этикетка")
+        .Titled("Этикетка")
+        .Css("text-center column-10")
+        .Encoded(false);
+        //columns.Add(model => model.ЗаявкаНаСогласование).Titled("На Согласование").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+        //columns.Add(model => model.ЗаявкаСогласованная).Titled("Согласовано").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+        //columns.Add(model => model.ЗаявкаОдобренная).Titled("Одобрено").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+        //columns.Add(model => model.СчетНаОплату).Titled("Счет").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+        //columns.Add(model => model.ОплатаОжидание).Titled("Ожидание оплаты").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+        ////columns.Add(model => model.ОплатаОтменено > 0 && model.ОплатаВыполнено == 0).Titled("оплата отменена").Filterable(false).Sortable(false);
+        //columns.Add(model => model.ОплатаОтменено > 0 && model.ОплатаВыполнено == 0 ? $"<img src=\"/images/Fail.svg\" />" : "")
+        //        .Titled("Оплата отменена")
+        //        .Css("text-center column-10")
+        //        .Encoded(false);
+        //columns.Add(model => model.ОплатаВыполнено).Titled("Оплачено").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+        //columns.Add(model => model.Набор).Titled("Набор").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+        //columns.Add(model => model.ОтменаНабора).Titled("Отмена набора").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+        //columns.Add(model => model.Продажа).Titled("Продажа").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);
+    })
+    .Named("gridConsole")
+    .AppendCss("table-hover")
+    .RowAttributed(model => new { id = model.Id, @class = model.StatusDescription == "Готов/Спорный" ? "зеленая" : model.StatusDescription == "Отменен" ? "серая" : model.isFBS ? ("голубая" + (model.Printed ? " printed" : "")) : model.NeedToGetPayment ? "снят_с_производства" : null })
+    .Using(GridFilterMode.Header)
+    .Empty("No data found")
+    .Pageable(pager =>
+    {
+        pager.RowsPerPage = 25;
+    })
+    .Filterable()
+    .Sortable()
+)
