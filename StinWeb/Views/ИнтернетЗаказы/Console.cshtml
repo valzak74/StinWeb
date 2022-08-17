@@ -42,6 +42,7 @@
                     <a class="dropdown-item" id="itemMultiPrint" href="#">Печать этикеток</a>
                     <a class="dropdown-item" id="itemMultiPrintNabor" href="#">Распечатать наборы</a>
                     <a class="dropdown-item" id="itemMultiCreate" href="#">Сформировать документы</a>
+                    <a class="dropdown-item" id="itemPrintLoadingAct" href="#">Печать листа сборки</a>
                   </div>
                 </div>
 @*
@@ -231,6 +232,11 @@
                 MultiOrdersClick(2);
         });
     }
+    if (document.getElementById("itemPrintLoadingAct")) {
+        document.getElementById("itemPrintLoadingAct").addEventListener("click", function () {
+            LoadingActClick();
+        });
+    }
     document.getElementById("gridConfigure").addEventListener("click", function () {
         new MvcGrid(document.querySelector("div[data-name='gridConsole']")).showConfiguration(this);
     });
@@ -387,6 +393,11 @@
     //}
     function GetLabels(orderId) {
         var url = '@Url.Action("GetLabelsPdf", "ИнтернетЗаказы")' + '?id=' + orderId.replaceAll(" ", "_") + "#view=fitH";
+        printPage(url, true);
+    }
+    function LoadingActClick() {
+        var e = document.getElementById("campaignIds");
+        var url = '@Url.Action("GetLoadingAct", "ИнтернетЗаказы")' + '?campaignId=' + e.value + "#view=fitH";
         printPage(url, true);
     }
     function btnActClick() {

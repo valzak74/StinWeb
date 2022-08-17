@@ -282,7 +282,9 @@ namespace OzonClasses
             long limit,
             CancellationToken cancellationToken)
         {
-            var request = new ProductListRequest { Last_id = string.IsNullOrEmpty(nextPageToken) ? "" : nextPageToken, Limit = limit };
+            var request = new ProductListRequest {
+                //Filter = new ProductFilter { Offer_id = new List<string> { "443030303533313935" }, Visibility = RequestFilterVisibility.ALL },
+                Last_id = string.IsNullOrEmpty(nextPageToken) ? "" : nextPageToken, Limit = limit };
             var result = await httpService.Exchange<ProductListResponse, ErrorResponse>(
                 "https://api-seller.ozon.ru/v2/product/list",
                 HttpMethod.Post,

@@ -87,6 +87,8 @@ namespace HttpExtensions
                     if (response.Content != null)
                     {
                         var bytes = await response.Content.ReadAsByteArrayAsync();
+                        //string r = await response.Content.ReadAsStringAsync();
+                        //System.IO.File.WriteAllText(@"f:\\tmp\15\r.txt", r);
                         if (typeof(T) == typeof(byte[]))
                             return new Tuple<T, E>((T)(object)bytes, default);
                         else
