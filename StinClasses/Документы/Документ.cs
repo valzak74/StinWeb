@@ -282,6 +282,7 @@ namespace StinClasses.Документы
             var ФирмаЮрЛицо = (from sc131 in _context.Sc131s
                                join sc4014 in _context.Sc4014s on sc131.Id equals sc4014.Sp4011
                                where sc4014.Id == ФирмаИД
+                               orderby sc4014.Id
                                select new
                                {
                                    Фирма = sc4014.Descr.Trim(),
@@ -307,6 +308,7 @@ namespace StinClasses.Документы
                     if (postfix == "@")
                         postfix = _пользователь.Постфикс(ПользовательИД);
                     postfix = "/" + postfix;
+                    НомерДок = НомерДок.TrimEnd();
                     НомерДок = НомерДок.Substring(0, НомерДок.Length - postfix.Length);
                 }
 

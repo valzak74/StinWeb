@@ -50,30 +50,35 @@ namespace StinWeb.Models.DataManager
                 {
                     if (entry is IList && entry.GetType().IsGenericType)
                     {
-                        string строкаTemplate = ReadTemplateFile(docName + "_" + variant.TrimStart('{').TrimEnd('}') + ".htm");
-                        var variantsСтроки = Regex.Matches(строкаTemplate, RegexParameter)
-                            .Cast<Match>()
-                            .Select(m => m.Value.Trim());
-                        Type ТипДанныеТаблЧасти = (entry as IList)[0].GetType();
-                        var ПараметрыТаблЧасти = ТипДанныеТаблЧасти.GetProperties();
-                        string таблЧасть = "";
-                        foreach (var p in (entry as IList))
+                        if ((entry as IList).Count > 0)
                         {
-                            string строка = строкаTemplate;
-                            foreach (string s in variantsСтроки)
+                            string строкаTemplate = ReadTemplateFile(docName + "_" + variant.TrimStart('{').TrimEnd('}') + ".htm");
+                            var variantsСтроки = Regex.Matches(строкаTemplate, RegexParameter)
+                                .Cast<Match>()
+                                .Select(m => m.Value.Trim());
+                            Type ТипДанныеТаблЧасти = (entry as IList)[0].GetType();
+                            var ПараметрыТаблЧасти = ТипДанныеТаблЧасти.GetProperties();
+                            string таблЧасть = "";
+                            foreach (var p in (entry as IList))
                             {
-                                var значение = ПараметрыТаблЧасти.Where(x => "{" + x.Name + "}" == s)
-                                    .Select(x => x.GetValue(p, null))
-                                    .FirstOrDefault();
-                                if (значение != null)
-                                    строка = строка.Replace(s, значение.ToString());
+                                string строка = строкаTemplate;
+                                foreach (string s in variantsСтроки)
+                                {
+                                    var значение = ПараметрыТаблЧасти.Where(x => "{" + x.Name + "}" == s)
+                                        .Select(x => x.GetValue(p, null))
+                                        .FirstOrDefault();
+                                    if (значение != null)
+                                        строка = строка.Replace(s, значение.ToString());
+                                }
+                                таблЧасть += строка;
                             }
-                            таблЧасть += строка;
+                            if (!string.IsNullOrEmpty(таблЧасть))
+                            {
+                                div = div.Replace(variant, таблЧасть);
+                            }
                         }
-                        if (!string.IsNullOrEmpty(таблЧасть))
-                        {
-                            div = div.Replace(variant, таблЧасть);
-                        }
+                        else
+                            div = div.Replace(variant, "");
                     }
                     else
                         div = div.Replace(variant, entry.ToString());
