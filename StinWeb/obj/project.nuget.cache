@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "wrvsxFPa+j7OF+0VtTYUdwXyHl3ZFsrT9RKrHEeeVehC7ASvUrdPhfZCQzq/BQNq/6l5yVGS/lGEVqYIsAMMbA==",
+  "dgSpecHash": "GyPrqf1+pMZq2yIXjzE4aInkqR0yKLpvOAimlIc22l8JcfC37x8ZYk1dTGxVjbrKqnkdQoToIgThYYPMX922gQ==",
   "success": true,
   "projectFilePath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\StinWeb.csproj",
   "expectedPackageFiles": [
@@ -259,10 +259,16 @@
   ],
   "logs": [
     {
+      "code": "NU1803",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "You are running the 'restore' operation with an 'HTTP' source, 'http://gfsnuget.azurewebsites.net/nuget'. Non-HTTPS access will be removed in a future version. Consider migrating to an 'HTTPS' source."
+    },
+    {
       "code": "NU1701",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "Package 'PDFsharp-MigraDoc 1.50.5147' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8' instead of the project target framework 'net6.0'. This package may not be fully compatible with your project.",
+      "message": "Package 'PDFsharp-MigraDoc 1.50.5147' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net6.0'. This package may not be fully compatible with your project.",
       "libraryId": "PDFsharp-MigraDoc",
       "targetGraphs": [
         "net6.0"

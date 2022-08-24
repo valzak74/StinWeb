@@ -188,18 +188,18 @@ namespace StinWeb.Controllers
                             d.OrderNo,
                             d.Status,
                             d.ТипДоставки,
-                            d.КолГрузоМест,
-                            d.КолТовара,
-                            d.СуммаТовара
+                            //d.КолГрузоМест,
+                            //d.КолТовара,
+                            //d.СуммаТовара
                         } into gr
                         select new
                         {
                             OrderNo = gr.Key.OrderNo,
                             ТипДоставки = gr.Key.ТипДоставки,
                             Status = gr.Key.Status,
-                            КолГрузоМест = gr.Key.КолГрузоМест,
-                            КолТовара = gr.Key.КолТовара,
-                            СуммаТовара = gr.Key.СуммаТовара,
+                            КолГрузоМест = gr.Sum(x => x.d.КолГрузоМест),
+                            КолТовара = gr.Sum(x => x.d.КолТовара),
+                            СуммаТовара = gr.Sum(x => x.d.СуммаТовара),
                             StatusCode = gr.Min(o => o.reg.statusOrder),
                             Склады = string.Join(", ", gr.Select(y => y.reg.складName).Distinct()),
                             МаршрутНаименование = string.Join(", ", gr.Select(y => y.reg.маршрутName).Distinct()),

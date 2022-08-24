@@ -15,6 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JsonExtensions;
 using HttpExtensions;
+using OzonClasses;
 
 namespace Refresher1C.Service
 {
@@ -1151,7 +1152,17 @@ namespace Refresher1C.Service
                 foreach (var entry in (data as IList<YandexClasses.OfferMappingEntry>))
                     if ((entry.Offer != null) && (entry.Offer.ProcessingState != null))
                     {
-                        var nomCode = hexEncoding ? entry.Offer.ShopSku.DecodeHexString() : entry.Offer.ShopSku;
+                        var nomCode = entry.Offer.ShopSku;
+                        if (hexEncoding)
+                            try
+                            {
+                                nomCode = nomCode.DecodeHexString();
+                            }
+                            catch
+                            {
+                                _logger.LogError("UpdateCatalogInfo : Yandex wrong encoded sku " + entry.Offer.ShopSku);
+                                continue;
+                            }
                         skus.Add(nomCode);
                         string краткоеОписание = "";
                         if ((entry.Offer.Urls != null) && (entry.Offer.Urls.Count > 0))
@@ -1184,7 +1195,18 @@ namespace Refresher1C.Service
                 foreach (var item in (data as IList<OzonClasses.Item>))
                     if (!string.IsNullOrWhiteSpace(item.Offer_id) && (item.Offer_id != "0"))
                     {
-                        skus.Add(hexEncoding ? item.Offer_id.DecodeHexString() : item.Offer_id);
+                        var nomCode = item.Offer_id;
+                        if (hexEncoding)
+                            try
+                            {
+                                nomCode = nomCode.DecodeHexString();
+                            }
+                            catch
+                            {
+                                _logger.LogError("UpdateCatalogInfo : Ozon wrong encoded sku " + item.Offer_id);
+                                continue;
+                            }
+                        skus.Add(nomCode);
                     }
             }
             //else if (data is IList<AliExpressClasses.Item_display_dto>)
@@ -1201,7 +1223,21 @@ namespace Refresher1C.Service
                 foreach (var entry in (data as IList<AliExpressClasses.CatalogInfo>))
                     if ((entry.Sku != null) && (entry.Sku.Count > 0))
                     {
-                        var decodeSkus = entry.Sku.Select(x => hexEncoding ? x.Code.DecodeHexString() : x.Code);
+                        var decodeSkus = entry.Sku.Select(x => 
+                        {
+                            var nomCode = x.Code;
+                            if (hexEncoding)
+                                try
+                                {
+                                    nomCode = nomCode.DecodeHexString();
+                                }
+                                catch
+                                {
+                                    _logger.LogError("UpdateCatalogInfo : Aliexpress wrong encoded sku " + x.Code);
+                                    nomCode = "";
+                                }
+                            return nomCode;
+                        });
                         skus.AddRange(decodeSkus);
                         productIdToSku.Add(entry.Id, decodeSkus.FirstOrDefault() ?? "");
                     }

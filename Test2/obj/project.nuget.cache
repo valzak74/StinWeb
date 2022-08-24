@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "XOTkPYVwJa4L7eEspc8DNmMalNDuuoLbbGXcBbSSdK8DACu1v9fSCi9UkQSJApZpHoZb9peyQxqXtxR4KrPl8Q==",
+  "dgSpecHash": "VSrkAA/lFafzN3NpKOomHetI6Uq4HgfuPNjUYuDCzM3a1WL5uDNbG4sLtov6H/pQX2v/uTSSbXPTOpxqdwVV9w==",
   "success": true,
   "projectFilePath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\Test2\\Test2.csproj",
   "expectedPackageFiles": [
@@ -24,5 +24,12 @@
     "C:\\Users\\Валентин\\.nuget\\packages\\system.security.principal.windows\\4.5.0\\system.security.principal.windows.4.5.0.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\system.text.encodings.web\\4.5.0\\system.text.encodings.web.4.5.0.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1803",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "You are running the 'restore' operation with an 'HTTP' source, 'http://gfsnuget.azurewebsites.net/nuget'. Non-HTTPS access will be removed in a future version. Consider migrating to an 'HTTPS' source."
+    }
+  ]
 }

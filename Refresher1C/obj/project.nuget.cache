@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "uJxg9pjWNbBFQiqesUj+eSTFGRyVu6q0oUqoV1Ae/4yu/FC3ihGYvxkdYmCvOf37VIT/AVcJy33BCB7d/3P9nw==",
+  "dgSpecHash": "uQlen93W6oYD9nzPjxsbHb1k9xR/tRUR7Sch4CAq7oOsSI/grQdLyv2pRh659d8nOs1p2vABLVmC9NESVa4lrw==",
   "success": true,
   "projectFilePath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\Refresher1C\\Refresher1C.csproj",
   "expectedPackageFiles": [
@@ -119,5 +119,12 @@
     "C:\\Users\\Валентин\\.nuget\\packages\\system.threading.timer\\4.0.1\\system.threading.timer.4.0.1.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\system.windows.extensions\\4.7.0\\system.windows.extensions.4.7.0.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1803",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "You are running the 'restore' operation with an 'HTTP' source, 'http://gfsnuget.azurewebsites.net/nuget'. Non-HTTPS access will be removed in a future version. Consider migrating to an 'HTTPS' source."
+    }
+  ]
 }

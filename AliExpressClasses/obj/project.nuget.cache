@@ -1,11 +1,18 @@
 {
   "version": 2,
-  "dgSpecHash": "78Kb1qSgDEuIA+C7EaWnBpuD+++vMYE938xEFu+cxDn2tZn8M84F6PBjaHzSYUd8y1mr5/T42ELFlGRleskptw==",
+  "dgSpecHash": "Z+7pc+DRmUI8HC82Mk2Rm98aZRyPVLp+NfmBMMiAGSqeN6zYkEc1ZE4/Sz6X38Nym8hKG23STVfz/Fs1DjMNqw==",
   "success": true,
   "projectFilePath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Валентин\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\6.0.1\\microsoft.extensions.logging.abstractions.6.0.1.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\newtonsoft.json\\13.0.1\\newtonsoft.json.13.0.1.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1803",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "You are running the 'restore' operation with an 'HTTP' source, 'http://gfsnuget.azurewebsites.net/nuget'. Non-HTTPS access will be removed in a future version. Consider migrating to an 'HTTPS' source."
+    }
+  ]
 }

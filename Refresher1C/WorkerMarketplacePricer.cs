@@ -87,6 +87,7 @@ namespace Refresher1C
                 using IMarketplaceService MarketplaceScope = _serviceScopeFactory.CreateScope()
                        .ServiceProvider.GetService<IMarketplaceService>();
                 await MarketplaceScope.UpdatePrices(stoppingToken);
+                //await MarketplaceScope.CheckCatalog(stoppingToken);
             }
             catch
             {
