@@ -476,6 +476,8 @@ namespace StinClasses.Справочники
                     _context.РегистрацияИзмененийРаспределеннойИБ(14042, MarketplaceEntity.Id);
                 }
                 order.Тип = MarketplaceEntity.Sp14155.ToUpper().Trim();
+                if ((order.Тип == "OZON") && (order.DeliveryServiceId != MarketplaceEntity.Code.Trim()))
+                    order.Marketplace = MarketplaceEntity.Sp14155.Trim() + " realFBS";
                 Sc13994 entity = new Sc13994
                 {
                     Id = order.Id,

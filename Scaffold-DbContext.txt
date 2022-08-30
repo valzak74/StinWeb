@@ -23,6 +23,7 @@ reset:  netsh winhttp reset proxy
 
 ИП Павлов:
 OZON
++7 927 768 97 89
 email = omfbs@yandex.ru
 password = qMpHnTMA1!
 ОнлайнМаркет FBS
@@ -47,6 +48,7 @@ Token = AQAAAABW9fzMAAeFNGqRShRjaUYBji2iT4tPk1k
 
 СтинСервис:
 OZON
++7 927 020 47 41
 email = stindbs@yandex.ru 
 password =  lTkG5zq*
 СтинМаркет FBS

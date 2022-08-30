@@ -75,6 +75,7 @@
         <span id="gridConfigure" class="fa fa-cog"></span>
     </div>
     <div style="flex-grow:1"></div>
+    <a id="refreshDateTime"></a>
     <div class="grid-header-buttons">
         <span id="gridRefresh" class="fa fa-refresh"></span>
     </div>
@@ -215,6 +216,11 @@
             gridConsole.reload();
         }
     }
+
+    document.addEventListener("reloadend", function (e) {
+        var refreshDateTime = new Date();
+        document.getElementById("refreshDateTime").textContent = "Обновлено: " + formatterDate.format(refreshDateTime) + " " + formatterTime.format(refreshDateTime);
+    });
 
     if (document.getElementById("itemMultiPrint")) {
         document.getElementById("itemMultiPrint").addEventListener("click", function () {
@@ -402,7 +408,7 @@
             type: "post",
             datatype: "xml",
             data: {
-                campaignId: $("#campaignIds").val()
+                campaignInfo: $("#campaignIds").val()
             },
             async: true,
             cache: false,
@@ -451,7 +457,7 @@
         var e = document.getElementById("campaignIds");
         $("#btnAct").attr("disabled", true);
         $('.spinner-grow').removeClass('d-none');
-        var url = '@Url.Action("GetReceptionTransferAct", "ИнтернетЗаказы")' + '?campaignId=' + e.value + "#view=fitH";
+        var url = '@Url.Action("GetReceptionTransferAct", "ИнтернетЗаказы")' + '?campaignInfo=' + e.value + "#view=fitH";
         printPage(url, true);
         $('.spinner-grow').addClass('d-none');
         $("#btnAct").attr("disabled", false);

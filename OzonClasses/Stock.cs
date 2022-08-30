@@ -13,6 +13,8 @@
         public string? Offer_id { get; set; }
         public long Product_id { get; set; }
         public long Stock { get; set; }
+        public long Warehouse_id { get; set; }
+        public bool ShouldSerializeWarehouse_id() => Warehouse_id > 0;
     }
     public class OzonStockResponse
     {
@@ -24,5 +26,6 @@
         public string? Offer_id { get; set; }
         public long Product_id { get; set; }
         public bool Updated { get; set; }
+        public long Warehouse_id { get; set; }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StinClasses;
 using StinClasses.Models;
@@ -10,12 +9,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using JsonExtensions;
 using HttpExtensions;
-using OzonClasses;
 
 namespace Refresher1C.Service
 {
@@ -1302,7 +1298,8 @@ namespace Refresher1C.Service
                             foreach (var entity in entities.Where(x => (x.Sp14158 != 1) || (x.Sp14190.Trim() != productId))) 
                             {
                                 entity.Sp14158 = 1;
-                                entity.Sp14190 = productId;
+                                if (productIdToSku.Count > 0)
+                                    entity.Sp14190 = productId;
                                 _context.Update(entity);
                                 _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
                             }
@@ -1539,7 +1536,7 @@ namespace Refresher1C.Service
                                                 AuthToken = market.Sp14054.Trim(),
                                                 AuthSecret = market.Sp14195.Trim(),
                                                 Authorization = market.Sp14077.Trim(),
-                                                //FeedId = market.Sp14154.Trim(),
+                                                Code = market.Code.Trim(),
                                                 HexEncoding = market.Sp14153 == 1
                                             })
                                             .ToListAsync();
@@ -1548,8 +1545,8 @@ namespace Refresher1C.Service
                     if (marketplace.Тип.ToUpper() == "OZON")
                     {
                         await UpdateOzonStock(
-                            marketplace.ClientId, marketplace.AuthToken, maxPerRequest,
-                            marketplace.Id, marketplace.FirmaId, marketplace.HexEncoding, stoppingToken);
+                            marketplace.ClientId, marketplace.AuthToken, 99,
+                            marketplace.Id, marketplace.FirmaId, marketplace.HexEncoding, marketplace.Code, stoppingToken);
                     }
                     else if (marketplace.Тип.ToUpper() == "ALIEXPRESS")
                     {
@@ -1565,7 +1562,7 @@ namespace Refresher1C.Service
             }
         }
         public async Task UpdateOzonStock(string clientId, string authToken, int limit, 
-            string marketplaceId, string firmaId, bool hexEncoding, CancellationToken stoppingToken)
+            string marketplaceId, string firmaId, bool hexEncoding, string skladCode, CancellationToken stoppingToken)
         {
             var data = await ((from markUse in _context.Sc14152s
                               join nom in _context.Sc84s on markUse.Parentext equals nom.Id
@@ -1579,6 +1576,7 @@ namespace Refresher1C.Service
                                   NomId = markUse.Parentext,
                                   OfferId = hexEncoding ? nom.Code.EncodeHexString() : nom.Code,
                                   Квант = nom.Sp14188,
+                                  WarehouseId = string.IsNullOrWhiteSpace(markUse.Sp14190) ? skladCode : markUse.Sp14190,
                                   UpdatedAt = markUse.Sp14178,
                                   UpdatedFlag = markUse.Sp14179 == 1
                               })
@@ -1659,10 +1657,13 @@ namespace Refresher1C.Service
                             }
                             else
                                 остаток = (long)(номенклатура.Остатки.Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент);
+                            if (!long.TryParse(item.WarehouseId, out long WarehouseId))
+                                WarehouseId = 0;
                             stockData.Add(new OzonClasses.StockRequest
                             {
                                 Offer_id = hexEncoding ? номенклатура.Code.EncodeHexString() : номенклатура.Code,
-                                Stock = item.Locked ? 0 : остаток
+                                Stock = item.Locked ? 0 : остаток,
+                                Warehouse_id = WarehouseId
                             });
                         }
                     }
@@ -1674,6 +1675,7 @@ namespace Refresher1C.Service
                         _logger.LogError(result.Item2);
                     }
                     List<string> uploadIds = new List<string>();
+                    //List<string> errorIds = new List<string>();
                     if (result.Item1 != null && result.Item1.Count > 0)
                     {
                         var nomIds = result.Item1.Select(x =>
@@ -1681,6 +1683,13 @@ namespace Refresher1C.Service
                                         .Where(y => (hexEncoding ? y.Code.EncodeHexString() : y.Code) == x)
                                         .Select(z => z.Id).FirstOrDefault());
                         uploadIds.AddRange(data.Where(x => nomIds.Contains(x.NomId)).Select(x => x.Id));
+                        //var errorNomCodes = stockData
+                        //    .Where(x => !result.Item1.Contains(x.Offer_id))
+                        //    .Select(x => hexEncoding ? x.Offer_id.DecodeHexString() : x.Offer_id);
+                        //var errorNomIds = списокНоменклатуры
+                        //    .Where(x => errorNomCodes.Contains(x.Code))
+                        //    .Select(x => x.Id);
+                        //errorIds.AddRange(data.Where(x => errorNomIds.Contains(x.NomId)).Select(x => x.Id));
                     }
                     if (uploadIds.Count > 0)
                     {
@@ -1692,7 +1701,7 @@ namespace Refresher1C.Service
                             {
                                 var notYetUpdated = await _context.Sc14152s
                                 .Where(x => uploadIds.Contains(x.Id) && (x.Sp14179 == -1))
-                                .ToListAsync();
+                                .ToListAsync(stoppingToken);
                                 foreach (var entity in notYetUpdated)
                                 {
                                     entity.Sp14179 = 0;
@@ -1700,6 +1709,16 @@ namespace Refresher1C.Service
                                     _context.Update(entity);
                                     _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
                                 }
+                                //var notYetUpdatedError = await _context.Sc14152s
+                                //    .Where(x => errorIds.Contains(x.Id) && (x.Sp14179 == -1))
+                                //    .ToListAsync(stoppingToken);
+                                //foreach (var entity in notYetUpdatedError)
+                                //{
+                                //    entity.Sp14179 = -2;
+                                //    entity.Sp14178 = DateTime.Today;
+                                //    _context.Update(entity);
+                                //    _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
+                                //}
                                 await _context.SaveChangesAsync(stoppingToken);
                                 if (_context.Database.CurrentTransaction != null)
                                     tran.Commit();

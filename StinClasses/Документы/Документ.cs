@@ -96,6 +96,8 @@ namespace StinClasses.Документы
         Task<Order> ПолучитьOrderНабора(string idDoc);
         Task<ФормаОплатаЧерезЮКасса> GetФормаОплатаЧерезЮКассаById(string idDoc);
         Task<ФормаЗаявкаПокупателя> GetФормаЗаявкаById(string idDoc);
+        Task<ФормаРеализация> GetФормаРеализацияById(string idDoc);
+
     }
     public class Документ : IДокумент
     {
@@ -579,6 +581,68 @@ namespace StinClasses.Документы
                     Сумма = row.Sp2451,
                     СтавкаНДС = _номенклатура.GetСтавкаНДС(row.Sp2454),
                     СуммаНДС = row.Sp2452
+                });
+            }
+
+            return doc;
+        }
+        public async Task<ФормаРеализация> GetФормаРеализацияById(string idDoc)
+        {
+            var d = await (from dh in _context.Dh1611s
+                           join j in _context._1sjourns on dh.Iddoc equals j.Iddoc
+                           where dh.Iddoc == idDoc
+                           select new
+                           {
+                               dh,
+                               j
+                           }).FirstOrDefaultAsync();
+            var докОснование = !(string.IsNullOrWhiteSpace(d.dh.Sp1587) || d.dh.Sp1587 == StinClasses.Common.ПустоеЗначениеИд13) ? await ДокОснованиеAsync(d.dh.Sp1587.Substring(4)) : null;
+
+            var doc = new ФормаРеализация
+            {
+                Общие = new ОбщиеРеквизиты
+                {
+                    IdDoc = d.dh.Iddoc,
+                    ДокОснование = докОснование,
+                    Фирма = await _фирма.GetEntityByIdAsync(d.j.Sp4056),
+                    Автор = await _пользователь.GetUserByIdAsync(d.j.Sp74),
+                    ВидДокумента10 = d.j.Iddocdef,
+                    ВидДокумента36 = Common.Encode36(d.j.Iddocdef),
+                    НомерДок = d.j.Docno,
+                    ДатаДок = d.j.DateTimeIddoc.ToDateTime(),
+                    Проведен = d.j.Closed == 1,
+                    Комментарий = d.dh.Sp660,
+                    Удален = d.j.Ismark
+                },
+                КодОперации = Common.КодОперации.FirstOrDefault(x => x.Key == d.dh.Sp3338),
+                Склад = await _склад.GetEntityByIdAsync(d.dh.Sp1593),
+                ПодСклад = await _склад.GetПодСкладByIdAsync(d.dh.Sp9000),
+                Контрагент = await _контрагент.GetКонтрагентAsync(d.dh.Sp1583),
+                Договор = await _контрагент.GetДоговорAsync(d.dh.Sp1584),
+                СниматьРезерв = d.dh.Sp8691 == 1,
+                ДатаОплаты = d.dh.Sp1588,
+                СкидКарта = await _контрагент.GetСкидКартаAsync(d.dh.Sp8673),
+                Маршрут = await _маршрут.GetМаршрутByCodeAsync(d.dh.Sp11568),
+                УчитыватьНДС = d.dh.Sp1589 == 1,
+                СуммаВклНДС = d.dh.Sp1590 == 1,
+                ТипЦен = await _контрагент.GetТипЦенAsync(d.dh.Sp1595),
+                Скидка = await _контрагент.GetСкидкаAsync(d.dh.Sp1596),
+                ЧужойТовар = (int)d.dh.Sp9537,
+            };
+            var ТаблЧасть = await _context.Dt1611s
+                .Where(x => x.Iddoc == idDoc)
+                .ToListAsync();
+            foreach (var row in ТаблЧасть)
+            {
+                doc.ТабличнаяЧасть.Add(new ФормаРеализацияТЧ
+                {
+                    Номенклатура = await _номенклатура.GetНоменклатураByIdAsync(row.Sp1599),
+                    Количество = row.Sp1600,
+                    Единица = await _номенклатура.GetЕдиницаByIdAsync(row.Sp1601),
+                    Цена = row.Sp1603,
+                    Сумма = row.Sp1604,
+                    СтавкаНДС = _номенклатура.GetСтавкаНДС(row.Sp1608),
+                    СуммаНДС = row.Sp1605
                 });
             }
 

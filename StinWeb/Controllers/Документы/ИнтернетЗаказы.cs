@@ -22,8 +22,6 @@ using StinClasses.Models;
 using JsonExtensions;
 using HttpExtensions;
 using System.Threading;
-using NPOI.SS.Formula.Functions;
-using System.Diagnostics;
 
 namespace StinWeb.Controllers
 {
@@ -85,8 +83,14 @@ namespace StinWeb.Controllers
 
             var CampaignIds = _context.Sc14042s
                 .Where(x => !x.Ismark && (x.Sp14164.Trim().ToUpper() == "FBS"))
-                .OrderBy(x => x.Sp14155).ThenBy(x => x.Descr)
-                .Select(x => new { CampaignId = x.Code.Trim(), Description = x.Sp14155.Trim() + " " + x.Descr.Trim() });
+                //.OrderBy(x => x.Sp14155).ThenBy(x => x.Descr)
+                .Select(x => new { CampaignId = x.Code.Trim(), Description = x.Sp14155.Trim() + " " + x.Descr.Trim() })
+                .Concat(
+                _context.Sc14042s
+                .Where(x => !x.Ismark && (x.Sp14155.Trim().ToUpper() == "OZON") && (x.Sp14164.Trim().ToUpper() == "FBS") && !string.IsNullOrWhiteSpace(x.Sp14154))
+                .Select(x => new { CampaignId = x.Code.Trim() + "/" + x.Sp14154.Trim(), Description = x.Sp14155.Trim() + " " + x.Sp14195.Trim() })
+                )
+                .OrderBy(x => x.Description);
             ViewBag.CampaignIds = new SelectList(CampaignIds, "CampaignId", "Description");
 
             var типыОплат = new List<Tuple<int, string>>();
@@ -101,7 +105,7 @@ namespace StinWeb.Controllers
             return View("Console");
         }
         [HttpPost]
-        public async Task<IActionResult> GetLoadingAct(string campaignId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetLoadingAct(string campaignInfo, CancellationToken cancellationToken)
         {
             var currentTime = DateTime.Now.TimeOfDay;
             if (!TimeSpan.TryParse("16:00", out TimeSpan limitTime))
@@ -109,25 +113,41 @@ namespace StinWeb.Controllers
                 limitTime = TimeSpan.MaxValue;
             }
             var reportDate = currentTime > limitTime ? DateTime.Today.AddDays(1) : DateTime.Today;
+            var campaignData = campaignInfo.Split('/');
+            var campaignId = campaignData[0];
+            var warehouseId = (campaignData.Length > 1) ? campaignData[1] : string.Empty;
             var data = await (from order in _context.Sc13994s
                               join market in _context.Sc14042s on order.Sp14038 equals market.Id
                               join item in _context.Sc14033s on order.Id equals item.Parentext
                               join nom in _context.Sc84s on item.Sp14022 equals nom.Id
                               join ed in _context.Sc75s on nom.Sp94 equals ed.Id
+                              join markUse in _context.Sc14152s on new { nomId = nom.Id, marketId = market.Id } equals new { nomId = markUse.Parentext, marketId = markUse.Sp14147 } into _markUse
+                              from markUse in _markUse.DefaultIfEmpty()
                               where !order.Ismark && (order.Sp13982 != 5) &&
                                     (market.Code.Trim() == campaignId) &&
-                                    (order.Sp13990.Date == reportDate)
+                                    (order.Sp13990.Date == reportDate) &&
+                                    (string.IsNullOrEmpty(warehouseId) ? true : markUse.Sp14190.Trim() == warehouseId)
+                              group new { order, market, item, nom, ed } by new 
+                              { 
+                                  orderId = order.Id, 
+                                  orderNo = order.Code,
+                                  status = order.Sp13982,
+                                  типДоставкиПартнер = order.Sp13985,
+                                  типДоставки = order.Sp13988,
+                              } into gr
                               select new
                               {
-                                  OrderId = order.Id,
-                                  OrderNo = order.Code.Trim(),
-                                  Status = order.Sp13982,
-                                  ТипДоставки = (((StinClasses.StinDeliveryPartnerType)order.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinDeliveryType)order.Sp13988 == StinClasses.StinDeliveryType.PICKUP)) ? "Самовывоз" : "Доставка",
-                                  КолТовара = item.Sp14023,
-                                  СуммаТовара = item.Sp14024 * item.Sp14023,
-                                  КолГрузоМест = market.Sp14155.ToUpper().Trim() == "ЯНДЕКС" ? ((ed.Sp14063 == 0 ? 1 : ed.Sp14063) * item.Sp14023) / (nom.Sp14188 == 0 ? 1 : nom.Sp14188) : 1,
+                                  OrderId = gr.Key.orderId,
+                                  OrderNo = gr.Key.orderNo.Trim(),
+                                  Status = gr.Key.status,
+                                  ТипДоставки = (((StinClasses.StinDeliveryPartnerType)gr.Key.типДоставкиПартнер == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinDeliveryType)gr.Key.типДоставки == StinClasses.StinDeliveryType.PICKUP)) ? "Самовывоз" : "Доставка",
+                                  КолТовара = gr.Sum(x => x.item.Sp14023),
+                                  СуммаТовара = gr.Sum(x => (x.item.Sp14024 + x.item.Sp14026) * x.item.Sp14023),
+                                  КолГрузоМест = gr.Sum(x => x.market.Sp14155.ToUpper().Trim() == "ЯНДЕКС" ? ((x.ed.Sp14063 == 0 ? 1 : x.ed.Sp14063) * x.item.Sp14023) / (x.nom.Sp14188 == 0 ? 1 : x.nom.Sp14188) : 1),
                               }).ToListAsync(cancellationToken);
-            var shop = _context.Sc14042s.Where(x => x.Code.Trim() == campaignId).Select(market => market.Sp14155.ToUpper().Trim() + " " + market.Descr.Trim()).FirstOrDefault();
+            var shop = _context.Sc14042s
+                .Where(x => (x.Code.Trim() == campaignId) && (string.IsNullOrEmpty(warehouseId) ? true : x.Sp14154 == warehouseId))
+                .Select(market => market.Sp14155.ToUpper().Trim() + " " + (string.IsNullOrEmpty(warehouseId) ? market.Descr.Trim() : market.Sp14195.Trim())).FirstOrDefault();
             var orderIds = data.Select(x => x.OrderId);
             DateTime dateRegTA = _context.GetRegTA();
             var ВидРеализация = Common.Encode36((long)StinClasses.Документы.ВидДокумента.Реализация).PadLeft(4);
@@ -188,18 +208,19 @@ namespace StinWeb.Controllers
                             d.OrderNo,
                             d.Status,
                             d.ТипДоставки,
-                            //d.КолГрузоМест,
-                            //d.КолТовара,
-                            //d.СуммаТовара
+                            d.КолГрузоМест,
+                            d.КолТовара,
+                            d.СуммаТовара
                         } into gr
+                        orderby gr.Key.OrderNo
                         select new
                         {
                             OrderNo = gr.Key.OrderNo,
                             ТипДоставки = gr.Key.ТипДоставки,
                             Status = gr.Key.Status,
-                            КолГрузоМест = gr.Sum(x => x.d.КолГрузоМест),
-                            КолТовара = gr.Sum(x => x.d.КолТовара),
-                            СуммаТовара = gr.Sum(x => x.d.СуммаТовара),
+                            КолГрузоМест = gr.Key.КолГрузоМест,
+                            КолТовара = gr.Key.КолТовара,
+                            СуммаТовара = gr.Key.СуммаТовара,
                             StatusCode = gr.Min(o => o.reg.statusOrder),
                             Склады = string.Join(", ", gr.Select(y => y.reg.складName).Distinct()),
                             МаршрутНаименование = string.Join(", ", gr.Select(y => y.reg.маршрутName).Distinct()),
@@ -241,8 +262,11 @@ namespace StinWeb.Controllers
             return Ok("".CreateOrUpdateHtmlPrintPage("ЛистСборки", printData[0]));
         }
         [HttpGet]
-        public async Task<IActionResult> GetReceptionTransferAct(string campaignId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetReceptionTransferAct(string campaignInfo, CancellationToken cancellationToken)
         {
+            var campaignData = campaignInfo.Split('/');
+            var campaignId = campaignData[0];
+            var warehouseId = (campaignData.Length > 1) ? campaignData[1] : string.Empty;
             var data = await _context.Sc14042s.Where(x => x.Code.Trim() == campaignId).Select(x => new
             {
                 тип = x.Sp14155.ToUpper().Trim(),
@@ -361,8 +385,28 @@ namespace StinWeb.Controllers
                 }
                 else if (data.тип == "OZON")
                 {
-                    if (!long.TryParse(campaignId, out long deliveryMethodId))
-                        deliveryMethodId = 0;
+                    long.TryParse(campaignId, out long deliveryMethodId);
+                    if (!string.IsNullOrEmpty(warehouseId))
+                    {
+                        long.TryParse(warehouseId, out long altDeliveryMethodId);
+                        DateTime departureDate = limitTime <= DateTime.Now.TimeOfDay ? DateTime.Today.AddDays(1) : DateTime.Today;
+                        if (departureDate.DayOfWeek == DayOfWeek.Saturday)
+                            departureDate = departureDate.AddDays(2);
+                        if (departureDate.DayOfWeek == DayOfWeek.Sunday)
+                            departureDate = departureDate.AddDays(1);
+
+                        var deliveryServiceId = await (from o in _context.Sc13994s
+                                                       join m in _context.Sc14042s on o.Sp14038 equals m.Id
+                                                       where !o.Ismark && (m.Code.Trim() == campaignId) &&
+                                                             !o.Sp13986.Equals(deliveryMethodId) && !o.Sp13986.Equals(altDeliveryMethodId) &&
+                                                             (o.Sp13990.Date == departureDate)
+                                                       select o.Sp13986)
+                                                       .FirstOrDefaultAsync(cancellationToken);
+                        if (deliveryServiceId > 0)
+                            deliveryMethodId = (long)deliveryServiceId;
+                        else
+                            deliveryMethodId = altDeliveryMethodId;
+                    }
                     var ozonResult = await OzonClasses.OzonOperators.GetAct(_httpService, data.clientId, data.token,
                         limitTime,
                         deliveryMethodId,
@@ -436,6 +480,10 @@ namespace StinWeb.Controllers
                        from sklad in _sklad.DefaultIfEmpty()
                        join order in _context.Sc13994s on r.orderId equals order.Id
                        join market in _context.Sc14042s on order.Sp14038 equals market.Id
+                       //join item in _context.Sc14033s on r.orderId equals item.Parentext
+                       //join nom in _context.Sc84s on item.Sp14022 equals nom.Id
+                       //join markUse in _context.Sc14152s on new { nomId = nom.Id, marketId = market.Id } equals new { nomId = markUse.Parentext, marketId = markUse.Sp14147 } into _markUse
+                       //from markUse in _markUse.DefaultIfEmpty()
                        join превЗаявка in _context.Dh12747s on order.Id equals превЗаявка.Sp14007
                        join binary in _context.VzOrderBinaries.Where(x => x.Extension.Trim().ToUpper() == "LABELS") on order.Id equals binary.Id into _binary
                        from binary in _binary.DefaultIfEmpty()
@@ -444,7 +492,7 @@ namespace StinWeb.Controllers
                            Id = order.Id,
                            Тип = market.Sp14155.ToUpper().Trim(),
                            MarketplaceId = order.Code.Trim(),
-                           MarketplaceType = order.Descr.Trim(),
+                           MarketplaceType = order.Descr.Trim(), // (markUse != null && !string.IsNullOrWhiteSpace(market.Sp14154) && (markUse.Sp14190.Trim() == market.Sp14154.Trim())) ? market.Sp14155.Trim() + " realFBS" : order.Descr.Trim(),
                            ShipmentDate = order.Sp13990,
                            ПредварительнаяЗаявкаНомер = order.Sp13981.Trim(),
                            CustomerNotes = order.Sp14122,
@@ -476,8 +524,9 @@ namespace StinWeb.Controllers
                            Labels = binary != null ? binary.Id : null
                        };
             var dataE = data.AsEnumerable();
+
             var dataResult = dataE
-                .GroupBy(x => new
+            .GroupBy(x => new
                 {
                     x.Id,
                     x.Тип,

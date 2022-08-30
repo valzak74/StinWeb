@@ -73,8 +73,13 @@ namespace HelloWorld
             }
             return result.ToString();
         }
+        static void temp(object o)
+        {
+            string ass = "";
+        }
         static async Task Main(string[] args)
         {
+            var rooooo = Enumerable.Range(0, 4);
             var url = "http://gw.api.taobao.com/router/rest"; //"https://api.taobao.com/router/rest";
             var secret = "c8174c131d123a878b4ccfddb9a72a88";
             var app_key = "33887460";

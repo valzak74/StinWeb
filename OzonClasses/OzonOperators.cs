@@ -353,7 +353,7 @@ namespace OzonClasses
             var request = new OzonStockRequest();
             request.Stocks = stockData;
             var result = await httpService.Exchange<OzonStockResponse, ErrorResponse>(
-                "https://api-seller.ozon.ru/v1/product/import/stocks",
+                "https://api-seller.ozon.ru/v2/products/stocks", //"https://api-seller.ozon.ru/v1/product/import/stocks",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
@@ -376,7 +376,7 @@ namespace OzonClasses
                         {
                             if (!string.IsNullOrEmpty(err))
                                 err += Environment.NewLine;
-                            err += item.Offer_id + " : " + string.Join(';', item.Errors.Select(x => x.Code + ": " + x.Message));
+                            err += "ClientId = " + clientId + " (" + item.Offer_id + ") : " + string.Join(';', item.Errors.Select(x => x.Code + ": " + x.Message));
                         }
                         if (item.Updated)
                         {
