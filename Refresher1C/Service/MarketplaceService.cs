@@ -12,6 +12,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using HttpExtensions;
+using System.Data;
 
 namespace Refresher1C.Service
 {
@@ -354,7 +355,7 @@ namespace Refresher1C.Service
                                     }
                                     if (result.Item2 != null && !string.IsNullOrEmpty(result.Item2) && (--tryCount == 0))
                                     {
-                                        if (result.Item2 == "3: POSTINGS_NOT_READY")
+                                        if ((result.Item2 == "3: POSTINGS_NOT_READY") || (result.Item2 == "3: INVALID_ARGUMENT"))
                                             status = entity.Sp13982;
                                         else
                                         {
@@ -1515,17 +1516,23 @@ namespace Refresher1C.Service
                 _logger.LogError(ex.Message);
             }
         }
-        public async Task UpdateStock(CancellationToken stoppingToken)
+        public async Task UpdateStock(bool regular, CancellationToken stoppingToken)
         {
-            if (int.TryParse(_configuration["Stocker:maxPerRequest"], out int maxPerRequest))
-                maxPerRequest = Math.Max(maxPerRequest, 1);
+            var defFirmaId = _configuration["Stocker:" + _configuration["Stocker:Firma"] + ":FirmaId"];
+            if (int.TryParse(_configuration["Stocker:maxPerRequestAliexpress"], out int maxPerRequestAli))
+                maxPerRequestAli = Math.Max(maxPerRequestAli, 1);
             else
-                maxPerRequest = 100;
+                maxPerRequestAli = 20;
+            if (int.TryParse(_configuration["Stocker:maxPerRequestOzon"], out int maxPerRequestOzon))
+                maxPerRequestOzon = Math.Max(maxPerRequestOzon, 1);
+            else
+                maxPerRequestOzon = 100;
             try
             {
                 var marketplaceIds = await (from market in _context.Sc14042s
                                             where !market.Ismark
                                                 && (market.Sp14177 == 1)
+                                                && (string.IsNullOrEmpty(defFirmaId) ? true : market.Parentext == defFirmaId)
                                             select new
                                             {
                                                 Id = market.Id,
@@ -1539,19 +1546,19 @@ namespace Refresher1C.Service
                                                 Code = market.Code.Trim(),
                                                 HexEncoding = market.Sp14153 == 1
                                             })
-                                            .ToListAsync();
+                                            .ToListAsync(stoppingToken);
                 foreach (var marketplace in marketplaceIds)
                 {
                     if (marketplace.Тип.ToUpper() == "OZON")
                     {
                         await UpdateOzonStock(
-                            marketplace.ClientId, marketplace.AuthToken, 99,
+                            marketplace.ClientId, marketplace.AuthToken, regular, maxPerRequestOzon,
                             marketplace.Id, marketplace.FirmaId, marketplace.HexEncoding, marketplace.Code, stoppingToken);
                     }
                     else if (marketplace.Тип.ToUpper() == "ALIEXPRESS")
                     {
                         await UpdateAliExpressStock(marketplace.ClientId, 
-                            marketplace.AuthSecret, marketplace.Authorization, maxPerRequest,
+                            marketplace.AuthSecret, marketplace.Authorization, regular, maxPerRequestAli,
                             marketplace.Id, marketplace.FirmaId, marketplace.HexEncoding, stoppingToken);
                     }
                 }
@@ -1561,14 +1568,17 @@ namespace Refresher1C.Service
                 _logger.LogError(ex.Message);
             }
         }
-        public async Task UpdateOzonStock(string clientId, string authToken, int limit, 
+        public async Task UpdateOzonStock(string clientId, string authToken, bool regular, int limit,
             string marketplaceId, string firmaId, bool hexEncoding, string skladCode, CancellationToken stoppingToken)
         {
             var data = await ((from markUse in _context.Sc14152s
                               join nom in _context.Sc84s on markUse.Parentext equals nom.Id
                               where (markUse.Sp14147 == marketplaceId) &&
                                 (markUse.Sp14158 == 1) && //Есть в каталоге 
-                                ((markUse.Sp14179 == 1) || (markUse.Sp14178 != DateTime.Today))
+                                //(markUse.Sp14179 == -3) && (markUse.Sp14178 < DateTime.Now.AddSeconds(-100))
+                                (((regular ? (markUse.Sp14179 == 1) : (markUse.Sp14179 == -2)) && 
+                                  (markUse.Sp14178 < DateTime.Now.AddMinutes(-2))) || 
+                                 (markUse.Sp14178.Date != DateTime.Today))
                               select new
                               {
                                   Id = markUse.Id,
@@ -1616,7 +1626,7 @@ namespace Refresher1C.Service
                         _context.Sc14152s
                             .Where(x => notReadyIds.Contains(x.Id))
                             .ToList()
-                            .ForEach(x => { x.Sp14178 = DateTime.Today; });
+                            .ForEach(x => { x.Sp14178 = DateTime.Now; });
                         await _context.SaveChangesAsync(stoppingToken);
                         if (_context.Database.CurrentTransaction != null)
                             tran.Commit();
@@ -1670,28 +1680,27 @@ namespace Refresher1C.Service
                     var result = await OzonClasses.OzonOperators.UpdateStock(_httpService, clientId, authToken,
                         stockData,
                         stoppingToken);
-                    if (result.Item2 != null && !string.IsNullOrEmpty(result.Item2))
+                    if (result.errorMessage != null && !string.IsNullOrEmpty(result.errorMessage))
                     {
-                        _logger.LogError(result.Item2);
+                        _logger.LogError(result.errorMessage);
                     }
                     List<string> uploadIds = new List<string>();
-                    //List<string> errorIds = new List<string>();
-                    if (result.Item1 != null && result.Item1.Count > 0)
+                    List<string> errorIds = new List<string>();
+                    if (result.updatedOfferIds?.Count > 0)
                     {
-                        var nomIds = result.Item1.Select(x =>
-                            списокНоменклатуры
-                                        .Where(y => (hexEncoding ? y.Code.EncodeHexString() : y.Code) == x)
-                                        .Select(z => z.Id).FirstOrDefault());
-                        uploadIds.AddRange(data.Where(x => nomIds.Contains(x.NomId)).Select(x => x.Id));
-                        //var errorNomCodes = stockData
-                        //    .Where(x => !result.Item1.Contains(x.Offer_id))
-                        //    .Select(x => hexEncoding ? x.Offer_id.DecodeHexString() : x.Offer_id);
-                        //var errorNomIds = списокНоменклатуры
-                        //    .Where(x => errorNomCodes.Contains(x.Code))
-                        //    .Select(x => x.Id);
-                        //errorIds.AddRange(data.Where(x => errorNomIds.Contains(x.NomId)).Select(x => x.Id));
+                        var nomIds = списокНоменклатуры
+                            .Where(x => result.updatedOfferIds.Contains(hexEncoding ? x.Code.EncodeHexString() : x.Code))
+                            .Select(x => x.Id);
+                        uploadIds = data.Where(x => nomIds.Contains(x.NomId)).Select(x => x.Id).ToList();
                     }
-                    if (uploadIds.Count > 0)
+                    if (result.errorOfferIds?.Count > 0)
+                    {
+                        var nomIds = списокНоменклатуры
+                            .Where(x => result.errorOfferIds.Contains(hexEncoding ? x.Code.EncodeHexString() : x.Code))
+                            .Select(x => x.Id);
+                        errorIds = data.Where(x => nomIds.Contains(x.NomId)).Select(x => x.Id).ToList();
+                    }
+                    if ((uploadIds.Count > 0) || (errorIds.Count > 0))
                     {
                         tryCount = 5;
                         while (true)
@@ -1699,26 +1708,32 @@ namespace Refresher1C.Service
                             using var tran = await _context.Database.BeginTransactionAsync();
                             try
                             {
-                                var notYetUpdated = await _context.Sc14152s
-                                .Where(x => uploadIds.Contains(x.Id) && (x.Sp14179 == -1))
-                                .ToListAsync(stoppingToken);
-                                foreach (var entity in notYetUpdated)
+                                if (uploadIds.Count > 0)
                                 {
-                                    entity.Sp14179 = 0;
-                                    entity.Sp14178 = DateTime.Today;
-                                    _context.Update(entity);
-                                    _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
+                                    var notYetUpdated = await _context.Sc14152s
+                                        .Where(x => uploadIds.Contains(x.Id) && (x.Sp14179 == -1))
+                                        .ToListAsync(stoppingToken);
+                                    foreach (var entity in notYetUpdated)
+                                    {
+                                        entity.Sp14179 = 0;
+                                        entity.Sp14178 = DateTime.Now;  //DateTime.Today;
+                                        _context.Update(entity);
+                                        _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
+                                    }
                                 }
-                                //var notYetUpdatedError = await _context.Sc14152s
-                                //    .Where(x => errorIds.Contains(x.Id) && (x.Sp14179 == -1))
-                                //    .ToListAsync(stoppingToken);
-                                //foreach (var entity in notYetUpdatedError)
-                                //{
-                                //    entity.Sp14179 = -2;
-                                //    entity.Sp14178 = DateTime.Today;
-                                //    _context.Update(entity);
-                                //    _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
-                                //}
+                                if (errorIds.Count > 0)
+                                {
+                                    var notYetUpdatedError = await _context.Sc14152s
+                                        .Where(x => errorIds.Contains(x.Id) && (x.Sp14179 == -1))
+                                        .ToListAsync(stoppingToken);
+                                    foreach (var entity in notYetUpdatedError)
+                                    {
+                                        entity.Sp14179 = -2;
+                                        entity.Sp14178 = DateTime.Now;
+                                        _context.Update(entity);
+                                        _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
+                                    }
+                                }
                                 await _context.SaveChangesAsync(stoppingToken);
                                 if (_context.Database.CurrentTransaction != null)
                                     tran.Commit();
@@ -1740,14 +1755,15 @@ namespace Refresher1C.Service
                 }
             }
         }
-        public async Task UpdateAliExpressStock(string appKey, string appSecret, string authorization, int limit,
+        public async Task UpdateAliExpressStock(string appKey, string appSecret, string authorization, bool regular, int limit,
             string marketplaceId, string firmaId, bool hexEncoding, CancellationToken stoppingToken)
         {
             var data = await ((from markUse in _context.Sc14152s
                                join nom in _context.Sc84s on markUse.Parentext equals nom.Id
                                where (markUse.Sp14147 == marketplaceId) &&
                                  (markUse.Sp14158 == 1) && //Есть в каталоге 
-                                 ((markUse.Sp14179 == 1) || (markUse.Sp14178 != DateTime.Today))
+                                 ((regular ? (markUse.Sp14179 == 1) : (markUse.Sp14179 == -2)) || 
+                                 (markUse.Sp14178 != DateTime.Today))
                                select new
                                {
                                    Id = markUse.Id,
@@ -1872,15 +1888,16 @@ namespace Refresher1C.Service
                     //var result = await AliExpressClasses.Functions.UpdateStock(_httpService, authToken,
                     //    stockData,
                     //    stoppingToken);
-                    if (result.Item2 != null && !string.IsNullOrEmpty(result.Item2))
+                    if (result.errorMessage != null && !string.IsNullOrEmpty(result.errorMessage))
                     {
-                        _logger.LogError(result.Item2);
+                        _logger.LogError(result.errorMessage);
                     }
                     List<string> uploadIds = new List<string>();
-                    if (result.Item1 != null && result.Item1.Count > 0)
+                    List<string> errorIds = new List<string>();
+                    if (result.updatedIds != null && result.updatedIds.Count > 0)
                     {
                         uploadIds.AddRange(data
-                            .Where(x => result.Item1.Select(y => y.ToString()).Contains(x.ProductId))
+                            .Where(x => result.updatedIds.Select(y => y.ToString()).Contains(x.ProductId))
                             .Select(x => x.Id));
                         //var nomIds = result.Item1.Select(x =>
                         //    списокНоменклатуры
@@ -1888,7 +1905,14 @@ namespace Refresher1C.Service
                         //                .Select(z => z.Id).FirstOrDefault());
                         //uploadIds.AddRange(data.Where(x => nomIds.Contains(x.NomId)).Select(x => x.Id));
                     }
-                    if (uploadIds.Count > 0)
+                    if (result.errorIds?.Count > 0)
+                    {
+                        errorIds = data
+                            .Where(x => result.errorIds.Select(y => y.ToString()).Contains(x.ProductId))
+                            .Select(x => x.Id)
+                            .ToList();
+                    }
+                    if ((uploadIds.Count > 0) || (errorIds.Count > 0))
                     {
                         tryCount = 5;
                         while (true)
@@ -1896,15 +1920,31 @@ namespace Refresher1C.Service
                             using var tran = await _context.Database.BeginTransactionAsync();
                             try
                             {
-                                var notYetUpdated = await _context.Sc14152s
-                                .Where(x => uploadIds.Contains(x.Id) && (x.Sp14179 == -1))
-                                .ToListAsync();
-                                foreach (var entity in notYetUpdated)
+                                if (uploadIds.Count > 0)
                                 {
-                                    entity.Sp14179 = 0;
-                                    entity.Sp14178 = DateTime.Today;
-                                    _context.Update(entity);
-                                    _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
+                                    var notYetUpdated = await _context.Sc14152s
+                                        .Where(x => uploadIds.Contains(x.Id) && (x.Sp14179 == -1))
+                                        .ToListAsync();
+                                    foreach (var entity in notYetUpdated)
+                                    {
+                                        entity.Sp14179 = 0;
+                                        entity.Sp14178 = DateTime.Today;
+                                        _context.Update(entity);
+                                        _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
+                                    }
+                                }
+                                if (errorIds.Count > 0)
+                                {
+                                    var notYetUpdatedError = await _context.Sc14152s
+                                        .Where(x => errorIds.Contains(x.Id) && (x.Sp14179 == -1))
+                                        .ToListAsync();
+                                    foreach (var entity in notYetUpdatedError)
+                                    {
+                                        entity.Sp14179 = -2;
+                                        entity.Sp14178 = DateTime.Today;
+                                        _context.Update(entity);
+                                        _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
+                                    }
                                 }
                                 await _context.SaveChangesAsync(stoppingToken);
                                 if (_context.Database.CurrentTransaction != null)

@@ -17,7 +17,7 @@ namespace Refresher1C.Service
         Task CheckPickupExpired(CancellationToken stoppingToken);
         Task UpdatePrices(CancellationToken stoppingToken);
         Task CheckCatalog(CancellationToken stoppingToken);
-        Task UpdateStock(CancellationToken stoppingToken);
+        Task UpdateStock(bool regular, CancellationToken stoppingToken);
         Task RefreshOrders(CancellationToken stoppingToken);
         Task UpdateTariffs(CancellationToken cancellationToken);
     }

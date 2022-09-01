@@ -2,6 +2,8 @@
 using JsonExtensions;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data.Common;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -181,7 +183,7 @@ namespace AliExpressClasses
             }
             return new(null, "");
         }
-        public static async Task<Tuple<List<long>?, string>> UpdateStockGlobal(IHttpService httpService, string appKey, string appSecret, string authorization,
+        public static async Task<(List<long>? updatedIds, List<long>? errorIds, string errorMessage)> UpdateStockGlobal(IHttpService httpService, string appKey, string appSecret, string authorization,
             List<StockProductGlobal> stockData,
             CancellationToken cancellationToken)
         {
@@ -194,11 +196,12 @@ namespace AliExpressClasses
                 cancellationToken);
             if (result.Item2 != null)
             {
-                return new(null, "".ParseErrorGlobal(result.Item2));
+                return (updatedIds: null, errorIds: null, errorMessage: "".ParseErrorGlobal(result.Item2));
             }
             else if (result.Item1 != null)
             {
                 var tmpList = new List<long>();
+                var errList = new List<long>();
                 var err = "";
                 if (result.Item1.Aliexpress_solution_batch_product_inventory_update_response != null)
                 {
@@ -217,11 +220,13 @@ namespace AliExpressClasses
                         err += string.Join(Environment.NewLine, result.Item1.Aliexpress_solution_batch_product_inventory_update_response.Update_failed_list.Synchronize_product_response_dto.Select(x => "ProductId : " + x.Product_id +
                             (string.IsNullOrEmpty(x.Error_code) ? "" : " | Code : " + x.Error_code) +
                             (string.IsNullOrEmpty(x.Error_message) ? "" : " | Message : " + x.Error_message)));
+                        errList = result.Item1.Aliexpress_solution_batch_product_inventory_update_response.Update_failed_list.Synchronize_product_response_dto
+                            .Select(x => x.Product_id).ToList();
                     }
                 }
-                return new(tmpList, err);
+                return (updatedIds: tmpList, errorIds: errList, errorMessage: err);
             }
-            return new(null, "");
+            return (null, null, "");
         }
         public static async Task<Tuple<List<string>?, string>> UpdatePrice(IHttpService httpService, string authToken,
             List<PriceProduct> priceData,

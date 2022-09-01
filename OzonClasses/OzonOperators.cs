@@ -346,7 +346,7 @@ namespace OzonClasses
             }
 
         }
-        public static async Task<Tuple<List<string>, string>> UpdateStock(IHttpService httpService, string clientId, string authToken,
+        public static async Task<(List<string> updatedOfferIds, List<string> errorOfferIds, string errorMessage)> UpdateStock(IHttpService httpService, string clientId, string authToken,
             List<StockRequest> stockData,
             CancellationToken cancellationToken)
         {
@@ -359,6 +359,7 @@ namespace OzonClasses
                 request,
                 cancellationToken);
             List<string> uploadIds = new List<string>();
+            List<string> errorIds = new List<string>();
             string err = "";
             if (result.Item2 != null)
             {
@@ -377,6 +378,8 @@ namespace OzonClasses
                             if (!string.IsNullOrEmpty(err))
                                 err += Environment.NewLine;
                             err += "ClientId = " + clientId + " (" + item.Offer_id + ") : " + string.Join(';', item.Errors.Select(x => x.Code + ": " + x.Message));
+                            if ((!item.Updated) && (!item.Errors.Any(x => x.Code == "TOO_MANY_REQUESTS")))
+                                errorIds.Add(item.Offer_id ?? "");
                         }
                         if (item.Updated)
                         {
@@ -391,7 +394,7 @@ namespace OzonClasses
                     err += "Internal: Can't find Result in Ozon stock response";
                 }
             }
-            return new(uploadIds, err);
+            return (updatedOfferIds: uploadIds, errorOfferIds: errorIds, errorMessage: err);
         }
         public static async Task<Tuple<byte[]?,string?>> GetLabels(IHttpService httpService, string clientId, string authToken,
             List<string> postingNumbers,

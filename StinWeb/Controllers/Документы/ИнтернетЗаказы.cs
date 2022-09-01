@@ -83,7 +83,6 @@ namespace StinWeb.Controllers
 
             var CampaignIds = _context.Sc14042s
                 .Where(x => !x.Ismark && (x.Sp14164.Trim().ToUpper() == "FBS"))
-                //.OrderBy(x => x.Sp14155).ThenBy(x => x.Descr)
                 .Select(x => new { CampaignId = x.Code.Trim(), Description = x.Sp14155.Trim() + " " + x.Descr.Trim() })
                 .Concat(
                 _context.Sc14042s
@@ -126,7 +125,9 @@ namespace StinWeb.Controllers
                               where !order.Ismark && (order.Sp13982 != 5) &&
                                     (market.Code.Trim() == campaignId) &&
                                     (order.Sp13990.Date == reportDate) &&
-                                    (string.IsNullOrEmpty(warehouseId) ? true : markUse.Sp14190.Trim() == warehouseId)
+                                    (!string.IsNullOrEmpty(warehouseId) ? markUse.Sp14190.Trim() == warehouseId :
+                                        (!string.IsNullOrWhiteSpace(market.Sp14154) ? markUse.Sp14190.Trim() != market.Sp14154.Trim() :
+                                            true))
                               group new { order, market, item, nom, ed } by new 
                               { 
                                   orderId = order.Id, 
