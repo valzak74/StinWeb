@@ -112,6 +112,12 @@ namespace StinWeb.Controllers
                 limitTime = TimeSpan.MaxValue;
             }
             var reportDate = currentTime > limitTime ? DateTime.Today.AddDays(1) : DateTime.Today;
+            reportDate = reportDate.DayOfWeek switch 
+            {
+                DayOfWeek.Saturday => reportDate.AddDays(2),
+                DayOfWeek.Sunday => reportDate.AddDays(1),
+                _ => reportDate
+            };
             var campaignData = campaignInfo.Split('/');
             var campaignId = campaignData[0];
             var warehouseId = (campaignData.Length > 1) ? campaignData[1] : string.Empty;

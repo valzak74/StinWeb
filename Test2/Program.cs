@@ -2,6 +2,7 @@
 using JsonExtensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using Top.Api;
@@ -15,6 +16,12 @@ namespace HelloWorld
 {
     class Program
     {
+        //public static IEnumerable<int> MyWhere(this IEnumerable<int> source, Func<int,bool> predicate)
+        //{
+        //    foreach (int item in source)
+        //        if (predicate(item))
+        //            yield return item;
+        //}
         static string GetResponse(string auth, string body)
         {
             try
