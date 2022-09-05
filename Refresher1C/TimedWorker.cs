@@ -10,6 +10,7 @@ namespace Refresher1C
     {
         protected Timer _timer;
         protected int _refreshInterval;
+        protected TimeSpan _dueTime;
         protected Task _executingTask;
         protected IServiceScopeFactory _scope;
         protected readonly CancellationTokenSource _stoppingCts = new CancellationTokenSource();
@@ -51,7 +52,7 @@ namespace Refresher1C
         public virtual void ExecuteTask(object state)
         {
             _executingTask = ExecuteTaskAsync(_stoppingCts.Token);
-            _timer?.Change(TimeSpan.FromSeconds(_refreshInterval), TimeSpan.FromMilliseconds(-1));
+            _timer?.Change(_dueTime, TimeSpan.FromMilliseconds(-1));
         }
 
         public abstract Task ExecuteTaskAsync(CancellationToken stoppingToken);

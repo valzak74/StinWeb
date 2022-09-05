@@ -16,6 +16,7 @@ namespace Refresher1C
                 _refreshInterval = Math.Max(_refreshInterval, 1);
             else
                 _refreshInterval = 10;
+            _dueTime = TimeSpan.FromSeconds(_refreshInterval);
         }
 
         public override async Task ExecuteTaskAsync(CancellationToken stoppingToken)

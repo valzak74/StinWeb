@@ -2000,9 +2000,10 @@ namespace Refresher1C.Service
                         await GetOzonCancelOrders(marketplace.ClientId, marketplace.AuthToken,
                             marketplace.Id, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
                             marketplace.HexEncoding, stoppingToken);
-                        await GetOzonDeliveringOrders(marketplace.Id, marketplace.ClientId, marketplace.AuthToken,
-                            marketplace.Id, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
-                            marketplace.HexEncoding, stoppingToken);
+                        //moved to Slow
+                        //await GetOzonDeliveringOrders(marketplace.Id, marketplace.ClientId, marketplace.AuthToken,
+                        //    marketplace.Id, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
+                        //    marketplace.HexEncoding, stoppingToken);
                     }
                     else if (marketplace.Тип == "ЯНДЕКС")
                     {
@@ -2020,6 +2021,44 @@ namespace Refresher1C.Service
             catch (Exception ex)
             {
                 _logger.LogError("RefreshOrders : " + ex.Message);
+            }
+        }
+        public async Task RefreshSlowOrders(CancellationToken stoppingToken)
+        {
+            try
+            {
+                var marketplaceIds = await (from market in _context.Sc14042s
+                                            where !market.Ismark
+                                            //&& (market.Sp14177 == 1)
+                                            //&& (market.Sp14155.Trim() == "AliExpress")
+                                            select new
+                                            {
+                                                Id = market.Id,
+                                                Code = market.Code.Trim(),
+                                                Тип = market.Sp14155.ToUpper().Trim(),
+                                                FirmaId = market.Parentext,
+                                                CustomerId = market.Sp14175,
+                                                DogovorId = market.Sp14176,
+                                                ClientId = market.Sp14053.Trim(),
+                                                AuthToken = market.Sp14054.Trim(),
+                                                AuthSecret = market.Sp14195.Trim(),
+                                                Authorization = market.Sp14077.Trim(),
+                                                HexEncoding = market.Sp14153 == 1
+                                            })
+                                            .ToListAsync();
+                foreach (var marketplace in marketplaceIds)
+                {
+                    if (marketplace.Тип == "OZON")
+                    {
+                        await GetOzonDeliveringOrders(marketplace.Id, marketplace.ClientId, marketplace.AuthToken,
+                            marketplace.Id, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
+                            marketplace.HexEncoding, stoppingToken);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("RefreshSlowOrders : " + ex.Message);
             }
         }
         private async Task GetAliExpressOrders(string appKey, string appSecret, string authorization,
