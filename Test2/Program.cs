@@ -86,6 +86,14 @@ namespace HelloWorld
         }
         static async Task Main(string[] args)
         {
+            int i = 10;
+            var arr = new[] { 10, 15, 20 };
+            var query = arr.Where(x => x == i).Where(x => x <= 20);
+            i = 15;
+            var result1 = query.ToList();
+            Console.WriteLine(result1.Count());
+            Console.WriteLine(result1[0]);
+            Console.ReadLine();
             var rooooo = Enumerable.Range(0, 4);
             var url = "http://gw.api.taobao.com/router/rest"; //"https://api.taobao.com/router/rest";
             var secret = "c8174c131d123a878b4ccfddb9a72a88";
