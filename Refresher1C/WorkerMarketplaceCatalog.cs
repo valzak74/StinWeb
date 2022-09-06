@@ -49,6 +49,7 @@ namespace Refresher1C
         }
         public override void ExecuteTask(object state)
         {
+            _timer?.Change(Timeout.Infinite, 0);
             _executingTask = ExecuteTaskAsync(_stoppingCts.Token);
             _timer?.Change(GetNextStartDelay(), TimeSpan.FromMilliseconds(-1));
         }

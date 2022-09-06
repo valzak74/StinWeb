@@ -48,6 +48,7 @@ namespace Market.Controllers
             
             var lockedNomIds = await bridge.ПолучитьLockedНоменклатураIds(_authApi, номенклатураCodes);
             var nomQuantums = await bridge.ПолучитьКвант(номенклатураCodes, cancellationToken);
+            var nomDeltaStock = await bridge.ПолучитьDeltaStock(market.Id, номенклатураCodes, cancellationToken);
 
             foreach (var requestedItem in requestedCart.Cart.Items)
             {
@@ -58,19 +59,25 @@ namespace Market.Controllers
                     if (!lockedNomIds.Any(x => x == номенклатура.Id))
                     {
                         var quantum = (int)nomQuantums.Where(x => x.Key == номенклатура.Id).Select(x => x.Value).FirstOrDefault();
+                        var deltaStock = (int)nomDeltaStock.Where(x => x.Key == номенклатура.Id).Select(x => x.Value).FirstOrDefault();
                         if (quantum > 1)
                         {
                             var запрошеноКвантов = (int)(requestedItem.Count / quantum);
                             if (запрошеноКвантов > 0)
                             {
-                                var остатокКвантов = (int)((номенклатура.Остатки
+                                var остатокКвантов = (int)(((номенклатура.Остатки
                                     .Where(x => x.СкладId == Common.SkladEkran)
-                                    .Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) / quantum);
+                                    .Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - deltaStock) / quantum);
+                                остатокКвантов = Math.Max(остатокКвантов, 0);
                                 МожноОтпустить = Math.Min(запрошеноКвантов * quantum, остатокКвантов * quantum);
                             }
                         }
                         else
-                            МожноОтпустить = Math.Min(requestedItem.Count, (int)(номенклатура.Остатки.Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент));
+                        {
+                            var остаток = (int)((номенклатура.Остатки.Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - deltaStock);
+                            остаток = Math.Max(остаток, 0);
+                            МожноОтпустить = Math.Min(requestedItem.Count, остаток);
+                        }
                     }
                     responseCart.Cart.Items.Add(new ResponseItemFBS
                     {
@@ -99,6 +106,7 @@ namespace Market.Controllers
 
             var lockedNomIds = await bridge.ПолучитьLockedНоменклатураIds(_authApi, номенклатураCodes);
             var nomQuantums = await bridge.ПолучитьКвант(номенклатураCodes, cancellationToken);
+            var nomDeltaStock = await bridge.ПолучитьDeltaStock(market.Id, номенклатураCodes, cancellationToken);
 
             foreach (var requestedSku in requestedStock.Skus)
             {
@@ -107,15 +115,20 @@ namespace Market.Controllers
                 if ((номенклатура != null) && !lockedNomIds.Any(x => x == номенклатура.Id))
                 {
                     var quantum = (int)nomQuantums.Where(x => x.Key == номенклатура.Id).Select(x => x.Value).FirstOrDefault();
+                    var deltaStock = (int)nomDeltaStock.Where(x => x.Key == номенклатура.Id).Select(x => x.Value).FirstOrDefault();
                     if (quantum > 1)
                     {
-                        var остатокКвантов = (int)((номенклатура.Остатки
+                        var остатокКвантов = (int)(((номенклатура.Остатки
                             .Where(x => x.СкладId == Common.SkladEkran)
-                            .Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) / quantum);
+                            .Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - deltaStock) / quantum);
+                        остатокКвантов = Math.Max(остатокКвантов, 0);
                         count = остатокКвантов * quantum;
                     }
                     else
-                        count = (int)(номенклатура.Остатки.Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент);
+                    {
+                        count = (int)(номенклатура.Остатки.Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - deltaStock;
+                        count = Math.Max(count, 0);
+                    }
                 }
                 responseStock.Skus.Add(new SkuEntry 
                 {

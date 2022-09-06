@@ -70,39 +70,6 @@ namespace StinWeb.Controllers.Обработки
             if (string.IsNullOrEmpty(marketId))
                 return StatusCode(502, "Недопустимое значение campaignId");
             
-            //DateTime rgStartPeriod = DateTime.MinValue;
-            //DateTime rgEndPeriod = DateTime.MinValue;
-            //DateTime raStartOld = DateTime.MinValue;
-            //DateTime raEndOld = DateTime.MinValue;
-            //DateTime raStart = DateTime.MinValue;
-            //DateTime raEnd = DateTime.MinValue;
-            //if (((startDate.Year != endDate.Year) || (startDate.Month != endDate.Month)) && (startDate.Day > 1))
-            //{
-            //    raStartOld = startDate;
-            //    raEndOld = new DateTime(startDate.Year, startDate.Month, DateTime.DaysInMonth(startDate.Year, startDate.Month));
-            //}
-
-            //DateTime dateTA = _context.GetDateTA();
-            //if (dateTA > endDate)
-            //{
-            //    raStart = new DateTime(endDate.Year, endDate.Month, 1);
-            //    raEnd = endDate;
-            //}
-            //if ((raStartOld > DateTime.MinValue) && (raEndOld > DateTime.MinValue))
-            //{
-            //    if (raEndOld.AddDays(1) != raStart)
-            //        rgStartPeriod = raEndOld.AddDays(1);
-            //}
-            //else
-            //    rgStartPeriod = startDate;
-            //if ((raStart > DateTime.MinValue) && (raEnd > DateTime.MinValue))
-            //{
-            //    if (rgStartPeriod > DateTime.MinValue)
-            //        rgEndPeriod = raStart.AddDays(-1);
-            //}
-            //else
-            //    rgEndPeriod = endDate;
-
             string extension = "xlsx";
             IWorkbook workbook;
             IFormulaEvaluator formula;
@@ -147,6 +114,9 @@ namespace StinWeb.Controllers.Обработки
 
             ICellStyle styleValueNum1tail = workbook.StyleValueNumber(fontArial8, 1);
             ICellStyle styleValueNum0tail = workbook.StyleValueNumber(fontArial8, 0);
+
+            ICellStyle styleDeltaStock = workbook.StyleValueNumber(fontArial8, 0, 13);
+            ICellStyle styleDeltaPrice = workbook.StyleValueNumber(fontArial8, 0, 49);
 
             ISheet sheet = workbook.CreateSheet("Лист 1");
 
@@ -201,11 +171,13 @@ namespace StinWeb.Controllers.Обработки
             columnValues.Add("РозничнаяСП", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("ЦенаПродажи", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("ЦП_ЗЦ", sheet.CreateColumnWithWidth(column++, 2900));
+            columnValues.Add("КоррЦены", sheet.CreateColumnWithWidth(column++, 2900));
             foreach (var marketplace in marketplaceData)
             {
                 columnValues.Add(marketplace.ShortName, sheet.CreateColumnWithWidth(column++, 2900));
             }
             columnValues.Add("Квант", sheet.CreateColumnWithWidth(column++, 2900));
+            columnValues.Add("КоррОстатков", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("КраткоеОписание", sheet.CreateColumnWithWidth(column++, 9000));
             columnValues.Add("Страна", sheet.CreateColumnWithWidth(column++, 3500));
             columnValues.Add("Категория", sheet.CreateColumnWithWidth(column++, 8000));
@@ -237,11 +209,13 @@ namespace StinWeb.Controllers.Обработки
             sheet.SetValue(styleHeader, row, columnValues["РозничнаяСП"], "Розничная спец");
             sheet.SetValue(styleHeader, row, columnValues["ЦенаПродажи"], "Цена продажи");
             sheet.SetValue(styleHeader, row, columnValues["ЦП_ЗЦ"], "ЦП/ЗЦ");
+            sheet.SetValue(styleHeader, row, columnValues["КоррЦены"], "Корр. Цен, %");
             foreach (var marketplace in marketplaceData)
             {
                 sheet.SetValue(styleHeader, row, columnValues[marketplace.ShortName], marketplace.ShortName + " " + marketplace.DefMultiplyer.ToString() );
             }
             sheet.SetValue(styleHeader, row, columnValues["Квант"], "Квант");
+            sheet.SetValue(styleHeader, row, columnValues["КоррОстатков"], "Корр. остатков");
             sheet.SetValue(styleHeader, row, columnValues["КраткоеОписание"], "Краткое описание");
             sheet.SetValue(styleHeader, row, columnValues["Страна"], "Страна происхождения");
             sheet.SetValue(styleHeader, row, columnValues["Категория"], "Категория конечная");
@@ -279,6 +253,8 @@ namespace StinWeb.Controllers.Обработки
                                  ЦенаСп = vzTovar != null ? vzTovar.RoznSp ?? 0 : 0,
                                  ЦенаЗакуп = vzTovar != null ? vzTovar.Zakup ?? 0 : 0,
                                  Квант = nom.Sp14188,
+                                 DeltaStock = marketUsing.Sp14214,
+                                 DeltaPrice = marketUsing.Sp14213,
                                  КраткоеОписание = nom.Sp12309.Trim(),
                                  Характеристики = nom.Sp8848.Trim(),
                                  Категория = parent != null ? parent.Descr.Trim() : "",
@@ -319,15 +295,6 @@ namespace StinWeb.Controllers.Обработки
                 null,
                 nomIds);
 
-            //var prodagi = from rg2351 in _context.Rg2351s
-            //              where (rg2351.Period >= rgStartPeriod) && (rg2351.Period <= rgEndPeriod) &&
-            //                nomIds.Contains(rg2351.Sp2343)
-            //              select new
-            //              {
-            //                  НоменклатураId = rg2351.Sp2343,
-            //                  ПокупательId = rg2351.Sp2344,
-            //                  Количество = rg2351.Sp2375 - rg2351.Sp5193
-            //              }
             long видКомлексПродажа = (long)StinClasses.Документы.ВидДокумента.КомплекснаяПродажа;
             string основаниеВидКомлексПродажа = "O1" + Common.Encode36(видКомлексПродажа).PadLeft(4);
             var реализовано = Enumerable.Repeat(new
@@ -400,6 +367,7 @@ namespace StinWeb.Controllers.Обработки
                 var ценаПродажи = item.ЦенаСп > 0 ? Math.Min(item.ЦенаРозн, item.ЦенаСп) : item.ЦенаРозн;
                 sheet.SetValue(styleValueNum, row, columnValues["ЦенаПродажи"], ценаПродажи);
                 sheet.SetValue(styleValueNum, row, columnValues["ЦП_ЗЦ"], item.ЦенаЗакуп == 0 ? 0 : ценаПродажи / item.ЦенаЗакуп);
+                sheet.SetValue(styleDeltaPrice, row, columnValues["КоррЦены"], item.DeltaPrice);
                 bool marked = false;
                 foreach (var marketplace in marketplaceData)
                 {
@@ -447,6 +415,7 @@ namespace StinWeb.Controllers.Обработки
                     marked = true;
                 }
                 sheet.SetValue(styleValueNum, row, columnValues["Квант"], item.Квант);
+                sheet.SetValue(styleDeltaStock, row, columnValues["КоррОстатков"], item.DeltaStock);
                 sheet.SetValue(styleValue, row, columnValues["КраткоеОписание"], item.Характеристики);
                 var странаId = await _context.ПолучитьЗначениеПериодическогоРеквизита(item.NomId, 5012);
                 string страна = "";
@@ -503,30 +472,30 @@ namespace StinWeb.Controllers.Обработки
                 return StatusCode(502, "В книге не найден лист " + (string.IsNullOrEmpty(sheetName) ? "" : sheetName));
             
             var map = FindExcelMap(sheet);
-            if (map.Item1 < 0)
+            if (map.Id < 0)
                 return StatusCode(502, "Не смогли обнаружить колонку Id");
-            if (map.Item2 < 0)
+            if (map.Value < 0)
                 return StatusCode(502, "Не смогли обнаружить колонку цен");
-            if (map.Item3 < 0)
+            if (map.StartRow < 0)
                 return StatusCode(502, "Не смогли обнаружить стартовую строку");
 
             using var tran = await _context.Database.BeginTransactionAsync();
             try
             {
-                for (int i = map.Item3; i <= sheet.LastRowNum; i++)
+                for (int i = map.StartRow; i <= sheet.LastRowNum; i++)
                 {
                     IRow row = sheet.GetRow(i);
                     if ((row != null) && (row.Cells.Count > 0))
                     {
                         string marketUsingId = row.Cells
-                            .FirstOrDefault(c => c.ColumnIndex == map.Item1)
+                            .FirstOrDefault(c => c.ColumnIndex == map.Id)
                             .GetStringValue()
                             .Replace("_", " ");
                         decimal value = 0;
                         if (!string.IsNullOrWhiteSpace(marketUsingId))
                         {
                             ICell valueCell = row.Cells
-                                .FirstOrDefault(c => c.ColumnIndex == map.Item2);
+                                .FirstOrDefault(c => c.ColumnIndex == map.Value);
                             if (valueCell != null)
                             {
                                 if (valueCell.CellType == CellType.Numeric)
@@ -542,7 +511,33 @@ namespace StinWeb.Controllers.Обработки
                                     }
                                 }
                             }
-                            await UpdateMarketUsing(marketUsingId, value);
+                            decimal deltaPrice = decimal.MinValue;
+                            if (map.DeltaPrice >= 0)
+                            {
+                                ICell deltaPriceCell = row.Cells
+                                    .FirstOrDefault(c => c.ColumnIndex == map.DeltaPrice);
+                                if (deltaPriceCell != null)
+                                {
+                                    if (deltaPriceCell.CellType == CellType.Numeric)
+                                        deltaPrice = Convert.ToDecimal(deltaPriceCell.NumericCellValue);
+                                    else
+                                        Decimal.TryParse(deltaPriceCell.GetStringValue(), out deltaPrice);
+                                }
+                            }
+                            decimal deltaStock = decimal.MinValue;
+                            if (map.DeltaStock >= 0)
+                            {
+                                ICell deltaStockCell = row.Cells
+                                    .FirstOrDefault(c => c.ColumnIndex == map.DeltaStock);
+                                if (deltaStockCell != null)
+                                {
+                                    if (deltaStockCell.CellType == CellType.Numeric)
+                                        deltaStock = Convert.ToDecimal(deltaStockCell.NumericCellValue);
+                                    else
+                                        Decimal.TryParse(deltaStockCell.GetStringValue(), out deltaStock);
+                                }
+                            }
+                            await UpdateMarketUsing(marketUsingId, value, deltaPrice, deltaStock);
                             valueCell.CellStyle.FillForegroundColor = 52;
                         }
                     }
@@ -572,20 +567,22 @@ namespace StinWeb.Controllers.Обработки
                 return StatusCode(502, ex.Message);
             }
         }
-        private Tuple<int,int,int> FindExcelMap(ISheet sheet)
+        private (int Id,int Value,int StartRow, int DeltaStock, int DeltaPrice) FindExcelMap(ISheet sheet)
         {
             int id = -1;
             int value = -1;
             int startRow = -1;
+            int deltaStock = -1;
+            int deltaPrice = -1;
             for (int i = sheet.FirstRowNum; i <= sheet.LastRowNum; i++)
             {
-                if ((id >= 0) && (value >= 0))
+                if ((id >= 0) && (value >= 0) && (deltaStock >= 0) && (deltaPrice >= 0))
                     break;
                 IRow row = sheet.GetRow(i);
                 if ((row != null) && (row.Cells.Count > 0))
                     for (int c = row.FirstCellNum; c <= row.LastCellNum; c++)
                     {
-                        if ((id >= 0) && (value >= 0))
+                        if ((id >= 0) && (value >= 0) && (deltaStock >= 0) && (deltaPrice >= 0))
                             break;
                         try
                         {
@@ -602,8 +599,11 @@ namespace StinWeb.Controllers.Обработки
                                 {
                                     value = cell.ColumnIndex;
                                     startRow = cell.RowIndex;
-                                    continue;
                                 }
+                                else if (color == HSSFColor.Yellow.Index) //Yellow = 13
+                                    deltaStock = cell.ColumnIndex;
+                                else if (color == HSSFColor.Aqua.Index) //Aqua = 49
+                                    deltaPrice = cell.ColumnIndex;
                             }
 
                         }
@@ -611,20 +611,40 @@ namespace StinWeb.Controllers.Обработки
                         { }
                     }
             }
-            return Tuple.Create(id, value, startRow);
+            return (Id: id, Value: value, StartRow: startRow, DeltaStock: deltaStock, DeltaPrice: deltaPrice);
         }
-        private async Task UpdateMarketUsing(string id, decimal value)
+        private async Task UpdateMarketUsing(string id, decimal value, decimal deltaPrice, decimal deltaStock)
         {
             var entity = await _context.Sc14152s.Where(x => x.Id == id).FirstOrDefaultAsync();
-            if ((entity != null) && (entity.Sp14148 != value))
+            if (entity != null)
             {
-                entity.Sp14148 = value;
-                entity.Sp14150 = 1; //чтобы выгрузилась
-                //остатки дополнительно не надо выгружать при смене цены
-                //entity.Sp14179 = 1; 
-                _context.Update(entity);
-                _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
-                await _context.SaveChangesAsync();
+                bool needUpdate = false;
+                if (entity.Sp14148 != value)
+                {
+                    needUpdate = true;
+                    entity.Sp14148 = value;
+                    entity.Sp14150 = 1; //чтобы выгрузилась
+                    //остатки дополнительно не надо выгружать при смене цены
+                    //entity.Sp14179 = 1; 
+                }
+                if ((deltaPrice > decimal.MinValue) && (deltaPrice != entity.Sp14213))
+                {
+                    needUpdate = true;
+                    entity.Sp14213 = deltaPrice;
+                    entity.Sp14150 = 1;
+                }
+                if ((deltaStock > decimal.MinValue) && (deltaStock != entity.Sp14214))
+                {
+                    needUpdate = true;
+                    entity.Sp14214 = deltaStock;
+                    entity.Sp14179 = 1; //обновить остатки
+                }
+                if (needUpdate)
+                {
+                    _context.Update(entity);
+                    _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
+                    await _context.SaveChangesAsync();
+                }
             }
         }
     }

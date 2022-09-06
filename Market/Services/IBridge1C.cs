@@ -27,5 +27,6 @@ namespace Market.Services
         Task<Marketplace> ПолучитьМаркет(string authorizationApi, string firmaId);
         Task<List<string>> ПолучитьСкладIdОстатковMarketplace();
         Task<Dictionary<string, decimal>> ПолучитьКвант(List<string> списокКодовНоменклатуры, CancellationToken cancellationToken);
+        Task<Dictionary<string, decimal>> ПолучитьDeltaStock(string marketId, List<string> списокКодовНоменклатуры, CancellationToken cancellationToken);
     }
 }

@@ -495,7 +495,6 @@ namespace StinClasses.Models
         public virtual DbSet<_1supdt> _1supdts { get; set; }
         public virtual DbSet<_1suser> _1susers { get; set; }
         public IQueryable<VzTree> fn_GetTreeById(string id, bool findRoot) => FromExpression(() => fn_GetTreeById(id, findRoot));
-
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -28550,6 +28549,14 @@ namespace StinClasses.Models
                     .HasColumnType("numeric(14, 2)")
                     .HasColumnName("SP14198");
 
+                entity.Property(e => e.Sp14213)
+                    .HasColumnType("numeric(3, 0)")
+                    .HasColumnName("SP14213");
+
+                entity.Property(e => e.Sp14214)
+                    .HasColumnType("numeric(9, 3)")
+                    .HasColumnName("SP14214");
+
                 entity.Property(e => e.Verstamp).HasColumnName("VERSTAMP");
             });
 
@@ -35027,7 +35034,7 @@ namespace StinClasses.Models
 
                 entity.Property(e => e.Docno)
                     .IsRequired()
-                    .HasMaxLength(10)
+                    .HasMaxLength(12)
                     .IsUnicode(false)
                     .HasColumnName("DOCNO")
                     .IsFixedLength();

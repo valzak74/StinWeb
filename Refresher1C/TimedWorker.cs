@@ -51,6 +51,7 @@ namespace Refresher1C
         }
         public virtual void ExecuteTask(object state)
         {
+            _timer?.Change(Timeout.Infinite, 0);
             _executingTask = ExecuteTaskAsync(_stoppingCts.Token);
             _timer?.Change(_dueTime, TimeSpan.FromMilliseconds(-1));
         }

@@ -813,6 +813,7 @@ namespace Refresher1C.Service
                                     //NomArt = nom.Sp85.Trim(),
                                     ProductId = marketUsing.Sp14190.Trim(),
                                     Квант = nom.Sp14188,
+                                    DeltaPrice = marketUsing.Sp14213,
                                     ЦенаРозн = vzTovar != null ? vzTovar.Rozn ?? 0 : 0,
                                     ЦенаСп = vzTovar != null ? vzTovar.RoznSp ?? 0 : 0,
                                     ЦенаЗакуп = vzTovar != null ? vzTovar.Zakup ?? 0 : 0,
@@ -845,6 +846,13 @@ namespace Refresher1C.Service
                                     Цена = d.ЦенаФикс;
                                 }
                             }
+                        }
+                        else if (d.DeltaPrice != 0)
+                        {
+                            var Порог = d.ЦенаЗакуп * (d.Коэф > 0 ? d.Коэф : (marketplace.Multiplayer > 0 ? marketplace.Multiplayer : checkCoeff));
+                            var calcPrice = Цена * (100 + d.DeltaPrice) / 100;
+                            if (calcPrice >= Порог)
+                                Цена = calcPrice;
                         }
                         if (long.TryParse(marketplace.FeedId, out long feedId))
                             feedId = 0;
@@ -913,22 +921,23 @@ namespace Refresher1C.Service
                         var result = await OzonClasses.OzonOperators.UpdatePrice(_httpService, priceData.Key.ClientId, priceData.Key.AuthToken,
                             priceData.Select(x =>
                             {
-                                var oldPrice = x.ЦенаДоСкидки;
+                                var oldPrice = x.ЦенаДоСкидки * x.Квант;
+                                var price = x.Цена * x.Квант;
                                 if ((oldPrice > 400) && (oldPrice <= 10000))
                                 {
-                                    if ((oldPrice - x.Цена) <= (oldPrice / 20))
-                                        oldPrice = x.Цена;
+                                    if ((oldPrice - price) <= (oldPrice / 20))
+                                        oldPrice = price;
                                 }
                                 else if (oldPrice > 10000)
                                 {
-                                    if ((oldPrice - x.Цена) <= 500)
-                                        oldPrice = x.Цена;
+                                    if ((oldPrice - price) <= 500)
+                                        oldPrice = price;
                                 }
                                 return new OzonClasses.PriceRequest
                                 {
                                     Offer_id = x.Код,
-                                    Old_price = (x.Квант * oldPrice).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                                    Price = (x.Квант * x.Цена).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
+                                    Old_price = oldPrice.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                                    Price = price.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
                                 };
                             }).ToList(),
                             stoppingToken);
@@ -1289,7 +1298,9 @@ namespace Refresher1C.Service
                                     Sp14179 = 1, //StockUpdated - пусть stock обновится
                                     Sp14187 = 0, //Quantum = 0
                                     Sp14190 = productId,
-                                    Sp14198 = 0
+                                    Sp14198 = 0, //Комиссия
+                                    Sp14213 = 0, //КоррЦенПроцент
+                                    Sp14214 = 0 //КоррОстатков
                                 };
                                 await _context.Sc14152s.AddAsync(entity);
                                 _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
@@ -1586,6 +1597,7 @@ namespace Refresher1C.Service
                                   NomId = markUse.Parentext,
                                   OfferId = hexEncoding ? nom.Code.EncodeHexString() : nom.Code,
                                   Квант = nom.Sp14188,
+                                  DeltaStock = markUse.Sp14214,
                                   WarehouseId = string.IsNullOrWhiteSpace(markUse.Sp14190) ? skladCode : markUse.Sp14190,
                                   UpdatedAt = markUse.Sp14178,
                                   UpdatedFlag = markUse.Sp14179 == 1
@@ -1661,12 +1673,13 @@ namespace Refresher1C.Service
                             long остаток = 0;
                             if (item.Квант > 1)
                             {
-                                остаток = (int)((номенклатура.Остатки
+                                остаток = (int)(((номенклатура.Остатки
                                     .Where(x => x.СкладId == Common.SkladEkran)
-                                    .Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) / item.Квант);
+                                    .Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - item.DeltaStock) / item.Квант);
                             }
                             else
-                                остаток = (long)(номенклатура.Остатки.Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент);
+                                остаток = (long)((номенклатура.Остатки.Sum(x => x.СвободныйОстаток) - item.DeltaStock) / номенклатура.Единица.Коэффициент);
+                            остаток = Math.Max(остаток, 0);
                             if (!long.TryParse(item.WarehouseId, out long WarehouseId))
                                 WarehouseId = 0;
                             stockData.Add(new OzonClasses.StockRequest
@@ -1685,6 +1698,7 @@ namespace Refresher1C.Service
                         _logger.LogError(result.errorMessage);
                     }
                     List<string> uploadIds = new List<string>();
+                    List<string> tooManyIds = new List<string>();
                     List<string> errorIds = new List<string>();
                     if (result.updatedOfferIds?.Count > 0)
                     {
@@ -1693,6 +1707,13 @@ namespace Refresher1C.Service
                             .Select(x => x.Id);
                         uploadIds = data.Where(x => nomIds.Contains(x.NomId)).Select(x => x.Id).ToList();
                     }
+                    if (result.tooManyRequests?.Count > 0)
+                    {
+                        var nomIds = списокНоменклатуры
+                            .Where(x => result.tooManyRequests.Contains(hexEncoding ? x.Code.EncodeHexString() : x.Code))
+                            .Select(x => x.Id);
+                        tooManyIds = data.Where(x => nomIds.Contains(x.NomId)).Select(x => x.Id).ToList();
+                    }
                     if (result.errorOfferIds?.Count > 0)
                     {
                         var nomIds = списокНоменклатуры
@@ -1700,7 +1721,7 @@ namespace Refresher1C.Service
                             .Select(x => x.Id);
                         errorIds = data.Where(x => nomIds.Contains(x.NomId)).Select(x => x.Id).ToList();
                     }
-                    if ((uploadIds.Count > 0) || (errorIds.Count > 0))
+                    if ((uploadIds.Count > 0) || (tooManyIds.Count > 0) || (errorIds.Count > 0))
                     {
                         tryCount = 5;
                         while (true)
@@ -1717,6 +1738,19 @@ namespace Refresher1C.Service
                                     {
                                         entity.Sp14179 = 0;
                                         entity.Sp14178 = DateTime.Now;  //DateTime.Today;
+                                        _context.Update(entity);
+                                        _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
+                                    }
+                                }
+                                if (tooManyIds.Count > 0)
+                                {
+                                    var notYetUpdated = await _context.Sc14152s
+                                        .Where(x => tooManyIds.Contains(x.Id) && (x.Sp14179 == -1))
+                                        .ToListAsync(stoppingToken);
+                                    foreach (var entity in notYetUpdated)
+                                    {
+                                        entity.Sp14179 = 1;
+                                        entity.Sp14178 = DateTime.Now;
                                         _context.Update(entity);
                                         _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
                                     }
@@ -1772,6 +1806,7 @@ namespace Refresher1C.Service
                                    ProductId = markUse.Sp14190.Trim(),
                                    Sku = hexEncoding ? nom.Code.EncodeHexString() : nom.Code,
                                    Квант = nom.Sp14188,
+                                   DeltaStock = markUse.Sp14214,
                                    UpdatedAt = markUse.Sp14178,
                                    UpdatedFlag = markUse.Sp14179 == 1
                                })
@@ -1847,12 +1882,13 @@ namespace Refresher1C.Service
                             long остаток = 0;
                             if (item.Квант > 1)
                             {
-                                остаток = (int)((номенклатура.Остатки
+                                остаток = (int)(((номенклатура.Остатки
                                     .Where(x => x.СкладId == Common.SkladEkran)
-                                    .Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) / item.Квант);
+                                    .Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - item.DeltaStock) / item.Квант);
                             }
                             else
-                                остаток = (long)(номенклатура.Остатки.Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент);
+                                остаток = (long)((номенклатура.Остатки.Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - item.DeltaStock);
+                            остаток = Math.Max(остаток, 0);
                             //global API
                             if (!long.TryParse(item.ProductId, out long productId))
                                 productId = 0;
@@ -2725,7 +2761,6 @@ namespace Refresher1C.Service
             string model,
             CancellationToken cancellationToken)
         {
-
         }
     }
 }

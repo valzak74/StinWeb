@@ -263,7 +263,7 @@ namespace OzonClasses
             {
                 if (!string.IsNullOrEmpty(err))
                     err += Environment.NewLine;
-                err += "PostingOrderResponse : " + ParseOzonError(result.Item2);
+                err += "PostingOrderResponse : (" + postingNumber + ") " + ParseOzonError(result.Item2);
             }
             if ((result.Item1 != null) && (result.Item1.Additional_data != null) && (result.Item1.Additional_data.Count > 0))
             {
@@ -346,7 +346,7 @@ namespace OzonClasses
             }
 
         }
-        public static async Task<(List<string> updatedOfferIds, List<string> errorOfferIds, string errorMessage)> UpdateStock(IHttpService httpService, string clientId, string authToken,
+        public static async Task<(List<string> updatedOfferIds, List<string> tooManyRequests, List<string> errorOfferIds, string errorMessage)> UpdateStock(IHttpService httpService, string clientId, string authToken,
             List<StockRequest> stockData,
             CancellationToken cancellationToken)
         {
@@ -359,6 +359,7 @@ namespace OzonClasses
                 request,
                 cancellationToken);
             List<string> uploadIds = new List<string>();
+            List<string> tooManyIds = new List<string>();
             List<string> errorIds = new List<string>();
             string err = "";
             if (result.Item2 != null)
@@ -380,6 +381,8 @@ namespace OzonClasses
                             err += "ClientId = " + clientId + " (" + item.Offer_id + ") : " + string.Join(';', item.Errors.Select(x => x.Code + ": " + x.Message));
                             if ((!item.Updated) && (!item.Errors.Any(x => x.Code == "TOO_MANY_REQUESTS")))
                                 errorIds.Add(item.Offer_id ?? "");
+                            if (!item.Updated && item.Errors.Any(x => x.Code == "TOO_MANY_REQUESTS"))
+                                tooManyIds.Add(item.Offer_id ?? "");
                         }
                         if (item.Updated)
                         {
@@ -394,7 +397,7 @@ namespace OzonClasses
                     err += "Internal: Can't find Result in Ozon stock response";
                 }
             }
-            return (updatedOfferIds: uploadIds, errorOfferIds: errorIds, errorMessage: err);
+            return (updatedOfferIds: uploadIds, tooManyRequests: tooManyIds, errorOfferIds: errorIds, errorMessage: err);
         }
         public static async Task<Tuple<byte[]?,string?>> GetLabels(IHttpService httpService, string clientId, string authToken,
             List<string> postingNumbers,

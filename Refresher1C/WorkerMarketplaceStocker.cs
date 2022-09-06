@@ -69,13 +69,16 @@ namespace Refresher1C
         }
         public override void ExecuteTask(object state)
         {
-            _executingTask = ExecuteTaskAsync(true, _stoppingCts.Token);
-            _timer.Change(TimeSpan.FromMilliseconds(_refreshInterval), TimeSpan.FromMilliseconds(-1));
+            _timer?.Change(Timeout.Infinite, 0);
+            if (_executingTask?.Status != TaskStatus.Running)
+                _executingTask = ExecuteTaskAsync(true, _stoppingCts.Token);
+            _timer?.Change(TimeSpan.FromMilliseconds(_refreshInterval), TimeSpan.FromMilliseconds(-1));
         }
         private void ExecuteErrorTask(object state)
         {
+            _timerForErrors?.Change(Timeout.Infinite, 0);
             _executingErrorTask = ExecuteTaskAsync(false, _stoppingCts.Token);
-            _timerForErrors.Change(TimeSpan.FromSeconds(_refreshIntervalForErrors), TimeSpan.FromMilliseconds(-1));
+            _timerForErrors?.Change(TimeSpan.FromSeconds(_refreshIntervalForErrors), TimeSpan.FromMilliseconds(-1));
         }
 
         private async Task ExecuteTaskAsync(bool regular, CancellationToken stoppingToken)

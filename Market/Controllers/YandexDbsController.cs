@@ -61,6 +61,7 @@ namespace Market.Controllers
             var номенклатураCodes = requestedCart.Cart.Items.Select(x => market.HexEncoding ? x.OfferId.DecodeHexString() : x.OfferId).ToList();
             var НоменклатураList = await bridge.ПолучитьСвободныеОстатки(номенклатураCodes, списокСкладовНаличияТовара);
             var lockedNomIds = await bridge.ПолучитьLockedНоменклатураIds(_authApi, номенклатураCodes);
+            var nomDeltaStock = await bridge.ПолучитьDeltaStock(market.Id, номенклатураCodes, cancellationToken);
 
             bool естьТовар = false;
             decimal суммаЗаказа = 0;
@@ -70,8 +71,9 @@ namespace Market.Controllers
                 if (номенклатура != null)
                 {
                     int ОтпуститьВсего = 0;
+                    var deltaStock = (int)nomDeltaStock.Where(x => x.Key == номенклатура.Id).Select(x => x.Value).FirstOrDefault();
                     if (!lockedNomIds.Any(x => x == номенклатура.Id))
-                        ОтпуститьВсего = Math.Min(requestedItem.Count, (int)(номенклатура.Остатки.Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент));
+                        ОтпуститьВсего = Math.Min(requestedItem.Count, Math.Max((int)((номенклатура.Остатки.Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - deltaStock),0));
                     responseCart.Cart.Items.Add(new ResponseItemDBS
                     {
                         FeedId = requestedItem.FeedId,
@@ -229,13 +231,17 @@ namespace Market.Controllers
             var НоменклатураList = await bridge.ПолучитьСвободныеОстатки(номенклатураCodes, списокСкладов);
 
             var lockedNomIds = await bridge.ПолучитьLockedНоменклатураIds(_authApi, номенклатураCodes);
+            var nomDeltaStock = await bridge.ПолучитьDeltaStock(market.Id, номенклатураCodes, cancellationToken);
 
             foreach (var requestedSku in requestedStock.Skus)
             {
                 int count = 0;
                 var номенклатура = НоменклатураList.Where(x => x.Code == (market.HexEncoding ? requestedSku.DecodeHexString() : requestedSku)).FirstOrDefault();
                 if ((номенклатура != null) && !lockedNomIds.Any(x => x == номенклатура.Id))
-                    count = (int)(номенклатура.Остатки.Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент);
+                {
+                    var deltaStock = (int)nomDeltaStock.Where(x => x.Key == номенклатура.Id).Select(x => x.Value).FirstOrDefault();
+                    count = Math.Max((int)(номенклатура.Остатки.Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - deltaStock, 0);
+                }
                 responseStock.Skus.Add(new SkuEntry
                 {
                     Sku = requestedSku,

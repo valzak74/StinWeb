@@ -36,6 +36,8 @@ namespace StinClasses.Справочники
         Task<Marketplace> ПолучитьMarketplace(string Id);
         Task<List<string>> GetLockedMarketplaceCatalogEntries(string authApi, List<string> nomenkCodes);
         Task<Dictionary<string, decimal>> GetQuantumInfo(string marketId, List<string> nomenkCodes, CancellationToken cancellationToken);
+        Task<Dictionary<string, decimal>> GetDeltaStockInfo(string marketId, List<string> nomenkCodes, CancellationToken cancellationToken);
+        Task<Dictionary<string, decimal>> GetDeltaPriceInfo(string marketId, List<string> nomenkCodes, CancellationToken cancellationToken);
     }
     public class MarketplaceEntity : IMarketplace
     {
@@ -167,6 +169,44 @@ namespace StinClasses.Справочники
                 .GroupBy(x => x.Id)
                 .Select(gr => gr.OrderBy(o => o.IsMark).FirstOrDefault())
                 .ToDictionaryAsync(k => k.Id, v => v.Quantum, cancellationToken);
+        }
+        public async Task<Dictionary<string, decimal>> GetDeltaStockInfo(string marketId, List<string> nomenkCodes, CancellationToken cancellationToken)
+        {
+            return await (from marketUsing in _context.Sc14152s
+                          join nom in _context.Sc84s on marketUsing.Parentext equals nom.Id
+                          join market in _context.Sc14042s on marketUsing.Sp14147 equals market.Id
+                          where (market.Id == marketId) &&
+                            nomenkCodes.Contains(nom.Code) &&
+                            (marketUsing.Sp14214 > 0)
+                          select new
+                          {
+                              Id = nom.Id,
+                              DeltaStock = marketUsing.Sp14214,
+                              IsMark = marketUsing.Ismark
+                          }
+                )
+                .GroupBy(x => x.Id)
+                .Select(gr => gr.OrderBy(o => o.IsMark).FirstOrDefault())
+                .ToDictionaryAsync(k => k.Id, v => v.DeltaStock, cancellationToken);
+        }
+        public async Task<Dictionary<string, decimal>> GetDeltaPriceInfo(string marketId, List<string> nomenkCodes, CancellationToken cancellationToken)
+        {
+            return await (from marketUsing in _context.Sc14152s
+                          join nom in _context.Sc84s on marketUsing.Parentext equals nom.Id
+                          join market in _context.Sc14042s on marketUsing.Sp14147 equals market.Id
+                          where (market.Id == marketId) &&
+                            nomenkCodes.Contains(nom.Code) &&
+                            (marketUsing.Sp14213 != 0)
+                          select new
+                          {
+                              Id = nom.Id,
+                              DeltaPrice = marketUsing.Sp14213,
+                              IsMark = marketUsing.Ismark
+                          }
+                )
+                .GroupBy(x => x.Id)
+                .Select(gr => gr.OrderBy(o => o.IsMark).FirstOrDefault())
+                .ToDictionaryAsync(k => k.Id, v => v.DeltaPrice, cancellationToken);
         }
     }
 }

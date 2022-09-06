@@ -70,13 +70,17 @@ namespace Refresher1C
         {
             if ((bool)state)
             {
-                _executingTask = ExecuteTaskAsync(_stoppingCts.Token);
-                _timer.Change(_dueTime, TimeSpan.FromMilliseconds(-1));
+                _timer?.Change(Timeout.Infinite, 0);
+                if (_executingTask?.Status != TaskStatus.Running)
+                    _executingTask = ExecuteTaskAsync(_stoppingCts.Token);
+                _timer?.Change(_dueTime, TimeSpan.FromMilliseconds(-1));
             }
             else
             {
-                _executingSlowTask = CheckSlowOrders(_stoppingCts.Token);
-                _timerSlow.Change(_dueTimeSlow, TimeSpan.FromMilliseconds(-1));
+                _timerSlow?.Change(Timeout.Infinite, 0);
+                if (_executingSlowTask?.Status != TaskStatus.Running)
+                    _executingSlowTask = CheckSlowOrders(_stoppingCts.Token);
+                _timerSlow?.Change(_dueTimeSlow, TimeSpan.FromMilliseconds(-1));
             }
         }
         private async Task CheckSlowOrders(CancellationToken stoppingToken)

@@ -1032,5 +1032,9 @@ namespace Market.Services
             //return await _marketplace.GetQuantumInfo(marketId, списокКодовНоменклатуры, cancellationToken);
             return await _номенклатура.ПолучитьКвант(списокКодовНоменклатуры, cancellationToken);
         }
+        public async Task<Dictionary<string, decimal>> ПолучитьDeltaStock(string marketId, List<string> списокКодовНоменклатуры, CancellationToken cancellationToken)
+        {
+            return await _marketplace.GetDeltaStockInfo(marketId, списокКодовНоменклатуры, cancellationToken);
+        }
     }
 }
