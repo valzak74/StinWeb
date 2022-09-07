@@ -1,17 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "dsCaDV5+2p5BwhvbcOjqMjcPL5o4xdrHbAwYdSPuhfaA33HPn2L30f2yKnm4+9AupJ9dryqAza3expjILtzxfw==",
+  "dgSpecHash": "UhhYvOM6xpCjXDNoZCrbsI+DfJkr41dvPQcaNBypvsP+coPvM/mYpYDM64jvJE5IcdMC9y88N7tBczqRbwHFHA==",
   "success": true,
   "projectFilePath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Валентин\\.nuget\\packages\\newtonsoft.json\\13.0.1\\newtonsoft.json.13.0.1.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1803",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "You are running the 'restore' operation with an 'HTTP' source, 'http://gfsnuget.azurewebsites.net/nuget'. Non-HTTPS access will be removed in a future version. Consider migrating to an 'HTTPS' source."
-    }
-  ]
+  "logs": []
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Refresher1C.Service;
 using System;
 using System.Threading;
@@ -7,21 +8,30 @@ using System.Threading.Tasks;
 
 namespace Refresher1C
 {
-    public class WorkerOncePerDay : TimedWorker 
+    public class WorkerOncePerDay : BackgroundService
     {
+        private IServiceScopeFactory _scopeFactory;
         private TimeSpan _executeTime;
         public WorkerOncePerDay(IServiceScopeFactory serviceScopeFactory, IConfiguration config)
-            :base(serviceScopeFactory)
         {
+            _scopeFactory = serviceScopeFactory;
             if (!TimeSpan.TryParseExact(config["OncePerDay:executeTime"], @"hh\:mm", null, out _executeTime))
                 _executeTime = TimeSpan.Zero;
         }
-        public override Task StartAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _timer = new Timer(ExecuteTask, null, GetNextStartDelay(), TimeSpan.FromMilliseconds(-1));
-
-            return Task.CompletedTask;
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                await Task.Delay(GetNextStartDelay(), stoppingToken);
+                await CheckMarketplaceData(stoppingToken);
+            }
         }
+        //public override Task StartAsync(CancellationToken stoppingToken)
+        //{
+        //    _timer = new Timer(ExecuteTask, null, GetNextStartDelay(), TimeSpan.FromMilliseconds(-1));
+
+        //    return Task.CompletedTask;
+        //}
         private TimeSpan GetNextStartDelay()
         {
             var currentDateTime = DateTime.Now;
@@ -33,25 +43,42 @@ namespace Refresher1C
             }
             return dayStart.AddTicks(_executeTime.Ticks) - currentDateTime;
         }
-        public override void ExecuteTask(object state)
-        {
-            _timer?.Change(Timeout.Infinite, 0);
-            _executingTask = ExecuteTaskAsync(_stoppingCts.Token);
-            _timer?.Change(GetNextStartDelay(), TimeSpan.FromMilliseconds(-1));
-        }
+        //public override void ExecuteTask(object state)
+        //{
+        //    _timer?.Change(Timeout.Infinite, 0);
+        //    if (_executingTask?.Status != TaskStatus.Running)
+        //        _executingTask = ExecuteTaskAsync(_stoppingCts.Token);
+        //    _timer?.Change(GetNextStartDelay(), TimeSpan.FromMilliseconds(-1));
+        //}
 
-        public override async Task ExecuteTaskAsync(CancellationToken stoppingToken)
-        {
-            await CheckMarketplaceData(stoppingToken);
-        }
+        //public override async Task ExecuteTaskAsync(CancellationToken stoppingToken)
+        //{
+        //    await CheckMarketplaceData(stoppingToken);
+        //}
         private async Task CheckMarketplaceData(CancellationToken stoppingToken)
         {
             try
             {
-                using IMarketplaceService MarketplaceScope = _scope.CreateScope()
-                       .ServiceProvider.GetService<IMarketplaceService>();
-                await MarketplaceScope.CheckPickupExpired(stoppingToken);
-                await MarketplaceScope.UpdateTariffs(stoppingToken);
+                Task pickupExpired = Task.Run(async () =>
+                {
+                    using IMarketplaceService MarketplaceScope = _scopeFactory.CreateScope()
+                           .ServiceProvider.GetService<IMarketplaceService>();
+                    await MarketplaceScope.CheckPickupExpired(stoppingToken);
+                });
+                Task tariffs = Task.Run(async () =>
+                {
+                    using IMarketplaceService MarketplaceScope = _scopeFactory.CreateScope()
+                           .ServiceProvider.GetService<IMarketplaceService>();
+                    await MarketplaceScope.UpdateTariffs(stoppingToken);
+                });
+                await Task.WhenAll(
+                    pickupExpired,
+                    tariffs
+                    );
+                //using IMarketplaceService MarketplaceScope = _scopeFactory.CreateScope()
+                //       .ServiceProvider.GetService<IMarketplaceService>();
+                //await MarketplaceScope.CheckPickupExpired(stoppingToken);
+                //await MarketplaceScope.UpdateTariffs(stoppingToken);
             }
             catch
             {

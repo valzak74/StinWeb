@@ -27,8 +27,8 @@
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "C:\\Program Files\\dotnet\\library-packs": {},
-          "http://gfsnuget.azurewebsites.net/nuget": {},
-          "https://api.nuget.org/v3/index.json": {}
+          "https://api.nuget.org/v3/index.json": {},
+          "https://gfsnuget.azurewebsites.net/nuget": {}
         },
         "frameworks": {
           "net6.0": {
@@ -101,8 +101,8 @@
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "C:\\Program Files\\dotnet\\library-packs": {},
-          "http://gfsnuget.azurewebsites.net/nuget": {},
-          "https://api.nuget.org/v3/index.json": {}
+          "https://api.nuget.org/v3/index.json": {},
+          "https://gfsnuget.azurewebsites.net/nuget": {}
         },
         "frameworks": {
           "net6.0": {
@@ -172,8 +172,8 @@
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "C:\\Program Files\\dotnet\\library-packs": {},
-          "http://gfsnuget.azurewebsites.net/nuget": {},
-          "https://api.nuget.org/v3/index.json": {}
+          "https://api.nuget.org/v3/index.json": {},
+          "https://gfsnuget.azurewebsites.net/nuget": {}
         },
         "frameworks": {
           "net6.0": {
@@ -239,8 +239,8 @@
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "C:\\Program Files\\dotnet\\library-packs": {},
-          "http://gfsnuget.azurewebsites.net/nuget": {},
-          "https://api.nuget.org/v3/index.json": {}
+          "https://api.nuget.org/v3/index.json": {},
+          "https://gfsnuget.azurewebsites.net/nuget": {}
         },
         "frameworks": {
           "net6.0": {
@@ -313,8 +313,8 @@
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "C:\\Program Files\\dotnet\\library-packs": {},
-          "http://gfsnuget.azurewebsites.net/nuget": {},
-          "https://api.nuget.org/v3/index.json": {}
+          "https://api.nuget.org/v3/index.json": {},
+          "https://gfsnuget.azurewebsites.net/nuget": {}
         },
         "frameworks": {
           "net6.0": {
@@ -436,8 +436,8 @@
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "C:\\Program Files\\dotnet\\library-packs": {},
-          "http://gfsnuget.azurewebsites.net/nuget": {},
-          "https://api.nuget.org/v3/index.json": {}
+          "https://api.nuget.org/v3/index.json": {},
+          "https://gfsnuget.azurewebsites.net/nuget": {}
         },
         "frameworks": {
           "net6.0": {
@@ -520,8 +520,8 @@
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "C:\\Program Files\\dotnet\\library-packs": {},
-          "http://gfsnuget.azurewebsites.net/nuget": {},
-          "https://api.nuget.org/v3/index.json": {}
+          "https://api.nuget.org/v3/index.json": {},
+          "https://gfsnuget.azurewebsites.net/nuget": {}
         },
         "frameworks": {
           "net6.0": {
@@ -594,8 +594,8 @@
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "C:\\Program Files\\dotnet\\library-packs": {},
-          "http://gfsnuget.azurewebsites.net/nuget": {},
-          "https://api.nuget.org/v3/index.json": {}
+          "https://api.nuget.org/v3/index.json": {},
+          "https://gfsnuget.azurewebsites.net/nuget": {}
         },
         "frameworks": {
           "net6.0": {

@@ -470,7 +470,8 @@ namespace StinClasses.Справочники
                         Sp14157 = 0, //Сортировка
                         Sp14175 = Common.ПустоеЗначение, //Контрагент
                         Sp14176 = Common.ПустоеЗначение, //Договор
-                        Sp14177 = 0 //StockRefresh
+                        Sp14177 = 0, //StockRefresh
+                        Sp14216 = 0 //StockOriginal
                     };
                     await _context.Sc14042s.AddAsync(MarketplaceEntity);
                     _context.РегистрацияИзмененийРаспределеннойИБ(14042, MarketplaceEntity.Id);

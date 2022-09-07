@@ -181,7 +181,7 @@ namespace StinClasses.Справочники
                           select new
                           {
                               Id = nom.Id,
-                              DeltaStock = marketUsing.Sp14214,
+                              DeltaStock = market.Sp14216 == 1 ? 0 : nom.Sp14215, //marketUsing.Sp14214,
                               IsMark = marketUsing.Ismark
                           }
                 )

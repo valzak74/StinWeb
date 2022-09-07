@@ -115,7 +115,7 @@ namespace StinWeb.Controllers.Обработки
             ICellStyle styleValueNum1tail = workbook.StyleValueNumber(fontArial8, 1);
             ICellStyle styleValueNum0tail = workbook.StyleValueNumber(fontArial8, 0);
 
-            ICellStyle styleDeltaStock = workbook.StyleValueNumber(fontArial8, 0, 13);
+           // ICellStyle styleDeltaStock = workbook.StyleValueNumber(fontArial8, 0, 13);
             ICellStyle styleDeltaPrice = workbook.StyleValueNumber(fontArial8, 0, 49);
 
             ISheet sheet = workbook.CreateSheet("Лист 1");
@@ -253,7 +253,7 @@ namespace StinWeb.Controllers.Обработки
                                  ЦенаСп = vzTovar != null ? vzTovar.RoznSp ?? 0 : 0,
                                  ЦенаЗакуп = vzTovar != null ? vzTovar.Zakup ?? 0 : 0,
                                  Квант = nom.Sp14188,
-                                 DeltaStock = marketUsing.Sp14214,
+                                 DeltaStock = nom.Sp14215, //marketUsing.Sp14214,
                                  DeltaPrice = marketUsing.Sp14213,
                                  КраткоеОписание = nom.Sp12309.Trim(),
                                  Характеристики = nom.Sp8848.Trim(),
@@ -415,7 +415,7 @@ namespace StinWeb.Controllers.Обработки
                     marked = true;
                 }
                 sheet.SetValue(styleValueNum, row, columnValues["Квант"], item.Квант);
-                sheet.SetValue(styleDeltaStock, row, columnValues["КоррОстатков"], item.DeltaStock);
+                sheet.SetValue(styleValueNum, row, columnValues["КоррОстатков"], item.DeltaStock);
                 sheet.SetValue(styleValue, row, columnValues["КраткоеОписание"], item.Характеристики);
                 var странаId = await _context.ПолучитьЗначениеПериодическогоРеквизита(item.NomId, 5012);
                 string страна = "";
@@ -524,20 +524,20 @@ namespace StinWeb.Controllers.Обработки
                                         Decimal.TryParse(deltaPriceCell.GetStringValue(), out deltaPrice);
                                 }
                             }
-                            decimal deltaStock = decimal.MinValue;
-                            if (map.DeltaStock >= 0)
-                            {
-                                ICell deltaStockCell = row.Cells
-                                    .FirstOrDefault(c => c.ColumnIndex == map.DeltaStock);
-                                if (deltaStockCell != null)
-                                {
-                                    if (deltaStockCell.CellType == CellType.Numeric)
-                                        deltaStock = Convert.ToDecimal(deltaStockCell.NumericCellValue);
-                                    else
-                                        Decimal.TryParse(deltaStockCell.GetStringValue(), out deltaStock);
-                                }
-                            }
-                            await UpdateMarketUsing(marketUsingId, value, deltaPrice, deltaStock);
+                            //decimal deltaStock = decimal.MinValue;
+                            //if (map.DeltaStock >= 0)
+                            //{
+                            //    ICell deltaStockCell = row.Cells
+                            //        .FirstOrDefault(c => c.ColumnIndex == map.DeltaStock);
+                            //    if (deltaStockCell != null)
+                            //    {
+                            //        if (deltaStockCell.CellType == CellType.Numeric)
+                            //            deltaStock = Convert.ToDecimal(deltaStockCell.NumericCellValue);
+                            //        else
+                            //            Decimal.TryParse(deltaStockCell.GetStringValue(), out deltaStock);
+                            //    }
+                            //}
+                            await UpdateMarketUsing(marketUsingId, value, deltaPrice);
                             valueCell.CellStyle.FillForegroundColor = 52;
                         }
                     }
@@ -567,22 +567,21 @@ namespace StinWeb.Controllers.Обработки
                 return StatusCode(502, ex.Message);
             }
         }
-        private (int Id,int Value,int StartRow, int DeltaStock, int DeltaPrice) FindExcelMap(ISheet sheet)
+        private (int Id,int Value,int StartRow, int DeltaPrice) FindExcelMap(ISheet sheet)
         {
             int id = -1;
             int value = -1;
             int startRow = -1;
-            int deltaStock = -1;
             int deltaPrice = -1;
             for (int i = sheet.FirstRowNum; i <= sheet.LastRowNum; i++)
             {
-                if ((id >= 0) && (value >= 0) && (deltaStock >= 0) && (deltaPrice >= 0))
+                if ((id >= 0) && (value >= 0) && (deltaPrice >= 0))
                     break;
                 IRow row = sheet.GetRow(i);
                 if ((row != null) && (row.Cells.Count > 0))
                     for (int c = row.FirstCellNum; c <= row.LastCellNum; c++)
                     {
-                        if ((id >= 0) && (value >= 0) && (deltaStock >= 0) && (deltaPrice >= 0))
+                        if ((id >= 0) && (value >= 0) && (deltaPrice >= 0))
                             break;
                         try
                         {
@@ -600,8 +599,8 @@ namespace StinWeb.Controllers.Обработки
                                     value = cell.ColumnIndex;
                                     startRow = cell.RowIndex;
                                 }
-                                else if (color == HSSFColor.Yellow.Index) //Yellow = 13
-                                    deltaStock = cell.ColumnIndex;
+                                //else if (color == HSSFColor.Yellow.Index) //Yellow = 13
+                                //    deltaStock = cell.ColumnIndex;
                                 else if (color == HSSFColor.Aqua.Index) //Aqua = 49
                                     deltaPrice = cell.ColumnIndex;
                             }
@@ -611,9 +610,9 @@ namespace StinWeb.Controllers.Обработки
                         { }
                     }
             }
-            return (Id: id, Value: value, StartRow: startRow, DeltaStock: deltaStock, DeltaPrice: deltaPrice);
+            return (Id: id, Value: value, StartRow: startRow, DeltaPrice: deltaPrice);
         }
-        private async Task UpdateMarketUsing(string id, decimal value, decimal deltaPrice, decimal deltaStock)
+        private async Task UpdateMarketUsing(string id, decimal value, decimal deltaPrice)
         {
             var entity = await _context.Sc14152s.Where(x => x.Id == id).FirstOrDefaultAsync();
             if (entity != null)
@@ -633,12 +632,12 @@ namespace StinWeb.Controllers.Обработки
                     entity.Sp14213 = deltaPrice;
                     entity.Sp14150 = 1;
                 }
-                if ((deltaStock > decimal.MinValue) && (deltaStock != entity.Sp14214))
-                {
-                    needUpdate = true;
-                    entity.Sp14214 = deltaStock;
-                    entity.Sp14179 = 1; //обновить остатки
-                }
+                //if ((deltaStock > decimal.MinValue) && (deltaStock != entity.Sp14214))
+                //{
+                //    needUpdate = true;
+                //    entity.Sp14214 = deltaStock;
+                //    entity.Sp14179 = 1; //обновить остатки
+                //}
                 if (needUpdate)
                 {
                     _context.Update(entity);

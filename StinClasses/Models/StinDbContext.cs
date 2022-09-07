@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
-using System.Linq;
 
 namespace StinClasses.Models
 {
@@ -28287,6 +28287,10 @@ namespace StinClasses.Models
                     .HasColumnName("SP14195")
                     .IsFixedLength();
 
+                entity.Property(e => e.Sp14216)
+                    .HasColumnType("numeric(1, 0)")
+                    .HasColumnName("SP14216");
+
                 entity.Property(e => e.Verstamp).HasColumnName("VERSTAMP");
             });
 
@@ -32338,6 +32342,10 @@ namespace StinClasses.Models
                 entity.Property(e => e.Sp14188)
                     .HasColumnType("numeric(10, 0)")
                     .HasColumnName("SP14188");
+
+                entity.Property(e => e.Sp14215)
+                    .HasColumnType("numeric(9, 3)")
+                    .HasColumnName("SP14215");
 
                 entity.Property(e => e.Sp208)
                     .HasColumnType("numeric(1, 0)")

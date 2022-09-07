@@ -682,6 +682,9 @@ namespace StinWeb.Models.Repository.Справочники
                         Sp12992 = ТнВЭД.Length > 20 ? ТнВЭД.Substring(0, 20) : ТнВЭД,
                         Sp13277 = 0,
                         Sp13501 = Common.ПустоеЗначение,
+                        Sp14121 = 0, //PickupOnly
+                        Sp14188 = 0, //Квант
+                        Sp14215 = 0, //DeltaStock
                         Sp95 = Комментарий,
                         Sp101 = Наименование,
                         Sp12310 = ПодробноеОписание

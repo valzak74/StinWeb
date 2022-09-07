@@ -1,18 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "f6Rfo0IiT21j1rzdVjhEFlYPJM/ibED3/0qCmjnDpdoHaTbet07AuGhfj2H2iQwMW4z3nryXakCOaIwaULPhsQ==",
+  "dgSpecHash": "RBt0y5Gtl4wdXQ0YnvyD3zaD6zcQT/n94oQ8854def4yxbWJLovdu5R173oXUN2HqUAzhz6pHL0T7TN5tLm/UA==",
   "success": true,
   "projectFilePath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Валентин\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\6.0.1\\microsoft.extensions.logging.abstractions.6.0.1.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\newtonsoft.json\\13.0.1\\newtonsoft.json.13.0.1.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1803",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "You are running the 'restore' operation with an 'HTTP' source, 'http://gfsnuget.azurewebsites.net/nuget'. Non-HTTPS access will be removed in a future version. Consider migrating to an 'HTTPS' source."
-    }
-  ]
+  "logs": []
 }

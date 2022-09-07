@@ -1555,7 +1555,8 @@ namespace Refresher1C.Service
                                                 AuthSecret = market.Sp14195.Trim(),
                                                 Authorization = market.Sp14077.Trim(),
                                                 Code = market.Code.Trim(),
-                                                HexEncoding = market.Sp14153 == 1
+                                                HexEncoding = market.Sp14153 == 1,
+                                                StockOriginal = market.Sp14216 == 1
                                             })
                                             .ToListAsync(stoppingToken);
                 foreach (var marketplace in marketplaceIds)
@@ -1564,13 +1565,13 @@ namespace Refresher1C.Service
                     {
                         await UpdateOzonStock(
                             marketplace.ClientId, marketplace.AuthToken, regular, maxPerRequestOzon,
-                            marketplace.Id, marketplace.FirmaId, marketplace.HexEncoding, marketplace.Code, stoppingToken);
+                            marketplace.Id, marketplace.FirmaId, marketplace.HexEncoding, marketplace.StockOriginal, marketplace.Code, stoppingToken);
                     }
                     else if (marketplace.Тип.ToUpper() == "ALIEXPRESS")
                     {
                         await UpdateAliExpressStock(marketplace.ClientId, 
                             marketplace.AuthSecret, marketplace.Authorization, regular, maxPerRequestAli,
-                            marketplace.Id, marketplace.FirmaId, marketplace.HexEncoding, stoppingToken);
+                            marketplace.Id, marketplace.FirmaId, marketplace.HexEncoding, marketplace.StockOriginal, stoppingToken);
                     }
                 }
             }
@@ -1580,7 +1581,7 @@ namespace Refresher1C.Service
             }
         }
         public async Task UpdateOzonStock(string clientId, string authToken, bool regular, int limit,
-            string marketplaceId, string firmaId, bool hexEncoding, string skladCode, CancellationToken stoppingToken)
+            string marketplaceId, string firmaId, bool hexEncoding, bool stockOriginal, string skladCode, CancellationToken stoppingToken)
         {
             var data = await ((from markUse in _context.Sc14152s
                               join nom in _context.Sc84s on markUse.Parentext equals nom.Id
@@ -1597,7 +1598,7 @@ namespace Refresher1C.Service
                                   NomId = markUse.Parentext,
                                   OfferId = hexEncoding ? nom.Code.EncodeHexString() : nom.Code,
                                   Квант = nom.Sp14188,
-                                  DeltaStock = markUse.Sp14214,
+                                  DeltaStock = stockOriginal ? 0 : nom.Sp14215, //markUse.Sp14214,
                                   WarehouseId = string.IsNullOrWhiteSpace(markUse.Sp14190) ? skladCode : markUse.Sp14190,
                                   UpdatedAt = markUse.Sp14178,
                                   UpdatedFlag = markUse.Sp14179 == 1
@@ -1790,7 +1791,7 @@ namespace Refresher1C.Service
             }
         }
         public async Task UpdateAliExpressStock(string appKey, string appSecret, string authorization, bool regular, int limit,
-            string marketplaceId, string firmaId, bool hexEncoding, CancellationToken stoppingToken)
+            string marketplaceId, string firmaId, bool hexEncoding, bool stockOriginal, CancellationToken stoppingToken)
         {
             var data = await ((from markUse in _context.Sc14152s
                                join nom in _context.Sc84s on markUse.Parentext equals nom.Id
@@ -1806,7 +1807,7 @@ namespace Refresher1C.Service
                                    ProductId = markUse.Sp14190.Trim(),
                                    Sku = hexEncoding ? nom.Code.EncodeHexString() : nom.Code,
                                    Квант = nom.Sp14188,
-                                   DeltaStock = markUse.Sp14214,
+                                   DeltaStock = stockOriginal ? 0 : nom.Sp14215, //markUse.Sp14214,
                                    UpdatedAt = markUse.Sp14178,
                                    UpdatedFlag = markUse.Sp14179 == 1
                                })
@@ -2037,9 +2038,9 @@ namespace Refresher1C.Service
                             marketplace.Id, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
                             marketplace.HexEncoding, stoppingToken);
                         //moved to Slow
-                        //await GetOzonDeliveringOrders(marketplace.Id, marketplace.ClientId, marketplace.AuthToken,
-                        //    marketplace.Id, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
-                        //    marketplace.HexEncoding, stoppingToken);
+                        await GetOzonDeliveringOrders(marketplace.Id, marketplace.ClientId, marketplace.AuthToken,
+                            marketplace.Id, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
+                            marketplace.HexEncoding, stoppingToken);
                     }
                     else if (marketplace.Тип == "ЯНДЕКС")
                     {
