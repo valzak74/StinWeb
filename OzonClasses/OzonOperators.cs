@@ -415,6 +415,31 @@ namespace OzonClasses
                 return new(null, ParseOzonError(result.Item2));
             return new(result.Item1, null);
         }
+        public static async Task<(double? ComAmount, double? VolumeWeight, string? Price, string? Error)> ProductComission(IHttpService httpService, string clientId, string authToken,
+            string offerId,
+            string searchTag,
+            CancellationToken cancellationToken)
+        {
+            var request = new ProductInfoRequest { Offer_id = offerId };
+            var result = await httpService.Exchange<ProductInfoResponse, ErrorResponse>(
+                "https://api-seller.ozon.ru/v2/product/info",
+                HttpMethod.Post,
+                GetOzonHeaders(clientId, authToken),
+                request,
+                cancellationToken);
+            if (result.Item2 != null)
+                return (ComAmount: null, VolumeWeight: null, Price: null, Error: "ProductInfoResponse : (" + offerId + ") " + ParseOzonError(result.Item2));
+            if ((result.Item1 != null) && (result.Item1.Result != null) && 
+                (result.Item1.Result.Commissions != null))
+            {
+                var comAmount = result.Item1.Result.Commissions
+                    .Where(x => x.SaleSchema?.ToLower().Trim() == searchTag)
+                    .Select(x => x.Value)
+                    .FirstOrDefault();
+                return (ComAmount: comAmount, VolumeWeight: result.Item1.Result.Volume_weight, Price: result.Item1.Result.Price, Error: null);
+            }
+            return (ComAmount: null, VolumeWeight: null, Price: null, Error: null);
+        }
         public static async Task<Tuple<List<string>?,string?>> ProductNotReady(IHttpService httpService, string clientId, string authToken,
             List<string> offers,
             CancellationToken cancellationToken)

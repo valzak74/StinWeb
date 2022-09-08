@@ -13,6 +13,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using HttpExtensions;
 using System.Data;
+using System.Runtime.CompilerServices;
+using OzonClasses;
 
 namespace Refresher1C.Service
 {
@@ -2754,6 +2756,49 @@ namespace Refresher1C.Service
                 }
             }
         }
+        private double CommissionFbsVolumeWeight(double volumeWeight, double price, bool kgt)
+        {
+            if (kgt)
+                return (price * 8 / 100).WithLimits(1000, 1400);
+            return volumeWeight switch
+            {
+                0.1d => (price * 4 / 100).WithLimits(41, 50),
+                0.2d => (price * 4 / 100).WithLimits(42, 50),
+                0.3d => (price * 4 / 100).WithLimits(43, 60),
+                0.4d => (price * 4 / 100).WithLimits(45, 65),
+                0.5d => (price * 4 / 100).WithLimits(47, 70),
+                0.6d => (price * 4 / 100).WithLimits(50, 70),
+                0.7d => (price * 4 / 100).WithLimits(53, 75),
+                0.8d => (price * 4 / 100).WithLimits(55, 75),
+                0.9d => (price * 4 / 100).WithLimits(55, 80),
+                1d => (price * 5 / 100).WithLimits(57, 95),
+                1.1d => (price * 5 / 100).WithLimits(59, 95),
+                1.2d => (price * 5 / 100).WithLimits(63, 100),
+                1.3d => (price * 5 / 100).WithLimits(63, 105),
+                1.4d => (price * 5 / 100).WithLimits(67, 105),
+                1.5d => (price * 5 / 100).WithLimits(67, 125),
+                1.6d => (price * 5 / 100).WithLimits(70, 125),
+                1.7d => (price * 5 / 100).WithLimits(71, 125),
+                1.8d => (price * 5 / 100).WithLimits(75, 130),
+                1.9d => (price * 5 / 100).WithLimits(77, 130),
+                < 3d => (price * 5 / 100).WithLimits(90, 145),
+                < 4d => (price * 5.5 / 100).WithLimits(115, 175),
+                < 5d => (price * 5.5 / 100).WithLimits(155, 215),
+                < 6d => (price * 5.5 / 100).WithLimits(175, 275),
+                < 7d => (price * 5.5 / 100).WithLimits(200, 315),
+                < 8d => (price * 5.5 / 100).WithLimits(215, 350),
+                < 9d => (price * 5.5 / 100).WithLimits(245, 385),
+                < 10d => (price * 5.5 / 100).WithLimits(270, 395),
+                < 11d => (price * 6 / 100).WithLimits(300, 400),
+                < 12d => (price * 6 / 100).WithLimits(315, 450),
+                < 13d => (price * 6 / 100).WithLimits(345, 490),
+                < 14d => (price * 6 / 100).WithLimits(365, 510),
+                < 15d => (price * 6 / 100).WithLimits(400, 515),
+                < 20d => (price * 6 / 100).WithLimits(485, 550),
+                < 25d => (price * 6 / 100).WithLimits(585, 650),
+                _ => (price * 8 / 100).WithLimits(650, double.MaxValue)
+            };
+        }
         private async Task UpdateTariffsOzon(string marketplaceId,
             string campaignId,
             string clientId,
@@ -2762,6 +2807,75 @@ namespace Refresher1C.Service
             string model,
             CancellationToken cancellationToken)
         {
+            int requestLimit = 1000;
+
+
+            var query = from markUse in _context.Sc14152s
+                        join nom in _context.Sc84s on markUse.Parentext equals nom.Id
+                        join market in _context.Sc14042s on markUse.Sp14147 equals market.Id
+                        where !markUse.Ismark && (markUse.Sp14147 == marketplaceId) &&
+                          (markUse.Sp14158 == 1) //Есть в каталоге 
+                          //&& nom.Code == "D00045010"
+                        select new
+                        {
+                            Id = markUse.Id,
+                            Sku = nom.Code,
+                            realFbs = !string.IsNullOrWhiteSpace(market.Sp14154) && (market.Sp14154.Trim() == markUse.Sp14190.Trim()),
+                            Комиссия = markUse.Sp14198
+                        };
+            for (int i = 0; i < query.Count(); i = i + requestLimit)
+            {
+                var data = await query
+                    .OrderBy(x => x.Sku)
+                    .Skip(i)
+                    .Take(requestLimit)
+                    .ToListAsync(cancellationToken);
+                bool needUpdate = false;
+                foreach (var item in data)
+                {
+                    var comResult = await OzonClasses.OzonOperators.ProductComission(_httpService, clientId, authToken,
+                        hexEncoding ? item.Sku.EncodeHexString() : item.Sku,
+                        item.realFbs ? "rfbs" : "fbs",
+                        cancellationToken);
+                    if (comResult.Error != null && !string.IsNullOrEmpty(comResult.Error))
+                    {
+                        _logger.LogError(comResult.Error);
+                    }
+                    if ((comResult.ComAmount.HasValue) && (comResult.ComAmount.Value > 0))
+                    {
+                        double.TryParse(comResult.Price ?? "", System.Globalization.NumberStyles.Number, new System.Globalization.NumberFormatInfo { NumberDecimalSeparator = "." }, out double price);
+                        if (price > 0)
+                        {
+                            Sc14152 entity = await _context.Sc14152s.FirstOrDefaultAsync(x => x.Id == item.Id, cancellationToken);
+                            if (entity != null)
+                            {
+                                var tariff = comResult.ComAmount.Value;
+                                if (item.realFbs)
+                                {
+
+                                }
+                                else //fbs
+                                {
+                                    tariff += 0; //Обработка отправления ТСЦ = 0
+                                    tariff += CommissionFbsVolumeWeight(comResult.VolumeWeight ?? 0, price, false);
+                                    tariff += (price * 5 / 100).WithLimits(60, 350); //Последняя миля 5% от 60 до 350 рублей.
+                                    tariff += price * 2 / 100; //услуга по продвижению Ozon Premium 2%
+                                }
+                                if ((decimal)tariff != entity.Sp14198)
+                                {
+                                    entity.Sp14198 = (decimal)tariff;
+                                    _context.Update(entity);
+                                    _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
+                                    needUpdate = true;
+                                }
+                            }
+                        }
+                    }
+
+                }
+                if (needUpdate)
+                    await _context.SaveChangesAsync(cancellationToken);
+            }
         }
     }
 }
