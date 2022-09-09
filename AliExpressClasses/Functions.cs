@@ -228,7 +228,7 @@ namespace AliExpressClasses
             }
             return (null, null, "");
         }
-        public static async Task<Tuple<List<string>?, string>> UpdatePrice(IHttpService httpService, string authToken,
+        public static async Task<(List<string>? UpdatedIds, string ErrorMessage)> UpdatePrice(IHttpService httpService, string authToken,
             List<PriceProduct> priceData,
             CancellationToken cancellationToken)
         {
@@ -242,7 +242,7 @@ namespace AliExpressClasses
                 cancellationToken);
             if (result.Item2 != null)
             {
-                return new(null, "".ParseError(result.Item2));
+                return (UpdatedIds: null, ErrorMessage: "".ParseError(result.Item2));
             }
             else if (result.Item1 != null)
             {
@@ -255,7 +255,7 @@ namespace AliExpressClasses
                         if (priceData.Count > i)
                         {
                             var item = result.Item1.Results[i];
-                            var skuRequested = (priceData[i]?.Skus ?? new List<PriceSku>()).Select(x => x.Sku_code).FirstOrDefault();
+                            //var skuRequested = (priceData[i]?.Skus ?? new List<PriceSku>()).Select(x => x.Sku_code).FirstOrDefault();
                             //if ((item.Errors != null) && (item.Errors.Count > 0))
                             //{
                             //    if (!string.IsNullOrEmpty(err))
@@ -264,22 +264,21 @@ namespace AliExpressClasses
                             //}
                             if (item.Ok)
                             {
-                                tmpList.Add(skuRequested ?? "");
+                                tmpList.Add(priceData[i]?.Product_id ?? "");
                             }
                         }
                     }
-                    return new(tmpList, err);
+                    return (UpdatedIds: tmpList, ErrorMessage: err);
                 }
                 else
-                    return new(null, "Internal: Can't find Result in Ali price response");
+                    return (UpdatedIds: null, ErrorMessage: "Internal: Can't find Result in Ali price response");
             }
             else
             {
-                return new(null, "AliPriceResponse Internal: both sides are null");
+                return (UpdatedIds: null, ErrorMessage: "AliPriceResponse Internal: both sides are null");
             }
-
         }
-        public static async Task<Tuple<List<string>, string>> UpdateStock(IHttpService httpService, string authToken,
+        public static async Task<(List<string> UpdatedIds, List<string> ErrorIds, string ErrorMessage)> UpdateStock(IHttpService httpService, string authToken,
             List<Product> stockData,
             CancellationToken cancellationToken)
         {
@@ -292,6 +291,7 @@ namespace AliExpressClasses
                 request,
                 cancellationToken);
             List<string> uploadIds = new List<string>();
+            List<string> errorIds = new List<string>();
             string err = "";
             if (result.Item2 != null)
             {
@@ -307,15 +307,17 @@ namespace AliExpressClasses
                         {
                             var item = result.Item1.Results[i];
                             var skuRequested = (stockData[i]?.Skus ?? new List<StockSku>()).Select(x => x.Sku_code).FirstOrDefault();
-                            //if ((item.Errors != null) && (item.Errors.Count > 0))
-                            //{
-                            //    if (!string.IsNullOrEmpty(err))
-                            //        err += Environment.NewLine;
-                            //    err += skuRequested ?? "" + " : " + string.Join(';', item.Errors.Select(x => x.Code + ": " + x.Message));
-                            //}
                             if (item.Ok)
                             {
-                                uploadIds.Add(skuRequested ?? "");
+                                //uploadIds.Add(skuRequested ?? "");
+                                uploadIds.Add(stockData[i]?.Product_id ?? "");
+                            }
+                            else if (item.Errors != null)
+                            {
+                                if (!string.IsNullOrEmpty(err))
+                                    err += Environment.NewLine;
+                                err += skuRequested ?? "" + " : " + item.Errors.Code + ": " + item.Errors.Message;
+                                errorIds.Add(stockData[i]?.Product_id ?? "");
                             }
                         }
                     }
@@ -327,7 +329,7 @@ namespace AliExpressClasses
                     err += "Internal: Can't find Result in AliExpress stock response";
                 }
             }
-            return new(uploadIds, err);
+            return (UpdatedIds: uploadIds, ErrorIds: errorIds, ErrorMessage: err);
         }
         public static async Task<Tuple<GetOrderResult?, string>> GetOrdersGlobal(IHttpService httpService, string appKey, string appSecret, string authorization,
             int currentPage, int limit,

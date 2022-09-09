@@ -13,8 +13,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using HttpExtensions;
 using System.Data;
-using System.Runtime.CompilerServices;
-using OzonClasses;
 
 namespace Refresher1C.Service
 {
@@ -825,8 +823,6 @@ namespace Refresher1C.Service
                                 .OrderBy(x => x.NomCode)
                                 .Take(maxPerRequest);
                                 //.ToList();
-                    //if (data.Count > 0)
-                    //    System.IO.File.WriteAllText(@"f:\\tmp\15\errors.txt", string.Join(Environment.NewLine, data.Select(x => x.NomArt)));
                     foreach (var d in data)
                     {
                         var Код = marketplace.HexEncoding ? d.NomCode.EncodeHexString() : d.NomCode;
@@ -960,60 +956,31 @@ namespace Refresher1C.Service
                     else if (priceData.Key.Тип == "ALIEXPRESS")
                     {
                         //global API
-                        var result = await AliExpressClasses.Functions.UpdatePriceGlobal(_httpService,
-                            priceData.Key.ClientId, priceData.Key.AuthSecret, priceData.Key.Authorization,
-                            priceData.Select(x =>
-                            {
-                                if (!long.TryParse(x.ProductId, out long productId))
-                                    productId = 0;
-                                return new AliExpressClasses.PriceProductGlobal
-                                {
-                                    Product_id = productId,
-                                    Multiple_sku_update_list = new List<AliExpressClasses.PriceSku>
-                                    {
-                                        new AliExpressClasses.PriceSku
-                                        {
-                                            Sku_code = x.Код,
-                                            Discount_price = (x.Квант * x.Цена).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                                            Price = x.ЦенаДоСкидки > 0 ? (x.Квант * x.ЦенаДоСкидки).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) : (x.Квант * x.Цена).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
-                                        }
-                                    }
-                                };
-                            }).ToList(),
-                            stoppingToken);
-                        if (result.Item1 != null)
-                        {
-                            var stringData = result.Item1.Select(x => x.ToString()).ToList();
-                            uploadIds.AddRange(priceData.Where(x => stringData.Contains(x.ProductId)).Select(x => x.Id));
-                            if (!string.IsNullOrEmpty(result.Item2))
-                                _logger.LogError(result.Item2);
-                        }
-                        else
-                        {
-                            if (_context.Database.CurrentTransaction != null)
-                                _context.Database.CurrentTransaction.Rollback();
-                            _logger.LogError(result.Item2);
-                            uploadIds.Clear();
-                        }
-                        //local API
-                        //var result = await AliExpressClasses.Functions.UpdatePrice(_httpService, priceData.Key.AuthToken,
-                        //    priceData.Select(x => new AliExpressClasses.PriceProduct
+                        //var result = await AliExpressClasses.Functions.UpdatePriceGlobal(_httpService,
+                        //    priceData.Key.ClientId, priceData.Key.AuthSecret, priceData.Key.Authorization,
+                        //    priceData.Select(x =>
                         //    {
-
-                        //        Product_id = x.ProductId,
-                        //        Skus = new List<AliExpressClasses.PriceSku> 
-                        //        { 
-                        //            new AliExpressClasses.PriceSku
+                        //        if (!long.TryParse(x.ProductId, out long productId))
+                        //            productId = 0;
+                        //        return new AliExpressClasses.PriceProductGlobal
+                        //        {
+                        //            Product_id = productId,
+                        //            Multiple_sku_update_list = new List<AliExpressClasses.PriceSku>
                         //            {
-                        //                Sku_code = x.Код,
-                        //                Price = (x.Квант * x.Цена).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
-                        //            } 
-                        //        }
+                        //                new AliExpressClasses.PriceSku
+                        //                {
+                        //                    Sku_code = x.Код,
+                        //                    Discount_price = (x.Квант * x.Цена).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                        //                    Price = x.ЦенаДоСкидки > 0 ? (x.Квант * x.ЦенаДоСкидки).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) : (x.Квант * x.Цена).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
+                        //                }
+                        //            }
+                        //        };
                         //    }).ToList(),
                         //    stoppingToken);
                         //if (result.Item1 != null)
                         //{
-                        //    uploadIds.AddRange(priceData.Where(x => result.Item1.Contains(x.Код)).Select(x => x.Id));
+                        //    var stringData = result.Item1.Select(x => x.ToString()).ToList();
+                        //    uploadIds.AddRange(priceData.Where(x => stringData.Contains(x.ProductId)).Select(x => x.Id));
                         //    if (!string.IsNullOrEmpty(result.Item2))
                         //        _logger.LogError(result.Item2);
                         //}
@@ -1024,6 +991,37 @@ namespace Refresher1C.Service
                         //    _logger.LogError(result.Item2);
                         //    uploadIds.Clear();
                         //}
+
+                        //local API
+                        var result = await AliExpressClasses.Functions.UpdatePrice(_httpService, priceData.Key.AuthToken,
+                            priceData.Select(x => new AliExpressClasses.PriceProduct
+                            {
+
+                                Product_id = x.ProductId,
+                                Skus = new List<AliExpressClasses.PriceSku>
+                                {
+                                    new AliExpressClasses.PriceSku
+                                    {
+                                        Sku_code = x.Код,
+                                        Discount_price = (x.Квант * x.Цена).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                                        Price = x.ЦенаДоСкидки > 0 ? (x.Квант * x.ЦенаДоСкидки).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) : (x.Квант * x.Цена).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
+                                    }
+                                }
+                            }).ToList(),
+                            stoppingToken);
+                        if (result.UpdatedIds != null)
+                        {
+                            uploadIds.AddRange(priceData.Where(x => result.UpdatedIds.Contains(x.ProductId)).Select(x => x.Id));
+                            if (!string.IsNullOrEmpty(result.ErrorMessage))
+                                _logger.LogError(result.ErrorMessage);
+                        }
+                        else
+                        {
+                            if (_context.Database.CurrentTransaction != null)
+                                _context.Database.CurrentTransaction.Rollback();
+                            _logger.LogError(result.ErrorMessage);
+                            uploadIds.Clear();
+                        }
                     }
                     else if (priceData.Key.Тип == "WILDBERRIES")
                     {
@@ -1572,7 +1570,7 @@ namespace Refresher1C.Service
                     else if (marketplace.Тип.ToUpper() == "ALIEXPRESS")
                     {
                         await UpdateAliExpressStock(marketplace.ClientId, 
-                            marketplace.AuthSecret, marketplace.Authorization, regular, maxPerRequestAli,
+                            marketplace.AuthSecret, marketplace.Authorization, marketplace.AuthToken, regular, maxPerRequestAli,
                             marketplace.Id, marketplace.FirmaId, marketplace.HexEncoding, marketplace.StockOriginal, stoppingToken);
                     }
                 }
@@ -1792,7 +1790,7 @@ namespace Refresher1C.Service
                 }
             }
         }
-        public async Task UpdateAliExpressStock(string appKey, string appSecret, string authorization, bool regular, int limit,
+        public async Task UpdateAliExpressStock(string appKey, string appSecret, string authorization, string authToken, bool regular, int limit,
             string marketplaceId, string firmaId, bool hexEncoding, bool stockOriginal, CancellationToken stoppingToken)
         {
             var data = await ((from markUse in _context.Sc14152s
@@ -1820,20 +1818,6 @@ namespace Refresher1C.Service
 
             if ((data != null) && (data.Count > 0))
             {
-                //var checkResult = await OzonClasses.OzonOperators.ProductNotReady(_httpService, clientId, authToken,
-                //    data.Select(x => x.OfferId).ToList(),
-                //    stoppingToken);
-                //if (checkResult.Item2 != null && !string.IsNullOrEmpty(checkResult.Item2))
-                //{
-                //    _logger.LogError(checkResult.Item2);
-                //}
-                //var notReadyIds = new List<string>();
-                //if ((checkResult.Item1 != null) && (checkResult.Item1.Count > 0))
-                //{
-                //    notReadyIds = data.Where(x => checkResult.Item1.Contains(x.OfferId)).Select(x => x.Id).ToList();
-                //}
-
-                //var listIds = data.Where(x => !notReadyIds.Contains(x.Id)).Select(x => x.Id).ToList();
                 int tryCount = 5;
                 TimeSpan sleepPeriod = TimeSpan.FromSeconds(1);
                 bool success = false;
@@ -1875,8 +1859,8 @@ namespace Refresher1C.Service
                     List<string> списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
 
                     var списокНоменклатуры = await _номенклатура.ПолучитьСвободныеОстатки(разрешенныеФирмы, списокСкладов, data.Select(x => x.NomId).ToList(), false);
-                    var stockData = new List<AliExpressClasses.StockProductGlobal>();
-                    //var stockData = new List<AliExpressClasses.Product>();
+                    //var stockData = new List<AliExpressClasses.StockProductGlobal>();
+                    var stockData = new List<AliExpressClasses.Product>();
                     foreach (var item in data)
                     {
                         var номенклатура = списокНоменклатуры.Where(x => x.Id == item.NomId).FirstOrDefault();
@@ -1892,13 +1876,27 @@ namespace Refresher1C.Service
                             else
                                 остаток = (long)((номенклатура.Остатки.Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - item.DeltaStock);
                             остаток = Math.Max(остаток, 0);
+
                             //global API
-                            if (!long.TryParse(item.ProductId, out long productId))
-                                productId = 0;
-                            stockData.Add(new AliExpressClasses.StockProductGlobal
+                            //long.TryParse(item.ProductId, out long productId);
+                            //stockData.Add(new AliExpressClasses.StockProductGlobal
+                            //{
+                            //    Product_id = productId,
+                            //    Multiple_sku_update_list = new List<AliExpressClasses.StockSku>
+                            //    {
+                            //        new AliExpressClasses.StockSku
+                            //        {
+                            //            Sku_code = hexEncoding ? номенклатура.Code.EncodeHexString() : номенклатура.Code,
+                            //            Inventory = (item.Locked ? 0 : остаток).ToString()
+                            //        }
+                            //    }
+                            //});
+
+                            //local API
+                            stockData.Add(new AliExpressClasses.Product
                             {
-                                Product_id = productId,
-                                Multiple_sku_update_list = new List<AliExpressClasses.StockSku>
+                                Product_id = item.ProductId,
+                                Skus = new List<AliExpressClasses.StockSku>
                                 {
                                     new AliExpressClasses.StockSku
                                     {
@@ -1907,47 +1905,29 @@ namespace Refresher1C.Service
                                     }
                                 }
                             });
-                            //local API
-                            //stockData.Add(new AliExpressClasses.Product
-                            //{
-                            //    Product_id = item.ProductId,
-                            //    Skus = new List<AliExpressClasses.StockSku>
-                            //    {
-                            //        new AliExpressClasses.StockSku 
-                            //        { 
-                            //            Sku_code = hexEncoding ? номенклатура.Code.EncodeHexString() : номенклатура.Code,
-                            //            Inventory = (item.Locked ? 0 : остаток).ToString()
-                            //        }
-                            //    }
-                            //});
                         }
                     }
-                    var result = await AliExpressClasses.Functions.UpdateStockGlobal(_httpService,
-                        appKey, appSecret, authorization, stockData, stoppingToken);
-                    //var result = await AliExpressClasses.Functions.UpdateStock(_httpService, authToken,
-                    //    stockData,
-                    //    stoppingToken);
-                    if (result.errorMessage != null && !string.IsNullOrEmpty(result.errorMessage))
+                    //var result = await AliExpressClasses.Functions.UpdateStockGlobal(_httpService,
+                    //    appKey, appSecret, authorization, stockData, stoppingToken);
+                    var result = await AliExpressClasses.Functions.UpdateStock(_httpService, authToken,
+                        stockData,
+                        stoppingToken);
+                    if (result.ErrorMessage != null && !string.IsNullOrEmpty(result.ErrorMessage))
                     {
-                        _logger.LogError(result.errorMessage);
+                        _logger.LogError(result.ErrorMessage);
                     }
                     List<string> uploadIds = new List<string>();
                     List<string> errorIds = new List<string>();
-                    if (result.updatedIds != null && result.updatedIds.Count > 0)
+                    if (result.UpdatedIds != null && result.UpdatedIds.Count > 0)
                     {
                         uploadIds.AddRange(data
-                            .Where(x => result.updatedIds.Select(y => y.ToString()).Contains(x.ProductId))
+                            .Where(x => result.UpdatedIds.Contains(x.ProductId))
                             .Select(x => x.Id));
-                        //var nomIds = result.Item1.Select(x =>
-                        //    списокНоменклатуры
-                        //                .Where(y => (hexEncoding ? y.Code.EncodeHexString() : y.Code) == x)
-                        //                .Select(z => z.Id).FirstOrDefault());
-                        //uploadIds.AddRange(data.Where(x => nomIds.Contains(x.NomId)).Select(x => x.Id));
                     }
-                    if (result.errorIds?.Count > 0)
+                    if (result.ErrorIds?.Count > 0)
                     {
                         errorIds = data
-                            .Where(x => result.errorIds.Select(y => y.ToString()).Contains(x.ProductId))
+                            .Where(x => result.ErrorIds.Contains(x.ProductId))
                             .Select(x => x.Id)
                             .ToList();
                     }
@@ -2617,6 +2597,7 @@ namespace Refresher1C.Service
                 var marketplaceIds = await (from market in _context.Sc14042s
                                             where !market.Ismark
                                                 //&& market.Code.Trim() == "22162396" //tmp
+                                                //&& market.Sp14155.Trim().ToUpper() == "OZON" //tmp
                                             select new
                                             {
                                                 Id = market.Id,
@@ -2807,7 +2788,7 @@ namespace Refresher1C.Service
             string model,
             CancellationToken cancellationToken)
         {
-            int requestLimit = 1000;
+            int requestLimit = 100;
 
 
             var query = from markUse in _context.Sc14152s

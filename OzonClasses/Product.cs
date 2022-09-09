@@ -34,10 +34,14 @@ namespace OzonClasses
     }
     public class Commission
     {
+        [JsonProperty(PropertyName = "delivery_amount")]
         public double DeliveryAmount { get; set; }
+        [JsonProperty(PropertyName = "min_value")]
         public double MinValue { get; set; }
         public double Percent { get; set; }
+        [JsonProperty(PropertyName = "return_amount")]
         public double ReturnAmount { get; set; }
+        [JsonProperty(PropertyName = "sale_schema")]
         public string? SaleSchema { get; set; }
         public double Value { get; set; }
     }
