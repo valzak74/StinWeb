@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using HttpExtensions;
 using System.Data;
+using YandexClasses;
 
 namespace Refresher1C.Service
 {
@@ -2652,24 +2653,27 @@ namespace Refresher1C.Service
             double shipmentFeeLightMin = model == "FBY" ? 13 : (model == "FBS" ? 60 : 0);
             double shipmentFeeLightMax = model == "FBY" ? 250 : (model == "FBS" ? 350 : 0);
 
-            double shipmentFeeLightPercent_OutBorder = 1; //up to 5 for FBS
+            double shipmentFeeLightPercent_OutBorder = 3; //up to 5 for FBS
             double shipmentFeeLightMin_OutBorder = model == "FBY" ? 10 : (model == "FBS" ? 20 : 0);
             double shipmentFeeLightMax_OutBorder = model == "FBY" ? 100 : (model == "FBS" ? 500 : 0);
 
             double shipmentFeeHard = 400;
-            double shipmentFeeHardPercent_OutBorder = 1; //up to 5 for FBS
+            double shipmentFeeHardPercent_OutBorder = 3; //up to 5 for FBS
             double shipmentFeeHardMin_OutBorder = model == "FBY" ? 50 : (model == "FBS" ? 25 : 0);
             double shipmentFeeHardMax_OutBorder = model == "FBY" ? 500 : (model == "FBS" ? 1500 : 0);
 
             var query = from markUse in _context.Sc14152s
                         join nom in _context.Sc84s on markUse.Parentext equals nom.Id
+                        join vzTovar in _context.VzTovars on nom.Id equals vzTovar.Id into _vzTovar
+                        from vzTovar in _vzTovar.DefaultIfEmpty()
                         where !markUse.Ismark && (markUse.Sp14147 == marketplaceId) &&
                           (markUse.Sp14158 == 1) //Есть в каталоге 
                           //&& nom.Code == "D00045010"
                         select new
                         {
                             Id = markUse.Id,
-                            Sku = nom.Code  
+                            Sku = nom.Code,
+                            ЦенаЗакуп = vzTovar != null ? vzTovar.Zakup ?? 0 : 0,
                         };
             for (int i = 0; i < query.Count(); i = i + requestLimit)
             {
@@ -2697,38 +2701,99 @@ namespace Refresher1C.Service
                     bool needUpdate = false;
                     foreach (var item in result.Item2.Result.ShopSkus)
                     {
-                        string markUseId = data.Where(x => (hexEncoding ? x.Sku.EncodeHexString() : x.Sku) == item.ShopSku).Select(x => x.Id).FirstOrDefault();
-                        Sc14152 entity = null;
-                        if (!string.IsNullOrEmpty(markUseId))
-                            entity = await _context.Sc14152s.FirstOrDefaultAsync(x => x.Id == markUseId, cancellationToken);
-                        if (entity != null)
+                        var dataItem = data.FirstOrDefault(x => (hexEncoding ? x.Sku.EncodeHexString() : x.Sku) == item.ShopSku);
+                        if (dataItem != null)
                         {
-                            double dimensions = (item.WeightDimensions?.Width ?? 0)
-                                + (item.WeightDimensions?.Length ?? 0)
-                                + (item.WeightDimensions?.Height ?? 0);
-                            double weight = item.WeightDimensions?.Weight ?? 0;
+                            Sc14152 entity = null;
+                            if (!string.IsNullOrEmpty(dataItem.Id))
+                                entity = await _context.Sc14152s.FirstOrDefaultAsync(x => x.Id == dataItem.Id, cancellationToken);
+                            if (entity != null)
+                            {
+                                var minPrice = item.Price;
+                                var КоэфМинНаценки = 10; 
+                                var Порог = (double)dataItem.ЦенаЗакуп * (100 + КоэфМинНаценки) / 100;
+                                //var c_saleType = comResult.ComPercent / 100;
+                                //var c_premium = 2d / 100; //2% premium
 
-                            var tariff = item.Tariffs?.Sum(x => x.Amount) ?? 0;
-                            tariff += tariffPerOrder;
-                            if ((weight > weightLimit) || (dimensions > dimensionsLimit))
-                            {
-                                tariff += shipmentFeeHard; //Доставка покупателю
-                                tariff += (item.Price * shipmentFeeHardPercent_OutBorder / 100)
-                                    .WithLimits(shipmentFeeHardMin_OutBorder, shipmentFeeHardMax_OutBorder); //доставка в другой округ
-                            }
-                            else
-                            {
-                                tariff += (item.Price * shipmentFeeLightPercent / 100)
-                                    .WithLimits(shipmentFeeLightMin, shipmentFeeLightMax); //Доставка покупателю
-                                tariff += (item.Price * shipmentFeeLightPercent_OutBorder / 100)
-                                    .WithLimits(shipmentFeeLightMin_OutBorder, shipmentFeeLightMax_OutBorder); //доставка в другой округ
-                            }
-                            if ((decimal)tariff != entity.Sp14198)
-                            {
-                                entity.Sp14198 = (decimal)tariff;
-                                _context.Update(entity);
-                                _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
-                                needUpdate = true;
+                                double dimensions = (item.WeightDimensions?.Width ?? 0)
+                                    + (item.WeightDimensions?.Length ?? 0)
+                                    + (item.WeightDimensions?.Height ?? 0);
+                                double weight = item.WeightDimensions?.Weight ?? 0;
+
+                                var sumPercentTariffs = 0d;
+                                item.Tariffs?.ForEach(x => sumPercentTariffs += x.Percent / 100);
+                                
+                                //var tariff = item.Tariffs?.Sum(x => x.Amount) ?? 0;
+                                //tariff += tariffPerOrder;
+                                if ((weight > weightLimit) || (dimensions > dimensionsLimit))
+                                {
+                                    minPrice = (Порог + tariffPerOrder + shipmentFeeHard) / (1 - sumPercentTariffs - shipmentFeeHardPercent_OutBorder / 100);
+                                    var minLimit = shipmentFeeHardPercent_OutBorder > 0 ? shipmentFeeHardMin_OutBorder * 100 / shipmentFeeHardPercent_OutBorder : double.MinValue;
+                                    var maxLimit = shipmentFeeHardPercent_OutBorder > 0 && shipmentFeeHardMax_OutBorder < double.MaxValue ? shipmentFeeHardMax_OutBorder * 100 / shipmentFeeHardPercent_OutBorder : double.MaxValue;
+
+                                    if (minPrice < minLimit)
+                                        minPrice = (Порог + tariffPerOrder + shipmentFeeHard + shipmentFeeHardMin_OutBorder) / (1 - sumPercentTariffs);
+                                    if (minPrice > maxLimit)
+                                        minPrice = (Порог + tariffPerOrder + shipmentFeeHard + shipmentFeeHardMax_OutBorder) / (1 - sumPercentTariffs);
+                                    //tariff += shipmentFeeHard; //Доставка покупателю
+                                    //tariff += (item.Price * shipmentFeeHardPercent_OutBorder / 100)
+                                    //    .WithLimits(shipmentFeeHardMin_OutBorder, shipmentFeeHardMax_OutBorder); //доставка в другой округ
+                                }
+                                else
+                                {
+                                    Dictionary<string, double> limits = new Dictionary<string, double>();
+                                    var minLimit = shipmentFeeLightPercent > 0 ? shipmentFeeLightMin * 100 / shipmentFeeLightPercent : double.MinValue;
+                                    var maxLimit = shipmentFeeLightPercent > 0 && shipmentFeeLightMax < double.MaxValue ? shipmentFeeLightMax * 100 / shipmentFeeLightPercent : double.MaxValue;
+                                    limits.Add("MinFeeLight", minLimit);
+                                    limits.Add("MaxFeeLight", maxLimit);
+
+                                    minLimit = shipmentFeeLightPercent_OutBorder > 0 ? shipmentFeeLightMin_OutBorder * 100 / shipmentFeeLightPercent_OutBorder : double.MinValue;
+                                    maxLimit = shipmentFeeLightPercent_OutBorder > 0 && shipmentFeeLightMax_OutBorder < double.MaxValue ? shipmentFeeLightMax_OutBorder * 100 / shipmentFeeLightPercent_OutBorder : double.MaxValue;
+                                    limits.Add("MinFeeLightOutBorder", minLimit);
+                                    limits.Add("MaxFeeLightOutBorder", maxLimit);
+
+                                    minPrice = (Порог + tariffPerOrder) / (1 - sumPercentTariffs - shipmentFeeLightPercent / 100 - shipmentFeeLightPercent_OutBorder / 100);
+                                    if (minPrice < Math.Min(limits["MinFeeLight"], limits["MinFeeLightOutBorder"]))
+                                    {
+                                        minPrice = (Порог + tariffPerOrder + shipmentFeeLightMin + shipmentFeeLightMin_OutBorder) / (1 - sumPercentTariffs);
+                                    }
+                                    //_logger.LogError("minPrice = " + minPrice.ToString());
+                                    if (minPrice < Math.Max(limits["MinFeeLight"], limits["MinFeeLightOutBorder"]))
+                                    {
+                                        if (limits["MinFeeLight"] > limits["MinFeeLightOutBorder"])
+                                            minPrice = (Порог + tariffPerOrder + shipmentFeeLightMin) / (1 - sumPercentTariffs - shipmentFeeLightPercent_OutBorder / 100);
+                                        else
+                                            minPrice = (Порог + tariffPerOrder + shipmentFeeLightMin_OutBorder) / (1 - sumPercentTariffs - shipmentFeeLightPercent / 100);
+                                    }
+                                    //_logger.LogError("minPrice = " + minPrice.ToString());
+                                    if (minPrice > Math.Min(limits["MaxFeeLight"], limits["MaxFeeLightOutBorder"]))
+                                    {
+                                        if (limits["MaxFeeLight"] < limits["MaxFeeLightOutBorder"])
+                                            minPrice = (Порог + tariffPerOrder + shipmentFeeLightMax) / (1 - sumPercentTariffs - shipmentFeeLightPercent_OutBorder / 100);
+                                        else
+                                            minPrice = (Порог + tariffPerOrder + shipmentFeeLightMax_OutBorder) / (1 - sumPercentTariffs - shipmentFeeLightPercent / 100);
+                                    }
+                                    //_logger.LogError("minPrice = " + minPrice.ToString());
+                                    if (minPrice > Math.Max(limits["MaxFeeLight"], limits["MaxFeeLightOutBorder"]))
+                                    {
+                                        minPrice = (Порог + tariffPerOrder + shipmentFeeLightMax + shipmentFeeLightMax_OutBorder) / (1 - sumPercentTariffs);
+                                    }
+                                    //_logger.LogError("sku = " + item.Sku + ";minPrice = " + minPrice.ToString());
+
+                                    //tariff += (item.Price * shipmentFeeLightPercent / 100)
+                                    //    .WithLimits(shipmentFeeLightMin, shipmentFeeLightMax); //Доставка покупателю
+                                    //tariff += (item.Price * shipmentFeeLightPercent_OutBorder / 100)
+                                    //    .WithLimits(shipmentFeeLightMin_OutBorder, shipmentFeeLightMax_OutBorder); //доставка в другой округ
+                                }
+                                decimal updateMinPrice = decimal.Round((decimal)minPrice, 2, MidpointRounding.AwayFromZero);
+
+                                if (updateMinPrice != entity.Sp14198)
+                                {
+                                    entity.Sp14198 = updateMinPrice;
+                                    _context.Update(entity);
+                                    _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
+                                    needUpdate = true;
+                                }
                             }
                         }
                     }
@@ -2737,48 +2802,70 @@ namespace Refresher1C.Service
                 }
             }
         }
-        private double CommissionFbsVolumeWeight(double volumeWeight, double price, bool kgt)
+        private (double percent, double limMin, double limMax) CommissionValuesFbsVolumeWeight(double volumeWeight, bool kgt)
         {
             if (kgt)
-                return (price * 8 / 100).WithLimits(1000, 1400);
+                return (percent: 8, limMin: 1000, limMax: 1400);
             return volumeWeight switch
             {
-                0.1d => (price * 4 / 100).WithLimits(41, 50),
-                0.2d => (price * 4 / 100).WithLimits(42, 50),
-                0.3d => (price * 4 / 100).WithLimits(43, 60),
-                0.4d => (price * 4 / 100).WithLimits(45, 65),
-                0.5d => (price * 4 / 100).WithLimits(47, 70),
-                0.6d => (price * 4 / 100).WithLimits(50, 70),
-                0.7d => (price * 4 / 100).WithLimits(53, 75),
-                0.8d => (price * 4 / 100).WithLimits(55, 75),
-                0.9d => (price * 4 / 100).WithLimits(55, 80),
-                1d => (price * 5 / 100).WithLimits(57, 95),
-                1.1d => (price * 5 / 100).WithLimits(59, 95),
-                1.2d => (price * 5 / 100).WithLimits(63, 100),
-                1.3d => (price * 5 / 100).WithLimits(63, 105),
-                1.4d => (price * 5 / 100).WithLimits(67, 105),
-                1.5d => (price * 5 / 100).WithLimits(67, 125),
-                1.6d => (price * 5 / 100).WithLimits(70, 125),
-                1.7d => (price * 5 / 100).WithLimits(71, 125),
-                1.8d => (price * 5 / 100).WithLimits(75, 130),
-                1.9d => (price * 5 / 100).WithLimits(77, 130),
-                < 3d => (price * 5 / 100).WithLimits(90, 145),
-                < 4d => (price * 5.5 / 100).WithLimits(115, 175),
-                < 5d => (price * 5.5 / 100).WithLimits(155, 215),
-                < 6d => (price * 5.5 / 100).WithLimits(175, 275),
-                < 7d => (price * 5.5 / 100).WithLimits(200, 315),
-                < 8d => (price * 5.5 / 100).WithLimits(215, 350),
-                < 9d => (price * 5.5 / 100).WithLimits(245, 385),
-                < 10d => (price * 5.5 / 100).WithLimits(270, 395),
-                < 11d => (price * 6 / 100).WithLimits(300, 400),
-                < 12d => (price * 6 / 100).WithLimits(315, 450),
-                < 13d => (price * 6 / 100).WithLimits(345, 490),
-                < 14d => (price * 6 / 100).WithLimits(365, 510),
-                < 15d => (price * 6 / 100).WithLimits(400, 515),
-                < 20d => (price * 6 / 100).WithLimits(485, 550),
-                < 25d => (price * 6 / 100).WithLimits(585, 650),
-                _ => (price * 8 / 100).WithLimits(650, double.MaxValue)
+                0.1d => (percent: 4, limMin: 41, limMax: 50),
+                0.2d => (percent: 4, limMin: 42, limMax: 50),
+                0.3d => (percent: 4, limMin: 43, limMax: 60),
+                0.4d => (percent: 4, limMin: 45, limMax: 65),
+                0.5d => (percent: 4, limMin: 47, limMax: 70),
+                0.6d => (percent: 4, limMin: 50, limMax: 70),
+                0.7d => (percent: 4, limMin: 53, limMax: 75),
+                0.8d => (percent: 4, limMin: 55, limMax: 75),
+                0.9d => (percent: 4, limMin: 55, limMax: 80),
+                1d => (percent: 5, limMin: 57, limMax: 95),
+                1.1d => (percent: 5, limMin: 59, limMax: 95),
+                1.2d => (percent: 5, limMin: 63, limMax: 100),
+                1.3d => (percent: 5, limMin: 63, limMax: 105),
+                1.4d => (percent: 5, limMin: 67, limMax: 105),
+                1.5d => (percent: 5, limMin: 67, limMax: 125),
+                1.6d => (percent: 5, limMin: 70, limMax: 125),
+                1.7d => (percent: 5, limMin: 71, limMax: 125),
+                1.8d => (percent: 5, limMin: 75, limMax: 130),
+                1.9d => (percent: 5, limMin: 77, limMax: 130),
+                < 3d => (percent: 5, limMin: 90, limMax: 145),
+                < 4d => (percent: 5.5, limMin: 115, limMax: 175),
+                < 5d => (percent: 5.5, limMin: 155, limMax: 215),
+                < 6d => (percent: 5.5, limMin: 175, limMax: 275),
+                < 7d => (percent: 5.5, limMin: 200, limMax: 315),
+                < 8d => (percent: 5.5, limMin: 215, limMax: 350),
+                < 9d => (percent: 5.5, limMin: 245, limMax: 385),
+                < 10d => (percent: 5.5, limMin: 270, limMax: 395),
+                < 11d => (percent: 6, limMin: 300, limMax: 400),
+                < 12d => (percent: 6, limMin: 315, limMax: 450),
+                < 13d => (percent: 6, limMin: 345, limMax: 490),
+                < 14d => (percent: 6, limMin: 365, limMax: 510),
+                < 15d => (percent: 6, limMin: 400, limMax: 515),
+                < 20d => (percent: 6, limMin: 485, limMax: 550),
+                < 25d => (percent: 6, limMin: 585, limMax: 650),
+                _ => (percent: 8, limMin: 650, limMax: double.MaxValue)
             };
+        }
+        private double CommissionFbsVolumeWeight(double volumeWeight, double price, bool kgt)
+        {
+            var commissionData = CommissionValuesFbsVolumeWeight(volumeWeight, kgt);
+            return (price * commissionData.percent / 100).WithLimits(commissionData.limMin, commissionData.limMax);
+        }
+        private Dictionary<string,double> LimitValues(
+            (double percent, double limMin, double limMax) weightLim,
+            (double percent, double limMin, double limMax) lastMileLim)
+        {
+            Dictionary<string,double> values = new Dictionary<string,double>();
+            var minLimit = weightLim.percent > 0 ? weightLim.limMin * 100 / weightLim.percent : double.MinValue;
+            var maxLimit = weightLim.percent > 0 && weightLim.limMax < double.MaxValue ? weightLim.limMax * 100 / weightLim.percent : double.MaxValue;
+            values.Add("MinWeightLimit", minLimit);
+            values.Add("MaxWeightLimit", maxLimit);
+            
+            minLimit = lastMileLim.percent > 0 ? lastMileLim.limMin * 100 / lastMileLim.percent : double.MinValue;
+            maxLimit = lastMileLim.percent > 0 && lastMileLim.limMax < double.MaxValue ? lastMileLim.limMax * 100 / lastMileLim.percent : double.MaxValue;
+            values.Add("MinLastMileLimit", minLimit);
+            values.Add("MaxLastMileLimit", maxLimit);
+
+            return values;
         }
         private async Task UpdateTariffsOzon(string marketplaceId,
             string campaignId,
@@ -2794,6 +2881,8 @@ namespace Refresher1C.Service
             var query = from markUse in _context.Sc14152s
                         join nom in _context.Sc84s on markUse.Parentext equals nom.Id
                         join market in _context.Sc14042s on markUse.Sp14147 equals market.Id
+                        join vzTovar in _context.VzTovars on nom.Id equals vzTovar.Id into _vzTovar
+                        from vzTovar in _vzTovar.DefaultIfEmpty()
                         where !markUse.Ismark && (markUse.Sp14147 == marketplaceId) &&
                           (markUse.Sp14158 == 1) //Есть в каталоге 
                           //&& nom.Code == "D00045010"
@@ -2802,7 +2891,8 @@ namespace Refresher1C.Service
                             Id = markUse.Id,
                             Sku = nom.Code,
                             realFbs = !string.IsNullOrWhiteSpace(market.Sp14154) && (market.Sp14154.Trim() == markUse.Sp14190.Trim()),
-                            Комиссия = markUse.Sp14198
+                            ЦенаЗакуп = vzTovar != null ? vzTovar.Zakup ?? 0 : 0,
+                            Квант = nom.Sp14188 == 0 ? 1 : nom.Sp14188,
                         };
             for (int i = 0; i < query.Count(); i = i + requestLimit)
             {
@@ -2822,7 +2912,7 @@ namespace Refresher1C.Service
                     {
                         _logger.LogError(comResult.Error);
                     }
-                    if ((comResult.ComAmount.HasValue) && (comResult.ComAmount.Value > 0))
+                    if ((comResult.ComPercent > 0) && (comResult.ComAmount > 0) && (comResult.VolumeWeight > 0))
                     {
                         double.TryParse(comResult.Price ?? "", System.Globalization.NumberStyles.Number, new System.Globalization.NumberFormatInfo { NumberDecimalSeparator = "." }, out double price);
                         if (price > 0)
@@ -2830,21 +2920,64 @@ namespace Refresher1C.Service
                             Sc14152 entity = await _context.Sc14152s.FirstOrDefaultAsync(x => x.Id == item.Id, cancellationToken);
                             if (entity != null)
                             {
-                                var tariff = comResult.ComAmount.Value;
+                                var minPrice = price;
+                                var КоэфМинНаценки = 10; // 
+                                var Порог = (double)(item.ЦенаЗакуп * item.Квант) * (100 + КоэфМинНаценки) / 100;
+                                var c_saleType = comResult.ComPercent / 100;
+                                var c_premium = 2d / 100; //2% premium
                                 if (item.realFbs)
                                 {
-
+                                    minPrice = Порог / (1 - c_saleType - c_premium);
                                 }
                                 else //fbs
                                 {
-                                    tariff += 0; //Обработка отправления ТСЦ = 0
-                                    tariff += CommissionFbsVolumeWeight(comResult.VolumeWeight ?? 0, price, false);
-                                    tariff += (price * 5 / 100).WithLimits(60, 350); //Последняя миля 5% от 60 до 350 рублей.
-                                    tariff += price * 2 / 100; //услуга по продвижению Ozon Premium 2%
+                                    var tariffWeight = CommissionValuesFbsVolumeWeight(comResult.VolumeWeight, false);
+                                    var tariffLastMile = (percent: 5d, limMin: 60d, limMax: 350d);
+                                    var limits = LimitValues(tariffWeight, tariffLastMile);
+                                    //_logger.LogError("Порог = " + Порог.ToString());
+                                    //var c_saleType = comResult.ComPercent / 100;
+                                    var c_delivery = 0d;//Обработка отправления ТСЦ = 0
+                                    var c_weight = tariffWeight.percent / 100;
+                                    var c_lastMile = tariffLastMile.percent / 100;
+                                    //var c_premium = 2d / 100; //2% premium
+                                    //_logger.LogError("c_saleType = " + c_saleType.ToString());
+                                    //_logger.LogError("c_delivery = " + c_delivery.ToString());
+                                    //_logger.LogError("c_weight = " + c_weight.ToString());
+                                    //_logger.LogError("c_lastMile = " + c_lastMile.ToString());
+                                    //_logger.LogError("c_premium = " + c_premium.ToString());
+                                    minPrice = Порог / (1 - c_saleType - c_delivery - c_weight - c_lastMile - c_premium);
+                                    //_logger.LogError("minPrice = " + minPrice.ToString());
+                                    if (minPrice < Math.Min(limits["MinWeightLimit"], limits["MinLastMileLimit"]))
+                                    {
+                                        minPrice = (Порог + tariffWeight.limMin + tariffLastMile.limMin) / (1 - c_saleType - c_delivery - c_premium);
+                                    }
+                                    //_logger.LogError("minPrice = " + minPrice.ToString());
+                                    if (minPrice < Math.Max(limits["MinWeightLimit"], limits["MinLastMileLimit"]))
+                                    {
+                                        if (limits["MinWeightLimit"] > limits["MinLastMileLimit"])
+                                            minPrice = (Порог + tariffWeight.limMin) / (1 - c_saleType - c_delivery - c_lastMile - c_premium);
+                                        else
+                                            minPrice = (Порог + tariffLastMile.limMin) / (1 - c_saleType - c_delivery - c_weight - c_premium);
+                                    }
+                                    //_logger.LogError("minPrice = " + minPrice.ToString());
+                                    if (minPrice > Math.Min(limits["MaxWeightLimit"], limits["MaxLastMileLimit"]))
+                                    {
+                                        if (limits["MaxWeightLimit"] < limits["MaxLastMileLimit"])
+                                            minPrice = (Порог + tariffWeight.limMax) / (1 - c_saleType - c_delivery - c_lastMile - c_premium);
+                                        else
+                                            minPrice = (Порог + tariffLastMile.limMax) / (1 - c_saleType - c_delivery - c_weight - c_premium);
+                                    }
+                                    //_logger.LogError("minPrice = " + minPrice.ToString());
+                                    if (minPrice > Math.Max(limits["MaxWeightLimit"], limits["MaxLastMileLimit"]))
+                                    {
+                                        minPrice = (Порог + tariffWeight.limMax + tariffLastMile.limMax) / (1 - c_saleType - c_delivery - c_premium);
+                                    }
+                                    //_logger.LogError("sku = " + item.Sku + ";minPrice = " + minPrice.ToString());
                                 }
-                                if ((decimal)tariff != entity.Sp14198)
+                                decimal updateMinPrice = decimal.Round((decimal)minPrice / item.Квант, 2, MidpointRounding.AwayFromZero);
+                                if (updateMinPrice != entity.Sp14198)
                                 {
-                                    entity.Sp14198 = (decimal)tariff;
+                                    entity.Sp14198 = updateMinPrice;
                                     _context.Update(entity);
                                     _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
                                     needUpdate = true;

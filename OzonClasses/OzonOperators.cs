@@ -415,7 +415,7 @@ namespace OzonClasses
                 return new(null, ParseOzonError(result.Item2));
             return new(result.Item1, null);
         }
-        public static async Task<(double? ComAmount, double? VolumeWeight, string? Price, string? Error)> ProductComission(IHttpService httpService, string clientId, string authToken,
+        public static async Task<(double ComPercent, double ComAmount, double VolumeWeight, string Price, string? Error)> ProductComission(IHttpService httpService, string clientId, string authToken,
             string offerId,
             string searchTag,
             CancellationToken cancellationToken)
@@ -428,17 +428,17 @@ namespace OzonClasses
                 request,
                 cancellationToken);
             if (result.Item2 != null)
-                return (ComAmount: null, VolumeWeight: null, Price: null, Error: "ProductInfoResponse : (" + offerId + ") " + ParseOzonError(result.Item2));
+                return (ComPercent: 0, ComAmount: 0, VolumeWeight: 0, Price: "", Error: "ProductInfoResponse : (" + offerId + ") " + ParseOzonError(result.Item2));
             if ((result.Item1 != null) && (result.Item1.Result != null) && 
                 (result.Item1.Result.Commissions != null))
             {
-                var comAmount = result.Item1.Result.Commissions
+                var comData = result.Item1.Result.Commissions
                     .Where(x => x.SaleSchema?.ToLower().Trim() == searchTag)
-                    .Select(x => x.Value)
+                    .Select(x => new { x.Percent, x.Value })
                     .FirstOrDefault();
-                return (ComAmount: comAmount, VolumeWeight: result.Item1.Result.Volume_weight, Price: result.Item1.Result.Price, Error: null);
+                return (ComPercent: comData?.Percent ?? 0, ComAmount: comData?.Value ?? 0, VolumeWeight: result.Item1.Result.Volume_weight, Price: result.Item1.Result.Price ?? "", Error: null);
             }
-            return (ComAmount: null, VolumeWeight: null, Price: null, Error: null);
+            return (ComPercent: 0, ComAmount: 0, VolumeWeight: 0, Price: "", Error: null);
         }
         public static async Task<Tuple<List<string>?,string?>> ProductNotReady(IHttpService httpService, string clientId, string authToken,
             List<string> offers,
