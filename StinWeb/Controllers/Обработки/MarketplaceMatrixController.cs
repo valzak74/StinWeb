@@ -166,11 +166,14 @@ namespace StinWeb.Controllers.Обработки
             {
                 columnValues.Add("Остаток" + skl.Code, sheet.CreateColumnWithWidth(column++, 2900));
             }
+            columnValues.Add("Себестоимость", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("Закупочная", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("Розничная", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("РозничнаяСП", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("ЦенаПродажи", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("ЦП_ЗЦ", sheet.CreateColumnWithWidth(column++, 2900));
+            columnValues.Add("МинЦена", sheet.CreateColumnWithWidth(column++, 2900));
+            columnValues.Add("ЦП_МЦ", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("КоррЦены", sheet.CreateColumnWithWidth(column++, 2900));
             foreach (var marketplace in marketplaceData)
             {
@@ -204,11 +207,14 @@ namespace StinWeb.Controllers.Обработки
             {
                 sheet.SetValue(styleHeader, row, columnValues["Остаток" + skl.Code], "Остаток " + skl.Название);
             }
+            sheet.SetValue(styleHeader, row, columnValues["Себестоимость"], "Себестоимость");
             sheet.SetValue(styleHeader, row, columnValues["Закупочная"], "Закупочная цена");
             sheet.SetValue(styleHeader, row, columnValues["Розничная"], "Розничная");
             sheet.SetValue(styleHeader, row, columnValues["РозничнаяСП"], "Розничная спец");
             sheet.SetValue(styleHeader, row, columnValues["ЦенаПродажи"], "Цена продажи");
             sheet.SetValue(styleHeader, row, columnValues["ЦП_ЗЦ"], "ЦП/ЗЦ");
+            sheet.SetValue(styleHeader, row, columnValues["МинЦена"], "Мин. цена");
+            sheet.SetValue(styleHeader, row, columnValues["ЦП_МЦ"], "ЦП/МЦ");
             sheet.SetValue(styleHeader, row, columnValues["КоррЦены"], "Корр. Цен, %");
             foreach (var marketplace in marketplaceData)
             {
@@ -252,6 +258,7 @@ namespace StinWeb.Controllers.Обработки
                                  ЦенаРозн = vzTovar != null ? vzTovar.Rozn ?? 0 : 0,
                                  ЦенаСп = vzTovar != null ? vzTovar.RoznSp ?? 0 : 0,
                                  ЦенаЗакуп = vzTovar != null ? vzTovar.Zakup ?? 0 : 0,
+                                 МинЦена = marketUsing.Sp14198,
                                  Квант = nom.Sp14188,
                                  DeltaStock = nom.Sp14215, //marketUsing.Sp14214,
                                  DeltaPrice = marketUsing.Sp14213,
@@ -282,6 +289,19 @@ namespace StinWeb.Controllers.Обработки
             var nomIds = nativeData.Select(x => x.NomId).Distinct().ToList();
             using var фирма = new StinClasses.Справочники.ФирмаEntity(_context);
             var разрешенныеФирмы = await фирма.ПолучитьСписокРазрешенныхФирмAsync();
+            DateTime dateReg = StinWeb.Models.DataManager.Common.GetRegTA(_context);
+            var себестоимостьData = await (from rg328 in _context.Rg328s
+                                           join sc84 in _context.Sc84s on rg328.Sp331 equals sc84.Id
+                                           join sc75 in _context.Sc75s on sc84.Sp94 equals sc75.Id
+                                           where rg328.Period == dateReg
+                                              && nomIds.Contains(rg328.Sp331)
+                                              && разрешенныеФирмы.Contains(rg328.Sp4061)
+                                           group new { rg328, sc75 } by new { nomId = rg328.Sp331, koef = sc75.Sp78 } into g
+                                           select new
+                                           {
+                                               НоменклатураId = g.Key.nomId,
+                                               Себестоимость = (decimal)((g.Sum(x => x.rg328.Sp342) != 0 ? g.Sum(x => x.rg328.Sp421) / g.Sum(x => x.rg328.Sp342) : 0) * (g.Key.koef == 0 ? 1 : g.Key.koef))
+                                           }).ToListAsync(cancellationToken);
             using var номенклатура = new StinClasses.Справочники.НоменклатураEntity(_context);
             var nomData = await номенклатура.ПолучитьСвободныеОстатки(
                 разрешенныеФирмы, 
@@ -361,12 +381,18 @@ namespace StinWeb.Controllers.Обработки
                         .Sum(x => x.Остатки.Where(s => s.СкладId == skl.Id).Sum(y => y.СвободныйОстаток) / x.Единица.Коэффициент);
                     sheet.SetValue(styleValueNum, row, columnValues["Остаток" + skl.Code], остаток);
                 }
-                sheet.SetValue(styleValueNum, row, columnValues["Закупочная"], item.ЦенаЗакуп);
-                sheet.SetValue(styleValueNum, row, columnValues["Розничная"], item.ЦенаРозн);
-                sheet.SetValue(styleValueNum, row, columnValues["РозничнаяСП"], item.ЦенаСп);
+                decimal себестоимость = себестоимостьData
+                    .Where(x => x.НоменклатураId == item.NomId)
+                    .Sum(x => x.Себестоимость);
+                sheet.SetValue(styleValueMoney, row, columnValues["Себестоимость"], себестоимость);
+                sheet.SetValue(styleValueMoney, row, columnValues["Закупочная"], item.ЦенаЗакуп);
+                sheet.SetValue(styleValueMoney, row, columnValues["Розничная"], item.ЦенаРозн);
+                sheet.SetValue(styleValueMoney, row, columnValues["РозничнаяСП"], item.ЦенаСп);
                 var ценаПродажи = item.ЦенаСп > 0 ? Math.Min(item.ЦенаРозн, item.ЦенаСп) : item.ЦенаРозн;
-                sheet.SetValue(styleValueNum, row, columnValues["ЦенаПродажи"], ценаПродажи);
+                sheet.SetValue(styleValueMoney, row, columnValues["ЦенаПродажи"], ценаПродажи);
                 sheet.SetValue(styleValueNum, row, columnValues["ЦП_ЗЦ"], item.ЦенаЗакуп == 0 ? 0 : ценаПродажи / item.ЦенаЗакуп);
+                sheet.SetValue(styleValueMoney, row, columnValues["МинЦена"], item.МинЦена);
+                sheet.SetValue(ценаПродажи < item.МинЦена ? styleValueNumRed : styleValueNum, row, columnValues["ЦП_МЦ"], item.МинЦена == 0 ? 0 : ценаПродажи / item.МинЦена);
                 sheet.SetValue(styleDeltaPrice, row, columnValues["КоррЦены"], item.DeltaPrice);
                 bool marked = false;
                 foreach (var marketplace in marketplaceData)

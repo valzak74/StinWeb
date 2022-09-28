@@ -1,0 +1,39 @@
+﻿@model IQueryable<StinWeb.Controllers.Отчеты.HistInfo>
+@(Html
+    .Grid(Model)
+    .Build(columns =>
+    {
+@*        columns.Add(model => $"<img src=\"/images/" + (model.Удален ? "blog-post-delete-icon-24.png" : (model.Проведен ? "page-accept-icon-24.png" : "page-icon-24.png")) + "\" />")
+        .Css("text-center column-10")
+        .Encoded(false);
+*@        
+        columns.Add(model => model.NomId).Named("NomId").Titled("NomId").Hidden();
+        columns.Add(model => model.Sku).Titled("SKU");
+        columns.Add(model => model.SkuCoded).Titled("SKU coded");
+        columns.Add(model => model.Description).Titled("Наименование").Css("column-20p");
+        columns.Add(model => model.Info).Titled("Информация").Css("column-60p").Encoded(false);
+        columns.Add(model => model.MarketNames).Titled("Маркетплейс").Css("column-10p").Encoded(false);
+        //columns.Add(model => model.Brend).Titled("Производитель").Css("column-5p");
+        //columns.Add(model => model.Params).Titled("Хар-ки").Css("column-5p");
+        //columns.Add(model => model.Barcode).Titled("Штрихкод").Css("column-5p");
+        //columns.Add(model => model.Weight).Titled("Вес").Css("column-5p").Css("text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматКоличества);
+        //columns.Add(model => model.WeightB).Titled("Вес (брутто)").Css("column-5p").Css("text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматКоличества);
+        //columns.Add(model => model.Width).Titled("Ширина").Css("column-5p").Css("text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматКоличества);
+        //columns.Add(model => model.Height).Titled("Высота").Css("column-5p").Css("text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматКоличества);
+        //columns.Add(model => model.Length).Titled("Длина").Css("column-5p").Css("text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматКоличества);
+        //columns.Add(model => model.Boxies).Titled("Кол мест").Css("column-5p").Css("text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматКоличества);
+        //columns.Add(model => model.Quantum).Titled("Квант").Css("column-5p").Css("text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматКоличества);
+        //columns.Add(model => model.Комментарий).Titled("Комментарий").Filterable(false).Sortable(false);
+    })
+    .Named("gridHistNomenklatura")
+    .AppendCss("table-hover")
+    //.RowAttributed(model => new { id = model.IdDoc, @class = model.Удален ? "снят_с_производства" : !model.Проведен ? "под_заказ" : null })
+    .Using(GridFilterMode.Header)
+    .Empty("No data found")
+    .Pageable(pager =>
+    {
+        pager.RowsPerPage = 25;
+    })
+    .Filterable()
+    .Sortable()
+)

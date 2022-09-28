@@ -147,6 +147,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNc0J3QvtC80LXQvdC60LvQsNGC0YPRgNCwXERlZmF1bHQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/Номенклатура/HistNomenklatura.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNc0J3QvtC80LXQvdC60LvQsNGC0YPRgNCwXEhpc3ROb21lbmtsYXR1cmEuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Shared/Components/НоменклатураРаскладка/Default.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNc0J3QvtC80LXQvdC60LvQsNGC0YPRgNCw0KDQsNGB0LrQu9Cw0LTQutCwXERlZmF1bHQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
@@ -265,6 +269,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Обработки/ЗагрузкаИзExcel.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3Nc0J7QsdGA0LDQsdC+0YLQutC4XNCX0LDQs9GA0YPQt9C60LDQmNC3RXhjZWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Отчеты/NomChanges.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3Nc0J7RgtGH0LXRgtGLXE5vbUNoYW5nZXMuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Валентин/source/repos/StinWeb/StinWeb/Views/Отчеты/ДолгиКонтрагентов.cshtml]

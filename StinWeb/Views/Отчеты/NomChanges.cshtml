@@ -1,0 +1,31 @@
+﻿@{
+    ViewBag.Title = "Отчет \"Изменение справочника номенклатуры\"";
+}
+<div class="card border-round" style="background-color: lightgray;">
+    <div class="card-header">
+        <div class="input-group input-group-sm col-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Начальная дата</span>
+            </div>
+            <input id="startDate" type="date" class="form-control" onchange="RefreshGrid()">
+        </div>
+    </div>
+</div>
+@Html.AjaxGrid(Url.Action("GetTableData", "NomChanges"))
+
+<script>
+    $(function () {
+        var start = moment();
+        $("#startDate").val(start.format('YYYY-MM-DD'));
+    });
+    function RefreshGrid() {
+        const gridHistNom = new MvcGrid(document.querySelector("div[data-name='gridHistNomenklatura']"));
+        gridHistNom.set({
+            isAjax: true,
+            url: "NomChanges/GetTableData",
+            query: "startDate=" + $("#startDate").val()
+        });
+        gridHistNom.reload();
+
+    }
+</script>

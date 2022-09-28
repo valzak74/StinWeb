@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using System.Linq;
 
 namespace StinClasses.Models
 {
@@ -473,6 +473,7 @@ namespace StinClasses.Models
         public virtual DbSet<VzImage> VzImages { get; set; }
         public virtual DbSet<VzInvoice> VzInvoices { get; set; }
         public virtual DbSet<VzNabor> VzNabors { get; set; }
+        public virtual DbSet<VzNomHistory> VzNomHistories { get; set; }
         public virtual DbSet<VzNomenNoZap> VzNomenNoZaps { get; set; }
         public virtual DbSet<VzOrderBinary> VzOrderBinaries { get; set; }
         public virtual DbSet<VzPayment> VzPayments { get; set; }
@@ -495,6 +496,8 @@ namespace StinClasses.Models
         public virtual DbSet<_1supdt> _1supdts { get; set; }
         public virtual DbSet<_1suser> _1susers { get; set; }
         public IQueryable<VzTree> fn_GetTreeById(string id, bool findRoot) => FromExpression(() => fn_GetTreeById(id, findRoot));
+
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -3833,6 +3836,17 @@ namespace StinClasses.Models
                     .HasColumnType("numeric(1, 0)")
                     .HasColumnName("SP13311");
 
+                entity.Property(e => e.Sp14218)
+                    .IsRequired()
+                    .HasMaxLength(30)
+                    .IsUnicode(false)
+                    .HasColumnName("SP14218")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Sp14219)
+                    .HasColumnType("datetime")
+                    .HasColumnName("SP14219");
+
                 entity.Property(e => e.Sp660)
                     .IsRequired()
                     .HasMaxLength(150)
@@ -4763,7 +4777,7 @@ namespace StinClasses.Models
 
                 entity.Property(e => e.Sp12568)
                     .IsRequired()
-                    .HasMaxLength(15)
+                    .HasMaxLength(30)
                     .IsUnicode(false)
                     .HasColumnName("SP12568")
                     .IsFixedLength();
@@ -4856,7 +4870,7 @@ namespace StinClasses.Models
 
                 entity.Property(e => e.Sp1995)
                     .IsRequired()
-                    .HasMaxLength(15)
+                    .HasMaxLength(30)
                     .IsUnicode(false)
                     .HasColumnName("SP1995")
                     .IsFixedLength();
@@ -28561,6 +28575,10 @@ namespace StinClasses.Models
                     .HasColumnType("numeric(9, 3)")
                     .HasColumnName("SP14214");
 
+                entity.Property(e => e.Sp14229)
+                    .HasColumnType("numeric(13, 3)")
+                    .HasColumnName("SP14229");
+
                 entity.Property(e => e.Verstamp).HasColumnName("VERSTAMP");
             });
 
@@ -34212,6 +34230,90 @@ namespace StinClasses.Models
                     .WithMany(p => p.VzNabors)
                     .HasForeignKey(d => d.ZIdDoc)
                     .HasConstraintName("FK_vzNabors_vzZayavki");
+            });
+
+            modelBuilder.Entity<VzNomHistory>(entity =>
+            {
+                entity.HasKey(e => e.RowId);
+
+                entity.ToTable("vzNomHistory");
+
+                entity.Property(e => e.RowId).HasColumnName("row_id");
+
+                entity.Property(e => e.Barcode)
+                    .HasMaxLength(50)
+                    .IsUnicode(false)
+                    .HasColumnName("barcode")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Boxes)
+                    .HasColumnType("numeric(3, 0)")
+                    .HasColumnName("boxes");
+
+                entity.Property(e => e.Brend)
+                    .HasMaxLength(9)
+                    .IsUnicode(false)
+                    .HasColumnName("brend")
+                    .IsFixedLength();
+
+                entity.Property(e => e.ChDate)
+                    .HasColumnType("datetime")
+                    .HasColumnName("chDate");
+
+                entity.Property(e => e.Code)
+                    .HasMaxLength(9)
+                    .IsUnicode(false)
+                    .HasColumnName("code")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Descr)
+                    .HasMaxLength(50)
+                    .IsUnicode(false)
+                    .HasColumnName("descr")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Height)
+                    .HasColumnType("numeric(13, 3)")
+                    .HasColumnName("height");
+
+                entity.Property(e => e.Length)
+                    .HasColumnType("numeric(13, 3)")
+                    .HasColumnName("length");
+
+                entity.Property(e => e.NomId)
+                    .IsRequired()
+                    .HasMaxLength(9)
+                    .IsUnicode(false)
+                    .HasColumnName("nomId")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Params)
+                    .HasMaxLength(120)
+                    .IsUnicode(false)
+                    .HasColumnName("params")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Quantum)
+                    .HasColumnType("numeric(10, 0)")
+                    .HasColumnName("quantum");
+
+                entity.Property(e => e.Vendor)
+                    .HasMaxLength(30)
+                    .IsUnicode(false)
+                    .HasColumnName("vendor")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Weight)
+                    .HasColumnType("numeric(13, 3)")
+                    .HasColumnName("weight");
+
+                entity.Property(e => e.WeightB)
+                    .HasColumnType("numeric(13, 3)")
+                    .HasColumnName("weightB");
+
+                entity.Property(e => e.Width)
+                    .HasColumnType("numeric(13, 3)")
+                    .HasColumnName("width");
             });
 
             modelBuilder.Entity<VzNomenNoZap>(entity =>

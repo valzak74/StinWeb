@@ -217,8 +217,11 @@ namespace Refresher1C.Service
             }
         }
         public async Task NewOrder(string тип, string defFirmaId, string customerId, string dogovorId, string authApi, bool hexEncoding,
-            string deliveryServiceId, string deliveryServiceName, 
-            string regionName, OrderRecipientAddress address,
+            string складОтгрузкиId, string notes,
+            string deliveryServiceId, string deliveryServiceName,
+            StinDeliveryPartnerType partnerType, StinDeliveryType deliveryType, double deliveryPrice, double deliverySubsidy,
+            StinPaymentType paymentType, StinPaymentMethod paymentMethod,
+            string regionId, string regionName, OrderRecipientAddress address,
             string shipmentId, string postingNumber, DateTime shipmentDate, List<OrderItem> items, CancellationToken cancellationToken)
         {
             var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(defFirmaId);
@@ -232,18 +235,19 @@ namespace Refresher1C.Service
             var nomQuantums = await _номенклатура.ПолучитьКвант(номенклатураCodes, cancellationToken);
             items.ForEach(x => 
             { 
-                x.ИдентификаторПоставщика = "";
-                x.ИдентификаторСклада = "";
-                x.ИдентификаторСкладаПартнера = "";
+                x.ИдентификаторПоставщика = тип == "YANDEX" ? x.ИдентификаторПоставщика : "";
+                x.ИдентификаторСклада = тип == "YANDEX" ? x.ИдентификаторСклада : "";
+                x.ИдентификаторСкладаПартнера = тип == "YANDEX" ? x.ИдентификаторСкладаПартнера : "";
                 x.НоменклатураId = НоменклатураList.Where(y => y.Code == x.НоменклатураId).Select(z => z.Id).FirstOrDefault();
                 var quantum = (int)nomQuantums.Where(q => q.Key == x.НоменклатураId).Select(q => q.Value).FirstOrDefault();
                 if (quantum == 0)
+                    quantum = 1;
+                if (тип == "YANDEX")
                     quantum = 1;
                 x.Количество = x.Количество * quantum;
                 x.Цена = x.Цена / quantum;
                 x.ЦенаСоСкидкой = x.ЦенаСоСкидкой / quantum;
             });
-            string складОтгрузкиId = Common.SkladEkran;
             DateTime dateTimeTA = _context.GetDateTimeTA();
             bool needToCalcDateTime = dateTimeTA.Month != DateTime.Now.Month;
             var реквизитыПроведенныхДокументов = new List<ОбщиеРеквизиты>();
@@ -251,26 +255,29 @@ namespace Refresher1C.Service
             try
             {
                 string marketplaceName = "";
-                StinDeliveryPartnerType deliveryPartnerType = StinDeliveryPartnerType.NotFound;
                 switch (тип)
                 {
                     case "OZON":
                         marketplaceName = "Ozon FBS";
-                        deliveryPartnerType = StinDeliveryPartnerType.OZON_LOGISTIC;
                         break;
                     case "ALIEXPRESS":
                         marketplaceName = "Aliexpress FBS";
-                        deliveryPartnerType = StinDeliveryPartnerType.ALIEXPRESS_LOGISTIC;
+                        break;
+                    case "YANDEX":
+                        marketplaceName = "Yandex ";
+                        if (partnerType == StinDeliveryPartnerType.SHOP)
+                            marketplaceName += "DBS";
+                        else
+                            marketplaceName += "FBS";
                         break;
                     default:
                         marketplaceName = "Ozon FBS";
-                        deliveryPartnerType = StinDeliveryPartnerType.OZON_LOGISTIC;
                         break;
                 }
                 var new_order = await _order.НовыйOrder(defFirmaId, hexEncoding, authApi,
-                    marketplaceName, postingNumber, StinPaymentType.NotFound, StinPaymentMethod.NotFound, deliveryPartnerType, StinDeliveryType.DELIVERY,
-                    deliveryServiceId, deliveryServiceName, 0, 0, shipmentId, shipmentDate,
-                    "0", regionName, address, "", items);
+                    marketplaceName, postingNumber, paymentType, paymentMethod, partnerType, deliveryType,
+                    deliveryServiceId, deliveryServiceName, deliveryPrice, deliverySubsidy, shipmentId, shipmentDate,
+                    regionId, regionName, address, notes, items);
 
                 var формаПредварительнаяЗаявка = await _предварительнаяЗаявка.НовыйДокумент(
                          needToCalcDateTime ? dateTimeTA.AddMilliseconds(1) : DateTime.Now,

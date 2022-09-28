@@ -14,12 +14,12 @@
 {
     <div class="card border-round" style="background-color: lightgray;">
 @*        
-        <div class="card-header">
+         <div class="card-header">
             <div class="input-group-text" id="AliveBlock">
                 @Html.CheckBox("alive", true, new { @class = "form-check-input ml-0", id = "chkAlive", onchange = "AliveCheck()" }))
                 <span class="form-check-label ml-3" for="chkAlive">Только активные</span>
             </div>
-            <div class="input-group input-group-sm" id="inputGroupPeriod">
+           <div class="input-group input-group-sm" id="inputGroupPeriod">
                 <div class="input-group-prepend">
                     <span class="input-group-text">Период</span>
                 </div>

@@ -192,7 +192,6 @@ namespace YandexClasses
                 authToken,
                 null,
                 cancellationToken);
-            //var result = await YandexExchange(null, string.Format(url, campaignId, pageNumber), HttpMethod.Get, clientId, authToken, null);
             if (result.Item2 != null)
             {
                 try
@@ -212,6 +211,25 @@ namespace YandexClasses
                 catch { }
             }
             return null;
+        }
+        public static async Task<(List<DetailOrder> Orders, bool NextPage)> OrdersList(IHttpService httpService, 
+            string campaignId, 
+            string clientId, 
+            string authToken, 
+            string status,
+            DateTime fromDate,
+            int pageNumber, 
+            CancellationToken cancellationToken)
+        {
+            var url = @"https://api.partner.market.yandex.ru/v2/campaigns/{0}/orders.json?status={1}&fromDate={2}&page={3}";
+            var result = await Exchange<OrderDetailListResponse>(httpService,
+                string.Format(url, campaignId, status, fromDate.ToString("dd-MM-yyyy"), pageNumber),
+                HttpMethod.Get,
+                clientId,
+                authToken,
+                null,
+                cancellationToken);
+            return (Orders: result.Item2?.Orders, NextPage: result.Item2?.Pager?.CurrentPage < result.Item2?.Pager?.PagesCount);
         }
         public static async Task<Tuple<bool, string>> UpdateOfferEntries(IHttpService httpService, string campaignId, string clientId, string authToken, List<OfferMappingEntry> data, CancellationToken cancellationToken)
         {

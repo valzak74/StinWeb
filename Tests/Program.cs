@@ -39,7 +39,6 @@ namespace Tests
             this.next = next;
       }
     }
-
     class Program
     {
         public static int Trap(int[] height)

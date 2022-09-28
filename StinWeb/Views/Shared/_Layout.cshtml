@@ -99,6 +99,10 @@
                                 {
                                     <li><a class="dropdown-item" asp-controller="ДолгиКонтрагентов" asp-action="Index">Долги контрагентов</a></li>
                                 }
+                                @if ((new[] { "Любой", "ИнтернетЗаказы" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
+                                {
+                                    <li><a class="dropdown-item" asp-controller="NomChanges" asp-action="Index">Изменение справочника номенклатуры</a></li>
+                                }
                             </ul>
                         </li>
                         <li class="nav-item dropdown">

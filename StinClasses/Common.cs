@@ -229,10 +229,12 @@ namespace StinClasses
             else
                 return aString != incomingString;
         }
-        public static string ConditionallyAppend(this string Value, string AddString)
+        public static string ConditionallyAppend(this string Value, string AddString, string separator = ", ")
         {
+            if (string.IsNullOrEmpty(AddString))
+                return Value;
             if (!string.IsNullOrWhiteSpace(Value) && Value.Length > 0)
-                return Value + ", " + AddString;
+                return Value + separator + AddString;
             return AddString;
         }
         public static string StringLimit(this string value, int limit)
