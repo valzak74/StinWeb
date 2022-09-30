@@ -760,9 +760,10 @@ namespace Refresher1C.Service
             {
                 var marketplaceIds = await (from marketUsing in _context.Sc14152s
                                             join market in _context.Sc14042s on marketUsing.Sp14147 equals market.Id
+                                            join updPrice in _context.VzUpdatingPrices on marketUsing.Id equals updPrice.MuId
                                             where !marketUsing.Ismark && 
                                                 (marketUsing.Sp14158 == 1) && //Есть в каталоге
-                                                ((marketUsing.Sp14150 == 1) || (marketUsing.Sp14174 < limitDate))
+                                                (updPrice.Flag || (updPrice.Updated < limitDate))
                                                 //&& (market.Code.Trim() == "3530297616")
                                             select new
                                             {
@@ -804,9 +805,10 @@ namespace Refresher1C.Service
                                 join nom in _context.Sc84s on marketUsing.Parentext equals nom.Id
                                 join vzTovar in _context.VzTovars on nom.Id equals vzTovar.Id into _vzTovar
                                 from vzTovar in _vzTovar.DefaultIfEmpty()
+                                join updPrice in _context.VzUpdatingPrices on marketUsing.Id equals updPrice.MuId
                                 where !marketUsing.Ismark &&
                                     (marketUsing.Sp14158 == 1) && //Есть в каталоге
-                                    ((marketUsing.Sp14150 == 1) || (marketUsing.Sp14174 < limitDate)) &&
+                                    (updPrice.Flag || (updPrice.Updated < limitDate)) &&
                                     (marketUsing.Sp14147 == marketplace.Id)
                                     //&& ((vzTovar == null) || (vzTovar.Rozn <= 0))
                                 select new
@@ -1062,14 +1064,14 @@ namespace Refresher1C.Service
                             using var tran = await _context.Database.BeginTransactionAsync();
                             try
                             {
-                                var entities = await _context.Sc14152s.Where(x => uploadIds.Contains(x.Id)).ToListAsync();
-                                foreach (var entity in entities)
-                                {
-                                    entity.Sp14150 = 0;
-                                    entity.Sp14174 = DateTime.Today;
-                                    _context.Update(entity);
-                                    _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
-                                }
+                                _context.VzUpdatingPrices
+                                    .Where(x => uploadIds.Contains(x.MuId))
+                                    .ToList()
+                                    .ForEach(x =>
+                                    {
+                                        x.Flag = false;
+                                        x.Updated = DateTime.Now;
+                                    });
                                 await _context.SaveChangesAsync(stoppingToken);
 
                                 if (_context.Database.CurrentTransaction != null)
@@ -1265,7 +1267,7 @@ namespace Refresher1C.Service
                     .ToDictionaryAsync(k => k.ProductId, v => v.Sku, stoppingToken);
                 skus = productIdToSku.Select(x => x.Value).Distinct().ToList();
             }
-            using var tran = await _context.Database.BeginTransactionAsync();
+            //using var tran = await _context.Database.BeginTransactionAsync();
             try
             {
                 foreach (var sku in skus)
@@ -1294,11 +1296,11 @@ namespace Refresher1C.Service
                                     Sp14147 = marketplaceId,
                                     Sp14148 = 0, //ФиксЦена
                                     Sp14149 = 0, //КоэфПроверки
-                                    Sp14150 = 1, //Флаг - пусть цены обновятся
+                                    Sp14150 = 0, //Флаг - пусть цены обновятся
                                     Sp14158 = 1, //Есть в каталоге
                                     Sp14174 = Common.min1cDate, //UpdatedAt = Min1C !!!
                                     Sp14178 = Common.min1cDate, //StockUpdatedAt
-                                    Sp14179 = 1, //StockUpdated - пусть stock обновится
+                                    Sp14179 = 0, //StockUpdated - пусть stock обновится
                                     Sp14187 = 0, //Quantum = 0
                                     Sp14190 = productId,
                                     Sp14198 = 0, //Комиссия
@@ -1306,12 +1308,25 @@ namespace Refresher1C.Service
                                     Sp14214 = 0, //КоррОстатков
                                     Sp14229 = 0 //VolumeWeight
                                 };
-                                await _context.Sc14152s.AddAsync(entity);
+                                await _context.Sc14152s.AddAsync(entity, stoppingToken);
                                 _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
+                                //await _context.VzUpdatingPrices.AddAsync(new VzUpdatingPrice
+                                //{
+                                //    MuId = entity.Id,
+                                //    Flag = true, //Флаг - пусть цены обновятся
+                                //    Updated = Common.min1cDate, //UpdatedAt = Min1C !!!
+                                //}, stoppingToken);
+                                //if (needStockRefresh)
+                                //    await _context.VzUpdatingStocks.AddAsync(new VzUpdatingStock
+                                //    {
+                                //        MuId = entity.Id,
+                                //        Flag = true, //StockUpdated - пусть stock обновится
+                                //        Updated = Common.min1cDate, //StockUpdatedAt
+                                //    }, stoppingToken);
                             }
                         }
                         else
-                            foreach (var entity in entities.Where(x => (x.Sp14158 != 1) || (x.Sp14190.Trim() != productId))) 
+                            foreach (var entity in entities.Where(x => (x.Sp14158 != 1) || ((productIdToSku.Count > 0) && (x.Sp14190.Trim() != productId)))) 
                             {
                                 entity.Sp14158 = 1;
                                 if (productIdToSku.Count > 0)
@@ -1319,17 +1334,17 @@ namespace Refresher1C.Service
                                 _context.Update(entity);
                                 _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
                             }
-                        await _context.SaveChangesAsync();
+                        await _context.SaveChangesAsync(stoppingToken);
                     }
                 }
 
-                if (_context.Database.CurrentTransaction != null)
-                    tran.Commit();
+                //if (_context.Database.CurrentTransaction != null)
+                //    tran.Commit();
             }
             catch (Exception ex)
             {
-                if (_context.Database.CurrentTransaction != null)
-                    _context.Database.CurrentTransaction.Rollback();
+                //if (_context.Database.CurrentTransaction != null)
+                //    _context.Database.CurrentTransaction.Rollback();
                 _logger.LogError(ex.Message);
             }
         }
@@ -1490,7 +1505,8 @@ namespace Refresher1C.Service
                                                 AuthSecret = market.Sp14195.Trim(),
                                                 Authorization = market.Sp14077.Trim(),
                                                 FeedId = market.Sp14154.Trim(),
-                                                HexEncoding = market.Sp14153 == 1
+                                                HexEncoding = market.Sp14153 == 1,
+                                                //NeedStockRefresh = market.Sp14177 == 1
                                             })
                                             .ToListAsync();
                 foreach (var marketplace in marketplaceIds)
@@ -1589,12 +1605,13 @@ namespace Refresher1C.Service
         {
             var data = await ((from markUse in _context.Sc14152s
                               join nom in _context.Sc84s on markUse.Parentext equals nom.Id
+                              join updStock in _context.VzUpdatingStocks on markUse.Id equals updStock.MuId
                               where (markUse.Sp14147 == marketplaceId) &&
                                 (markUse.Sp14158 == 1) && //Есть в каталоге 
                                 //(markUse.Sp14179 == -3) && (markUse.Sp14178 < DateTime.Now.AddSeconds(-100))
-                                (((regular ? (markUse.Sp14179 == 1) : (markUse.Sp14179 == -2)) && 
-                                  (markUse.Sp14178 < DateTime.Now.AddMinutes(-2))) || 
-                                 (markUse.Sp14178.Date != DateTime.Today))
+                                (((regular ? updStock.Flag : updStock.IsError) && 
+                                  (updStock.Updated < DateTime.Now.AddMinutes(-2))) || 
+                                 (updStock.Updated.Date != DateTime.Today))
                               select new
                               {
                                   Id = markUse.Id,
@@ -1604,8 +1621,8 @@ namespace Refresher1C.Service
                                   Квант = nom.Sp14188,
                                   DeltaStock = stockOriginal ? 0 : nom.Sp14215, //markUse.Sp14214,
                                   WarehouseId = string.IsNullOrWhiteSpace(markUse.Sp14190) ? skladCode : markUse.Sp14190,
-                                  UpdatedAt = markUse.Sp14178,
-                                  UpdatedFlag = markUse.Sp14179 == 1
+                                  UpdatedAt = updStock.Updated,
+                                  UpdatedFlag = updStock.Flag
                               })
                 .OrderByDescending(x => x.UpdatedFlag)
                 .ThenBy(x => x.UpdatedAt)
@@ -1636,14 +1653,25 @@ namespace Refresher1C.Service
                     using var tran = await _context.Database.BeginTransactionAsync();
                     try
                     {
-                        _context.Sc14152s
-                            .Where(x => listIds.Contains(x.Id))
+                        _context.VzUpdatingStocks
+                            .Where(x => listIds.Contains(x.MuId))
                             .ToList()
-                            .ForEach(x => { x.Sp14179 = -1; });
-                        _context.Sc14152s
-                            .Where(x => notReadyIds.Contains(x.Id))
+                            .ForEach(x => 
+                            {
+                                x.Flag = false;
+                                x.Taken = true;
+                                x.IsError = false;
+                            });
+                        _context.VzUpdatingStocks
+                            .Where(x => notReadyIds.Contains(x.MuId))
                             .ToList()
-                            .ForEach(x => { x.Sp14178 = DateTime.Now; });
+                            .ForEach(x => 
+                            {
+                                x.Flag = false;
+                                x.Taken = false;
+                                x.IsError = true;
+                                x.Updated = DateTime.Now; 
+                            });
                         await _context.SaveChangesAsync(stoppingToken);
                         if (_context.Database.CurrentTransaction != null)
                             tran.Commit();
@@ -1736,42 +1764,42 @@ namespace Refresher1C.Service
                             {
                                 if (uploadIds.Count > 0)
                                 {
-                                    var notYetUpdated = await _context.Sc14152s
-                                        .Where(x => uploadIds.Contains(x.Id) && (x.Sp14179 == -1))
-                                        .ToListAsync(stoppingToken);
-                                    foreach (var entity in notYetUpdated)
-                                    {
-                                        entity.Sp14179 = 0;
-                                        entity.Sp14178 = DateTime.Now;  //DateTime.Today;
-                                        _context.Update(entity);
-                                        _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
-                                    }
+                                    _context.VzUpdatingStocks
+                                        .Where(x => uploadIds.Contains(x.MuId) && x.Taken)
+                                        .ToList()
+                                        .ForEach(x =>
+                                        {
+                                            x.Flag = false;
+                                            x.Taken = false;
+                                            x.IsError = false;
+                                            x.Updated = DateTime.Now;
+                                        });
                                 }
                                 if (tooManyIds.Count > 0)
                                 {
-                                    var notYetUpdated = await _context.Sc14152s
-                                        .Where(x => tooManyIds.Contains(x.Id) && (x.Sp14179 == -1))
-                                        .ToListAsync(stoppingToken);
-                                    foreach (var entity in notYetUpdated)
-                                    {
-                                        entity.Sp14179 = 1;
-                                        entity.Sp14178 = DateTime.Now;
-                                        _context.Update(entity);
-                                        _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
-                                    }
-                                }
+                                    _context.VzUpdatingStocks
+                                        .Where(x => tooManyIds.Contains(x.MuId) && x.Taken)
+                                        .ToList()
+                                        .ForEach(x =>
+                                        {
+                                            x.Flag = true;
+                                            x.Taken = false;
+                                            x.IsError = false;
+                                            x.Updated = DateTime.Now;
+                                        });
+                               }
                                 if (errorIds.Count > 0)
                                 {
-                                    var notYetUpdatedError = await _context.Sc14152s
-                                        .Where(x => errorIds.Contains(x.Id) && (x.Sp14179 == -1))
-                                        .ToListAsync(stoppingToken);
-                                    foreach (var entity in notYetUpdatedError)
-                                    {
-                                        entity.Sp14179 = -2;
-                                        entity.Sp14178 = DateTime.Now;
-                                        _context.Update(entity);
-                                        _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
-                                    }
+                                    _context.VzUpdatingStocks
+                                        .Where(x => errorIds.Contains(x.MuId) && x.Taken)
+                                        .ToList()
+                                        .ForEach(x =>
+                                        {
+                                            x.Flag = false;
+                                            x.Taken = false;
+                                            x.IsError = true;
+                                            x.Updated = DateTime.Now;
+                                        });
                                 }
                                 await _context.SaveChangesAsync(stoppingToken);
                                 if (_context.Database.CurrentTransaction != null)
@@ -1799,10 +1827,12 @@ namespace Refresher1C.Service
         {
             var data = await ((from markUse in _context.Sc14152s
                                join nom in _context.Sc84s on markUse.Parentext equals nom.Id
+                               join updStock in _context.VzUpdatingStocks on markUse.Id equals updStock.MuId
                                where (markUse.Sp14147 == marketplaceId) &&
                                  (markUse.Sp14158 == 1) && //Есть в каталоге 
-                                 ((regular ? (markUse.Sp14179 == 1) : (markUse.Sp14179 == -2)) || 
-                                 (markUse.Sp14178 != DateTime.Today))
+                                 (((regular ? updStock.Flag : updStock.IsError) &&
+                                 (updStock.Updated < DateTime.Now.AddMinutes(-2))) || 
+                                 (updStock.Updated.Date != DateTime.Today))
                                select new
                                {
                                    Id = markUse.Id,
@@ -1812,8 +1842,8 @@ namespace Refresher1C.Service
                                    Sku = hexEncoding ? nom.Code.EncodeHexString() : nom.Code,
                                    Квант = nom.Sp14188,
                                    DeltaStock = stockOriginal ? 0 : nom.Sp14215, //markUse.Sp14214,
-                                   UpdatedAt = markUse.Sp14178,
-                                   UpdatedFlag = markUse.Sp14179 == 1
+                                   UpdatedAt = updStock.Updated,
+                                   UpdatedFlag = updStock.Flag
                                })
                 .OrderByDescending(x => x.UpdatedFlag)
                 .ThenBy(x => x.UpdatedAt)
@@ -1830,14 +1860,15 @@ namespace Refresher1C.Service
                     using var tran = await _context.Database.BeginTransactionAsync();
                     try
                     {
-                        _context.Sc14152s
-                            .Where(x => data.Select(d => d.Id).Contains(x.Id))
+                        _context.VzUpdatingStocks
+                            .Where(x => data.Select(d => d.Id).Contains(x.MuId))
                             .ToList()
-                            .ForEach(x => { x.Sp14179 = -1; });
-                        //_context.Sc14152s
-                        //    .Where(x => notReadyIds.Contains(x.Id))
-                        //    .ToList()
-                        //    .ForEach(x => { x.Sp14178 = DateTime.Today; });
+                            .ForEach(x =>
+                            {
+                                x.Flag = false;
+                                x.Taken = true;
+                                x.IsError = false;
+                            });
                         await _context.SaveChangesAsync(stoppingToken);
                         if (_context.Database.CurrentTransaction != null)
                             tran.Commit();
@@ -1945,29 +1976,29 @@ namespace Refresher1C.Service
                             {
                                 if (uploadIds.Count > 0)
                                 {
-                                    var notYetUpdated = await _context.Sc14152s
-                                        .Where(x => uploadIds.Contains(x.Id) && (x.Sp14179 == -1))
-                                        .ToListAsync();
-                                    foreach (var entity in notYetUpdated)
-                                    {
-                                        entity.Sp14179 = 0;
-                                        entity.Sp14178 = DateTime.Today;
-                                        _context.Update(entity);
-                                        _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
-                                    }
+                                    _context.VzUpdatingStocks
+                                        .Where(x => uploadIds.Contains(x.MuId) && x.Taken)
+                                        .ToList()
+                                        .ForEach(x =>
+                                        {
+                                            x.Flag = false;
+                                            x.Taken = false;
+                                            x.IsError = false;
+                                            x.Updated = DateTime.Now;
+                                        });
                                 }
                                 if (errorIds.Count > 0)
                                 {
-                                    var notYetUpdatedError = await _context.Sc14152s
-                                        .Where(x => errorIds.Contains(x.Id) && (x.Sp14179 == -1))
-                                        .ToListAsync();
-                                    foreach (var entity in notYetUpdatedError)
-                                    {
-                                        entity.Sp14179 = -2;
-                                        entity.Sp14178 = DateTime.Today;
-                                        _context.Update(entity);
-                                        _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
-                                    }
+                                    _context.VzUpdatingStocks
+                                        .Where(x => errorIds.Contains(x.MuId) && x.Taken)
+                                        .ToList()
+                                        .ForEach(x =>
+                                        {
+                                            x.Flag = false;
+                                            x.Taken = false;
+                                            x.IsError = true;
+                                            x.Updated = DateTime.Now;
+                                        });
                                 }
                                 await _context.SaveChangesAsync(stoppingToken);
                                 if (_context.Database.CurrentTransaction != null)

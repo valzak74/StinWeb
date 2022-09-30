@@ -648,7 +648,7 @@ namespace StinWeb.Controllers.Обработки
                 {
                     needUpdate = true;
                     entity.Sp14148 = value;
-                    entity.Sp14150 = 1; //чтобы выгрузилась
+                    //entity.Sp14150 = 1; //чтобы выгрузилась
                     //остатки дополнительно не надо выгружать при смене цены
                     //entity.Sp14179 = 1; 
                 }
@@ -656,7 +656,7 @@ namespace StinWeb.Controllers.Обработки
                 {
                     needUpdate = true;
                     entity.Sp14213 = deltaPrice;
-                    entity.Sp14150 = 1;
+                    //entity.Sp14150 = 1;
                 }
                 //if ((deltaStock > decimal.MinValue) && (deltaStock != entity.Sp14214))
                 //{
@@ -668,6 +668,19 @@ namespace StinWeb.Controllers.Обработки
                 {
                     _context.Update(entity);
                     _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
+                    var entityUpdatePrice = await _context.VzUpdatingPrices.Where(x => x.MuId == id).FirstOrDefaultAsync();
+                    if (entityUpdatePrice != null)
+                    {
+                        entityUpdatePrice.Flag = true;
+                        _context.Update(entityUpdatePrice);
+                    }
+                    else
+                        _context.Add(new VzUpdatingPrice 
+                        { 
+                            MuId = id,
+                            Flag = true,
+                            Updated = Common.min1cDate
+                        });
                     await _context.SaveChangesAsync();
                 }
             }

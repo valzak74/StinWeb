@@ -482,6 +482,8 @@ namespace StinClasses.Models
         public virtual DbSet<VzTovar> VzTovars { get; set; }
         public virtual DbSet<VzTovarImage> VzTovarImages { get; set; }
         public virtual DbSet<VzTree> VzTrees { get; set; }
+        public virtual DbSet<VzUpdatingPrice> VzUpdatingPrices { get; set; }
+        public virtual DbSet<VzUpdatingStock> VzUpdatingStocks { get; set; }
         public virtual DbSet<VzZayavki> VzZayavkis { get; set; }
         public virtual DbSet<_1sconnect> _1sconnects { get; set; }
         public virtual DbSet<_1sconst> _1sconsts { get; set; }
@@ -497,7 +499,6 @@ namespace StinClasses.Models
         public virtual DbSet<_1suser> _1susers { get; set; }
         public IQueryable<VzTree> fn_GetTreeById(string id, bool findRoot) => FromExpression(() => fn_GetTreeById(id, findRoot));
 
-
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -508,6 +509,7 @@ namespace StinClasses.Models
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+
             modelBuilder.HasDbFunction(() => fn_GetTreeById(default, default));
             modelBuilder.Entity<Dh10054>(entity =>
             {
@@ -34759,6 +34761,54 @@ namespace StinClasses.Models
                     .IsUnicode(false)
                     .HasColumnName("parentid")
                     .IsFixedLength();
+            });
+
+            modelBuilder.Entity<VzUpdatingPrice>(entity =>
+            {
+                entity.HasKey(e => e.RowId);
+
+                entity.ToTable("vzUpdatingPrice");
+
+                entity.Property(e => e.RowId).HasColumnName("row_id");
+
+                entity.Property(e => e.Flag).HasColumnName("flag");
+
+                entity.Property(e => e.MuId)
+                    .IsRequired()
+                    .HasMaxLength(9)
+                    .IsUnicode(false)
+                    .HasColumnName("mu_id")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Updated)
+                    .HasColumnType("datetime")
+                    .HasColumnName("updated");
+            });
+
+            modelBuilder.Entity<VzUpdatingStock>(entity =>
+            {
+                entity.HasKey(e => e.RowId);
+
+                entity.ToTable("vzUpdatingStock");
+
+                entity.Property(e => e.RowId).HasColumnName("row_id");
+
+                entity.Property(e => e.Flag).HasColumnName("flag");
+
+                entity.Property(e => e.IsError).HasColumnName("is_error");
+
+                entity.Property(e => e.MuId)
+                    .IsRequired()
+                    .HasMaxLength(9)
+                    .IsUnicode(false)
+                    .HasColumnName("mu_id")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Taken).HasColumnName("taken");
+
+                entity.Property(e => e.Updated)
+                    .HasColumnType("datetime")
+                    .HasColumnName("updated");
             });
 
             modelBuilder.Entity<VzZayavki>(entity =>
