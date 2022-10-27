@@ -456,7 +456,7 @@ namespace OzonClasses
             if ((result.Item1 != null) && (result.Item1.Result != null) && (result.Item1.Result.Items != null))
             {
                 var items = result.Item1.Result.Items
-                    .Where(x => (x.Status == null) || (x.Status.Is_failed) || ((x.Status.Item_errors != null) && (x.Status.Item_errors.Count > 0)))
+                    .Where(x => (x.Status == null) || (x.Status.Is_failed) || ((x.Status.Item_errors != null) && (x.Status.Item_errors.Count > 0) && (x.Status.Item_errors.Any(e => e.Level != "warning"))))
                     .Select(x => x.Offer_id == null ? "" : x.Offer_id)
                     .ToList();
                 return new(items,null);

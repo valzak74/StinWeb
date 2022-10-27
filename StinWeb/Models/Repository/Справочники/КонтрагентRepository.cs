@@ -232,6 +232,7 @@ namespace StinWeb.Models.Repository.Справочники
                             Sp674 = Адрес ?? ""
                         };
                         await _context.Sc503s.AddAsync(ФизЛицо);
+                        await _context.РегистрацияИзмененийРаспределеннойИБAsync(503, ФизЛицо.Id);
                         Контрагент.Sp521 = Common.Encode36(503).PadLeft(4) + ФизЛицо.Id;
                     }
                     else
@@ -265,6 +266,7 @@ namespace StinWeb.Models.Repository.Справочники
                             Sp499 = Адрес ?? ""
                         };
                         await _context.Sc493s.AddAsync(ЮрЛицо);
+                        await _context.РегистрацияИзмененийРаспределеннойИБAsync(493, ЮрЛицо.Id);
                         Контрагент.Sp521 = Common.Encode36(493).PadLeft(4) + ЮрЛицо.Id;
                     }
 
@@ -316,6 +318,7 @@ namespace StinWeb.Models.Repository.Справочники
                         Sp13487 = 1
                     };
                     await _context.Sc204s.AddAsync(Договор);
+                    await _context.РегистрацияИзмененийРаспределеннойИБAsync(204, Договор.Id);
                     Контрагент.Sp667 = Договор.Id;
 
                     await _context.Sc172s.AddAsync(Контрагент);
@@ -324,6 +327,7 @@ namespace StinWeb.Models.Repository.Справочники
                     await НовыйEmailAsync(Контрагент.Id, Email);
 
                     await _context.SaveChangesAsync();
+                    await _context.РегистрацияИзмененийРаспределеннойИБAsync(172, Контрагент.Id);
                     tran.Commit();
                     return Контрагент.Map();
                 }

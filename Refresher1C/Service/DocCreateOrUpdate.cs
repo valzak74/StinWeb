@@ -321,9 +321,10 @@ namespace Refresher1C.Service
                             {
                                 foreach (var склId in ПереченьНаличия.Where(x => !notNativeKeys.Contains(x.Item2)).GroupBy(x => x.Item2).Select(gr => gr.Key))
                                 {
-                                    var rowData = ПереченьНаличия.Where(x => x.Item1 == firmaId && x.Item2 == склId).Select(x => x.Item3).FirstOrDefault();
-                                    if (rowData.Count > 0)
+                                    var rowDataValue = ПереченьНаличия.Where(x => x.Item1 == firmaId && x.Item2 == склId).Select(x => x.Item3);
+                                    if (rowDataValue.Count() > 0)
                                     {
+                                        var rowData = rowDataValue.FirstOrDefault();
                                         if (необходимоПеремещать && (формаПредварительнаяЗаявка.Склад.Id != склId))
                                         {
                                             var формаЗаявкаОдобренная = await _заявкаПокупателя.ВводНаОснованииAsync(формаПредварительнаяЗаявка, needToCalcDateTime ? dateTimeTA.AddMilliseconds(2) : DateTime.Now, списокУслуг.Count > 0, "Заявка (одобренная)", формаПредварительнаяЗаявка.Общие.Фирма.Id, формаПредварительнаяЗаявка.Склад.Id, rowData);
