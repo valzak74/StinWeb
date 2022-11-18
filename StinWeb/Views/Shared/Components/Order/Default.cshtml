@@ -163,7 +163,7 @@
                     {
                         <button type="button" id="btnProcessSell" class="btn btn-primary" onclick="btnProcessSellClick()">ПРОБИТЬ ЧЕК и сформировать отгрузочные документы</button>
                     }
-                    else if (Model.Order.Тип == "ЯНДЕКС")
+                    else if ((Model.Order.Тип == "ЯНДЕКС") || (Model.Order.Тип == "SBER"))
                     {
                         <button type="button" id="btnProcess" class="btn btn-primary" onclick="btnProcessClick()">Сформировать отгрузочные документы</button>
                     }

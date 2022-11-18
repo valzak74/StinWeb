@@ -22,11 +22,22 @@ namespace StinClasses.Справочники
         public string TokenKey { get; set; }
         public string UrlApi { get; set; }
         public string Authorization { get; set; }
-        public bool HexEncoding { get; set; }
+        public EncodeVersion Encoding { get; set; }
         public string FeedId { get; set; }
         public decimal КоэфПроверкиЦен { get; set; }
         public string КонтрагентId { get; set; }
         public string ДоговорId { get; set; }
+        private string _складId;
+        public string СкладId { 
+            get => _складId; 
+            set 
+            {
+                if (!string.IsNullOrWhiteSpace(value) && (value != Common.ПустоеЗначение))
+                    _складId = value;
+                else
+                    _складId = "";
+            } 
+        }
         public bool NeedStockUpdate { get; set; }
     }
     public interface IMarketplace : IDisposable
@@ -80,11 +91,12 @@ namespace StinClasses.Справочники
                     TokenKey = entity.Sp14054.Trim(),
                     UrlApi = entity.Sp14076.Trim(),
                     Authorization = entity.Sp14077.Trim(),
-                    HexEncoding = entity.Sp14153 == 1,
+                    Encoding = (EncodeVersion)entity.Sp14153,
                     FeedId = entity.Sp14154.Trim(),
                     КоэфПроверкиЦен = entity.Sp14165,
                     КонтрагентId = entity.Sp14175,
                     ДоговорId = entity.Sp14176,
+                    СкладId = entity.Sp14241,
                     NeedStockUpdate = entity.Sp14177 == 1,
                 })
                 .FirstOrDefaultAsync();
@@ -106,11 +118,12 @@ namespace StinClasses.Справочники
                     TokenKey = entity.Sp14054.Trim(),
                     UrlApi = entity.Sp14076.Trim(),
                     Authorization = entity.Sp14077.Trim(),
-                    HexEncoding = entity.Sp14153 == 1,
+                    Encoding = (EncodeVersion)entity.Sp14153,
                     FeedId = entity.Sp14154.Trim(),
                     КоэфПроверкиЦен = entity.Sp14165,
                     КонтрагентId = entity.Sp14175,
                     ДоговорId = entity.Sp14176,
+                    СкладId = entity.Sp14241,
                     NeedStockUpdate = entity.Sp14177 == 1,
                 })
                 .FirstOrDefaultAsync();
@@ -132,11 +145,12 @@ namespace StinClasses.Справочники
                     TokenKey = entity.Sp14054.Trim(),
                     UrlApi = entity.Sp14076.Trim(),
                     Authorization = entity.Sp14077.Trim(),
-                    HexEncoding = entity.Sp14153 == 1,
+                    Encoding = (EncodeVersion)entity.Sp14153,
                     FeedId = entity.Sp14154.Trim(),
                     КоэфПроверкиЦен = entity.Sp14165,
                     КонтрагентId = entity.Sp14175,
                     ДоговорId = entity.Sp14176,
+                    СкладId = entity.Sp14241,
                     NeedStockUpdate = entity.Sp14177 == 1,
                 })
                 .FirstOrDefaultAsync();

@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+https://go.microsoft.com/fwlink/?LinkID=208121.
+-->
+<Project>
+  <PropertyGroup>
+    <_PublishTargetUrl>\\server2012\Marketip</_PublishTargetUrl>
+    <History>True|2022-11-14T11:11:08.8486328Z;True|2022-11-09T10:47:30.5488044+04:00;True|2022-11-02T15:59:41.7159436+04:00;True|2022-11-02T13:59:34.3328160+04:00;</History>
+    <LastFailureDetails />
+  </PropertyGroup>
+</Project>

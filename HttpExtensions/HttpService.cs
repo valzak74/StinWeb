@@ -76,6 +76,7 @@ namespace HttpExtensions
                 if (content != null)
                 {
                     var contentString = content.SerializeObject();
+                    //Console.WriteLine(contentString);
                     if (!string.IsNullOrEmpty(contentString))
                     {
                         request.Content = new StringContent(contentString, Encoding.UTF8, "application/json");
@@ -88,6 +89,7 @@ namespace HttpExtensions
                     {
                         var bytes = await response.Content.ReadAsByteArrayAsync();
                         //string r = await response.Content.ReadAsStringAsync();
+                        //Console.WriteLine(r);
                         //System.IO.File.WriteAllText(@"f:\\tmp\15\r.txt", r);
                         if (typeof(T) == typeof(byte[]))
                             return new Tuple<T, E>((T)(object)bytes, default);

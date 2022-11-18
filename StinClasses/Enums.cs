@@ -3,6 +3,12 @@ using Newtonsoft.Json;
 
 namespace StinClasses
 {
+    public enum EncodeVersion
+    {
+        None = 0,
+        Hex = 1,
+        Dec = 2,
+    }
     [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]
     public enum StinDeliveryType
     {
@@ -19,6 +25,7 @@ namespace StinClasses
         SHOP = 1,
         OZON_LOGISTIC = 2,
         ALIEXPRESS_LOGISTIC = 3,
+        SBER_MEGA_MARKET = 4,
         NotFound
     }
     [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]

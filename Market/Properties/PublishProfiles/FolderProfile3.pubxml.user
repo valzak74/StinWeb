@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+https://go.microsoft.com/fwlink/?LinkID=208121.
+-->
+<Project>
+  <PropertyGroup>
+    <_PublishTargetUrl>\\server8\Marketplus</_PublishTargetUrl>
+    <History>True|2022-11-02T10:11:31.4618816Z;</History>
+    <LastFailureDetails />
+  </PropertyGroup>
+</Project>

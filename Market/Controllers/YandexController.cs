@@ -9,7 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using StinClasses;
 using YandexClasses;
-using StinClasses.Справочники;
 
 namespace Market.Controllers
 {
@@ -22,37 +21,41 @@ namespace Market.Controllers
         private IConfiguration _configuration;
         private string _defFirma;
         private string _defFirmaId;
-        private string _authApi;
         public YandexController(IConfiguration configuration, IServiceScopeFactory serviceScopeFactory)
         {
             _serviceScopeFactory = serviceScopeFactory;
             _configuration = configuration;
             _defFirma = _configuration["Settings:Firma"];
             _defFirmaId = _configuration["Settings:" + _defFirma + ":FirmaId"];
-            _authApi = _configuration["Settings:" + _defFirma + ":YandexFBS"];
         }
         [HttpPost("cart")]
-        public async Task<ActionResult<ResponseCartFBS>> Cart([FromBody] RequestedCart requestedCart, CancellationToken cancellationToken)
+        public async Task<ActionResult<ResponseCartFBS>> Cart([FromHeader] HeadersParameters headers, [FromBody] RequestedCart requestedCart, CancellationToken cancellationToken)
         {
             var responseCart = new ResponseCartFBS();
             responseCart.Cart = new CartResponseFBSEntry();
 
             using IBridge1C bridge = _serviceScopeFactory.CreateScope()
                 .ServiceProvider.GetService<IBridge1C>();
-            List<string> списокСкладов = await bridge.ПолучитьСкладIdОстатковMarketplace(); 
-            
-            var market = await bridge.ПолучитьМаркет(_authApi, _defFirmaId);
 
-            var номенклатураCodes = requestedCart.Cart.Items.Select(x => market.HexEncoding ? x.OfferId.DecodeHexString() : x.OfferId).ToList();
+            var market = await bridge.ПолучитьМаркет(headers.Authorization, _defFirmaId);
+
+            List<string> списокСкладов = null;
+            if (!string.IsNullOrEmpty(market.СкладId))
+                списокСкладов = new List<string> { market.СкладId };
+            else
+                списокСкладов = await bridge.ПолучитьСкладIdОстатковMarketplace();
+
+            var номенклатураCodes = requestedCart.Cart.Items.Select(x => x.OfferId.Decode(market.Encoding))
+                .Where(x => !string.IsNullOrEmpty(x)).ToList();
             var НоменклатураList = await bridge.ПолучитьСвободныеОстатки(номенклатураCodes, списокСкладов);
             
-            var lockedNomIds = await bridge.ПолучитьLockedНоменклатураIds(_authApi, номенклатураCodes);
+            var lockedNomIds = await bridge.ПолучитьLockedНоменклатураIds(headers.Authorization, номенклатураCodes);
             var nomQuantums = await bridge.ПолучитьКвант(номенклатураCodes, cancellationToken);
             var nomDeltaStock = await bridge.ПолучитьDeltaStock(market.Id, номенклатураCodes, cancellationToken);
 
             foreach (var requestedItem in requestedCart.Cart.Items)
             {
-                var номенклатура = НоменклатураList.Where(x => x.Code == (market.HexEncoding ? requestedItem.OfferId.DecodeHexString() : requestedItem.OfferId)).FirstOrDefault();
+                var номенклатура = НоменклатураList.Where(x => x.Code == requestedItem.OfferId.Decode(market.Encoding)).FirstOrDefault();
                 if (номенклатура != null)
                 {
                     int МожноОтпустить = 0;
@@ -87,31 +90,48 @@ namespace Market.Controllers
                         Delivery = МожноОтпустить > 0
                     });
                 }
+                else
+                    responseCart.Cart.Items.Add(new ResponseItemFBS
+                    {
+                        FeedId = requestedItem.FeedId,
+                        OfferId = requestedItem.OfferId,
+                        Count = 0,
+                        Delivery = false
+                    });
             }
             return Ok(responseCart);
         }
         [HttpPost("stocks")]
-        public async Task<ActionResult<ResponseStocks>> Stocks([FromBody] RequestStocks requestedStock, CancellationToken cancellationToken)
+        public async Task<ActionResult<ResponseStocks>> Stocks([FromHeader] HeadersParameters headers, [FromBody] RequestStocks requestedStock, CancellationToken cancellationToken)
         {
             var responseStock = new ResponseStocks();
 
             using IBridge1C bridge = _serviceScopeFactory.CreateScope()
                 .ServiceProvider.GetService<IBridge1C>();
 
-            List<string> списокСкладов = await bridge.ПолучитьСкладIdОстатковMarketplace();
-            
-            var market = await bridge.ПолучитьМаркет(_authApi, _defFirmaId);
-            var номенклатураCodes = market.HexEncoding ? requestedStock.Skus.Select(x => x.DecodeHexString()).ToList() : requestedStock.Skus;
+            var market = await bridge.ПолучитьМаркет(headers.Authorization, _defFirmaId);
+            List<string> списокСкладов = null;
+            if (!string.IsNullOrEmpty(market.СкладId))
+                списокСкладов = new List<string> { market.СкладId };
+            else
+                списокСкладов = await bridge.ПолучитьСкладIdОстатковMarketplace();
+
+            var номенклатураCodes = requestedStock.Skus.Select(x => x.Decode(market.Encoding))
+                .Where(x => !string.IsNullOrEmpty(x))
+                .ToList();
+                //market.HexEncoding ? requestedStock.Skus.Select(x => x.TryDecodeHexString()).Where(x => !string.IsNullOrEmpty(x)).ToList() : requestedStock.Skus;
             var НоменклатураList = await bridge.ПолучитьСвободныеОстатки(номенклатураCodes, списокСкладов);
 
-            var lockedNomIds = await bridge.ПолучитьLockedНоменклатураIds(_authApi, номенклатураCodes);
+            var lockedNomIds = await bridge.ПолучитьLockedНоменклатураIds(headers.Authorization, номенклатураCodes);
             var nomQuantums = await bridge.ПолучитьКвант(номенклатураCodes, cancellationToken);
             var nomDeltaStock = await bridge.ПолучитьDeltaStock(market.Id, номенклатураCodes, cancellationToken);
 
             foreach (var requestedSku in requestedStock.Skus)
             {
                 int count = 0;
-                var номенклатура = НоменклатураList.Where(x => x.Code == (market.HexEncoding ? requestedSku.DecodeHexString() : requestedSku)).FirstOrDefault();
+                var номенклатура = НоменклатураList.Where(x => x.Code == requestedSku.Decode(market.Encoding))
+                    .FirstOrDefault();
+                //(market.HexEncoding ? requestedSku.TryDecodeHexString() : requestedSku)).FirstOrDefault();
                 if ((номенклатура != null) && !lockedNomIds.Any(x => x == номенклатура.Id))
                 {
                     var quantum = (int)nomQuantums.Where(x => x.Key == номенклатура.Id).Select(x => x.Value).FirstOrDefault();
@@ -148,7 +168,7 @@ namespace Market.Controllers
             return Ok(responseStock);
         }
         [HttpPost("order/accept")]
-        public async Task<ActionResult<ResponseOrder>> OrderAccept([FromBody] RequestedOrder requestedOrder, CancellationToken cancellationToken)
+        public async Task<ActionResult<ResponseOrder>> OrderAccept([FromHeader] HeadersParameters headers, [FromBody] RequestedOrder requestedOrder, CancellationToken cancellationToken)
         {
             var responseOrder = new ResponseOrder();
             responseOrder.Order = new OrderResponseEntry();
@@ -159,7 +179,7 @@ namespace Market.Controllers
             {
                 using IBridge1C bridge = _serviceScopeFactory.CreateScope()
                     .ServiceProvider.GetService<IBridge1C>();
-                var orderResult = await bridge.NewOrder(true, _authApi, requestedOrder.Order);
+                var orderResult = await bridge.NewOrder(true, headers.Authorization, requestedOrder.Order);
                 responseOrder.Order.Accepted = !string.IsNullOrEmpty(orderResult.Item1);
                 if (responseOrder.Order.Accepted)
                 {
@@ -179,11 +199,11 @@ namespace Market.Controllers
             return Ok(responseOrder);
         }
         [HttpPost("order/status")]
-        public async Task<ActionResult> OrderChangeStatus([FromBody] RequestedOrder requestedOrder, CancellationToken cancellationToken)
+        public async Task<ActionResult> OrderChangeStatus([FromHeader] HeadersParameters headers, [FromBody] RequestedOrder requestedOrder, CancellationToken cancellationToken)
         {
             using IBridge1C bridge = _serviceScopeFactory.CreateScope()
                 .ServiceProvider.GetService<IBridge1C>();
-            await bridge.ChangeStatus(null, _authApi, requestedOrder.Order.Id, requestedOrder.Order.Status, requestedOrder.Order.SubStatus);
+            await bridge.ChangeStatus(null, headers.Authorization, requestedOrder.Order.Id, requestedOrder.Order.Status, requestedOrder.Order.SubStatus);
             return Ok();
         }
         [HttpPost("order/int_items")]

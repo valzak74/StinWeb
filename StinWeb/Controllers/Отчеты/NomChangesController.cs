@@ -162,7 +162,6 @@ namespace StinWeb.Controllers.Отчеты
                 {
                     NomId = gr.Key.NomId,
                     Sku = gr.Key.Sku,
-                    SkuCoded = gr.Key.Sku.EncodeHexString(),
                     Description = gr.Key.OldDescription,
                     Info = FormInfoString(new[] 
                     { 
@@ -237,7 +236,8 @@ namespace StinWeb.Controllers.Отчеты
     {
         public string NomId { get; set; }
         public string Sku { get; set; }
-        public string SkuCoded { get; set; }
+        public string SkuCoded { get { return this.Sku.EncodeHexString(); } }
+        public string SkuCoded2 { get { return this.Sku.EncodeDecString(); } }
         public string Vendor { get; set; }
         public string Description { get; set; }
         public string Brend { get; set; }

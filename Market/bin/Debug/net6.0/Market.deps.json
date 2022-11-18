@@ -1065,6 +1065,7 @@
       },
       "YandexClasses/1.0.0": {
         "dependencies": {
+          "HttpExtensions": "1.0.0",
           "JsonExtensions": "1.0.0",
           "Newtonsoft.Json": "13.0.1"
         },

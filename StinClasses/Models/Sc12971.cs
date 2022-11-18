@@ -10,6 +10,7 @@ namespace StinClasses.Models
         public string Code { get; set; }
         public bool Ismark { get; set; }
         public int Verstamp { get; set; }
+        public string Sp14234 { get; set; }
         public string Sp12967 { get; set; }
         public string Sp12968 { get; set; }
         public decimal Sp12969 { get; set; }

@@ -8,6 +8,7 @@ using System.Text;
 using Top.Api;
 using Top.Api.Request;
 using Top.Api.Response;
+using StinClasses;
 //using Top.Api;
 //using Top.Api.Request;
 //using Top.Api.Response;
@@ -86,6 +87,12 @@ namespace HelloWorld
         }
         static async Task Main(string[] args)
         {
+            string code = "D0004567893";
+            string decCode = code.EncodeDecString();
+            string decoded = decCode.TryDecodeDecString();
+            Console.WriteLine(code);
+            Console.WriteLine(decCode);
+            Console.WriteLine(decoded);
             int i = 10;
             var arr = new[] { 10, 15, 20 };
             var query = arr.Where(x => x == i).Where(x => x <= 20);

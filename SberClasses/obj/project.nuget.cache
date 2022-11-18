@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "wRsgyYiSCbaIZwJq5A0Z2diDlZBCzef/hfjTt1mjOgFnJE3vYHqudO8t2S9V4Bp5g54GwrgJSgYGqEDe0qIFhQ==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\SberClasses\\SberClasses.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Валентин\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\6.0.1\\microsoft.extensions.logging.abstractions.6.0.1.nupkg.sha512",
+    "C:\\Users\\Валентин\\.nuget\\packages\\newtonsoft.json\\13.0.1\\newtonsoft.json.13.0.1.nupkg.sha512"
+  ],
+  "logs": []
+}

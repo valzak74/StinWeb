@@ -163,6 +163,14 @@ namespace StinClasses.Справочники
                     result.ЮридическийАдрес = ДанныеЮрЛица.Sp666.Trim();
                     result.ФактическийАдрес = ДанныеЮрЛица.Sp499.Trim();
                 }
+                else if (ВидЮрЛица == "3N")
+                {
+                    //собственное юр лицо
+                    var ДанныеЮрЛица = await _context.Sc131s.FirstOrDefaultAsync(x => x.Id == ЮрФизЛицоId && x.Ismark == false);
+                    result.ПолнНаименование = ДанныеЮрЛица.Sp143.Trim();
+                    result.ЮридическийАдрес = ДанныеЮрЛица.Sp149.Trim();
+                    result.ФактическийАдрес = ДанныеЮрЛица.Sp144.Trim();
+                }
                 else
                 {
                     //физ лица

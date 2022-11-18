@@ -13,6 +13,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using HttpExtensions;
 using System.Data;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Refresher1C.Service
 {
@@ -120,16 +122,19 @@ namespace Refresher1C.Service
                                   join market in _context.Sc14042s on order.Sp14038 equals market.Id
                                   join nom in _context.Sc84s on r.Sp14012 equals nom.Id
                                   join ed in _context.Sc75s on nom.Sp94 equals ed.Id
+                                  join item in _context.Sc14033s on new { orderId = order.Id, nomId = nom.Id }  equals new { orderId = item.Parentext, nomId = item.Sp14022 }
                                   //join markUse in _context.Sc14152s.Where(x => !x.Ismark) on new { NomId = nom.Id, MarketId = market.Id } equals new { NomId = markUse.Parentext, MarketId = markUse.Sp14147 } into _markUse
                                   //from markUse in _markUse.DefaultIfEmpty()
                                   where r.Period == dateRegTA && ((r.Sp14011 == 10) || (r.Sp14011 == 11)) &&
                                     order.Sp13982 == 8 //order статус = 8
                                     && (((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.YANDEX_MARKET) ||
+                                        ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.SBER_MEGA_MARKET) ||
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.OZON_LOGISTIC))
-                                  group new { r, order, market, nom, ed } by new
+                                  group new { r, order, market, nom, ed, item } by new
                                   {
                                       OrderId = order.Id,
                                       MarketplaceId = order.Code,
+                                      OrderOurId = order.Sp13981,
                                       ShipmentId = order.Sp13989,
                                       Тип = market.Sp14155,
                                       CampaignId = market.Code,
@@ -138,13 +143,17 @@ namespace Refresher1C.Service
                                       НоменклатураId = nom.Id,
                                       КоэффициентЕдиницы = ed.Sp78,
                                       КолМест = ed.Sp14063,
-                                      Квант = nom.Sp14188
+                                      Квант = nom.Sp14188,
+                                      Encode = market.Sp14153,
+                                      ItemIndex = item.Code,
+                                      Sku = nom.Code
                                   } into gr
                                   where (gr.Sum(x => x.r.Sp14017) != 0)
                                   select new
                                   {
                                       OrderId = gr.Key.OrderId,
                                       MarketplaceId = gr.Key.MarketplaceId.Trim(),
+                                      OrderOurId = gr.Key.OrderOurId.Trim(),
                                       ShipmentId = gr.Key.ShipmentId.Trim(),
                                       Тип = gr.Key.Тип.ToUpper().Trim(),
                                       CampaignId = gr.Key.CampaignId.Trim(),
@@ -153,7 +162,9 @@ namespace Refresher1C.Service
                                       НоменклатураId = gr.Key.НоменклатураId,
                                       КолМест = gr.Key.КолМест == 0 ? 1 : gr.Key.КолМест,
                                       Количество = gr.Sum(x => x.r.Sp14017) / gr.Key.КоэффициентЕдиницы,
-                                      Квант = gr.Key.Квант
+                                      Квант = gr.Key.Квант,
+                                      ItemIndex = gr.Key.ItemIndex.Trim(),
+                                      Sku = gr.Key.Sku.Encode((EncodeVersion)gr.Key.Encode)
                                   })
                        .ToListAsync(stoppingToken);
                 if ((data != null) && (data.Count > 0))
@@ -162,6 +173,7 @@ namespace Refresher1C.Service
                     {
                         OrderId = x.OrderId,
                         MarketplaceId = x.MarketplaceId,
+                        OrderOurId = x.OrderOurId,
                         ShipmentId = x.ShipmentId,
                         Тип = x.Тип,
                         CampaignId = x.CampaignId,
@@ -202,21 +214,14 @@ namespace Refresher1C.Service
                                     HttpMethod.Put,
                                     obj.Key.ClientId,
                                     obj.Key.AuthToken,
-                                    request, 
+                                    request,
                                     stoppingToken);
-                                //string context = request.SerializeObject();
-                                //var result = YandexClasses.YandexOperators.YandexExchange(null, string.Format(urlBoxes, obj.Key.CampaignId, obj.Key.MarketplaceId, obj.Key.ShipmentId), HttpMethod.Put, obj.Key.ClientId, obj.Key.AuthToken, context).Result;
                                 if (result.Item1 == YandexClasses.ResponseStatus.ERROR)
                                 {
                                     if (!string.IsNullOrEmpty(result.Item3) && !result.Item3.Contains("INTERNAL_SERVER_ERROR"))
-                                    //if ((result.Item3 != null) &&
-                                    //    (result.Item3.Errors != null) &&
-                                    //    (result.Item3.Errors.Count > 0) &&
-                                    //    (!result.Item3.Errors.Any(x => x.Code.Trim().ToUpper() == "INTERNAL_SERVER_ERROR")))
                                     {
                                         //записать ошибку
                                         status = -1;
-                                        //err = YandexClasses.YandexOperators.ParseErrorResponse(result.Item3);
                                         err = result.Item3;
                                     }
                                 }
@@ -226,8 +231,6 @@ namespace Refresher1C.Service
                                         try
                                         {
                                             if (result.Item2.Status != YandexClasses.ResponseStatus.OK)
-                                            //var boxesResponse = result.Item2.DeserializeObject<YandexClasses.BoxesResponse>();
-                                            //if (boxesResponse.Status != YandexClasses.ResponseStatus.OK)
                                             {
                                                 status = -1;
                                                 err = "Internal : Boxes response ERROR status";
@@ -240,6 +243,25 @@ namespace Refresher1C.Service
                                         }
                                 }
                             }
+                            else if (obj.Key.Тип == "SBER")
+                            {
+                                var items = new List<KeyValuePair<string, string>>();
+                                foreach (var item in obj)
+                                {
+                                    items.Add(new(item.ItemIndex, item.Sku));
+                                }
+                                var result = await SberClasses.Functions.OrderConfirm(_httpService,
+                                    obj.Key.AuthToken,
+                                    obj.Key.MarketplaceId,
+                                    obj.Key.OrderOurId,
+                                    items,
+                                    stoppingToken);
+                                if (!string.IsNullOrEmpty(result.error))
+                                    err = result.error;
+                                if (!result.success)
+                                    status = -1;
+                            }
+
                             entity.Sp13982 = status;
                             if (!string.IsNullOrEmpty(err))
                                 entity.Sp14055 = err;
@@ -250,7 +272,7 @@ namespace Refresher1C.Service
 
                     }
                     _context.ОбновитьСетевуюАктивность();
-                    await _context.SaveChangesAsync();
+                    await _context.SaveChangesAsync(stoppingToken);
                 }
 
                 if (_context.Database.CurrentTransaction != null)
@@ -280,6 +302,7 @@ namespace Refresher1C.Service
                                   from binary in _binary.DefaultIfEmpty()
                                   where ((order.Sp13982 == 1) || (order.Sp13982 == 3)) && //order статус = 1 (грузовые места сформированы)
                                         (((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.YANDEX_MARKET) ||
+                                        ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.SBER_MEGA_MARKET) ||
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.OZON_LOGISTIC)) &&
                                         (binary == null)
                                   group new { order, market } by new { order.Id, order.Code, campaignId = market.Code, clientId = market.Sp14053, token = market.Sp14054, тип = market.Sp14155 } into gr
@@ -319,25 +342,17 @@ namespace Refresher1C.Service
                                     status = -2;
                                     err = result.Item3;
                                 }
-                                //var result = await YandexClasses.YandexOperators.YandexExchange(null, string.Format(urlLabels, order.CampaignId, order.MarketplaceId), HttpMethod.Get, order.ClientId, order.AuthToken, null);
-                                //if (result.Item1 == YandexClasses.ResponseStatus.ERROR)
-                                //{
-                                //    if ((result.Item3 != null) &&
-                                //        (result.Item3.Errors != null) &&
-                                //        (result.Item3.Errors.Count > 0) &&
-                                //        (!result.Item3.Errors.Any(x => x.Code.Trim().ToUpper() == "INTERNAL_SERVER_ERROR")))
-                                //    {
-                                //        status = -2;
-                                //        err = YandexClasses.YandexOperators.ParseErrorResponse(result.Item3);
-                                //    }
-                                //}
-                                //else
-                                //{
-                                //    if (result.Item2 != null)
-                                //    {
-                                //        label = result.Item2;
-                                //    }
-                                //}
+                            }
+                            else if (order.Тип == "SBER")
+                            {
+                                var orderEntry = await _order.ПолучитьOrderWithItems(order.OrderId);
+                                var result = await SberClasses.Functions.StickerPrint(_httpService, orderEntry.CampaignId, orderEntry.AuthToken,
+                                    orderEntry.MarketplaceId, orderEntry.OrderNo, orderEntry.Items.Select(x => x.Id).ToList(),
+                                    stoppingToken);
+                                if (result.pdf != null)
+                                {
+                                    label = result.pdf;
+                                }
                             }
                             else if (order.Тип == "OZON")
                             {
@@ -469,6 +484,7 @@ namespace Refresher1C.Service
                                      where ((order.Sp13982 == 1) || (order.Sp13982 == 2)) && //order статус = 1 или 2 (грузовые места сформированы, лейблы скачены)
                                        (r.Period == dateRegTA) && (r.Sp14011 == 11) &&
                                        (((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.YANDEX_MARKET) ||
+                                       ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.SBER_MEGA_MARKET) ||
                                        ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.OZON_LOGISTIC))
                                      group new { order, market, items, r, ed } by new { order.Id, order.Code, тип = market.Sp14155, campaignId = market.Code, clientId = market.Sp14053, token = market.Sp14054, edK = ed.Sp78 } into gr
                                      where gr.Sum(x => x.items.Sp14023) == (gr.Sum(x => x.r.Sp14017) / (gr.Key.edK == 0 ? 1 : gr.Key.edK))
@@ -483,10 +499,14 @@ namespace Refresher1C.Service
                                      })
                        .Distinct()
                        .ToListAsync(stoppingToken);
-                if ((fbsData != null) && (fbsData.Count > 0))
+                if (fbsData?.Count > 0)
                     foreach (var row in fbsData)
                     {
-                        var order = await _order.ПолучитьOrder(row.OrderId);
+                        Order order;
+                        if (row.Тип == "SBER")
+                            order = await _order.ПолучитьOrderWithItems(row.OrderId);
+                        else
+                            order = await _order.ПолучитьOrder(row.OrderId);
                         if ((order != null) && (order.Status == (int)StinOrderStatus.PROCESSING) && (order.SubStatus == (int)StinOrderSubStatus.READY_TO_SHIP))
                         {
                             needSaveChanges = true;
@@ -515,6 +535,21 @@ namespace Refresher1C.Service
                                     else
                                         await _order.ОбновитьOrderStatus(order.Id, -3, result.Item2);
                                 }
+                            }
+                            else if (row.Тип == "SBER")
+                            {
+                                var itemIndexes = order.Items.Select(x => x.Id).ToList();
+                                var result = await SberClasses.Functions.OrderPicking(_httpService,
+                                    order.CampaignId,
+                                    order.AuthToken,
+                                    order.MarketplaceId,
+                                    order.OrderNo,
+                                    itemIndexes,
+                                    stoppingToken);
+                                if (result.success)
+                                    await _order.ОбновитьOrderStatus(order.Id, 3);
+                                else
+                                    await _order.ОбновитьOrderStatus(order.Id, -3, result.error);
                             }
                             else if (row.Тип == "OZON")
                                 await _order.ОбновитьOrderStatus(order.Id, 3);
@@ -625,7 +660,7 @@ namespace Refresher1C.Service
                 if (needSaveChanges)
                 {
                     _context.ОбновитьСетевуюАктивность();
-                    await _context.SaveChangesAsync();
+                    await _context.SaveChangesAsync(stoppingToken);
                 }
 
                 if (_context.Database.CurrentTransaction != null)
@@ -773,7 +808,7 @@ namespace Refresher1C.Service
                                                 AuthSecret = market.Sp14195.Trim(),
                                                 Authorization = market.Sp14077.Trim(),
                                                 FeedId = market.Sp14154.Trim(),
-                                                HexEncoding = market.Sp14153 == 1,
+                                                Encoding = (EncodeVersion)market.Sp14153,
                                                 Multiplayer = market.Sp14165
                                             })
                                             .Distinct()
@@ -808,6 +843,7 @@ namespace Refresher1C.Service
                                     (updPrice.Flag || (updPrice.Updated < limitDate)) &&
                                     (marketUsing.Sp14147 == marketplace.Id)
                                     //&& ((vzTovar == null) || (vzTovar.Rozn <= 0))
+                                    //&& nom.Code == "K00035471"
                                 select new
                                 {
                                     Id = marketUsing.Id,
@@ -827,7 +863,7 @@ namespace Refresher1C.Service
                                 //.ToList();
                     foreach (var d in data)
                     {
-                        var Код = marketplace.HexEncoding ? d.NomCode.EncodeHexString() : d.NomCode;
+                        var Код = d.NomCode.Encode(marketplace.Encoding);
                         var Цена = d.ЦенаСп > 0 ? Math.Min(d.ЦенаСп, d.ЦенаРозн) : d.ЦенаРозн;
                         if (d.ЦенаФикс > 0)
                         {
@@ -946,6 +982,29 @@ namespace Refresher1C.Service
                             uploadIds.AddRange(priceData.Where(x => result.Item1.Contains(x.Код)).Select(x => x.Id));
                             if (!string.IsNullOrEmpty(result.Item2))
                                 _logger.LogError(result.Item2);
+                        }
+                        else
+                        {
+                            if (_context.Database.CurrentTransaction != null)
+                                _context.Database.CurrentTransaction.Rollback();
+                            _logger.LogError(result.Item2);
+                            uploadIds.Clear();
+                        }
+                    }
+                    else if (priceData.Key.Тип == "SBER")
+                    {
+                        var result = await SberClasses.Functions.UpdatePrice(_httpService, priceData.Key.AuthToken,
+                            priceData.Select(x => new
+                            {
+                                Offer_id = x.Код,
+                                Price = (int)(x.Цена * x.Квант)
+                            }).ToDictionary(k => k.Offer_id, v => v.Price),
+                           stoppingToken);
+                        if (result.success)
+                        {
+                            uploadIds.AddRange(priceData.Select(x => x.Id));
+                            if (!string.IsNullOrEmpty(result.error))
+                                _logger.LogError(result.error);
                         }
                         else
                         {
@@ -1109,18 +1168,18 @@ namespace Refresher1C.Service
             }
         }
         private async Task UpdateQuantum(string campaignId, string clientId, string authToken, string marketplaceId, 
-            bool hexEncoding, 
+            EncodeVersion encoding, 
             IList<YandexClasses.OfferMappingEntry> offerEntries,
             CancellationToken cancellationToken)
         {
-            var codes = offerEntries.Select(x => hexEncoding ? x.Offer.ShopSku.DecodeHexString() : x.Offer.ShopSku);
+            var codes = offerEntries.Select(x => x.Offer.ShopSku.Decode(encoding));
             var localData = await (from markUse in _context.Sc14152s
                                    join nom in _context.Sc84s on markUse.Parentext equals nom.Id
                                    where codes.Contains(nom.Code) &&
                                      markUse.Sp14147 == marketplaceId
                                    select new
                                    {
-                                       NomCode = hexEncoding ? nom.Code.EncodeHexString() : nom.Code,
+                                       NomCode = nom.Code.Encode(encoding),
                                        Quantum = nom.Sp14188
                                    }).ToListAsync(cancellationToken);
             if ((localData != null) && (localData.Count > 0))
@@ -1151,7 +1210,7 @@ namespace Refresher1C.Service
                 }
             }
         }
-        private async Task UpdateCatalogInfo(object data, string marketplaceId, bool hexEncoding, CancellationToken stoppingToken)
+        private async Task UpdateCatalogInfo(object data, string marketplaceId, EncodeVersion encoding, CancellationToken stoppingToken)
         {
             var skus = new List<string>();
             var productIdToSku = new Dictionary<string, string>();
@@ -1160,17 +1219,12 @@ namespace Refresher1C.Service
                 foreach (var entry in (data as IList<YandexClasses.OfferMappingEntry>))
                     if ((entry.Offer != null) && (entry.Offer.ProcessingState != null))
                     {
-                        var nomCode = entry.Offer.ShopSku;
-                        if (hexEncoding)
-                            try
-                            {
-                                nomCode = nomCode.DecodeHexString();
-                            }
-                            catch
-                            {
-                                _logger.LogError("UpdateCatalogInfo : Yandex wrong encoded sku " + entry.Offer.ShopSku);
-                                continue;
-                            }
+                        var nomCode = entry.Offer.ShopSku.Decode(encoding);
+                        if (string.IsNullOrEmpty(nomCode))
+                        {
+                            _logger.LogError("UpdateCatalogInfo : Yandex wrong encoded sku " + entry.Offer.ShopSku);
+                            continue;
+                        }
                         skus.Add(nomCode);
                         string краткоеОписание = "";
                         if ((entry.Offer.Urls != null) && (entry.Offer.Urls.Count > 0))
@@ -1203,17 +1257,12 @@ namespace Refresher1C.Service
                 foreach (var item in (data as IList<OzonClasses.Item>))
                     if (!string.IsNullOrWhiteSpace(item.Offer_id) && (item.Offer_id != "0"))
                     {
-                        var nomCode = item.Offer_id;
-                        if (hexEncoding)
-                            try
-                            {
-                                nomCode = nomCode.DecodeHexString();
-                            }
-                            catch
-                            {
-                                _logger.LogError("UpdateCatalogInfo : Ozon wrong encoded sku " + item.Offer_id);
-                                continue;
-                            }
+                        var nomCode = item.Offer_id.Decode(encoding);
+                        if (string.IsNullOrEmpty(nomCode))
+                        {
+                            _logger.LogError("UpdateCatalogInfo : Ozon wrong encoded sku " + item.Offer_id);
+                            continue;
+                        }
                         skus.Add(nomCode);
                     }
             }
@@ -1233,17 +1282,12 @@ namespace Refresher1C.Service
                     {
                         var decodeSkus = entry.Sku.Select(x => 
                         {
-                            var nomCode = x.Code;
-                            if (hexEncoding)
-                                try
-                                {
-                                    nomCode = nomCode.DecodeHexString();
-                                }
-                                catch
-                                {
-                                    _logger.LogError("UpdateCatalogInfo : Aliexpress wrong encoded sku " + x.Code);
-                                    nomCode = "";
-                                }
+                            var nomCode = x.Code.Decode(encoding);
+                            if (string.IsNullOrEmpty(nomCode))
+                            {
+                                _logger.LogError("UpdateCatalogInfo : Aliexpress wrong encoded sku " + x.Code);
+                                nomCode = "";
+                            }
                             return nomCode;
                         });
                         skus.AddRange(decodeSkus);
@@ -1258,7 +1302,7 @@ namespace Refresher1C.Service
                                         where nmIds.Contains(markUse.Sp14190) && markUse.Sp14147 == marketplaceId
                                         select new
                                         {
-                                            Sku = hexEncoding ? nom.Code.DecodeHexString() : nom.Code,
+                                            Sku = nom.Code.Decode(encoding),
                                             ProductId = markUse.Sp14190.Trim()
                                         })
                     .ToDictionaryAsync(k => k.ProductId, v => v.Sku, stoppingToken);
@@ -1345,7 +1389,7 @@ namespace Refresher1C.Service
                 _logger.LogError(ex.Message);
             }
         }
-        private async Task ParseNextPageCatalogRequest(string url, string campaignId, string clientId, string authToken, int limit, string nextPageToken, string marketplaceId, string marketplaceModel, bool hexEncoding, CancellationToken stoppingToken)
+        private async Task ParseNextPageCatalogRequest(string url, string campaignId, string clientId, string authToken, int limit, string nextPageToken, string marketplaceId, string marketplaceModel, EncodeVersion encoding, CancellationToken stoppingToken)
         {
             var result = await YandexClasses.YandexOperators.Exchange<YandexClasses.OfferMappingEntriesResponse>(_httpService,
                 string.Format(url, campaignId, limit) + (string.IsNullOrEmpty(nextPageToken) ? "" : "&page_token=" + nextPageToken),
@@ -1370,10 +1414,10 @@ namespace Refresher1C.Service
                         {
                             //if ((marketplaceModel == "FBY") || (marketplaceModel == "FBS"))
                             //    await UpdateQuantum(campaignId,clientId,authToken, marketplaceId, hexEncoding, catalogResponse.Result.OfferMappingEntries, stoppingToken);
-                            await UpdateCatalogInfo(catalogResponse.Result.OfferMappingEntries, marketplaceId, hexEncoding, stoppingToken);
+                            await UpdateCatalogInfo(catalogResponse.Result.OfferMappingEntries, marketplaceId, encoding, stoppingToken);
                             if ((catalogResponse.Result.Paging != null) && (!string.IsNullOrEmpty(catalogResponse.Result.Paging.NextPageToken)))
                             {
-                                await ParseNextPageCatalogRequest(url, campaignId, clientId, authToken, limit, catalogResponse.Result.Paging.NextPageToken, marketplaceId, marketplaceModel, hexEncoding, stoppingToken);
+                                await ParseNextPageCatalogRequest(url, campaignId, clientId, authToken, limit, catalogResponse.Result.Paging.NextPageToken, marketplaceId, marketplaceModel, encoding, stoppingToken);
                             }
                         }
                         else
@@ -1387,7 +1431,7 @@ namespace Refresher1C.Service
                     }
             }
         }
-        private async Task ParseNextPageCatalogOzon(string clientId, string authToken, int limit, string nextPageToken, string marketplaceId, bool hexEncoding, CancellationToken stoppingToken)
+        private async Task ParseNextPageCatalogOzon(string clientId, string authToken, int limit, string nextPageToken, string marketplaceId, EncodeVersion encoding, CancellationToken stoppingToken)
         {
             var result = await OzonClasses.OzonOperators.ParseCatalog(_httpService, clientId, authToken, nextPageToken, limit, stoppingToken);
             if (result.Item2 != null && !string.IsNullOrEmpty(result.Item2))
@@ -1397,10 +1441,10 @@ namespace Refresher1C.Service
             if (result.Item1 != null)
                 try
                 {
-                    await UpdateCatalogInfo(result.Item1.Items, marketplaceId, hexEncoding, stoppingToken);
+                    await UpdateCatalogInfo(result.Item1.Items, marketplaceId, encoding, stoppingToken);
                     if (!string.IsNullOrEmpty(result.Item1.Last_id))
                     {
-                        await ParseNextPageCatalogOzon(clientId, authToken, limit, result.Item1.Last_id, marketplaceId, hexEncoding, stoppingToken);
+                        await ParseNextPageCatalogOzon(clientId, authToken, limit, result.Item1.Last_id, marketplaceId, encoding, stoppingToken);
                     }
                 }
                 catch (Exception ex)
@@ -1408,7 +1452,7 @@ namespace Refresher1C.Service
                     _logger.LogError("Internal (ParseNextPageCatalogOzon) : " + ex.Message);
                 }
         }
-        public async Task ParseMextPageCatalogAliExpressGlobal(string appKey, string appSecret, string authToken, int currentPage, int limit, string marketplaceId, bool hexEncoding, CancellationToken stoppingToken)
+        public async Task ParseMextPageCatalogAliExpressGlobal(string appKey, string appSecret, string authToken, int currentPage, int limit, string marketplaceId, EncodeVersion encoding, CancellationToken stoppingToken)
         {
             var result = await AliExpressClasses.Functions.GetCatalogInfoGlobal(_httpService, appKey, appSecret, authToken,
                 currentPage, limit,
@@ -1425,12 +1469,12 @@ namespace Refresher1C.Service
                         (result.Item1.Aeop_a_e_product_display_d_t_o_list.Item_display_dto.Count > 0))
                     {
                         await UpdateCatalogInfo(result.Item1.Aeop_a_e_product_display_d_t_o_list.Item_display_dto.Where(x => x.Product_id.HasValue && (x.Product_id.Value > 0)).ToList(),
-                            marketplaceId, hexEncoding, stoppingToken);
+                            marketplaceId, encoding, stoppingToken);
                     }
                     var totalPages = result.Item1.Total_page.HasValue ? result.Item1.Total_page.Value : 1;
                     if (totalPages > currentPage)
                     {
-                        await ParseMextPageCatalogAliExpressGlobal(appKey, appSecret, authToken, currentPage+1, limit, marketplaceId, hexEncoding, stoppingToken);
+                        await ParseMextPageCatalogAliExpressGlobal(appKey, appSecret, authToken, currentPage+1, limit, marketplaceId, encoding, stoppingToken);
                     }
                 }
                 catch (Exception ex)
@@ -1438,7 +1482,7 @@ namespace Refresher1C.Service
                     _logger.LogError("ParseMextPageCatalogAliExpress internal : " + ex.Message);
                 }
         }
-        public async Task ParseMextPageCatalogAliExpress(string authToken, string lastProductId, int limit, string marketplaceId, bool hexEncoding, CancellationToken stoppingToken)
+        public async Task ParseMextPageCatalogAliExpress(string authToken, string lastProductId, int limit, string marketplaceId, EncodeVersion encoding, CancellationToken stoppingToken)
         {
             var result = await AliExpressClasses.Functions.GetCatalogInfo(_httpService, authToken, lastProductId, limit, stoppingToken);
             if (result.Item2 != null && !string.IsNullOrEmpty(result.Item2))
@@ -1448,11 +1492,11 @@ namespace Refresher1C.Service
             if ((result.Item1 != null) && (result.Item1.Count > 0))
                 try
                 {
-                    await UpdateCatalogInfo(result.Item1, marketplaceId, hexEncoding, stoppingToken);
+                    await UpdateCatalogInfo(result.Item1, marketplaceId, encoding, stoppingToken);
                     lastProductId = result.Item1.LastOrDefault()?.Id;
                     if (!string.IsNullOrEmpty(lastProductId))
                     {
-                        await ParseMextPageCatalogAliExpress(authToken, lastProductId, limit, marketplaceId, hexEncoding, stoppingToken);
+                        await ParseMextPageCatalogAliExpress(authToken, lastProductId, limit, marketplaceId, encoding, stoppingToken);
                     }
                 }
                 catch (Exception ex)
@@ -1460,7 +1504,7 @@ namespace Refresher1C.Service
                     _logger.LogError("ParseMextPageCatalogAliExpress internal : " + ex.Message);
                 }
         }
-        private async Task ParseWildberriesCatalog(string authToken, string marketplaceId, bool hexEncoding, CancellationToken stoppingToken)
+        private async Task ParseWildberriesCatalog(string authToken, string marketplaceId, EncodeVersion encoding, CancellationToken stoppingToken)
         {
             var result = await WbClasses.Functions.GetCatalogInfo(_httpService, authToken, stoppingToken);
             if (result.Item2 != null && !string.IsNullOrEmpty(result.Item2))
@@ -1470,7 +1514,7 @@ namespace Refresher1C.Service
             if ((result.Item1 != null) && (result.Item1.Count > 0))
                 try
                 {
-                    await UpdateCatalogInfo(result.Item1, marketplaceId, hexEncoding, stoppingToken);
+                    await UpdateCatalogInfo(result.Item1, marketplaceId, encoding, stoppingToken);
                 }
                 catch (Exception ex)
                 {
@@ -1502,7 +1546,7 @@ namespace Refresher1C.Service
                                                 AuthSecret = market.Sp14195.Trim(),
                                                 Authorization = market.Sp14077.Trim(),
                                                 FeedId = market.Sp14154.Trim(),
-                                                HexEncoding = market.Sp14153 == 1,
+                                                Encoding = (EncodeVersion)market.Sp14153,
                                                 //NeedStockRefresh = market.Sp14177 == 1
                                             })
                                             .ToListAsync();
@@ -1518,24 +1562,24 @@ namespace Refresher1C.Service
                             null,
                             marketplace.Id, 
                             marketplace.Модель,
-                            marketplace.HexEncoding, 
+                            marketplace.Encoding, 
                             stoppingToken);
                     else if (marketplace.Тип == "OZON")
                     {
                         await ParseNextPageCatalogOzon(
                             marketplace.ClientId, marketplace.AuthToken, maxResponseEntries, null,
-                            marketplace.Id, marketplace.HexEncoding, stoppingToken);
+                            marketplace.Id, marketplace.Encoding, stoppingToken);
                     }
                     else if (marketplace.Тип == "ALIEXPRESS")
                     {
                         //await ParseMextPageCatalogAliExpressGlobal(marketplace.ClientId, marketplace.Authorization, marketplace.AuthToken,
                         //    1, 50, marketplace.Id, marketplace.HexEncoding, stoppingToken);
                         await ParseMextPageCatalogAliExpress(
-                            marketplace.AuthToken, "0", 50, marketplace.Id, marketplace.HexEncoding, stoppingToken);
+                            marketplace.AuthToken, "0", 50, marketplace.Id, marketplace.Encoding, stoppingToken);
                     }
                     else if (marketplace.Тип == "WILDBERRIES")
                     {
-                        await ParseWildberriesCatalog(marketplace.AuthToken, marketplace.Id, marketplace.HexEncoding, stoppingToken);
+                        await ParseWildberriesCatalog(marketplace.AuthToken, marketplace.Id, marketplace.Encoding, stoppingToken);
                     }
                 }
             }
@@ -1561,6 +1605,7 @@ namespace Refresher1C.Service
                                             where !market.Ismark
                                                 && (market.Sp14177 == 1)
                                                 && (string.IsNullOrEmpty(defFirmaId) ? true : market.Parentext == defFirmaId)
+                                                && (market.Code == "18795")
                                             select new
                                             {
                                                 Id = market.Id,
@@ -1572,7 +1617,8 @@ namespace Refresher1C.Service
                                                 AuthSecret = market.Sp14195.Trim(),
                                                 Authorization = market.Sp14077.Trim(),
                                                 Code = market.Code.Trim(),
-                                                HexEncoding = market.Sp14153 == 1,
+                                                Encoding = (EncodeVersion)market.Sp14153,
+                                                СкладId = market.Sp14241 == Common.ПустоеЗначение ? "" : market.Sp14241,
                                                 StockOriginal = market.Sp14216 == 1
                                             })
                                             .ToListAsync(stoppingToken);
@@ -1582,13 +1628,18 @@ namespace Refresher1C.Service
                     {
                         await UpdateOzonStock(
                             marketplace.ClientId, marketplace.AuthToken, regular, maxPerRequestOzon,
-                            marketplace.Id, marketplace.FirmaId, marketplace.HexEncoding, marketplace.StockOriginal, marketplace.Code, stoppingToken);
+                            marketplace.Id, marketplace.FirmaId, marketplace.Encoding, marketplace.СкладId, marketplace.StockOriginal, marketplace.Code, stoppingToken);
+                    }
+                    else if (marketplace.Тип.ToUpper() == "SBER")
+                    {
+                        await UpdateSberStock(marketplace.AuthToken, regular, marketplace.Id, marketplace.FirmaId,
+                            marketplace.Encoding, marketplace.СкладId, marketplace.StockOriginal, stoppingToken);
                     }
                     else if (marketplace.Тип.ToUpper() == "ALIEXPRESS")
                     {
                         await UpdateAliExpressStock(marketplace.ClientId, 
                             marketplace.AuthSecret, marketplace.Authorization, marketplace.AuthToken, regular, maxPerRequestAli,
-                            marketplace.Id, marketplace.FirmaId, marketplace.HexEncoding, marketplace.StockOriginal, stoppingToken);
+                            marketplace.Id, marketplace.FirmaId, marketplace.Encoding, marketplace.СкладId, marketplace.StockOriginal, stoppingToken);
                     }
                 }
             }
@@ -1597,8 +1648,151 @@ namespace Refresher1C.Service
                 _logger.LogError(ex.Message);
             }
         }
+        public async Task UpdateSberStock(string authToken, bool regular, string marketplaceId, string firmaId, EncodeVersion encoding, 
+            string складId, bool stockOriginal, CancellationToken stoppingToken)
+        {
+            var data = await ((from markUse in _context.Sc14152s
+                               join nom in _context.Sc84s on markUse.Parentext equals nom.Id
+                               join updStock in _context.VzUpdatingStocks on markUse.Id equals updStock.MuId
+                               where (markUse.Sp14147 == marketplaceId) &&
+                                 (markUse.Sp14158 == 1) && //Есть в каталоге 
+                                 (((regular ? updStock.Flag : updStock.IsError) &&
+                                   (updStock.Updated < DateTime.Now.AddMinutes(-2))) ||
+                                  (updStock.Updated.Date != DateTime.Today))
+                               select new
+                               {
+                                   Id = markUse.Id,
+                                   Locked = markUse.Ismark,
+                                   NomId = markUse.Parentext,
+                                   OfferId = nom.Code.Encode(encoding),
+                                   Квант = nom.Sp14188,
+                                   DeltaStock = stockOriginal ? 0 : nom.Sp14215, //markUse.Sp14214,
+                                   //WarehouseId = string.IsNullOrWhiteSpace(markUse.Sp14190) ? skladCode : markUse.Sp14190,
+                                   UpdatedAt = updStock.Updated,
+                                   UpdatedFlag = updStock.Flag
+                               })
+                .OrderByDescending(x => x.UpdatedFlag)
+                .ThenBy(x => x.UpdatedAt)
+                .Take(100))
+                .ToListAsync(stoppingToken);
+            if (data?.Count > 0)
+            {
+                var listIds = data.Select(x => x.Id).ToList();
+                int tryCount = 5;
+                TimeSpan sleepPeriod = TimeSpan.FromSeconds(1);
+                bool success = false;
+                while (true)
+                {
+                    using var tran = await _context.Database.BeginTransactionAsync();
+                    try
+                    {
+                        _context.VzUpdatingStocks
+                            .Where(x => listIds.Contains(x.MuId))
+                            .ToList()
+                            .ForEach(x =>
+                            {
+                                x.Flag = false;
+                                x.Taken = true;
+                                x.IsError = false;
+                            });
+                        await _context.SaveChangesAsync(stoppingToken);
+                        if (_context.Database.CurrentTransaction != null)
+                            tran.Commit();
+                        success = true;
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        if (_context.Database.CurrentTransaction != null)
+                            _context.Database.CurrentTransaction.Rollback();
+                        _logger.LogError(ex.Message);
+                        if (--tryCount == 0)
+                        {
+                            break;
+                        }
+                        await Task.Delay(sleepPeriod);
+                    }
+                }
+                if (success)
+                {
+                    var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(firmaId);
+                    List<string> списокСкладов = null;
+                    if (string.IsNullOrEmpty(складId))
+                        списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
+                    else
+                        списокСкладов = new List<string> { складId };
+
+                    var списокНоменклатуры = await _номенклатура.ПолучитьСвободныеОстатки(разрешенныеФирмы, списокСкладов, data.Select(x => x.NomId).ToList(), false);
+                    var stockData = new Dictionary<string, int>();
+                    foreach (var item in data)
+                    {
+                        var номенклатура = списокНоменклатуры.Where(x => x.Id == item.NomId).FirstOrDefault();
+                        if (номенклатура != null)
+                        {
+                            long остаток = 0;
+                            if (item.Квант > 1)
+                            {
+                                остаток = (int)(((номенклатура.Остатки
+                                    .Where(x => x.СкладId == Common.SkladEkran)
+                                    .Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - item.DeltaStock) / item.Квант);
+                            }
+                            else
+                                остаток = (long)((номенклатура.Остатки.Sum(x => x.СвободныйОстаток) - item.DeltaStock) / номенклатура.Единица.Коэффициент);
+                            остаток = Math.Max(остаток, 0);
+                            stockData.Add(номенклатура.Code.Encode(encoding), item.Locked ? 0 : (int)остаток);
+                        }
+                    }
+                    if (stockData.Count > 0)
+                    {
+                        var result = await SberClasses.Functions.UpdateStock(_httpService, authToken,
+                            stockData,
+                            stoppingToken);
+                        if (!string.IsNullOrEmpty(result.error))
+                        {
+                            _logger.LogError(result.error);
+                        }
+                        if (result.success)
+                        {
+                            tryCount = 5;
+                            while (true)
+                            {
+                                using var tran = await _context.Database.BeginTransactionAsync();
+                                try
+                                {
+                                    _context.VzUpdatingStocks
+                                        .Where(x => listIds.Contains(x.MuId) && x.Taken)
+                                        .ToList()
+                                        .ForEach(x =>
+                                        {
+                                            x.Flag = false;
+                                            x.Taken = false;
+                                            x.IsError = false;
+                                            x.Updated = DateTime.Now;
+                                        });
+                                    await _context.SaveChangesAsync(stoppingToken);
+                                    if (_context.Database.CurrentTransaction != null)
+                                        tran.Commit();
+                                    break;
+                                }
+                                catch (Exception ex)
+                                {
+                                    if (_context.Database.CurrentTransaction != null)
+                                        _context.Database.CurrentTransaction.Rollback();
+                                    _logger.LogError(ex.Message);
+                                    if (--tryCount == 0)
+                                    {
+                                        break;
+                                    }
+                                    await Task.Delay(sleepPeriod);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
         public async Task UpdateOzonStock(string clientId, string authToken, bool regular, int limit,
-            string marketplaceId, string firmaId, bool hexEncoding, bool stockOriginal, string skladCode, CancellationToken stoppingToken)
+            string marketplaceId, string firmaId, EncodeVersion encoding, string складId, bool stockOriginal, string skladCode, CancellationToken stoppingToken)
         {
             var data = await ((from markUse in _context.Sc14152s
                               join nom in _context.Sc84s on markUse.Parentext equals nom.Id
@@ -1614,7 +1808,7 @@ namespace Refresher1C.Service
                                   Id = markUse.Id,
                                   Locked = markUse.Ismark,
                                   NomId = markUse.Parentext,
-                                  OfferId = hexEncoding ? nom.Code.EncodeHexString() : nom.Code,
+                                  OfferId = nom.Code.Encode(encoding),
                                   Квант = nom.Sp14188,
                                   DeltaStock = stockOriginal ? 0 : nom.Sp14215, //markUse.Sp14214,
                                   WarehouseId = string.IsNullOrWhiteSpace(markUse.Sp14190) ? skladCode : markUse.Sp14190,
@@ -1628,6 +1822,7 @@ namespace Refresher1C.Service
                               
             if ((data != null) && (data.Count > 0))
             {
+                var notReadyIds = new List<string>();
                 var checkResult = await OzonClasses.OzonOperators.ProductNotReady(_httpService, clientId, authToken,
                     data.Select(x => x.OfferId).ToList(),
                     stoppingToken);
@@ -1635,12 +1830,11 @@ namespace Refresher1C.Service
                 {
                     _logger.LogError(checkResult.Item2);
                 }
-                var notReadyIds = new List<string>();
+
                 if ((checkResult.Item1 != null) && (checkResult.Item1.Count > 0))
                 {
                     notReadyIds = data.Where(x => checkResult.Item1.Contains(x.OfferId)).Select(x => x.Id).ToList();
                 }
-
                 var listIds = data.Where(x => !notReadyIds.Contains(x.Id)).Select(x => x.Id).ToList();
                 int tryCount = 5;
                 TimeSpan sleepPeriod = TimeSpan.FromSeconds(1);
@@ -1690,8 +1884,11 @@ namespace Refresher1C.Service
                 if (success && (listIds.Count > 0))
                 {
                     var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(firmaId);
-                    
-                    List<string> списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
+                    List<string> списокСкладов = null;
+                    if (string.IsNullOrEmpty(складId))
+                        списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
+                    else
+                        списокСкладов = new List<string> { складId };
 
                     var списокНоменклатуры = await _номенклатура.ПолучитьСвободныеОстатки(разрешенныеФирмы, списокСкладов, data.Where(x => !notReadyIds.Contains(x.Id)).Select(x => x.NomId).ToList(), false);
                     var stockData = new List<OzonClasses.StockRequest>();
@@ -1714,105 +1911,108 @@ namespace Refresher1C.Service
                                 WarehouseId = 0;
                             stockData.Add(new OzonClasses.StockRequest
                             {
-                                Offer_id = hexEncoding ? номенклатура.Code.EncodeHexString() : номенклатура.Code,
+                                Offer_id = номенклатура.Code.Encode(encoding),
                                 Stock = item.Locked ? 0 : остаток,
                                 Warehouse_id = WarehouseId
                             });
                         }
                     }
-                    var result = await OzonClasses.OzonOperators.UpdateStock(_httpService, clientId, authToken,
-                        stockData,
-                        stoppingToken);
-                    if (result.errorMessage != null && !string.IsNullOrEmpty(result.errorMessage))
+                    if (stockData.Count > 0)
                     {
-                        _logger.LogError(result.errorMessage);
-                    }
-                    List<string> uploadIds = new List<string>();
-                    List<string> tooManyIds = new List<string>();
-                    List<string> errorIds = new List<string>();
-                    if (result.updatedOfferIds?.Count > 0)
-                    {
-                        var nomIds = списокНоменклатуры
-                            .Where(x => result.updatedOfferIds.Contains(hexEncoding ? x.Code.EncodeHexString() : x.Code))
-                            .Select(x => x.Id);
-                        uploadIds = data.Where(x => nomIds.Contains(x.NomId)).Select(x => x.Id).ToList();
-                    }
-                    if (result.tooManyRequests?.Count > 0)
-                    {
-                        var nomIds = списокНоменклатуры
-                            .Where(x => result.tooManyRequests.Contains(hexEncoding ? x.Code.EncodeHexString() : x.Code))
-                            .Select(x => x.Id);
-                        tooManyIds = data.Where(x => nomIds.Contains(x.NomId)).Select(x => x.Id).ToList();
-                    }
-                    if (result.errorOfferIds?.Count > 0)
-                    {
-                        var nomIds = списокНоменклатуры
-                            .Where(x => result.errorOfferIds.Contains(hexEncoding ? x.Code.EncodeHexString() : x.Code))
-                            .Select(x => x.Id);
-                        errorIds = data.Where(x => nomIds.Contains(x.NomId)).Select(x => x.Id).ToList();
-                    }
-                    if ((uploadIds.Count > 0) || (tooManyIds.Count > 0) || (errorIds.Count > 0))
-                    {
-                        tryCount = 5;
-                        while (true)
+                        var result = await OzonClasses.OzonOperators.UpdateStock(_httpService, clientId, authToken,
+                            stockData,
+                            stoppingToken);
+                        if (result.errorMessage != null && !string.IsNullOrEmpty(result.errorMessage))
                         {
-                            using var tran = await _context.Database.BeginTransactionAsync();
-                            try
+                            _logger.LogError(result.errorMessage);
+                        }
+                        List<string> uploadIds = new List<string>();
+                        List<string> tooManyIds = new List<string>();
+                        List<string> errorIds = new List<string>();
+                        if (result.updatedOfferIds?.Count > 0)
+                        {
+                            var nomIds = списокНоменклатуры
+                                .Where(x => result.updatedOfferIds.Contains(x.Code.Encode(encoding)))
+                                .Select(x => x.Id);
+                            uploadIds = data.Where(x => nomIds.Contains(x.NomId)).Select(x => x.Id).ToList();
+                        }
+                        if (result.tooManyRequests?.Count > 0)
+                        {
+                            var nomIds = списокНоменклатуры
+                                .Where(x => result.tooManyRequests.Contains(x.Code.Encode(encoding)))
+                                .Select(x => x.Id);
+                            tooManyIds = data.Where(x => nomIds.Contains(x.NomId)).Select(x => x.Id).ToList();
+                        }
+                        if (result.errorOfferIds?.Count > 0)
+                        {
+                            var nomIds = списокНоменклатуры
+                                .Where(x => result.errorOfferIds.Contains(x.Code.Encode(encoding)))
+                                .Select(x => x.Id);
+                            errorIds = data.Where(x => nomIds.Contains(x.NomId)).Select(x => x.Id).ToList();
+                        }
+                        if ((uploadIds.Count > 0) || (tooManyIds.Count > 0) || (errorIds.Count > 0))
+                        {
+                            tryCount = 5;
+                            while (true)
                             {
-                                if (uploadIds.Count > 0)
+                                using var tran = await _context.Database.BeginTransactionAsync();
+                                try
                                 {
-                                    _context.VzUpdatingStocks
-                                        .Where(x => uploadIds.Contains(x.MuId) && x.Taken)
-                                        .ToList()
-                                        .ForEach(x =>
-                                        {
-                                            x.Flag = false;
-                                            x.Taken = false;
-                                            x.IsError = false;
-                                            x.Updated = DateTime.Now;
-                                        });
-                                }
-                                if (tooManyIds.Count > 0)
-                                {
-                                    _context.VzUpdatingStocks
-                                        .Where(x => tooManyIds.Contains(x.MuId) && x.Taken)
-                                        .ToList()
-                                        .ForEach(x =>
-                                        {
-                                            x.Flag = true;
-                                            x.Taken = false;
-                                            x.IsError = false;
-                                            x.Updated = DateTime.Now;
-                                        });
-                               }
-                                if (errorIds.Count > 0)
-                                {
-                                    _context.VzUpdatingStocks
-                                        .Where(x => errorIds.Contains(x.MuId) && x.Taken)
-                                        .ToList()
-                                        .ForEach(x =>
-                                        {
-                                            x.Flag = false;
-                                            x.Taken = false;
-                                            x.IsError = true;
-                                            x.Updated = DateTime.Now;
-                                        });
-                                }
-                                await _context.SaveChangesAsync(stoppingToken);
-                                if (_context.Database.CurrentTransaction != null)
-                                    tran.Commit();
-                                break;
-                            }
-                            catch (Exception ex)
-                            {
-                                if (_context.Database.CurrentTransaction != null)
-                                    _context.Database.CurrentTransaction.Rollback();
-                                _logger.LogError(ex.Message);
-                                if (--tryCount == 0)
-                                {
+                                    if (uploadIds.Count > 0)
+                                    {
+                                        _context.VzUpdatingStocks
+                                            .Where(x => uploadIds.Contains(x.MuId) && x.Taken)
+                                            .ToList()
+                                            .ForEach(x =>
+                                            {
+                                                x.Flag = false;
+                                                x.Taken = false;
+                                                x.IsError = false;
+                                                x.Updated = DateTime.Now;
+                                            });
+                                    }
+                                    if (tooManyIds.Count > 0)
+                                    {
+                                        _context.VzUpdatingStocks
+                                            .Where(x => tooManyIds.Contains(x.MuId) && x.Taken)
+                                            .ToList()
+                                            .ForEach(x =>
+                                            {
+                                                x.Flag = true;
+                                                x.Taken = false;
+                                                x.IsError = false;
+                                                x.Updated = DateTime.Now;
+                                            });
+                                    }
+                                    if (errorIds.Count > 0)
+                                    {
+                                        _context.VzUpdatingStocks
+                                            .Where(x => errorIds.Contains(x.MuId) && x.Taken)
+                                            .ToList()
+                                            .ForEach(x =>
+                                            {
+                                                x.Flag = false;
+                                                x.Taken = false;
+                                                x.IsError = true;
+                                                x.Updated = DateTime.Now;
+                                            });
+                                    }
+                                    await _context.SaveChangesAsync(stoppingToken);
+                                    if (_context.Database.CurrentTransaction != null)
+                                        tran.Commit();
                                     break;
                                 }
-                                await Task.Delay(sleepPeriod);
+                                catch (Exception ex)
+                                {
+                                    if (_context.Database.CurrentTransaction != null)
+                                        _context.Database.CurrentTransaction.Rollback();
+                                    _logger.LogError(ex.Message);
+                                    if (--tryCount == 0)
+                                    {
+                                        break;
+                                    }
+                                    await Task.Delay(sleepPeriod);
+                                }
                             }
                         }
                     }
@@ -1820,7 +2020,7 @@ namespace Refresher1C.Service
             }
         }
         public async Task UpdateAliExpressStock(string appKey, string appSecret, string authorization, string authToken, bool regular, int limit,
-            string marketplaceId, string firmaId, bool hexEncoding, bool stockOriginal, CancellationToken stoppingToken)
+            string marketplaceId, string firmaId, EncodeVersion encoding, string складId, bool stockOriginal, CancellationToken stoppingToken)
         {
             var data = await ((from markUse in _context.Sc14152s
                                join nom in _context.Sc84s on markUse.Parentext equals nom.Id
@@ -1836,7 +2036,7 @@ namespace Refresher1C.Service
                                    Locked = markUse.Ismark,
                                    NomId = markUse.Parentext,
                                    ProductId = markUse.Sp14190.Trim(),
-                                   Sku = hexEncoding ? nom.Code.EncodeHexString() : nom.Code,
+                                   Sku = nom.Code.Encode(encoding),
                                    Квант = nom.Sp14188,
                                    DeltaStock = stockOriginal ? 0 : nom.Sp14215, //markUse.Sp14214,
                                    UpdatedAt = updStock.Updated,
@@ -1888,7 +2088,11 @@ namespace Refresher1C.Service
                 {
                     var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(firmaId);
 
-                    List<string> списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
+                    List<string> списокСкладов = null;
+                    if (string.IsNullOrEmpty(складId))
+                        списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
+                    else
+                        списокСкладов = new List<string> { складId };
 
                     var списокНоменклатуры = await _номенклатура.ПолучитьСвободныеОстатки(разрешенныеФирмы, списокСкладов, data.Select(x => x.NomId).ToList(), false);
                     //var stockData = new List<AliExpressClasses.StockProductGlobal>();
@@ -1932,7 +2136,7 @@ namespace Refresher1C.Service
                                 {
                                     new AliExpressClasses.StockSku
                                     {
-                                        Sku_code = hexEncoding ? номенклатура.Code.EncodeHexString() : номенклатура.Code,
+                                        Sku_code = номенклатура.Code.Encode(encoding),
                                         Inventory = (item.Locked ? 0 : остаток).ToString()
                                     }
                                 }
@@ -2038,7 +2242,7 @@ namespace Refresher1C.Service
                                                 AuthToken = market.Sp14054.Trim(),
                                                 AuthSecret = market.Sp14195.Trim(),
                                                 Authorization = market.Sp14077.Trim(),
-                                                HexEncoding = market.Sp14153 == 1
+                                                Encoding = (EncodeVersion)market.Sp14153
                                             })
                                             .ToListAsync();
                 foreach (var marketplace in marketplaceIds)
@@ -2047,26 +2251,24 @@ namespace Refresher1C.Service
                     {
                         await GetOzonNewOrders(marketplace.ClientId, marketplace.AuthToken, 
                             marketplace.Id, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId, 
-                            marketplace.HexEncoding, stoppingToken);
+                            marketplace.Encoding, stoppingToken);
                         await GetOzonCancelOrders(marketplace.ClientId, marketplace.AuthToken,
-                            marketplace.Id, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
-                            marketplace.HexEncoding, stoppingToken);
+                            marketplace.Id, stoppingToken);
                         //moved to Slow
                         await GetOzonDeliveringOrders(marketplace.Id, marketplace.ClientId, marketplace.AuthToken,
-                            marketplace.Id, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
-                            marketplace.HexEncoding, stoppingToken);
+                            marketplace.Id, stoppingToken);
                     }
                     else if (marketplace.Тип == "ЯНДЕКС")
                     {
                         await GetYandexNewOrders(marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Authorization, marketplace.Id,
-                            marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId, marketplace.HexEncoding, stoppingToken);
+                            marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId, marketplace.Encoding, stoppingToken);
                         await GetYandexCancelOrders(marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Id, stoppingToken);
                     }
                     else if (marketplace.Тип == "ALIEXPRESS")
                     {
                         await GetAliExpressOrders(marketplace.ClientId, marketplace.AuthSecret, marketplace.Authorization,
                             marketplace.Id,
-                            marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId, marketplace.HexEncoding,
+                            marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId, marketplace.Encoding,
                             stoppingToken);
                     }
                 }
@@ -2096,7 +2298,7 @@ namespace Refresher1C.Service
                                                 AuthToken = market.Sp14054.Trim(),
                                                 AuthSecret = market.Sp14195.Trim(),
                                                 Authorization = market.Sp14077.Trim(),
-                                                HexEncoding = market.Sp14153 == 1
+                                                Encoding = (EncodeVersion)market.Sp14153
                                             })
                                             .ToListAsync();
                 foreach (var marketplace in marketplaceIds)
@@ -2104,8 +2306,7 @@ namespace Refresher1C.Service
                     if (marketplace.Тип == "OZON")
                     {
                         await GetOzonDeliveringOrders(marketplace.Id, marketplace.ClientId, marketplace.AuthToken,
-                            marketplace.Id, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
-                            marketplace.HexEncoding, stoppingToken);
+                            marketplace.Id, stoppingToken);
                     }
                 }
             }
@@ -2116,7 +2317,7 @@ namespace Refresher1C.Service
         }
         private async Task GetAliExpressOrders(string appKey, string appSecret, string authorization,
             string marketplaceId,
-            string firmaId, string customerId, string dogovorId, bool hexEncoding,
+            string firmaId, string customerId, string dogovorId, EncodeVersion encoding,
             CancellationToken cancellationToken)
         {
             //await AliExpressClasses.Functions.GetLogisticDetails(_httpService, appKey, appSecret, authorization,
@@ -2154,7 +2355,7 @@ namespace Refresher1C.Service
                                         (orderDto.Product_list.Order_product_dto.Count > 0))
                                     {
                                         //create new order
-                                        var номенклатураCodes = orderDto.Product_list.Order_product_dto.Select(x => hexEncoding ? x.Sku_code.DecodeHexString() : x.Sku_code).ToList();
+                                        var номенклатураCodes = orderDto.Product_list.Order_product_dto.Select(x => x.Sku_code.Decode(encoding)).ToList();
                                         var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(firmaId);
                                         var списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
                                         var НоменклатураList = await _номенклатура.ПолучитьСвободныеОстатки(
@@ -2172,7 +2373,7 @@ namespace Refresher1C.Service
                                             if (quantum == 0)
                                                 quantum = 1;
                                             var asked = orderDto.Product_list.Order_product_dto
-                                                                .Where(b => (hexEncoding ? b.Sku_code.DecodeHexString() : b.Sku_code) == номенклатура.Code)
+                                                                .Where(b => b.Sku_code.Decode(encoding) == номенклатура.Code)
                                                                 .Select(c => c.Product_count * quantum)
                                                                 .FirstOrDefault();
                                             if (остаток < asked)
@@ -2202,7 +2403,7 @@ namespace Refresher1C.Service
                                             orderItems.Add(new OrderItem
                                             {
                                                 Id = item.Product_id.ToString(),
-                                                НоменклатураId = hexEncoding ? item.Sku_code.DecodeHexString() : item.Sku_code,
+                                                НоменклатураId = item.Sku_code.Decode(encoding),
                                                 Количество = item.Product_count,
                                                 Цена = цена,
                                             });
@@ -2224,7 +2425,7 @@ namespace Refresher1C.Service
                                            customerId,
                                            dogovorId,
                                            authorization,
-                                           hexEncoding,
+                                           encoding,
                                            Common.SkladEkran,
                                            "",
                                            "0",
@@ -2289,7 +2490,7 @@ namespace Refresher1C.Service
                 }
             }
         }
-        private async Task GetOzonNewOrders(string clientId, string authToken, string id, string firmaId, string customerId, string dogovorId, bool hexEncoding, CancellationToken stoppingToken)
+        private async Task GetOzonNewOrders(string clientId, string authToken, string id, string firmaId, string customerId, string dogovorId, EncodeVersion encoding, CancellationToken stoppingToken)
         {
             if (int.TryParse(_configuration["Orderer:maxPerRequest"], out int maxPerRequest))
                 maxPerRequest = Math.Max(maxPerRequest, 1);
@@ -2313,7 +2514,7 @@ namespace Refresher1C.Service
                         {
                             var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(firmaId);
                             var списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
-                            var номенклатураCodes = posting.Products.Select(x => hexEncoding ? x.Offer_id.DecodeHexString() : x.Offer_id).ToList();
+                            var номенклатураCodes = posting.Products.Select(x => x.Offer_id.Decode(encoding)).ToList();
                             var НоменклатураList = await _номенклатура.ПолучитьСвободныеОстатки(
                                 разрешенныеФирмы,
                                 списокСкладов,
@@ -2329,7 +2530,7 @@ namespace Refresher1C.Service
                                 if (quantum == 0)
                                     quantum = 1;
                                 var asked = posting.Products
-                                                    .Where(b => (hexEncoding ? b.Offer_id.DecodeHexString() : b.Offer_id) == номенклатура.Code)
+                                                    .Where(b => b.Offer_id.Decode(encoding) == номенклатура.Code)
                                                     .Select(c => c.Quantity * quantum)
                                                     .FirstOrDefault();
                                 if (остаток < asked)
@@ -2351,7 +2552,7 @@ namespace Refresher1C.Service
                         var orderItems = new List<OrderItem>();
                         if (posting.Status == Enum.GetName(OzonClasses.OrderStatus.awaiting_packaging))
                         {
-                            orderItems = await OzonMakeOrdersPosting(clientId, authToken, hexEncoding, posting, stoppingToken);
+                            orderItems = await OzonMakeOrdersPosting(clientId, authToken, encoding, posting, stoppingToken);
                         }
                         else
                         {
@@ -2364,7 +2565,7 @@ namespace Refresher1C.Service
                                 {
                                     ИдентификаторПоставщика = posting.Posting_number,
                                     Id = item.Sku.ToString(),
-                                    НоменклатураId = hexEncoding ? item.Offer_id.DecodeHexString() : item.Offer_id,
+                                    НоменклатураId = item.Offer_id.Decode(encoding),
                                     Количество = item.Quantity,
                                     Цена = Convert.ToDecimal(item.Price, new System.Globalization.NumberFormatInfo { NumberDecimalSeparator = "." }),
                                 });
@@ -2380,7 +2581,7 @@ namespace Refresher1C.Service
                                    customerId,
                                    dogovorId,
                                    authToken,
-                                   hexEncoding,
+                                   encoding,
                                    Common.SkladEkran,
                                    "",
                                    posting.Delivery_method != null ? posting.Delivery_method.Id.ToString() : "0",
@@ -2409,13 +2610,13 @@ namespace Refresher1C.Service
                 }
             }
         }
-        private async Task<List<OrderItem>> OzonMakeOrdersPosting(string clientId, string authToken, bool hexEncoding, OzonClasses.FbsPosting posting, CancellationToken stoppingToken)
+        private async Task<List<OrderItem>> OzonMakeOrdersPosting(string clientId, string authToken, EncodeVersion encoding, OzonClasses.FbsPosting posting, CancellationToken stoppingToken)
         {
             var orderItems = new List<OrderItem>();
             var postingPackageData = new List<OzonClasses.PostingPackage>();
             foreach (var product in posting.Products)
             {
-                var code = hexEncoding ? product.Offer_id.DecodeHexString() : product.Offer_id;
+                var code = product.Offer_id.Decode(encoding);
                 string nomId = await _номенклатура.GetIdByCode(code);
                 //decimal колМест = await _номенклатура.ПолучитьКоличествоМест(nomId);
                 //колМест = колМест == 0 ? 1 : колМест;
@@ -2532,7 +2733,7 @@ namespace Refresher1C.Service
                         {
                             ИдентификаторПоставщика = data.Posting_number,
                             Id = item.Sku.ToString(),
-                            НоменклатураId = hexEncoding ? item.Offer_id.DecodeHexString() : item.Offer_id,
+                            НоменклатураId = item.Offer_id.Decode(encoding),
                             Количество = item.Quantity,
                             Цена = Convert.ToDecimal(item.Price, new System.Globalization.NumberFormatInfo { NumberDecimalSeparator = "." }),
                         });
@@ -2543,7 +2744,7 @@ namespace Refresher1C.Service
         }
         private async Task GetYandexNewOrders(string campaignId, string clientId, string authToken, string authorization,
             string marketplaceId,
-            string firmaId, string customerId, string dogovorId, bool hexEncoding, 
+            string firmaId, string customerId, string dogovorId, EncodeVersion encoding, 
             CancellationToken cancellationToken)
         {
             int pageNumber = 0;
@@ -2573,7 +2774,7 @@ namespace Refresher1C.Service
                             var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, detailOrder.Id.ToString());
                             if (order == null)
                             {
-                                var номенклатураCodes = detailOrder.Items.Select(x => hexEncoding ? x.OfferId.DecodeHexString() : x.OfferId).ToList();
+                                var номенклатураCodes = detailOrder.Items.Select(x => x.OfferId.Decode(encoding)).ToList();
                                 var НоменклатураList = await _номенклатура.ПолучитьСвободныеОстатки(
                                     разрешенныеФирмы,
                                     списокСкладов,
@@ -2589,7 +2790,7 @@ namespace Refresher1C.Service
                                     //if (quantum == 0)
                                     //    quantum = 1;
                                     var asked = detailOrder.Items
-                                                        .Where(b => (hexEncoding ? b.OfferId.DecodeHexString() : b.OfferId) == номенклатура.Code)
+                                                        .Where(b => b.OfferId.Decode(encoding) == номенклатура.Code)
                                                         .Select(c => c.Count)
                                                         .FirstOrDefault();
                                     if (остаток < asked)
@@ -2615,7 +2816,7 @@ namespace Refresher1C.Service
                                     orderItems.Add(new OrderItem
                                     {
                                         Id = item.Id.ToString(),
-                                        НоменклатураId = hexEncoding ? item.OfferId.DecodeHexString() : item.OfferId,
+                                        НоменклатураId = item.OfferId.Decode(encoding),
                                         Количество = item.Count,
                                         Цена = (decimal)item.Price,
                                         ЦенаСоСкидкой = (decimal)item.BuyerPrice,
@@ -2670,7 +2871,7 @@ namespace Refresher1C.Service
                                    customerId,
                                    dogovorId,
                                    authorization,
-                                   hexEncoding,
+                                   encoding,
                                    складОтгрузкиId,
                                    detailOrder.Notes ?? "",
                                    detailOrder.Delivery?.DeliveryServiceId ?? "0",
@@ -2718,7 +2919,7 @@ namespace Refresher1C.Service
                 }
             }
         }
-        private async Task GetOzonCancelOrders(string clientId, string authToken, string id, string firmaId, string customerId, string dogovorId, bool hexEncoding, CancellationToken stoppingToken)
+        private async Task GetOzonCancelOrders(string clientId, string authToken, string id, CancellationToken stoppingToken)
         {
             int limit = 1000;
             int numberCount = 0;
@@ -2748,7 +2949,7 @@ namespace Refresher1C.Service
                 nextPage = result.Item2.HasValue ? result.Item2.Value : false;
             }
         }
-        private async Task GetOzonDeliveringOrders(string marketplaceId, string clientId, string authToken, string id, string firmaId, string customerId, string dogovorId, bool hexEncoding, CancellationToken stoppingToken)
+        private async Task GetOzonDeliveringOrders(string marketplaceId, string clientId, string authToken, string id, CancellationToken stoppingToken)
         {
             var activeOrders = await ActiveOrders(marketplaceId, stoppingToken);
             if ((activeOrders != null) && (activeOrders.Count > 0))
@@ -2815,18 +3016,18 @@ namespace Refresher1C.Service
                                                 AuthToken = market.Sp14054.Trim(),
                                                 AuthSecret = market.Sp14195.Trim(),
                                                 Authorization = market.Sp14077.Trim(),
-                                                HexEncoding = market.Sp14153 == 1
+                                                Encoding = (EncodeVersion)market.Sp14153
                                             })
                                             .ToListAsync();
                 foreach (var marketplace in marketplaceIds)
                 {
                     if (marketplace.Тип.ToUpper() == "ЯНДЕКС")
                     {
-                        await UpdateTariffsYandex(marketplace.Id, marketplace.CampaignId, marketplace.ClientId, marketplace.AuthToken, marketplace.HexEncoding, marketplace.Модель, cancellationToken);
+                        await UpdateTariffsYandex(marketplace.Id, marketplace.CampaignId, marketplace.ClientId, marketplace.AuthToken, marketplace.Encoding, marketplace.Модель, cancellationToken);
                     }
                     else if (marketplace.Тип.ToUpper() == "OZON")
                     {
-                        await UpdateTariffsOzon(marketplace.Id, marketplace.CampaignId, marketplace.ClientId, marketplace.AuthToken, marketplace.HexEncoding, marketplace.Модель, cancellationToken);
+                        await UpdateTariffsOzon(marketplace.Id, marketplace.CampaignId, marketplace.ClientId, marketplace.AuthToken, marketplace.Encoding, marketplace.Модель, cancellationToken);
                     }
                     else if (marketplace.Тип.ToUpper() == "ALIEXPRESS")
                     {
@@ -2843,7 +3044,7 @@ namespace Refresher1C.Service
             string campaignId,
             string clientId,
             string authToken,
-            bool hexEncoding,
+            EncodeVersion encoding,
             string model,
             CancellationToken cancellationToken)
         {
@@ -2889,7 +3090,7 @@ namespace Refresher1C.Service
                     .Skip(i)
                     .Take(requestLimit)
                     .ToListAsync(cancellationToken);
-                var request = new YandexClasses.SkuDetailsRequest { ShopSkus = data.Select(x => hexEncoding ? x.Sku.EncodeHexString() : x.Sku).ToList() };
+                var request = new YandexClasses.SkuDetailsRequest { ShopSkus = data.Select(x => x.Sku.Encode(encoding)).ToList() };
                 var result = await YandexClasses.YandexOperators.Exchange<YandexClasses.SkuDetailsResponse>(_httpService,
                     string.Format(detailUrl, campaignId),
                     HttpMethod.Post,
@@ -2908,7 +3109,7 @@ namespace Refresher1C.Service
                     bool needUpdate = false;
                     foreach (var item in result.Item2.Result.ShopSkus)
                     {
-                        var dataItem = data.FirstOrDefault(x => (hexEncoding ? x.Sku.EncodeHexString() : x.Sku) == item.ShopSku);
+                        var dataItem = data.FirstOrDefault(x => x.Sku.Encode(encoding) == item.ShopSku);
                         if (dataItem != null)
                         {
                             Sc14152 entity = null;
@@ -3123,7 +3324,7 @@ namespace Refresher1C.Service
             string campaignId,
             string clientId,
             string authToken,
-            bool hexEncoding,
+            EncodeVersion encoding,
             string model,
             CancellationToken cancellationToken)
         {
@@ -3157,7 +3358,7 @@ namespace Refresher1C.Service
                 foreach (var item in data)
                 {
                     var comResult = await OzonClasses.OzonOperators.ProductComission(_httpService, clientId, authToken,
-                        hexEncoding ? item.Sku.EncodeHexString() : item.Sku,
+                        item.Sku.Encode(encoding),
                         item.realFbs ? "rfbs" : "fbs",
                         cancellationToken);
                     if (comResult.Error != null && !string.IsNullOrEmpty(comResult.Error))

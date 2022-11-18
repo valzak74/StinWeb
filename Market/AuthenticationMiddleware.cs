@@ -2,7 +2,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Market
@@ -12,7 +14,9 @@ namespace Market
         private readonly RequestDelegate _next;
         private string _yandexFbsToken;
         private string _yandexDbsToken;
+        private string _yandexExpressToken;
         private string _ozonFbsToken;
+        private string _sberFbsToken;
         private readonly ILogger _logger;
         public AuthenticationMiddleware(RequestDelegate next, IConfiguration configuration, ILogger<AuthenticationMiddleware> logger)
         {
@@ -20,7 +24,9 @@ namespace Market
             _next = next;
             _yandexFbsToken = configuration["Settings:" + defFirma + ":YandexFBS"];
             _yandexDbsToken = configuration["Settings:" + defFirma + ":YandexDBS"];
+            _yandexExpressToken = configuration["Settings:" + defFirma + ":YandexExpress"];
             _ozonFbsToken = configuration["Settings:" + defFirma + ":OzonFBS"];
+            _sberFbsToken = "Basic " + Convert.ToBase64String(ASCIIEncoding.ASCII.GetBytes(configuration["Settings:" + defFirma + ":SberFBS"]));
             _logger = logger;
         }
         public async Task Invoke(HttpContext context)
@@ -28,6 +34,7 @@ namespace Market
             bool isYandexFBS = context.Request.Path.StartsWithSegments("/yandex", StringComparison.InvariantCultureIgnoreCase);
             bool isYandexDBS = context.Request.Path.StartsWithSegments("/yandexDBS", StringComparison.InvariantCultureIgnoreCase);
             bool isOzonFBS = context.Request.Path.StartsWithSegments("/ozon", StringComparison.InvariantCultureIgnoreCase);
+            bool isSberFBS = context.Request.Path.StartsWithSegments("/sber", StringComparison.InvariantCultureIgnoreCase);
 
             _logger.LogInformation($"Header: {Newtonsoft.Json.JsonConvert.SerializeObject(context.Request.Headers, Newtonsoft.Json.Formatting.Indented)}");
 
@@ -41,17 +48,22 @@ namespace Market
 
             string queryAuth = "";
             string headerAuth = "";
-            string token = isYandexFBS ? _yandexFbsToken : 
-                isYandexDBS ? _yandexDbsToken :
-                isOzonFBS ? _ozonFbsToken : "";
             if (context.Request.Query.ContainsKey("auth-token"))
                 queryAuth = context.Request.Query["auth-token"];
             if (context.Request.Headers.ContainsKey("Authorization"))
                 headerAuth = context.Request.Headers["Authorization"];
 
+            List<string> validTokens = new List<string> {
+                isYandexFBS ? _yandexFbsToken :
+                isYandexDBS ? _yandexDbsToken :
+                isOzonFBS ? _ozonFbsToken :
+                isSberFBS ? _sberFbsToken : "" };
+            if (isYandexFBS && !string.IsNullOrEmpty(_yandexExpressToken))
+                validTokens.Add(_yandexExpressToken);
+
             if ((string.IsNullOrEmpty(queryAuth) && string.IsNullOrEmpty(headerAuth)) ||
-                ((!string.IsNullOrEmpty(queryAuth) && (queryAuth != token)) ||
-                (!string.IsNullOrEmpty(headerAuth) && (headerAuth != token))))
+                ((!string.IsNullOrEmpty(queryAuth) && !validTokens.Contains(queryAuth))) ||
+                (!string.IsNullOrEmpty(headerAuth) && !validTokens.Contains(headerAuth)))
             {
                 context.Response.StatusCode = 403; //Forbidden
                 return;

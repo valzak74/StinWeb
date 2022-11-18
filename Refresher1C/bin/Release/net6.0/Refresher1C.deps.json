@@ -20,6 +20,7 @@
           "OzonClasses": "1.0.0",
           "Polly": "7.2.3",
           "Polly.Extensions.Http": "3.0.0",
+          "SberClasses": "1.0.0",
           "Serilog.AspNetCore": "4.1.0",
           "StinClasses": "1.0.0",
           "WbClasses": "1.0.0",
@@ -1143,6 +1144,15 @@
           "OzonClasses.dll": {}
         }
       },
+      "SberClasses/1.0.0": {
+        "dependencies": {
+          "HttpExtensions": "1.0.0",
+          "JsonExtensions": "1.0.0"
+        },
+        "runtime": {
+          "SberClasses.dll": {}
+        }
+      },
       "StinClasses/1.0.0": {
         "dependencies": {
           "JsonExtensions": "1.0.0",
@@ -1996,6 +2006,11 @@
       "sha512": ""
     },
     "OzonClasses/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "SberClasses/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

@@ -20,17 +20,15 @@ namespace Market.Controllers
         private IConfiguration _configuration;
         private string _defFirma;
         private string _defFirmaId;
-        private string _authApi;
         public YandexDbsController(IConfiguration configuration, IServiceScopeFactory serviceScopeFactory)
         {
             _serviceScopeFactory = serviceScopeFactory;
             _configuration = configuration;
             _defFirma = _configuration["Settings:Firma"];
             _defFirmaId = _configuration["Settings:" + _defFirma + ":FirmaId"];
-            _authApi = _configuration["Settings:" + _defFirma + ":YandexDBS"];
         }
         [HttpPost("cart")]
-        public async Task<ActionResult<ResponseCartDBS>> Cart([FromBody] RequestedCart requestedCart, CancellationToken cancellationToken)
+        public async Task<ActionResult<ResponseCartDBS>> Cart([FromHeader] HeadersParameters headers, [FromBody] RequestedCart requestedCart, CancellationToken cancellationToken)
         {
             var responseCart = new ResponseCartDBS();
             responseCart.Cart = new CartResponseDBSEntry();
@@ -38,7 +36,7 @@ namespace Market.Controllers
             using IBridge1C bridge = _serviceScopeFactory.CreateScope()
                 .ServiceProvider.GetService<IBridge1C>();
 
-            var market = await bridge.ПолучитьМаркет(_authApi, _defFirmaId);
+            var market = await bridge.ПолучитьМаркет(headers.Authorization, _defFirmaId);
             var requestedRegion = requestedCart.Cart.Delivery.Region.FindRegionByType(RegionType.CITY);
             if (requestedRegion == null)
                 requestedRegion = requestedCart.Cart.Delivery.Region.FindRegionByType(RegionType.SUBJECT_FEDERATION_DISTRICT);
@@ -54,20 +52,26 @@ namespace Market.Controllers
             //получить DataList = new List(pickupId == MarketplacePickups.Code, складId, regionName, МаксВремяЗаказа, КолвоДнейВыполнения = 0) 
             //исходя из фирмы и из Marketplace.AuthorizationYandexApi == configuration["Settings:YandexDBS"]
             //и из requestedCart.regionName
-            var точкиСамовывоза = await bridge.ПолучитьТочкиСамовывоза(фирма.Id, _authApi, requestedRegion.Name);
+            var точкиСамовывоза = await bridge.ПолучитьТочкиСамовывоза(фирма.Id, headers.Authorization, requestedRegion.Name);
 
-            var списокСкладовНаличияТовара = await bridge.ПолучитьСкладIdОстатковMarketplace();
+            List<string> списокСкладовНаличияТовара = null;
+            if (!string.IsNullOrEmpty(market.СкладId))
+                списокСкладовНаличияТовара = new List<string> { market.СкладId };
+            else
+                списокСкладовНаличияТовара = await bridge.ПолучитьСкладIdОстатковMarketplace();
             //получить Свободные остатки исходя из полученных складId
-            var номенклатураCodes = requestedCart.Cart.Items.Select(x => market.HexEncoding ? x.OfferId.DecodeHexString() : x.OfferId).ToList();
+            var номенклатураCodes = requestedCart.Cart.Items.Select(x => x.OfferId.Decode(market.Encoding)).Where(x => !string.IsNullOrEmpty(x)).ToList();
+            //market.HexEncoding ? x.OfferId.TryDecodeHexString() : x.OfferId).Where(x => !string.IsNullOrEmpty(x)).ToList();
             var НоменклатураList = await bridge.ПолучитьСвободныеОстатки(номенклатураCodes, списокСкладовНаличияТовара);
-            var lockedNomIds = await bridge.ПолучитьLockedНоменклатураIds(_authApi, номенклатураCodes);
+            var lockedNomIds = await bridge.ПолучитьLockedНоменклатураIds(headers.Authorization, номенклатураCodes);
             var nomDeltaStock = await bridge.ПолучитьDeltaStock(market.Id, номенклатураCodes, cancellationToken);
 
             bool естьТовар = false;
             decimal суммаЗаказа = 0;
             foreach (var requestedItem in requestedCart.Cart.Items)
             {
-                var номенклатура = НоменклатураList.Where(x => x.Code == (market.HexEncoding ? requestedItem.OfferId.DecodeHexString() : requestedItem.OfferId)).FirstOrDefault();
+                var номенклатура = НоменклатураList.Where(x => x.Code == requestedItem.OfferId.Decode(market.Encoding)).FirstOrDefault();
+                //(market.HexEncoding ? requestedItem.OfferId.TryDecodeHexString() : requestedItem.OfferId)).FirstOrDefault();
                 if (номенклатура != null)
                 {
                     int ОтпуститьВсего = 0;
@@ -117,7 +121,8 @@ namespace Market.Controllers
                 bool deliveryAvailable = !НоменклатураList.Where(x =>
                     responseCart.Cart.Items
                         .Where(y => y.Delivery)
-                        .Any(z => (market.HexEncoding ? z.OfferId.DecodeHexString() : z.OfferId) == x.Code))
+                        .Any(z => z.OfferId.Decode(market.Encoding) == x.Code))
+                        //(market.HexEncoding ? z.OfferId.DecodeHexString() : z.OfferId) == x.Code))
                     .Any(x => x.PickupOnly);
                 if (deliveryAvailable && (суммаЗаказа > 2000))
                 {
@@ -127,12 +132,14 @@ namespace Market.Controllers
                         bool нетНаСкладе = НоменклатураList
                             .Where(x => responseCart.Cart.Items
                                     .Where(y => y.Delivery)
-                                    .Any(z => (market.HexEncoding ? z.OfferId.DecodeHexString() : z.OfferId) == x.Code))
+                                    .Any(z => z.OfferId.Decode(market.Encoding) == x.Code))
+                                    //(market.HexEncoding ? z.OfferId.DecodeHexString() : z.OfferId) == x.Code))
                             .Any(x => x.Остатки
                                     .Where(y => y.СкладId == складId)
                                     .Sum(z => z.СвободныйОстаток) / x.Единица.Коэффициент <
                                         responseCart.Cart.Items
-                                            .Where(b => (market.HexEncoding ? b.OfferId.DecodeHexString() : b.OfferId) == x.Code)
+                                            .Where(b => b.OfferId.Decode(market.Encoding) == x.Code)
+                                            //(market.HexEncoding ? b.OfferId.DecodeHexString() : b.OfferId) == x.Code)
                                             .Select(c => c.Count)
                                             .FirstOrDefault());
                         if (!нетНаСкладе)
@@ -217,26 +224,32 @@ namespace Market.Controllers
             return Ok(responseCart);
         }
         [HttpPost("stocks")]
-        public async Task<ActionResult<ResponseStocks>> Stocks([FromBody] RequestStocks requestedStock, CancellationToken cancellationToken)
+        public async Task<ActionResult<ResponseStocks>> Stocks([FromHeader] HeadersParameters headers, [FromBody] RequestStocks requestedStock, CancellationToken cancellationToken)
         {
             var responseStock = new ResponseStocks();
 
             using IBridge1C bridge = _serviceScopeFactory.CreateScope()
                 .ServiceProvider.GetService<IBridge1C>();
            
-            List<string> списокСкладов = await bridge.ПолучитьСкладIdОстатковMarketplace();
-            
-            var market = await bridge.ПолучитьМаркет(_authApi, _defFirmaId);
-            var номенклатураCodes = market.HexEncoding ? requestedStock.Skus.Select(x => x.DecodeHexString()).ToList() : requestedStock.Skus;
+            var market = await bridge.ПолучитьМаркет(headers.Authorization, _defFirmaId);
+            List<string> списокСкладов = null;
+            if (!string.IsNullOrEmpty(market.СкладId))
+                списокСкладов = new List<string> { market.СкладId };
+            else
+                списокСкладов = await bridge.ПолучитьСкладIdОстатковMarketplace();
+
+            var номенклатураCodes = requestedStock.Skus.Select(x => x.Decode(market.Encoding)).Where(x => !string.IsNullOrEmpty(x)).ToList();
+                //market.HexEncoding ? requestedStock.Skus.Select(x => x.TryDecodeHexString()).Where(x => !string.IsNullOrEmpty(x)).ToList() : requestedStock.Skus;
             var НоменклатураList = await bridge.ПолучитьСвободныеОстатки(номенклатураCodes, списокСкладов);
 
-            var lockedNomIds = await bridge.ПолучитьLockedНоменклатураIds(_authApi, номенклатураCodes);
+            var lockedNomIds = await bridge.ПолучитьLockedНоменклатураIds(headers.Authorization, номенклатураCodes);
             var nomDeltaStock = await bridge.ПолучитьDeltaStock(market.Id, номенклатураCodes, cancellationToken);
 
             foreach (var requestedSku in requestedStock.Skus)
             {
                 int count = 0;
-                var номенклатура = НоменклатураList.Where(x => x.Code == (market.HexEncoding ? requestedSku.DecodeHexString() : requestedSku)).FirstOrDefault();
+                var номенклатура = НоменклатураList.Where(x => x.Code == requestedSku.Decode(market.Encoding)).FirstOrDefault();
+                //(market.HexEncoding ? requestedSku.TryDecodeHexString() : requestedSku)).FirstOrDefault();
                 if ((номенклатура != null) && !lockedNomIds.Any(x => x == номенклатура.Id))
                 {
                     var deltaStock = (int)nomDeltaStock.Where(x => x.Key == номенклатура.Id).Select(x => x.Value).FirstOrDefault();
@@ -260,7 +273,7 @@ namespace Market.Controllers
             return Ok(responseStock);
         }
         [HttpPost("order/accept")]
-        public async Task<ActionResult<ResponseOrder>> OrderAccept([FromBody] RequestedOrder requestedOrder, CancellationToken cancellationToken)
+        public async Task<ActionResult<ResponseOrder>> OrderAccept([FromHeader] HeadersParameters headers, [FromBody] RequestedOrder requestedOrder, CancellationToken cancellationToken)
         {
             var responseOrder = new ResponseOrder();
             responseOrder.Order = new OrderResponseEntry();
@@ -271,7 +284,7 @@ namespace Market.Controllers
             {
                 using IBridge1C bridge = _serviceScopeFactory.CreateScope()
                     .ServiceProvider.GetService<IBridge1C>();
-                var orderResult = await bridge.NewOrder(false, _authApi, requestedOrder.Order);
+                var orderResult = await bridge.NewOrder(false, headers.Authorization, requestedOrder.Order);
                 responseOrder.Order.Accepted = !string.IsNullOrEmpty(orderResult.Item1);
                 if (responseOrder.Order.Accepted)
                 {
@@ -291,7 +304,7 @@ namespace Market.Controllers
             return Ok(responseOrder);
         }
         [HttpPost("order/status")]
-        public async Task<ActionResult> OrderChangeStatus([FromBody] RequestedOrder requestedOrder, CancellationToken cancellationToken)
+        public async Task<ActionResult> OrderChangeStatus([FromHeader] HeadersParameters headers, [FromBody] RequestedOrder requestedOrder, CancellationToken cancellationToken)
         {
             using IBridge1C bridge = _serviceScopeFactory.CreateScope()
                 .ServiceProvider.GetService<IBridge1C>();
@@ -329,20 +342,20 @@ namespace Market.Controllers
                     Floor = requestedOrder.Order.Delivery.Address.Floor;
                     Apartment = requestedOrder.Order.Delivery.Address.Apartment;
                 }
-                await bridge.SetRecipientAndAddress(_authApi, requestedOrder.Order.Id, 
+                await bridge.SetRecipientAndAddress(headers.Authorization, requestedOrder.Order.Id, 
                     BuyerLastName, BuyerFirstName, BuyerMiddleName, Recipient, Phone,
                     Postcode, Country, City, Subway, Street, House, Block, Entrance, Entryphone, Floor, Apartment,
                     requestedOrder.Order.Notes);
             }
-            await bridge.ChangeStatus(null, _authApi, requestedOrder.Order.Id, requestedOrder.Order.Status, requestedOrder.Order.SubStatus);
+            await bridge.ChangeStatus(null, headers.Authorization, requestedOrder.Order.Id, requestedOrder.Order.Status, requestedOrder.Order.SubStatus);
             return Ok();
         }
         [HttpPost("order/cancellation/notify")]
-        public async Task<ActionResult> OrderCancelNotify([FromBody] RequestedOrder requestedOrder, CancellationToken cancellationToken)
+        public async Task<ActionResult> OrderCancelNotify([FromHeader] HeadersParameters headers, [FromBody] RequestedOrder requestedOrder, CancellationToken cancellationToken)
         {
             using IBridge1C bridge = _serviceScopeFactory.CreateScope()
                 .ServiceProvider.GetService<IBridge1C>();
-            await bridge.SetCancelNotify(_authApi, requestedOrder.Order.Id);
+            await bridge.SetCancelNotify(headers.Authorization, requestedOrder.Order.Id);
             return Ok();
         }
         [HttpPost("order/int_items")]

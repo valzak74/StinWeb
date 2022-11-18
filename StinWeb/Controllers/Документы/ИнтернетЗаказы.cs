@@ -134,9 +134,9 @@ namespace StinWeb.Controllers
                                     (!string.IsNullOrEmpty(warehouseId) ? markUse.Sp14190.Trim() == warehouseId :
                                         (!string.IsNullOrWhiteSpace(market.Sp14154) ? markUse.Sp14190.Trim() != market.Sp14154.Trim() :
                                             true))
-                              group new { order, market, item, nom, ed } by new 
-                              { 
-                                  orderId = order.Id, 
+                              group new { order, market, item, nom, ed } by new
+                              {
+                                  orderId = order.Id,
                                   orderNo = order.Code,
                                   status = order.Sp13982,
                                   типДоставкиПартнер = order.Sp13985,
@@ -643,8 +643,9 @@ namespace StinWeb.Controllers
         private async Task<string> SendOrderShippedAsync(string orderId, StinClasses.ReceiverPaymentType receiverPaymentType, string receiverEmail, string receiverPhone)
         {
             string functionResult = "";
+            var validMarketTypes = new List<string> { "ЯНДЕКС", "SBER" };
             var order = await _order.ПолучитьOrder(orderId);
-            if ((order != null) && (order.Тип == "ЯНДЕКС"))
+            if ((order != null) && validMarketTypes.Contains(order.Тип))
             {
                 using var httpClientHandler = new HttpClientHandler();
                 httpClientHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;

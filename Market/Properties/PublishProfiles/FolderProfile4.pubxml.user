@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+https://go.microsoft.com/fwlink/?LinkID=208121.
+-->
+<Project>
+  <PropertyGroup>
+    <_PublishTargetUrl>\\server8\marketip</_PublishTargetUrl>
+    <History>True|2022-11-17T11:11:28.6701065Z;</History>
+    <LastFailureDetails />
+  </PropertyGroup>
+</Project>

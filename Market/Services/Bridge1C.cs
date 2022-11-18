@@ -129,6 +129,256 @@ namespace Market.Services
             //using IPickup _pickup = new PickupEntity(_context);
             return await _pickup.GetPickups(фирмаId, authorizationApi, regionName);
         }
+        public async Task<(string orderNo, DateTime ShipmentDate)> NewOrder(
+            string authorizationApi, 
+            string marketplaceName,
+            string orderId,
+            List<OrderItem> items,
+            string regionName,
+            string outletId,
+            string orderDeliveryShipmentId,
+            DateTime orderShipmentDate,
+            double deliveryPrice,
+            double deliverySubsidy,
+            OrderRecipientAddress address,
+            StinPaymentType orderPaymentType,
+            StinPaymentMethod orderPaymentMethod,
+            StinDeliveryPartnerType orderDeliveryPartnerType,
+            StinDeliveryType orderDeliveryType,
+            string orderDeliveryServiceId,
+            string orderServiceName,
+            string orderDeliveryRegionId,
+            string orderDeliveryRegionName,
+            string orderNotes,
+            CancellationToken cancellationToken)
+        {
+            var defFirma = _configuration["Settings:Firma"];
+            string _defFirmaId = _configuration["Settings:" + defFirma + ":FirmaId"];
+            var market = await _marketplace.ПолучитьMarketplaceByFirma(authorizationApi, _defFirmaId);
+            if (market == null)
+            {
+                _logger.LogError("Не обнаружен маркетплейс для фирмы " + _defFirmaId + " и authApi " + authorizationApi);
+                return (orderNo: "", ShipmentDate: DateTime.Now);
+            }
+
+            Order getOrder = await _order.ПолучитьOrderByMarketplaceId(market.Id, orderId);
+            string orderNo = getOrder != null ? getOrder.OrderNo.Trim() : "";
+            if (string.IsNullOrEmpty(orderNo))
+            {
+                foreach (var item in items)
+                {
+                    item.Sku = item.Sku.Decode(market.Encoding); 
+                }
+                var точкиСамовывоза = await ПолучитьТочкиСамовывоза(_defFirmaId, authorizationApi, regionName);
+                List<string> списокСкладовНаличияТовара = null;
+                if (!string.IsNullOrEmpty(market.СкладId))
+                    списокСкладовНаличияТовара = new List<string> { market.СкладId };
+                else
+                    списокСкладовНаличияТовара = await _склад.ПолучитьСкладIdОстатковMarketplace();
+
+                var НоменклатураList = await ПолучитьСвободныеОстатки(items.Select(x => x.Sku).ToList(), списокСкладовНаличияТовара);
+                var номенклатураCodes = items.Select(x => x.Sku).ToList();
+                var nomQuantums = await _номенклатура.ПолучитьКвант(номенклатураCodes, cancellationToken);
+                foreach (var item in items)
+                {
+                    item.НоменклатураId = НоменклатураList.Where(y => y.Code == item.Sku).Select(z => z.Id).FirstOrDefault();
+                    var quantum = (int)nomQuantums.Where(q => q.Key == item.НоменклатураId).Select(q => q.Value).FirstOrDefault();
+                    if (quantum == 0)
+                        quantum = 1;
+                    if (marketplaceName.Contains("YANDEX", StringComparison.InvariantCultureIgnoreCase))
+                        quantum = 1;
+                    item.Количество = item.Количество * quantum;
+                    item.Цена = item.Цена / quantum;
+                    item.ЦенаСоСкидкой = item.ЦенаСоСкидкой / quantum;
+                }
+
+                bool нетВНаличие = НоменклатураList
+                            .Any(x => x.Остатки
+                                    .Sum(z => z.СвободныйОстаток) / x.Единица.Коэффициент <
+                                        items
+                                            .Where(b => b.Sku == x.Code)
+                                            .Select(c => c.Количество)
+                                            .FirstOrDefault());
+                if (!нетВНаличие)
+                {
+                    string складОтгрузкиId = Common.SkladEkran;
+                    if (!string.IsNullOrEmpty(outletId))
+                        складОтгрузкиId = outletId;
+                    using var tran = await _context.Database.BeginTransactionAsync(cancellationToken);
+                    try
+                    {
+                        DateTime dateTimeTA = _context.GetDateTimeTA();
+                        bool needToCalcDateTime = dateTimeTA.Month != DateTime.Now.Month;
+                        var реквизитыПроведенныхДокументов = new List<ОбщиеРеквизиты>();
+
+                        var new_order = await _order.НовыйOrder(_defFirmaId, market.Encoding, authorizationApi, marketplaceName, orderId,
+                            orderPaymentType, orderPaymentMethod,
+                            orderDeliveryPartnerType, orderDeliveryType, orderDeliveryServiceId, orderServiceName, deliveryPrice, deliverySubsidy,
+                            orderDeliveryShipmentId, orderShipmentDate,
+                            orderDeliveryRegionId, orderDeliveryRegionName, address, orderNotes, items);
+                        var формаПредварительнаяЗаявка = await _предварительнаяЗаявка.НовыйДокумент(
+                                 needToCalcDateTime ? dateTimeTA.AddMilliseconds(1) : DateTime.Now,
+                                 _defFirmaId,
+                                 string.IsNullOrEmpty(складОтгрузкиId) ? Common.SkladEkran : складОтгрузкиId,
+                                 market.КонтрагентId,
+                                 market.ДоговорId,
+                                 Common.ТипЦенРозничный,
+                                 new_order, НоменклатураList, address);
+                        var result = await _предварительнаяЗаявка.ЗаписатьAsync(формаПредварительнаяЗаявка);
+                        if (result != null)
+                        {
+                            if (_context.Database.CurrentTransaction != null)
+                                tran.Rollback();
+                            _logger.LogError(result.Description);
+                            orderNo = null;
+                        }
+                        else
+                        {
+                            orderNo = формаПредварительнаяЗаявка.Общие.НомерДок + "-" + формаПредварительнаяЗаявка.Общие.ДатаДок.ToString("yyyy");
+                            формаПредварительнаяЗаявка.Order.OrderNo = orderNo;
+                            if (marketplaceName.Contains("YANDEX", StringComparison.InvariantCultureIgnoreCase))
+                                await _order.ОбновитьOrderNo(формаПредварительнаяЗаявка.Order.Id, orderNo);
+                            else
+                                await _order.ОбновитьOrderNoAndStatus(формаПредварительнаяЗаявка.Order.Id, orderNo, 8);
+                            result = await _предварительнаяЗаявка.ПровестиAsync(формаПредварительнаяЗаявка);
+                            if (result != null)
+                            {
+                                if (_context.Database.CurrentTransaction != null)
+                                    tran.Rollback();
+                                _logger.LogError(result.Description);
+                                orderNo = null;
+                            }
+                            else
+                            {
+                                реквизитыПроведенныхДокументов.Add(формаПредварительнаяЗаявка.Общие);
+                                bool необходимоПеремещать = (формаПредварительнаяЗаявка.Order != null) &&
+                                    (формаПредварительнаяЗаявка.Order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP) &&
+                                    (формаПредварительнаяЗаявка.Order.DeliveryType == StinDeliveryType.PICKUP);
+                                var ПереченьНаличия = await _предварительнаяЗаявка.РаспределитьТоварПоНаличиюAsync(формаПредварительнаяЗаявка, списокСкладовНаличияТовара);
+                                List<string> notNativeKeys = new List<string> { "ДилерскаяЗаявка", "Спрос" };
+                                var списокУслуг = формаПредварительнаяЗаявка.ТабличнаяЧасть.Where(x => x.Номенклатура.ЭтоУслуга).ToList();
+                                if (ПереченьНаличия.Where(x => !notNativeKeys.Contains(x.Item2)).Count() > 0)
+                                {
+                                    foreach (var firmaId in ПереченьНаличия.Where(x => !notNativeKeys.Contains(x.Item2)).GroupBy(x => x.Item1).Select(gr => gr.Key))
+                                    {
+                                        foreach (var склId in ПереченьНаличия.Where(x => !notNativeKeys.Contains(x.Item2)).GroupBy(x => x.Item2).Select(gr => gr.Key))
+                                        {
+                                            var rowDataValue = ПереченьНаличия.Where(x => x.Item1 == firmaId && x.Item2 == склId).Select(x => x.Item3);
+                                            if (rowDataValue.Count() > 0)
+                                            {
+                                                var rowData = rowDataValue.FirstOrDefault();
+                                                if (необходимоПеремещать && (формаПредварительнаяЗаявка.Склад.Id != склId))
+                                                {
+                                                    var формаЗаявкаОдобренная = await _заявкаПокупателя.ВводНаОснованииAsync(формаПредварительнаяЗаявка, needToCalcDateTime ? dateTimeTA.AddMilliseconds(2) : DateTime.Now, списокУслуг.Count > 0, "Заявка (одобренная)", формаПредварительнаяЗаявка.Общие.Фирма.Id, формаПредварительнаяЗаявка.Склад.Id, rowData);
+                                                    списокУслуг.Clear();
+                                                    result = await _заявкаПокупателя.ЗаписатьПровестиAsync(формаЗаявкаОдобренная);
+                                                    реквизитыПроведенныхДокументов.Add(формаЗаявкаОдобренная.Общие);
+                                                    if (result != null)
+                                                    {
+                                                        if (_context.Database.CurrentTransaction != null)
+                                                            tran.Rollback();
+                                                        _logger.LogError(result.Description);
+                                                        orderNo = null;
+                                                        break;
+                                                    }
+                                                    //Перемещение со склада (включить маршрут)
+                                                    var ПереченьФормаПеремещениеТМЦ = await _перемещениеТМЦ.ДляЗаказаЗаявки(формаЗаявкаОдобренная, needToCalcDateTime ? dateTimeTA.AddMilliseconds(3) : DateTime.Now, firmaId, склId);
+                                                    foreach (var формаПеремещениеТмц in ПереченьФормаПеремещениеТМЦ)
+                                                    {
+                                                        result = await _перемещениеТМЦ.ЗаписатьПровестиAsync(формаПеремещениеТмц);
+                                                        реквизитыПроведенныхДокументов.Add(формаПеремещениеТмц.Общие);
+                                                        if (result != null)
+                                                        {
+                                                            if (_context.Database.CurrentTransaction != null)
+                                                                tran.Rollback();
+                                                            _logger.LogError(result.Description);
+                                                            orderNo = null;
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    var формаСчет = await _заявкаПокупателя.ВводНаОснованииAsync(формаПредварительнаяЗаявка, needToCalcDateTime ? dateTimeTA.AddMilliseconds(2) : DateTime.Now, списокУслуг.Count > 0, "Счет на оплату", формаПредварительнаяЗаявка.Общие.Фирма.Id, склId, rowData);
+                                                    списокУслуг.Clear();
+                                                    result = await _заявкаПокупателя.ЗаписатьПровестиAsync(формаСчет);
+                                                    реквизитыПроведенныхДокументов.Add(формаСчет.Общие);
+                                                }
+                                                if (result != null)
+                                                {
+                                                    if (_context.Database.CurrentTransaction != null)
+                                                        tran.Rollback();
+                                                    _logger.LogError(result.Description);
+                                                    orderNo = null;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        if (result != null)
+                                            break;
+                                    }
+                                }
+                                if (ПереченьНаличия.Where(x => x.Item2 == "ДилерскаяЗаявка").Count() > 0)
+                                {
+                                    var rowData = ПереченьНаличия.Where(x => x.Item2 == "ДилерскаяЗаявка").Select(x => x.Item3).FirstOrDefault();
+                                    if (rowData.Count > 0)
+                                    {
+                                        var формаДилерскаяЗаявка = await _заявкаПокупателя.ВводНаОснованииAsync(формаПредварительнаяЗаявка, needToCalcDateTime ? dateTimeTA.AddMilliseconds(2) : DateTime.Now, списокУслуг.Count > 0, "Заявка дилера", null, null, rowData);
+                                        списокУслуг.Clear();
+                                        result = await _заявкаПокупателя.ЗаписатьПровестиAsync(формаДилерскаяЗаявка);
+                                        реквизитыПроведенныхДокументов.Add(формаДилерскаяЗаявка.Общие);
+                                        if (result != null)
+                                        {
+                                            if (_context.Database.CurrentTransaction != null)
+                                                tran.Rollback();
+                                            _logger.LogError(result.Description);
+                                            orderNo = null;
+                                        }
+                                    }
+                                }
+                                if (ПереченьНаличия.Where(x => x.Item2 == "Спрос").Count() > 0)
+                                {
+                                    var rowData = ПереченьНаличия.Where(x => x.Item2 == "Спрос").Select(x => x.Item3).FirstOrDefault();
+                                    if (rowData.Count > 0)
+                                    {
+                                        var формаСпрос = await _спрос.ВводНаОснованииAsync(формаПредварительнаяЗаявка, needToCalcDateTime ? dateTimeTA.AddMilliseconds(2) : DateTime.Now, rowData);
+                                        result = await _спрос.ЗаписатьПровестиAsync(формаСпрос);
+                                        реквизитыПроведенныхДокументов.Add(формаСпрос.Общие);
+                                        if (result != null)
+                                        {
+                                            if (_context.Database.CurrentTransaction != null)
+                                                tran.Rollback();
+                                            _logger.LogError(result.Description);
+                                            orderNo = null;
+                                        }
+                                    }
+                                }
+                            }
+                            if (реквизитыПроведенныхДокументов.Count > 0)
+                                await _предварительнаяЗаявка.ОбновитьАктивность(реквизитыПроведенныхДокументов);
+                        }
+                        if (_context.Database.CurrentTransaction != null)
+                            tran.Commit();
+                    }
+                    catch (DbUpdateException db_ex)
+                    {
+                        if (_context.Database.CurrentTransaction != null)
+                            _context.Database.CurrentTransaction.Rollback();
+                        _logger.LogError(db_ex.InnerException.ToString());
+                    }
+                    catch (Exception ex)
+                    {
+                        if (_context.Database.CurrentTransaction != null)
+                            _context.Database.CurrentTransaction.Rollback();
+                        _logger.LogError(ex.Message);
+                    }
+                }
+
+            }
+            else
+                orderShipmentDate = getOrder.ShipmentDate;
+            return (orderNo: orderNo, ShipmentDate: orderShipmentDate);
+        }
         public async Task<Tuple<string, DateTime>> NewOrder(bool isFBS, string authorizationApi, OrderRequestEntry order)
         {
             var defFirma = _configuration["Settings:Firma"];
@@ -147,7 +397,7 @@ namespace Market.Services
             {
                 foreach (var item in order.Items)
                 {
-                    item.OfferId = market.HexEncoding ? item.OfferId.DecodeHexString() : item.OfferId;
+                    item.OfferId = item.OfferId.Decode(market.Encoding); //market.HexEncoding ? item.OfferId.DecodeHexString() : item.OfferId;
                 }
                 var requestedRegion = order.Delivery.Region.FindRegionByType(RegionType.CITY);
                 if (requestedRegion == null)
@@ -159,7 +409,11 @@ namespace Market.Services
                 if (requestedRegion == null)
                     requestedRegion = order.Delivery.Region.FindRegionByType(RegionType.COUNTRY);
                 var точкиСамовывоза = await ПолучитьТочкиСамовывоза(_defFirmaId, authorizationApi, requestedRegion.Name);
-                var списокСкладовНаличияТовара = await _склад.ПолучитьСкладIdОстатковMarketplace(); 
+                List<string> списокСкладовНаличияТовара = null;
+                if (!string.IsNullOrEmpty(market.СкладId))
+                    списокСкладовНаличияТовара = new List<string> { market.СкладId };
+                else
+                    списокСкладовНаличияТовара = await _склад.ПолучитьСкладIdОстатковMarketplace();
 
                 var НоменклатураList = await ПолучитьСвободныеОстатки(order.Items.Select(x => x.OfferId).ToList(), списокСкладовНаличияТовара);
                 bool нетВНаличие = НоменклатураList
@@ -234,7 +488,7 @@ namespace Market.Services
                             Apartment = order.Delivery.Address.Apartment ?? ""
                         } : null;
 
-                        var new_order = await _order.НовыйOrder(_defFirmaId, market.HexEncoding, authorizationApi, "Yandex " + (isFBS ? "FBS" : "DBS"), order.Id.ToString(),
+                        var new_order = await _order.НовыйOrder(_defFirmaId, market.Encoding, authorizationApi, "Yandex " + (isFBS ? "FBS" : "DBS"), order.Id.ToString(),
                             (StinPaymentType)order.PaymentType, (StinPaymentMethod)order.PaymentMethod,
                             (StinDeliveryPartnerType)order.Delivery.DeliveryPartnerType, (StinDeliveryType)order.Delivery.Type, order.Delivery.DeliveryServiceId, order.Delivery.ServiceName, deliveryPrice, deliverySubsidy,
                             orderDeliveryShipmentId, orderShipmentDate,
@@ -652,6 +906,58 @@ namespace Market.Services
                 }
             }
         }
+        public async Task<bool> ReduceCancelItems(string orderNo, string authorizationApi, List<OrderItem> cancelItems, CancellationToken cancellationToken)
+        {
+            var defFirma = _configuration["Settings:Firma"];
+            string _defFirmaId = _configuration["Settings:" + defFirma + ":FirmaId"];
+            var market = await _marketplace.ПолучитьMarketplaceByFirma(authorizationApi, _defFirmaId);
+            if (market == null)
+            {
+                _logger.LogError("Не обнаружен маркетплейс для фирмы " + _defFirmaId + " и authApi " + authorizationApi);
+                return false;
+            }
+            var order = await _order.ПолучитьOrderWithItems(market.Id, orderNo);
+            if (order != null && (order.Status != (int)StinOrderStatus.CANCELLED))
+            {
+                var reduceList = new List<OrderItem>();
+                foreach (var item in order.Items)
+                {
+                    if (cancelItems.Any(x => x.Sku == item.Sku))
+                    {
+                        var строкаВозврата = cancelItems.FirstOrDefault(x => x.Sku == item.Sku);
+                        if (item.Количество >= строкаВозврата.Количество)
+                        {
+                            reduceList.Add(new OrderItem { НоменклатураId = item.НоменклатураId, Количество = строкаВозврата.Количество });
+                            item.Количество = Math.Round(item.Количество - строкаВозврата.Количество);
+                            cancelItems.Remove(строкаВозврата);
+                        }
+                        else
+                        {
+                            reduceList.Add(new OrderItem { НоменклатураId = item.НоменклатураId, Количество = item.Количество });
+                            строкаВозврата.Количество = Math.Round(строкаВозврата.Количество - item.Количество);
+                            item.Количество = 0;
+                        }
+                    }
+                }
+                if (cancelItems.Count > 0)
+                {
+                    _logger.LogError("Превышено количество возвращаемых позиций по orderNo = " + orderNo);
+                    return false;
+                }
+                if (order.Items.Where(x => x.Количество > 0).Any())
+                {
+                    // частичная отмена
+                    _logger.LogError("Частичная отмена по orderNo = " + orderNo + " не реализована");
+                    return false;
+                }
+                else
+                {
+                    // полная отмена
+                    await ChangeStatus(order, authorizationApi, 0, StatusYandex.CANCELLED, SubStatusYandex.NotFound);
+                }
+            }
+            return true;
+        }
         public async Task<string> ReduceCancelItems(string docId, CancellationToken stoppingToken)
         {
             //using IOrder _order = new OrderEntity(_context);
@@ -712,6 +1018,20 @@ namespace Market.Services
                                 result += yandexResult.Item2;
                             }
                         }
+                        else if (order.Тип == "SBER")
+                        {
+                            var sberResult = await SberClasses.Functions.OrderReject(_httpService, order.AuthToken, order.MarketplaceId, SberClasses.SberReason.OUT_OF_STOCK,
+                                order.Items.Select(x => new KeyValuePair<string,string> (x.Id,x.Sku)).ToList(), stoppingToken);
+                            if (!string.IsNullOrEmpty(sberResult.error))
+                                result += sberResult.error;
+                            if (sberResult.success)
+                                await _order.ОбновитьOrderStatus(order.Id, 5);
+                            else
+                            {
+                                _logger.LogError(result);
+                                await _order.ОбновитьOrderStatus(order.Id, -5, sberResult.error);
+                            }
+                        }
                         else if (order.Тип == "OZON")
                         {
                             result += await OzonClasses.OzonOperators.CancelOrder(_httpService, order.ClientId, order.AuthToken,
@@ -723,9 +1043,9 @@ namespace Market.Services
                             }
                             else
                                 await _order.ОбновитьOrderStatus(order.Id, 5);
-                            _context.ОбновитьСетевуюАктивность();
-                            await _context.SaveChangesAsync();
                         }
+                        _context.ОбновитьСетевуюАктивность();
+                        await _context.SaveChangesAsync(stoppingToken);
                     }
                     else
                     {
@@ -790,6 +1110,56 @@ namespace Market.Services
                                         _context.РегистрацияИзмененийРаспределеннойИБ(14033, entityItem.Id);
                                     }
                                 }
+                            }
+                        }
+                        else if (order.Тип == "SBER")
+                        {
+                            var cancelData = new List<KeyValuePair<string, string>>();
+                            foreach (var item in order.Items)
+                            {
+                                if (списокВозврата.Any(x => x.НоменклатураId == item.НоменклатураId))
+                                {
+                                    var строкаВозврата = списокВозврата.FirstOrDefault(x => x.НоменклатураId == item.НоменклатураId);
+                                    if (item.Количество >= строкаВозврата.Количество)
+                                    {
+                                        item.Количество = Math.Round(item.Количество - строкаВозврата.Количество);
+                                        списокВозврата.Remove(строкаВозврата);
+                                    }
+                                    else
+                                    {
+                                        строкаВозврата.Количество = Math.Round(строкаВозврата.Количество - item.Количество);
+                                        item.Количество = 0;
+                                    }
+                                }
+                                cancelData.Add(new(item.Id, item.Sku));
+                            }
+
+                            var sberResult = await SberClasses.Functions.OrderReject(_httpService, order.AuthToken, order.MarketplaceId, SberClasses.SberReason.OUT_OF_STOCK,
+                                cancelData, stoppingToken);
+                            if (!string.IsNullOrEmpty(sberResult.error))
+                                result += sberResult.error;
+                            if (sberResult.success)
+                            {
+                                foreach (var item in order.Items)
+                                {
+                                    var entityItem = await _context.Sc14033s.FirstOrDefaultAsync(x => x.Parentext == order.Id && x.Sp14022 == item.НоменклатураId);
+                                    if (entityItem != null)
+                                    {
+                                        if (item.Количество == 0)
+                                            _context.Sc14033s.Remove(entityItem);
+                                        else
+                                        {
+                                            entityItem.Sp14023 = item.Количество;
+                                            _context.Update(entityItem);
+                                        }
+                                        _context.РегистрацияИзмененийРаспределеннойИБ(14033, entityItem.Id);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                _logger.LogError(result);
+                                await _order.ОбновитьOrderStatus(order.Id, -4, sberResult.error);
                             }
                         }
                         else if (order.Тип == "OZON")
@@ -869,24 +1239,37 @@ namespace Market.Services
         public async Task<string> SetStatusShipped(string orderId, string userId, ReceiverPaymentType paymentType, string email, string phone, CancellationToken cancellationToken)
         {
             string result = "";
-            var order = await _order.ПолучитьOrder(orderId);
+            var order = await _order.ПолучитьOrderWithItems(orderId);
             if ((order != null) && (order.Status == (int)StatusYandex.PROCESSING) && (order.SubStatus == (int)SubStatusYandex.READY_TO_SHIP))
             {
                 using var tran = await _context.Database.BeginTransactionAsync();
                 try
                 {
-                    var yandexResult = await YandexClasses.YandexOperators.ChangeStatus(_httpService,
-                        order.CampaignId, order.MarketplaceId,
-                        order.ClientId, order.AuthToken,
-                        order.DeliveryPartnerType == StinDeliveryPartnerType.YANDEX_MARKET ? YandexClasses.StatusYandex.PROCESSING : YandexClasses.StatusYandex.DELIVERED,
-                        order.DeliveryPartnerType == StinDeliveryPartnerType.YANDEX_MARKET ? YandexClasses.SubStatusYandex.SHIPPED : YandexClasses.SubStatusYandex.NotFound,
-                        (YandexClasses.DeliveryType)order.DeliveryType,
-                        cancellationToken);
-                    if (yandexResult.Item1)
-                        await _order.ОбновитьOrderStatus(order.Id, 6);
-                    else
-                        await _order.ОбновитьOrderStatus(order.Id, -6, yandexResult.Item2);
-                    result += yandexResult.Item2;
+                    if (order.Тип == "ЯНДЕКС")
+                    {
+                        var yandexResult = await YandexClasses.YandexOperators.ChangeStatus(_httpService,
+                            order.CampaignId, order.MarketplaceId,
+                            order.ClientId, order.AuthToken,
+                            order.DeliveryPartnerType == StinDeliveryPartnerType.YANDEX_MARKET ? YandexClasses.StatusYandex.PROCESSING : YandexClasses.StatusYandex.DELIVERED,
+                            order.DeliveryPartnerType == StinDeliveryPartnerType.YANDEX_MARKET ? YandexClasses.SubStatusYandex.SHIPPED : YandexClasses.SubStatusYandex.NotFound,
+                            (YandexClasses.DeliveryType)order.DeliveryType,
+                            cancellationToken);
+                        if (yandexResult.Item1)
+                            await _order.ОбновитьOrderStatus(order.Id, 6);
+                        else
+                            await _order.ОбновитьOrderStatus(order.Id, -6, yandexResult.Item2);
+                        result += yandexResult.Item2;
+                    }
+                    else if (order.Тип == "SBER")
+                    {
+                        var sberResult = await SberClasses.Functions.OrderShipping(_httpService,
+                            order.CampaignId, order.AuthToken, order.MarketplaceId, order.OrderNo, DateTime.Now, order.Items.Count, cancellationToken);
+                        if (sberResult.success)
+                            await _order.ОбновитьOrderStatus(order.Id, 6);
+                        else
+                            await _order.ОбновитьOrderStatus(order.Id, -6, sberResult.error);
+                        result += sberResult.error;
+                    }
                     if (_context.Database.CurrentTransaction != null)
                         tran.Commit();
                 }

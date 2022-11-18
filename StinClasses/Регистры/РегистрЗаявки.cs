@@ -287,7 +287,7 @@ namespace StinClasses.Регистры
                                join j in _context._1sjourns on ra.Iddoc equals j.Iddoc
                                join doc in _context.Dh2457s on ra.Sp4671 equals doc.Iddoc
                                where j.DateTimeIddoc.CompareTo(PeriodStart) >= 0 && (IncludeDeadLine ? j.DateTimeIddoc.CompareTo(PeriodEnd) <= 0 : j.DateTimeIddoc.CompareTo(PeriodEnd) < 0) &&
-                                    doc.Sp13995 == orderId
+                                    doc.Sp13995 == orderId 
                                select new
                                {
                                    ЗаявкаId = ra.Sp4671,

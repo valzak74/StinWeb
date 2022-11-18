@@ -18,11 +18,6 @@ namespace Refresher1C
             int.TryParse(config["Marketplace:refreshIntervalSec"], out int refreshInterval);
             refreshInterval = Math.Max(refreshInterval, 1);
             _delay = TimeSpan.FromSeconds(refreshInterval);
-            //if (int.TryParse(config["Marketplace:refreshIntervalSec"], out _refreshInterval))
-            //    _refreshInterval = Math.Max(_refreshInterval, 1);
-            //else
-            //    _refreshInterval = 60;
-            //_dueTime = TimeSpan.FromSeconds(_refreshInterval);
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -32,17 +27,11 @@ namespace Refresher1C
                 await Task.Delay(_delay, stoppingToken);
             }
         }
-        //public override async Task ExecuteTaskAsync(CancellationToken stoppingToken)
-        //{
-        //    await CheckMarketplaceData(stoppingToken);
-        //}
         private async Task CheckMarketplaceData(CancellationToken stoppingToken)
         {
             try
             {
-                //using IMarketplaceService MarketplaceScope = _scopeFactory.CreateScope()
-                //       .ServiceProvider.GetService<IMarketplaceService>();
-                Task checkNabor = Task.Run(async () => 
+                Task checkNabor = Task.Run(async () =>
                 {
                     using IMarketplaceService MarketplaceScope = _scopeFactory.CreateScope()
                            .ServiceProvider.GetService<IMarketplaceService>();
@@ -79,11 +68,6 @@ namespace Refresher1C
                     buyerInfo,
                     orderStatus
                     );
-                //await MarketplaceScope.CheckNaborNeeded(stoppingToken);
-                //await MarketplaceScope.PrepareYandexFbsBoxes(stoppingToken);
-                //await MarketplaceScope.PrepareFbsLabels(stoppingToken);
-                //await MarketplaceScope.RefreshBuyerInfo(stoppingToken);
-                //await MarketplaceScope.ChangeOrderStatus(stoppingToken);
             }
             catch
             {

@@ -50,6 +50,7 @@ namespace StinClasses.Справочники
         public string ClientId { get; set; }
         public string AuthToken { get; set; }
         public string AuthorizationApi { get; set; }
+        public EncodeVersion Encode { get; set; }
         public OrderBuyerRecipient Recipient { get; set; }
         public OrderRecipientAddress Address { get; set; }
         public string CustomerComment { get; set; }
@@ -63,6 +64,7 @@ namespace StinClasses.Справочники
     public class OrderItem
     {
         public string Id { get; set; }
+        public string Sku { get; set; }
         public string НоменклатураId { get; set; }
         public decimal Количество { get; set; }
         public decimal Цена { get; set; }
@@ -102,7 +104,7 @@ namespace StinClasses.Справочники
         Task<Order> ПолучитьOrderByMarketplaceId(string marketplaceId, string marketplaceOrderId);
         Task<Order> ПолучитьOrderWithItems(string orderId);
         Task<Order> ПолучитьOrderWithItems(string marketplaceId, string marketplaceOrderId);
-        Task<Order> НовыйOrder(string firmaId, bool hexEncoding, string authApi, string marketplaceName, string marketplaceId,
+        Task<Order> НовыйOrder(string firmaId, EncodeVersion encoding, string authApi, string marketplaceName, string marketplaceId,
             StinPaymentType paymentType, StinPaymentMethod paymentMethod,
             StinDeliveryPartnerType deliveryPartnerType, StinDeliveryType deliveryType, string deliveryServiceId, string deliveryServiceName, double deliveryPrice, double deliverySubsidy,
             string shipmentId, DateTime shipmentDate, string regionId, string regionName, OrderRecipientAddress address, string notes, List<OrderItem> items);
@@ -214,7 +216,8 @@ namespace StinClasses.Справочники
                                    CampaignId = m.Code.Trim(),
                                    ClientId = m.Sp14053.Trim(),
                                    AuthToken = m.Sp14054.Trim(),
-                                   AuthorizationApi = m.Sp14077.Trim()
+                                   AuthorizationApi = m.Sp14077.Trim(),
+                                   Encode = (EncodeVersion)m.Sp14153
                                }).FirstOrDefaultAsync();
 
             return await UpdateOrderStatusFromRegistry(order);
@@ -272,7 +275,8 @@ namespace StinClasses.Справочники
                                    CampaignId = m.Code.Trim(),
                                    ClientId = m.Sp14053.Trim(),
                                    AuthToken = m.Sp14054.Trim(),
-                                   AuthorizationApi = m.Sp14077.Trim()
+                                   AuthorizationApi = m.Sp14077.Trim(),
+                                   Encode = (EncodeVersion)m.Sp14153
                                }).FirstOrDefaultAsync();
 
             return await UpdateOrderStatusFromRegistry(order);
@@ -281,44 +285,50 @@ namespace StinClasses.Справочники
         {
             var order = await ПолучитьOrder(orderId);
             if (order != null)
-                order.Items = await _context.Sc14033s
-                    .Where(x => x.Parentext == order.Id)
-                    .Select(x => new OrderItem
-                    {
-                        Id = x.Code,
-                        НоменклатураId = x.Sp14022,
-                        Количество = x.Sp14023,
-                        Цена = x.Sp14024,
-                        ЦенаСоСкидкой = x.Sp14025,
-                        Вознаграждение = x.Sp14026,
-                        Доставка = x.Sp14027 == 1,
-                        ДопПараметры = x.Sp14028,
-                        ИдентификаторПоставщика = x.Sp14029,
-                        ИдентификаторСклада = x.Sp14030,
-                        ИдентификаторСкладаПартнера = x.Sp14031
-                    }).ToListAsync();
+                order.Items = await (from x in _context.Sc14033s
+                       join n in _context.Sc84s on x.Sp14022 equals n.Id
+                       where x.Parentext == orderId
+                       select new OrderItem
+                       {
+                           Id = x.Code,
+                           Sku = n.Code.Encode(order.Encode),
+                           НоменклатураId = x.Sp14022,
+                           Количество = x.Sp14023,
+                           Цена = x.Sp14024,
+                           ЦенаСоСкидкой = x.Sp14025,
+                           Вознаграждение = x.Sp14026,
+                           Доставка = x.Sp14027 == 1,
+                           ДопПараметры = x.Sp14028,
+                           ИдентификаторПоставщика = x.Sp14029,
+                           ИдентификаторСклада = x.Sp14030,
+                           ИдентификаторСкладаПартнера = x.Sp14031
+                       }
+                    ).ToListAsync();
             return order;
         }
         public async Task<Order> ПолучитьOrderWithItems(string marketplaceId, string marketplaceOrderId)
         {
             var order = await ПолучитьOrderByMarketplaceId(marketplaceId, marketplaceOrderId);
             if (order != null)
-                order.Items = await _context.Sc14033s
-                    .Where(x => x.Parentext == order.Id)
-                    .Select(x => new OrderItem
-                    {
-                        Id = x.Code,
-                        НоменклатураId = x.Sp14022,
-                        Количество = x.Sp14023,
-                        Цена = x.Sp14024,
-                        ЦенаСоСкидкой = x.Sp14025,
-                        Вознаграждение = x.Sp14026,
-                        Доставка = x.Sp14027 == 1,
-                        ДопПараметры = x.Sp14028,
-                        ИдентификаторПоставщика = x.Sp14029,
-                        ИдентификаторСклада = x.Sp14030,
-                        ИдентификаторСкладаПартнера = x.Sp14031
-                    }).ToListAsync();
+                order.Items = await (from x in _context.Sc14033s
+                                     join n in _context.Sc84s on x.Sp14022 equals n.Id
+                                     where x.Parentext == order.Id
+                                     select new OrderItem
+                                     {
+                                         Id = x.Code,
+                                         Sku = n.Code.Encode(order.Encode),
+                                         НоменклатураId = x.Sp14022,
+                                         Количество = x.Sp14023,
+                                         Цена = x.Sp14024,
+                                         ЦенаСоСкидкой = x.Sp14025,
+                                         Вознаграждение = x.Sp14026,
+                                         Доставка = x.Sp14027 == 1,
+                                         ДопПараметры = x.Sp14028,
+                                         ИдентификаторПоставщика = x.Sp14029,
+                                         ИдентификаторСклада = x.Sp14030,
+                                         ИдентификаторСкладаПартнера = x.Sp14031
+                                     }
+                    ).ToListAsync();
             return order;
         }
         public async Task ОбновитьOrderNo(string Id, string OrderNo)
@@ -414,7 +424,7 @@ namespace StinClasses.Справочники
                 await _context.SaveChangesAsync();
             }
         }
-        public async Task<Order> НовыйOrder(string firmaId, bool hexEncoding, string authApi, string marketplaceName, string marketplaceId,
+        public async Task<Order> НовыйOrder(string firmaId, EncodeVersion encoding, string authApi, string marketplaceName, string marketplaceId,
             StinPaymentType paymentType, StinPaymentMethod paymentMethod,
             StinDeliveryPartnerType deliveryPartnerType, StinDeliveryType deliveryType, string deliveryServiceId, string deliveryServiceName, double deliveryPrice, double deliverySubsidy,
             string shipmentId, DateTime shipmentDate, string regionId, string regionName, OrderRecipientAddress address, string notes, List<OrderItem> items)
@@ -461,7 +471,7 @@ namespace StinClasses.Справочники
                         Sp14054 = "",
                         Sp14076 = "",
                         Sp14077 = authApi,
-                        Sp14153 = hexEncoding ? 1 : 0,
+                        Sp14153 = (int)encoding, 
                         Sp14154 = "",
                         Sp14155 = "Яндекс", //Тип
                         Sp14164 = "FBS", //Модель
@@ -470,6 +480,7 @@ namespace StinClasses.Справочники
                         Sp14157 = 0, //Сортировка
                         Sp14175 = Common.ПустоеЗначение, //Контрагент
                         Sp14176 = Common.ПустоеЗначение, //Договор
+                        Sp14241 = Common.ПустоеЗначение, //Склад
                         Sp14177 = 0, //StockRefresh
                         Sp14216 = 0 //StockOriginal
                     };

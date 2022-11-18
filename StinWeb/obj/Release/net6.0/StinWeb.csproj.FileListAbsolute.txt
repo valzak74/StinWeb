@@ -320,3 +320,8 @@ C:\Users\Валентин\source\repos\StinWeb\StinWeb\bin\Release\net6.0\HttpEx
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\bin\Release\net6.0\OzonClasses.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\bin\Release\net6.0\HttpExtensions.pdb
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\bin\Release\net6.0\OzonClasses.pdb
+C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\staticwebassets\msbuild.StinWeb.Microsoft.AspNetCore.StaticWebAssets.props
+C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\staticwebassets\msbuild.build.StinWeb.props
+C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\staticwebassets\msbuild.buildMultiTargeting.StinWeb.props
+C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\staticwebassets\msbuild.buildTransitive.StinWeb.props
+C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\staticwebassets.pack.json

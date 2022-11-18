@@ -13,7 +13,30 @@ namespace Market.Services
         Task<Фирма> ПолучитьФирму(string фирмаId);
         Task<List<Номенклатура>> ПолучитьСвободныеОстатки(List<string> requestedCodes, List<string> списокСкладов);
         Task<Tuple<string,DateTime>> NewOrder(bool isFBS, string authorizationApi, OrderRequestEntry order);
+        Task<(string orderNo, DateTime ShipmentDate)> NewOrder(
+                    string authorizationApi,
+                    string marketplaceName,
+                    string orderId,
+                    List<OrderItem> items,
+                    string regionName,
+                    string outletId,
+                    string orderDeliveryShipmentId,
+                    DateTime orderShipmentDate,
+                    double deliveryPrice,
+                    double deliverySubsidy,
+                    OrderRecipientAddress address,
+                    StinPaymentType orderPaymentType,
+                    StinPaymentMethod orderPaymentMethod,
+                    StinDeliveryPartnerType orderDeliveryPartnerType,
+                    StinDeliveryType orderDeliveryType,
+                    string orderDeliveryServiceId,
+                    string orderServiceName,
+                    string orderDeliveryRegionId,
+                    string orderDeliveryRegionName,
+                    string orderNotes,
+                    CancellationToken cancellationToken);
         Task ChangeStatus(Order order, string authorizationApi, long Id, StatusYandex newStatus, SubStatusYandex newSubStatus, string userId = null, ReceiverPaymentType receiverPaymentType = ReceiverPaymentType.NotFound, string receiverEmail = null, string receiverPhone = null);
+        Task<bool> ReduceCancelItems(string orderNo, string authorizationApi, List<OrderItem> cancelItems, CancellationToken cancellationToken);
         Task<string> ReduceCancelItems(string docId, CancellationToken stoppingToken);
         Task<string> SetStatusShipped(string orderId, string userId, ReceiverPaymentType paymentType, string email, string phone, CancellationToken cancellationToken);
         Task<string> SetStatusCancelledUserChangeMind(string orderId, CancellationToken cancellationToken);

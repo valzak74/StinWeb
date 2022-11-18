@@ -1,0 +1,17 @@
+C:\Users\Валентин\source\repos\StinWeb\SberClasses\bin\Release\net6.0\SberClasses.deps.json
+C:\Users\Валентин\source\repos\StinWeb\SberClasses\bin\Release\net6.0\SberClasses.dll
+C:\Users\Валентин\source\repos\StinWeb\SberClasses\bin\Release\net6.0\SberClasses.pdb
+C:\Users\Валентин\source\repos\StinWeb\SberClasses\obj\Release\net6.0\SberClasses.csproj.AssemblyReference.cache
+C:\Users\Валентин\source\repos\StinWeb\SberClasses\obj\Release\net6.0\SberClasses.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Валентин\source\repos\StinWeb\SberClasses\obj\Release\net6.0\SberClasses.AssemblyInfoInputs.cache
+C:\Users\Валентин\source\repos\StinWeb\SberClasses\obj\Release\net6.0\SberClasses.AssemblyInfo.cs
+C:\Users\Валентин\source\repos\StinWeb\SberClasses\obj\Release\net6.0\SberClasses.csproj.CoreCompileInputs.cache
+C:\Users\Валентин\source\repos\StinWeb\SberClasses\obj\Release\net6.0\SberClasses.dll
+C:\Users\Валентин\source\repos\StinWeb\SberClasses\obj\Release\net6.0\refint\SberClasses.dll
+C:\Users\Валентин\source\repos\StinWeb\SberClasses\obj\Release\net6.0\SberClasses.pdb
+C:\Users\Валентин\source\repos\StinWeb\SberClasses\obj\Release\net6.0\ref\SberClasses.dll
+C:\Users\Валентин\source\repos\StinWeb\SberClasses\bin\Release\net6.0\JsonExtensions.dll
+C:\Users\Валентин\source\repos\StinWeb\SberClasses\bin\Release\net6.0\JsonExtensions.pdb
+C:\Users\Валентин\source\repos\StinWeb\SberClasses\obj\Release\net6.0\SberClasses.csproj.CopyComplete
+C:\Users\Валентин\source\repos\StinWeb\SberClasses\bin\Release\net6.0\HttpExtensions.dll
+C:\Users\Валентин\source\repos\StinWeb\SberClasses\bin\Release\net6.0\HttpExtensions.pdb

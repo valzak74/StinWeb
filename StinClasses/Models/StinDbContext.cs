@@ -26959,6 +26959,13 @@ namespace StinClasses.Models
                     .HasColumnType("numeric(13, 3)")
                     .HasColumnName("SP12969");
 
+                entity.Property(e => e.Sp14234)
+                    .IsRequired()
+                    .HasMaxLength(9)
+                    .IsUnicode(false)
+                    .HasColumnName("SP14234")
+                    .IsFixedLength();
+
                 entity.Property(e => e.Verstamp).HasColumnName("VERSTAMP");
             });
 
@@ -28306,6 +28313,13 @@ namespace StinClasses.Models
                 entity.Property(e => e.Sp14216)
                     .HasColumnType("numeric(1, 0)")
                     .HasColumnName("SP14216");
+
+                entity.Property(e => e.Sp14241)
+                    .IsRequired()
+                    .HasMaxLength(9)
+                    .IsUnicode(false)
+                    .HasColumnName("SP14241")
+                    .IsFixedLength();
 
                 entity.Property(e => e.Verstamp).HasColumnName("VERSTAMP");
             });

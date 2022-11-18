@@ -19,6 +19,7 @@ namespace Refresher1C.Service
         private readonly ILogger<DocCreateOrUpdate> _logger;
 
         private IOrder _order;
+        private IMarketplace _marketplace;
         private IСклад _склад;
         private IФирма _фирма;
         private IНоменклатура _номенклатура;
@@ -47,6 +48,7 @@ namespace Refresher1C.Service
                 if (disposing)
                 {
                     _order.Dispose();
+                    _marketplace.Dispose();
                     _склад.Dispose();
                     _фирма.Dispose();
                     _номенклатура.Dispose();
@@ -80,6 +82,7 @@ namespace Refresher1C.Service
             _logger = logger;
             _context = context;
             _order = new OrderEntity(context);
+            _marketplace = new MarketplaceEntity(context);
             _склад = new СкладEntity(context);
             _фирма = new ФирмаEntity(context);
             _номенклатура = new НоменклатураEntity(context);
@@ -216,7 +219,7 @@ namespace Refresher1C.Service
                 _logger.LogError(ex.Message);
             }
         }
-        public async Task NewOrder(string тип, string defFirmaId, string customerId, string dogovorId, string authApi, bool hexEncoding,
+        public async Task NewOrder(string тип, string defFirmaId, string customerId, string dogovorId, string authApi, EncodeVersion encoding,
             string складОтгрузкиId, string notes,
             string deliveryServiceId, string deliveryServiceName,
             StinDeliveryPartnerType partnerType, StinDeliveryType deliveryType, double deliveryPrice, double deliverySubsidy,
@@ -225,7 +228,12 @@ namespace Refresher1C.Service
             string shipmentId, string postingNumber, DateTime shipmentDate, List<OrderItem> items, CancellationToken cancellationToken)
         {
             var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(defFirmaId);
-            var списокСкладовНаличияТовара = await _склад.ПолучитьСкладIdОстатковMarketplace();
+            var market = await _marketplace.ПолучитьMarketplaceByFirma(authApi, defFirmaId);
+            List<string> списокСкладовНаличияТовара = null;
+            if (!string.IsNullOrEmpty(market.СкладId))
+                списокСкладовНаличияТовара = new List<string> { market.СкладId };
+            else
+                списокСкладовНаличияТовара = await _склад.ПолучитьСкладIdОстатковMarketplace();
             var номенклатураCodes = items.Select(x => x.НоменклатураId).ToList();
             var НоменклатураList = await _номенклатура.ПолучитьСвободныеОстатки(
                 разрешенныеФирмы, 
@@ -274,7 +282,7 @@ namespace Refresher1C.Service
                         marketplaceName = "Ozon FBS";
                         break;
                 }
-                var new_order = await _order.НовыйOrder(defFirmaId, hexEncoding, authApi,
+                var new_order = await _order.НовыйOrder(defFirmaId, encoding, authApi,
                     marketplaceName, postingNumber, paymentType, paymentMethod, partnerType, deliveryType,
                     deliveryServiceId, deliveryServiceName, deliveryPrice, deliverySubsidy, shipmentId, shipmentDate,
                     regionId, regionName, address, notes, items);

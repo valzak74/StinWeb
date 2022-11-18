@@ -131,7 +131,7 @@ namespace StinWeb.Controllers.Обработки
                     Model = x.Sp14164.ToUpper().Trim(),
                     Наименование = x.Descr.Trim(),
                     ShortName = x.Sp14156.Trim(),
-                    HexEncoding = x.Sp14153 == 1,
+                    Encoding = (EncodeVersion)x.Sp14153,
                     DefMultiplyer = x.Sp14165,
                     КонтрагентId = x.Sp14175
                 })
@@ -362,7 +362,7 @@ namespace StinWeb.Controllers.Обработки
             {
                 row++;
                 sheet.SetValue(styleValue, row, columnValues["Id"], item.Id.Replace(" ","_"));
-                sheet.SetValue(styleValue, row, columnValues["Sku"], campaignData.HexEncoding ? item.NomCode.EncodeHexString() : item.NomCode);
+                sheet.SetValue(styleValue, row, columnValues["Sku"], item.NomCode.Encode(campaignData.Encoding));
                 sheet.SetValue(styleValue, row, columnValues["Артикул"], item.Артикул);
                 sheet.SetValue(styleValue, row, columnValues["Наименование"], item.Наименование);
                 sheet.SetValue(styleValue, row, columnValues["Бренд"], item.Бренд);

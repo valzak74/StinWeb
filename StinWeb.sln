@@ -33,6 +33,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WbClasses", "WbClasses\WbCl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "topsdk-net-core", "F:\tmp\aliexpress_net_core\topsdk-net-core.csproj", "{F68B8C49-1E6B-4E26-BCFB-4B98E2F32F06}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SberClasses", "SberClasses\SberClasses.csproj", "{40699948-D0A7-48EB-8480-BE46EAE62275}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -99,6 +101,10 @@ Global
 		{F68B8C49-1E6B-4E26-BCFB-4B98E2F32F06}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F68B8C49-1E6B-4E26-BCFB-4B98E2F32F06}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F68B8C49-1E6B-4E26-BCFB-4B98E2F32F06}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40699948-D0A7-48EB-8480-BE46EAE62275}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40699948-D0A7-48EB-8480-BE46EAE62275}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40699948-D0A7-48EB-8480-BE46EAE62275}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40699948-D0A7-48EB-8480-BE46EAE62275}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

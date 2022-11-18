@@ -206,6 +206,54 @@ namespace StinClasses
         {
             return Encoding.UTF8.GetString(Convert.FromHexString(value));
         }
+        public static string TryDecodeHexString(this string value)
+        {
+            try
+            {
+                return Encoding.UTF8.GetString(Convert.FromHexString(value));
+            }
+            catch
+            {
+                //Console.WriteLine(value);
+                return "";
+            }
+        }
+        public static string EncodeDecString(this string value)
+        {
+            return string.Join('.', value.Select(c => (short)c));
+        }
+        public static string TryDecodeDecString(this string value)
+        {
+            try
+            {
+                var decs = value.Split('.', StringSplitOptions.RemoveEmptyEntries).Select(x => (char)(short.Parse(x)));
+                return string.Join("", decs);
+            }
+            catch
+            {
+                return "";
+            }
+        }
+        public static string Encode(this string value, EncodeVersion version)
+        {
+            return version switch
+            {
+                EncodeVersion.None => value,
+                EncodeVersion.Hex => value.EncodeHexString(),
+                EncodeVersion.Dec => value.EncodeDecString(),
+                _ => value
+            };
+        }
+        public static string Decode(this string value, EncodeVersion version)
+        {
+            return version switch
+            {
+                EncodeVersion.None => value,
+                EncodeVersion.Hex => value.TryDecodeHexString(),
+                EncodeVersion.Dec => value.TryDecodeDecString(),
+                _ => value
+            };
+        }
         public static DateTime ToDateTime(this string DateTimeIddoc)
         {
             DateTime result = new DateTime();
