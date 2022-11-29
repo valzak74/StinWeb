@@ -22,6 +22,7 @@ using StinClasses.Models;
 using JsonExtensions;
 using HttpExtensions;
 using System.Threading;
+using System.Text;
 
 namespace StinWeb.Controllers
 {
@@ -268,6 +269,89 @@ namespace StinWeb.Controllers
             }, 1).ToList();
             return Ok("".CreateOrUpdateHtmlPrintPage("ЛистСборки", printData[0]));
         }
+        async Task<string> GetSberReestr(string campaignId, TimeSpan limitTime, CancellationToken cancellationToken)
+        {
+            DateTime departureDate = limitTime <= DateTime.Now.TimeOfDay ? DateTime.Today.AddDays(1) : DateTime.Today;
+            if (departureDate.DayOfWeek == DayOfWeek.Saturday)
+                departureDate = departureDate.AddDays(2);
+            if (departureDate.DayOfWeek == DayOfWeek.Sunday)
+                departureDate = departureDate.AddDays(1);
+
+            var dataFirma = await (from market in _context.Sc14042s
+                                   join firma in _context.Sc4014s on market.Parentext equals firma.Id
+                                   join своиЮрЛица in _context.Sc131s on firma.Sp4011 equals своиЮрЛица.Id
+                                   where market.Code.Trim() == campaignId
+                                   select new
+                                   {
+                                       НазваниеФирмы = своиЮрЛица.Descr.Trim(),
+                                       ИНН = своиЮрЛица.Sp135.Trim(),
+                                       своиЮрЛица.Id,
+                                       Договор = market.Sp14053.Trim()
+                                   }).FirstOrDefaultAsync(cancellationToken);
+            var РуководительId = await StinClasses.CommonDB.ПолучитьЗначениеПериодическогоРеквизита(_context, dataFirma.Id, 146);
+            var Директор = await _context.Sc503s.Where(x => x.Id == РуководительId).Select(x => x.Descr.Trim()).FirstOrDefaultAsync(cancellationToken);
+            var dataOrder = await (from order in _context.Sc13994s
+                                   join market in _context.Sc14042s on order.Sp14038 equals market.Id
+                                   join item in _context.Sc14033s on order.Id equals item.Parentext
+                                   join nom in _context.Sc84s on item.Sp14022 equals nom.Id
+                                   join ed in _context.Sc75s on nom.Sp94 equals ed.Id
+                                   where !order.Ismark
+                                    && (market.Code.Trim() == campaignId)
+                                    && (order.Sp13990 == departureDate)
+                                   select new
+                                   {
+                                       DeliveryId = order.Sp13989.Trim(),
+                                       ShipmentId = order.Code.Trim(),
+                                       НомерСПрефиксом = market.Code.Trim() + "*" + order.Sp13981.Trim(),
+                                       КолМест = ed.Sp14063 == 0 ? 1 : ed.Sp14063,
+                                       Квант = nom.Sp14188 == 0 ? 1 : nom.Sp14188,
+                                       Количество = item.Sp14023,
+                                       Цена = item.Sp14024,
+                                   }).ToListAsync(cancellationToken);
+            var dataOrderNum = dataOrder
+                .GroupBy(x => new { x.DeliveryId, x.ShipmentId, x.НомерСПрефиксом })
+                .Select((gr, y) =>
+                {
+                    string boxPref = gr.Key.НомерСПрефиксом + "*";
+                    int boxCount = 0;
+                    var boxNos = new List<string>();
+                    var boxCosts = new List<string>();
+                    foreach (var item in gr)
+                    {
+                        int boxes = (int)(item.Количество * item.КолМест);
+                        boxCount += boxes;
+                        boxNos.Add(boxPref + boxCount);
+                        boxCosts.Add((item.Цена / boxes).ToString(Common.ФорматЦеныСи, CultureInfo.InvariantCulture));
+                    }
+                    return new 
+                    {
+                        Ном = (y + 1).ToString("0", CultureInfo.InvariantCulture),
+                        gr.Key.DeliveryId,
+                        gr.Key.ShipmentId,
+                        gr.Key.НомерСПрефиксом,
+                        КолМест = gr.Sum(x => x.Количество * x.КолМест).ToString("0", CultureInfo.InvariantCulture),
+                        НомерМеста = string.Join(Environment.NewLine, boxNos),
+                        СтоимостьМеста = string.Join(Environment.NewLine, boxCosts),
+                        СтоимостьОтправления = gr.Sum(x => x.Количество * x.Цена).ToString(Common.ФорматЦеныСи, CultureInfo.InvariantCulture),
+                        КолМестNum = gr.Sum(x => x.Количество * x.КолМест),
+                        СтоимостьОтправленияNum = gr.Sum(x => x.Количество * x.Цена)
+                    };
+                }).ToList();
+            var printData = Enumerable.Repeat(new
+            {
+                НомерДок = DateTime.Today.DayOfYear.ToString() + DateTime.Today.ToString("yyyy"),
+                ДатаДок = DateTime.Today.ToString("dd.MM.yyyy"),
+                НазваниеФирмы = dataFirma.НазваниеФирмы,
+                Директор,
+                ДокУстава = dataFirma.ИНН.Length == 12 ? "Свидетельства" : "Устава", 
+                Договор = dataFirma.Договор,
+                ТаблЧасть = dataOrderNum,
+                ИтогоМест = dataOrderNum.Sum(x => x.КолМестNum).ToString("0", CultureInfo.InvariantCulture),
+                ИтогоСтоимость = dataOrderNum.Sum(x => x.СтоимостьОтправленияNum).ToString(Common.ФорматЦеныСи, CultureInfo.InvariantCulture)
+            }, 1).FirstOrDefault();
+
+            return "".CreateOrUpdateHtmlPrintPage("РеестрСберМегаМаркет", printData);
+        }
         [HttpGet]
         public async Task<IActionResult> GetReceptionTransferAct(string campaignInfo, CancellationToken cancellationToken)
         {
@@ -422,6 +506,11 @@ namespace StinWeb.Controllers
                         return File(ozonResult.Item1, "application/pdf");
                     if (ozonResult.Item2 != null)
                         return BadRequest(new ExceptionData { Code = -100, Description = ozonResult.Item2 });
+                }
+                else if (data.тип == "SBER")
+                {
+                    string html = await GetSberReestr(campaignId, limitTime, cancellationToken);
+                    return File(Encoding.UTF8.GetBytes(html), "text/html;charset=utf-8");
                 }
                 return BadRequest(new ExceptionData { Code = -100, Description = "Unhandling exception" });
             }

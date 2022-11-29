@@ -67,6 +67,8 @@ namespace StinClasses.Справочники
         public string Sku { get; set; }
         public string НоменклатураId { get; set; }
         public decimal Количество { get; set; }
+        public decimal Квант { get; set; }
+        public decimal КолМест { get; set; }
         public decimal Цена { get; set; }
         public decimal ЦенаСоСкидкой { get; set; }
         public decimal Вознаграждение { get; set; }
@@ -287,12 +289,15 @@ namespace StinClasses.Справочники
             if (order != null)
                 order.Items = await (from x in _context.Sc14033s
                        join n in _context.Sc84s on x.Sp14022 equals n.Id
+                       join ed in _context.Sc75s on n.Sp94 equals ed.Id
                        where x.Parentext == orderId
                        select new OrderItem
                        {
                            Id = x.Code,
                            Sku = n.Code.Encode(order.Encode),
                            НоменклатураId = x.Sp14022,
+                           КолМест = ed.Sp14063 == 0 ? 1 : ed.Sp14063,
+                           Квант = n.Sp14188 == 0 ? 1 : n.Sp14188,
                            Количество = x.Sp14023,
                            Цена = x.Sp14024,
                            ЦенаСоСкидкой = x.Sp14025,
@@ -312,12 +317,15 @@ namespace StinClasses.Справочники
             if (order != null)
                 order.Items = await (from x in _context.Sc14033s
                                      join n in _context.Sc84s on x.Sp14022 equals n.Id
+                                     join ed in _context.Sc75s on n.Sp94 equals ed.Id
                                      where x.Parentext == order.Id
                                      select new OrderItem
                                      {
                                          Id = x.Code,
                                          Sku = n.Code.Encode(order.Encode),
                                          НоменклатураId = x.Sp14022,
+                                         КолМест = ed.Sp14063 == 0 ? 1 : ed.Sp14063,
+                                         Квант = n.Sp14188 == 0 ? 1 : n.Sp14188,
                                          Количество = x.Sp14023,
                                          Цена = x.Sp14024,
                                          ЦенаСоСкидкой = x.Sp14025,

@@ -35,6 +35,18 @@ namespace StinClasses.Справочники
         {
             Остатки = new List<Остатки>();
         }
+        public override bool Equals(object obj)
+        {
+            if (!(obj is Номенклатура))
+                return false;
+            if (obj == null)
+                return false;
+            return Id == (obj as Номенклатура).Id;
+        }
+        public override int GetHashCode()
+        {
+            return ("ClassНоменклатура" + Id).GetHashCode();
+        }
     }
     public class Производитель
     {
@@ -47,6 +59,32 @@ namespace StinClasses.Справочники
         public string Код { get; set; }
         public string Наименование { get; set; }
         public decimal Коэффициент { get; set; }
+        public override bool Equals(object obj)
+        {
+            if (!(obj is Единица)) return false;
+            if (obj == null) return false;
+            return Id == (obj as Единица).Id;
+        }
+        public override int GetHashCode()
+        {
+            return ("ClassЕдиница" + Id).GetHashCode();
+        }
+    }
+    public class ParentTree
+    {
+        public string Sku { get; set; }
+        public string ParentSku { get; set; }
+        public string Name { get; set; }
+        public override bool Equals(object obj)
+        {
+            if (!(obj is ParentTree)) return false;
+            if (obj == null) return false;
+            return Sku == (obj as ParentTree).Sku;
+        }
+        public override int GetHashCode()
+        {
+            return ("ClassParentTree" + Sku).GetHashCode();
+        }
     }
     public class СтавкаНДС
     {

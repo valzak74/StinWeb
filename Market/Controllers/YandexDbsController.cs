@@ -124,7 +124,7 @@ namespace Market.Controllers
                         .Any(z => z.OfferId.Decode(market.Encoding) == x.Code))
                         //(market.HexEncoding ? z.OfferId.DecodeHexString() : z.OfferId) == x.Code))
                     .Any(x => x.PickupOnly);
-                if (deliveryAvailable && (суммаЗаказа > 2000))
+                if (deliveryAvailable && (суммаЗаказа > 500))
                 {
                     string складОтгрузкиId = "";
                     foreach (var складId in списокСкладовНаличияТовара)

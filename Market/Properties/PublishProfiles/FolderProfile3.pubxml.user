@@ -5,7 +5,7 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
 <Project>
   <PropertyGroup>
     <_PublishTargetUrl>\\server8\Marketplus</_PublishTargetUrl>
-    <History>True|2022-11-02T10:11:31.4618816Z;</History>
+    <History>True|2022-11-29T07:36:49.2965800Z;True|2022-11-29T11:10:00.7760322+04:00;True|2022-11-02T14:11:31.4618816+04:00;</History>
     <LastFailureDetails />
   </PropertyGroup>
 </Project>

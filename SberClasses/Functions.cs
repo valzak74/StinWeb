@@ -39,18 +39,18 @@ namespace SberClasses
                 });
             }
             var result = await httpService.Exchange<SberResponse, string>(
-                "https://partner.goodsteam.tech/api/market/v1/orderService/order/confirm",
+                "https://partner.sbermegamarket.ru/api/market/v1/orderService/order/confirm",
                 HttpMethod.Post,
                 new Dictionary<string, string>(),
                 request,
                 cancellationToken);
             string err = "";
             if (!string.IsNullOrEmpty(result.Item2))
-                err = ("OrderConfirmResponse : ").ParseError(shipmentId, result.Item2);
+                err = "OrderConfirmResponse : ".ParseError(shipmentId, result.Item2);
             if (result.Item1 != null)
             {
                 if (result.Item1.Error != null) 
-                    err = err.ParseError(shipmentId, JsonConvert.SerializeObject(result.Item1.Error));
+                    err = err.ParseError(shipmentId, "OrderConfirmResponse : " + JsonConvert.SerializeObject(result.Item1.Error));
                 return (result.Item1.Success == 1, err);
             }
             return (false, err);
@@ -58,45 +58,47 @@ namespace SberClasses
         public static async Task<(byte[]? pdf, string error)> StickerPrint(IHttpService httpService, string clientId, string token,
             string shipmentId,
             string orderCode,
-            List<string> itemIndexes,
+            List<KeyValuePair<string, int>> items,
             CancellationToken cancellationToken)
         {
             string boxCodePrefix = clientId + "*" + orderCode + "*";
             var boxCodes = new List<string>();
-            var items = new List<SberItem>();
+            var requestItems = new List<SberItem>();
             int boxIndex = 0;
-            foreach (var item in itemIndexes)
+            foreach (var item in items)
             {
-                boxIndex++;
-                string boxCode = boxCodePrefix + boxIndex.ToString();
-                boxCodes.Add(boxCode);
-                items.Add(new SberItem 
+                var boxes = new List<SberBox>();
+                for (int i = 0; i < item.Value; i++)
                 {
-                    ItemIndex = item,
-                    Quantity = 1,
-                    Boxes = new List<SberBox>
+                    boxIndex++;
+                    string boxCode = boxCodePrefix + boxIndex.ToString();
+                    boxCodes.Add(boxCode);
+                    boxes.Add(new SberBox
                     {
-                        new SberBox
-                        {
-                            BoxIndex = boxIndex,
-                            BoxCode = boxCode
-                        }
-                    }
+                        BoxIndex = boxIndex,
+                        BoxCode = boxCode
+                    });
+                }
+                requestItems.Add(new SberItem
+                {
+                    ItemIndex = item.Key,
+                    Quantity = 1,
+                    Boxes = boxes
                 });
             }
 
             var request = new SberRequest(token);
             request.Data.PrintAsPdf = true;
-            request.Data.Shipments = new List<SberShipment> { new SberShipment { ShipmentId = shipmentId, BoxCodes = boxCodes, Items = items } };
+            request.Data.Shipments = new List<SberShipment> { new SberShipment { ShipmentId = shipmentId, BoxCodes = boxCodes, Items = requestItems } };
             var result = await httpService.Exchange<byte[], string>(
-                "https://partner.goodsteam.tech/api/market/v1/orderService/sticker/print",
+                "https://partner.sbermegamarket.ru/api/market/v1/orderService/sticker/print",
                 HttpMethod.Post,
                 new Dictionary<string, string>(),
                 request,
                 cancellationToken);
             string err = "";
             if (!string.IsNullOrEmpty(result.Item2))
-                err = ("StickerPrintResponse : ").ParseError(shipmentId, result.Item2);
+                err = "StickerPrintResponse : ".ParseError(shipmentId, result.Item2);
             if (result.Item1 != null)
                 return (result.Item1, err);
             return (null, err);
@@ -104,38 +106,44 @@ namespace SberClasses
         public static async Task<(bool success, string error)> OrderPicking(IHttpService httpService, string clientId, string token,
             string shipmentId,
             string orderCode,
-            List<string> itemIndexes,
+            List<KeyValuePair<string, int>> items,
             CancellationToken cancellationToken)
         {
             var request = new SberRequest(token);
             request.Data.Shipments = new List<SberShipment> { new SberShipment { ShipmentId = shipmentId, OrderCode = orderCode, Items = new List<SberItem>() } };
             string boxCodePrefix = clientId + "*" + orderCode + "*";
             int boxIndex = 0;
-            foreach (var item in itemIndexes)
+            foreach (var item in items)
             {
-                boxIndex++;
+                var boxes = new List<SberBox>();
+                for (int i = 0; i < item.Value; i++)
+                {
+                    boxIndex++;
+                    boxes.Add(new SberBox
+                    {
+                        BoxIndex = boxIndex,
+                        BoxCode = boxCodePrefix + boxIndex.ToString()
+                    });
+                }
                 request.Data?.Shipments?[0].Items?.Add(new SberItem
                 {
-                    ItemIndex = item,
-                    Boxes = new List<SberBox>
-                    {
-                        new SberBox { BoxIndex = boxIndex, BoxCode = boxCodePrefix + boxIndex.ToString() }
-                    }
+                    ItemIndex = item.Key,
+                    Boxes = boxes
                 });
             }
             var result = await httpService.Exchange<SberResponse, string>(
-                "https://partner.goodsteam.tech/api/market/v1/orderService/order/packing",
+                "https://partner.sbermegamarket.ru/api/market/v1/orderService/order/packing",
                 HttpMethod.Post,
                 new Dictionary<string, string>(),
                 request,
                 cancellationToken);
             string err = "";
             if (!string.IsNullOrEmpty(result.Item2))
-                err = ("OrderPickingResponse : ").ParseError(shipmentId, result.Item2);
+                err = "OrderPickingResponse : ".ParseError(shipmentId, result.Item2);
             if (result.Item1 != null)
             {
                 if (result.Item1.Error != null)
-                    err = err.ParseError(shipmentId, JsonConvert.SerializeObject(result.Item1.Error));
+                    err = err.ParseError(shipmentId, "OrderPickingResponse : " + JsonConvert.SerializeObject(result.Item1.Error));
                 return ((result.Item1.Success == 1) && (result.Item1.Data?.Result == 1), err);
             }
             return (false, err);
@@ -161,18 +169,18 @@ namespace SberClasses
             var request = new SberRequest(token);
             request.Data.Shipments = new List<SberShipment> { new SberShipment { ShipmentId = shipmentId, Boxes = boxes, Shipping = new SberShipping { ShippingDate = shippingDate } } };
             var result = await httpService.Exchange<SberResponse, string>(
-                "https://partner.goodsteam.tech/api/market/v1/orderService/order/shipping",
+                "https://partner.sbermegamarket.ru/api/market/v1/orderService/order/shipping",
                 HttpMethod.Post,
                 new Dictionary<string, string>(),
                 request,
                 cancellationToken);
             string err = "";
             if (!string.IsNullOrEmpty(result.Item2))
-                err = ("OrderShippingResponse : ").ParseError(shipmentId, result.Item2);
+                err = "OrderShippingResponse : ".ParseError(shipmentId, result.Item2);
             if (result.Item1 != null)
             {
                 if (result.Item1.Error != null)
-                    err = err.ParseError(shipmentId, JsonConvert.SerializeObject(result.Item1.Error));
+                    err = err.ParseError(shipmentId, "OrderShippingResponse : " + JsonConvert.SerializeObject(result.Item1.Error));
                 return ((result.Item1.Success == 1) && (result.Item1.Data?.Result == 1), err);
             }
             return (false, err);
@@ -197,18 +205,18 @@ namespace SberClasses
             request.Data.Shipments = new List<SberShipment> { new SberShipment { ShipmentId = shipmentId, Items = sberItems } };
 
             var result = await httpService.Exchange<SberResponse, string>(
-                "https://partner.goodsteam.tech/api/market/v1/orderService/order/reject",
+                "https://partner.sbermegamarket.ru/api/market/v1/orderService/order/reject",
                 HttpMethod.Post,
                 new Dictionary<string, string>(),
                 request,
                 cancellationToken);
             string err = "";
             if (!string.IsNullOrEmpty(result.Item2))
-                err = ("OrderRejectResponse : ").ParseError(shipmentId, result.Item2);
+                err = "OrderRejectResponse : ".ParseError(shipmentId, result.Item2);
             if (result.Item1 != null)
             {
                 if (result.Item1.Error != null)
-                    err = err.ParseError(shipmentId, JsonConvert.SerializeObject(result.Item1.Error));
+                    err = err.ParseError(shipmentId, "OrderRejectResponse : " + JsonConvert.SerializeObject(result.Item1.Error));
                 return ((result.Item1.Success == 1) && (result.Item1.Data?.Result == 1), err);
             }
             return (false, err);
@@ -230,18 +238,18 @@ namespace SberClasses
             request.Data.Stocks = sberStock;
 
             var result = await httpService.Exchange<SberResponseSingleError, string>(
-                "https://partner.goodsteam.tech/api/merchantIntegration/v1/offerService/stock/update",
+                "https://partner.sbermegamarket.ru/api/merchantIntegration/v1/offerService/stock/update",
                 HttpMethod.Post,
                 new Dictionary<string, string>(),
                 request,
                 cancellationToken);
             string err = "";
             if (!string.IsNullOrEmpty(result.Item2))
-                err = ("SberStockResponse : ").ParseError("", result.Item2);
+                err = "SberStockResponse : ".ParseError("", result.Item2);
             if (result.Item1 != null)
             {
                 if (result.Item1.Error != null)
-                    err = err.ParseError("", JsonConvert.SerializeObject(result.Item1.Error));
+                    err = err.ParseError("", "SberStockResponse : " + JsonConvert.SerializeObject(result.Item1.Error));
                 return (result.Item1.Success == 1, err);
             }
             return (false, err);
@@ -264,23 +272,33 @@ namespace SberClasses
             request.Data.Prices = sberPrice;
 
             var result = await httpService.Exchange<SberResponseSingleError, string>(
-                "https://partner.goodsteam.tech/api/merchantIntegration/v1/offerService/manualPrice/save",
+                "https://partner.sbermegamarket.ru/api/merchantIntegration/v1/offerService/manualPrice/save",
                 HttpMethod.Post,
                 new Dictionary<string, string>(),
                 request,
                 cancellationToken);
             string err = "";
             if (!string.IsNullOrEmpty(result.Item2))
-                err = ("SberPriceResponse : ").ParseError("", result.Item2);
+                err = "SberPriceResponse : ".ParseError("", result.Item2);
             if (result.Item1 != null)
             {
                 if (result.Item1.Error != null)
-                    err = err.ParseError("", JsonConvert.SerializeObject(result.Item1.Error));
-                if (result.Item1.Data?.Warnings != null)
-                    err = err.ParseError("", JsonConvert.SerializeObject(result.Item1.Data?.Warnings));
+                    err = err.ParseError("", "SberPriceResponse : " +JsonConvert.SerializeObject(result.Item1.Error));
+                if (result.Item1.Data?.Warnings?.Count > 0)
+                    err = err.ParseError("", "SberPriceResponse : " + JsonConvert.SerializeObject(result.Item1.Data?.Warnings));
                 return ((result.Item1.Success == 1) && (result.Item1.Data?.SavedPrices == 1), err);
             }
             return (false, err);
+        }
+        public static int NDS(decimal percent)
+        {
+            return percent switch
+            {
+                20 => 1,
+                10 => 2,
+                0 => 5,
+                _ => 6
+            };
         }
     }
 }

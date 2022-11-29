@@ -148,7 +148,7 @@ namespace StinClasses.Документы
         {
             List<string> СписокФирм = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(докОснование.Общие.Фирма.Id);
             List<string> СписокСкладов = new List<string>() { докОснование.Склад.Id };
-            List<string> СписокНоменклатуры = докОснование.ТабличнаяЧасть.Select(x => x.Номенклатура.Id).ToList();
+            List<string> СписокНоменклатуры = докОснование.ТабличнаяЧасть.Select(x => x.Номенклатура.Id).Distinct().ToList();
             Dictionary<ПодСклад, List<ФормаНаборТЧ>> ПереченьНаличия = new Dictionary<ПодСклад, List<ФормаНаборТЧ>>();
 
             var заявки_Остатки = await _регистрЗаявки.ПолучитьОстаткиAsync(
@@ -179,8 +179,16 @@ namespace StinClasses.Документы
                     Количество = gr.Sum(k => k.Количество),
                     Стоимость = gr.Sum(s => s.Стоимость)
                 });
+                var таблЧастьGrouped = докОснование.ТабличнаяЧасть.GroupBy(x => new { x.Номенклатура, x.Единица, x.Цена }).Select(gr => new
+                {
+                    gr.Key.Номенклатура,
+                    gr.Key.Единица,
+                    Количество = gr.Sum(k => k.Количество),
+                    gr.Key.Цена,
+                    Сумма = gr.Sum(s => s.Сумма)
+                });
                 string message = "";
-                foreach (var row in докОснование.ТабличнаяЧасть)
+                foreach (var row in таблЧастьGrouped) //докОснование.ТабличнаяЧасть)
                 {
                     decimal ТекОстатокСуммы = row.Сумма;
                     var r = заявкиGrouped.FirstOrDefault(x => x.НоменклатураId == row.Номенклатура.Id);

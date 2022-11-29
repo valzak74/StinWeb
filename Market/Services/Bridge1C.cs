@@ -415,14 +415,13 @@ namespace Market.Services
                 else
                     списокСкладовНаличияТовара = await _склад.ПолучитьСкладIdОстатковMarketplace();
 
-                var НоменклатураList = await ПолучитьСвободныеОстатки(order.Items.Select(x => x.OfferId).ToList(), списокСкладовНаличияТовара);
+                var НоменклатураList = await ПолучитьСвободныеОстатки(order.Items.Select(x => x.OfferId).Distinct().ToList(), списокСкладовНаличияТовара);
                 bool нетВНаличие = НоменклатураList
                             .Any(x => x.Остатки
                                     .Sum(z => z.СвободныйОстаток) / x.Единица.Коэффициент <
                                         order.Items
                                             .Where(b => b.OfferId == x.Code)
-                                            .Select(c => c.Count)
-                                            .FirstOrDefault());
+                                            .Sum(c => c.Count));
                 if (!нетВНаличие)
                 {
                     var orderItems = new List<OrderItem>();
@@ -1069,13 +1068,12 @@ namespace Market.Services
                                         строкаВозврата.Количество = Math.Round(строкаВозврата.Количество - item.Количество);
                                         item.Количество = 0;
                                     }
+                                    request.Items.Add(new YandexClasses.ChangeItem
+                                    {
+                                        Id = long.Parse(item.Id),
+                                        Count = (int)item.Количество,
+                                    });
                                 }
-
-                                request.Items.Add(new YandexClasses.ChangeItem
-                                {
-                                    Id = long.Parse(item.Id),
-                                    Count = (int)item.Количество,
-                                });
                             }
                             var yandexResult = await YandexClasses.YandexOperators.Exchange<YandexClasses.ErrorResponse>(_httpService,
                                 string.Format(YandexClasses.YandexOperators.urlChangeItems, order.CampaignId, order.MarketplaceId),
@@ -1130,8 +1128,8 @@ namespace Market.Services
                                         строкаВозврата.Количество = Math.Round(строкаВозврата.Количество - item.Количество);
                                         item.Количество = 0;
                                     }
+                                    cancelData.Add(new(item.Id, item.Sku));
                                 }
-                                cancelData.Add(new(item.Id, item.Sku));
                             }
 
                             var sberResult = await SberClasses.Functions.OrderReject(_httpService, order.AuthToken, order.MarketplaceId, SberClasses.SberReason.OUT_OF_STOCK,
@@ -1142,7 +1140,7 @@ namespace Market.Services
                             {
                                 foreach (var item in order.Items)
                                 {
-                                    var entityItem = await _context.Sc14033s.FirstOrDefaultAsync(x => x.Parentext == order.Id && x.Sp14022 == item.НоменклатураId);
+                                    var entityItem = await _context.Sc14033s.FirstOrDefaultAsync(x => (x.Parentext == order.Id) && (x.Sp14022 == item.НоменклатураId) && (x.Code == item.Id));
                                     if (entityItem != null)
                                     {
                                         if (item.Количество == 0)
@@ -1155,6 +1153,12 @@ namespace Market.Services
                                         _context.РегистрацияИзмененийРаспределеннойИБ(14033, entityItem.Id);
                                     }
                                 }
+                                var files = await _context.VzOrderBinaries.Where(x => x.Id == order.Id && x.Extension == "LABELS")
+                                    .ToListAsync();
+                                foreach (var file in files)
+                                    _context.VzOrderBinaries.Remove(file);
+                                if (order.InternalStatus == 2)
+                                    await _order.ОбновитьOrderStatus(order.Id, 1);
                             }
                             else
                             {
@@ -1180,12 +1184,12 @@ namespace Market.Services
                                         строкаВозврата.Количество = Math.Round(строкаВозврата.Количество - item.Количество);
                                         item.Количество = 0;
                                     }
+                                    cancelData.Add(new OzonClasses.CancelItem
+                                    {
+                                        Sku = long.Parse(item.Id),
+                                        Quantity = (int)item.Количество,
+                                    });
                                 }
-                                cancelData.Add(new OzonClasses.CancelItem
-                                {
-                                    Sku = long.Parse(item.Id),
-                                    Quantity = (int)item.Количество,
-                                });
                             }
                             result += await OzonClasses.OzonOperators.CancelOrder(_httpService, order.ClientId, order.AuthToken,
                                 order.MarketplaceId, 400, "Fall off", cancelData, stoppingToken);
@@ -1262,8 +1266,9 @@ namespace Market.Services
                     }
                     else if (order.Тип == "SBER")
                     {
+                        int boxCount = order.Items.Sum(x => (int)x.КолМест);
                         var sberResult = await SberClasses.Functions.OrderShipping(_httpService,
-                            order.CampaignId, order.AuthToken, order.MarketplaceId, order.OrderNo, DateTime.Now, order.Items.Count, cancellationToken);
+                            order.CampaignId, order.AuthToken, order.MarketplaceId, order.OrderNo, DateTime.Now, boxCount, cancellationToken);
                         if (sberResult.success)
                             await _order.ОбновитьOrderStatus(order.Id, 6);
                         else

@@ -30,4 +30,8 @@
     <ProjectReference Include="..\WbClasses\WbClasses.csproj" />
     <ProjectReference Include="..\YandexClasses\YandexClasses.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Templates\" />
+  </ItemGroup>
 </Project>

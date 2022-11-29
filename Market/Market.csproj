@@ -27,4 +27,8 @@
     <ProjectReference Include="..\YandexClasses\YandexClasses.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Products\" />
+  </ItemGroup>
+
 </Project>

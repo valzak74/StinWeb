@@ -1761,6 +1761,18 @@
       "PackagePath": "staticwebassets\\templates\\ПриемВРемонтДляМастера_Styles.htm"
     },
     {
+      "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\templates\\РеестрСберМегаМаркет_Div.htm",
+      "PackagePath": "staticwebassets\\templates\\РеестрСберМегаМаркет_Div.htm"
+    },
+    {
+      "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\templates\\РеестрСберМегаМаркет_Styles.htm",
+      "PackagePath": "staticwebassets\\templates\\РеестрСберМегаМаркет_Styles.htm"
+    },
+    {
+      "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\templates\\РеестрСберМегаМаркет_ТаблЧасть.htm",
+      "PackagePath": "staticwebassets\\templates\\РеестрСберМегаМаркет_ТаблЧасть.htm"
+    },
+    {
       "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\vakata-jstree\\dist\\jstree.js",
       "PackagePath": "staticwebassets\\vakata-jstree\\dist\\jstree.js"
     },

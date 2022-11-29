@@ -11,6 +11,9 @@ using StinClasses.Справочники;
 using System.Collections.Generic;
 using YandexClasses;
 using StinClasses;
+using System.Xml.Linq;
+using System.Text;
+using System.IO;
 
 namespace Market.Controllers
 {
@@ -136,6 +139,15 @@ namespace Market.Controllers
             bool isSuccess = await bridge.ReduceCancelItems(orderId, authorization, cancelItems, cancellationToken);
             response.Success = isSuccess ? 1 : 0;
             return Ok(response);
+        }
+        [HttpGet("products/{filename}")]
+        public ActionResult GetProductFeed(string filename, CancellationToken cancellationToken)
+        {
+            string fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "products", filename);
+            if (!System.IO.File.Exists(fullPath))
+                return NotFound();
+            byte[] fileBytes = System.IO.File.ReadAllBytes(fullPath);
+            return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, filename);
         }
     }
 }

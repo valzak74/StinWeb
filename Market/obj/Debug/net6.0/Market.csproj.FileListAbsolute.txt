@@ -89,3 +89,10 @@ C:\Users\Валентин\source\repos\StinWeb\Market\bin\Debug\net6.0\OzonClass
 C:\Users\Валентин\source\repos\StinWeb\Market\bin\Debug\net6.0\Microsoft.Extensions.Logging.Abstractions.dll
 C:\Users\Валентин\source\repos\StinWeb\Market\bin\Debug\net6.0\HttpExtensions.dll
 C:\Users\Валентин\source\repos\StinWeb\Market\bin\Debug\net6.0\HttpExtensions.pdb
+C:\Users\Валентин\source\repos\StinWeb\Market\bin\Debug\net6.0\SberClasses.dll
+C:\Users\Валентин\source\repos\StinWeb\Market\bin\Debug\net6.0\SberClasses.pdb
+C:\Users\Валентин\source\repos\StinWeb\Market\obj\Debug\net6.0\staticwebassets\msbuild.Market.Microsoft.AspNetCore.StaticWebAssets.props
+C:\Users\Валентин\source\repos\StinWeb\Market\obj\Debug\net6.0\staticwebassets\msbuild.build.Market.props
+C:\Users\Валентин\source\repos\StinWeb\Market\obj\Debug\net6.0\staticwebassets\msbuild.buildMultiTargeting.Market.props
+C:\Users\Валентин\source\repos\StinWeb\Market\obj\Debug\net6.0\staticwebassets\msbuild.buildTransitive.Market.props
+C:\Users\Валентин\source\repos\StinWeb\Market\obj\Debug\net6.0\staticwebassets.pack.json

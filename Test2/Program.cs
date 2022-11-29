@@ -9,6 +9,7 @@ using Top.Api;
 using Top.Api.Request;
 using Top.Api.Response;
 using StinClasses;
+using System.Net;
 //using Top.Api;
 //using Top.Api.Request;
 //using Top.Api.Response;
@@ -87,7 +88,15 @@ namespace HelloWorld
         }
         static async Task Main(string[] args)
         {
-            string code = "D0004567893";
+            double sec = 27024581;
+            var ts = TimeSpan.FromSeconds(sec);
+            decimal r = 9m;
+            Console.WriteLine(r.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture));
+            string login = "dXNlclRlc3Q6dXNlcnBhcw==";
+            var encoding = Encoding.GetEncoding("iso-8859-1");
+            var credentials = encoding.GetString(Convert.FromBase64String(login));
+            Console.WriteLine("Basic " + credentials);
+            string code = "K00033539";
             string decCode = code.EncodeDecString();
             string decoded = decCode.TryDecodeDecString();
             Console.WriteLine(code);

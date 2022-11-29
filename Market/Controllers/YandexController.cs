@@ -173,7 +173,7 @@ namespace Market.Controllers
             var responseOrder = new ResponseOrder();
             responseOrder.Order = new OrderResponseEntry();
 
-            int tryCount = 5;
+            int tryCount = 1;
             TimeSpan sleepPeriod = TimeSpan.FromSeconds(1);
             while (true)
             {
@@ -195,7 +195,27 @@ namespace Market.Controllers
             }
 
             if (!responseOrder.Order.Accepted)
-                responseOrder.Order.Reason = FaultReason.OUT_OF_DATE;
+            {
+                string dirPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "error_offers");
+                string fullPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "error_offers", RouteData.Values["controller"] + ".txt");
+                if (!System.IO.Directory.Exists(dirPath))
+                    System.IO.Directory.CreateDirectory(dirPath);
+                if (!System.IO.File.Exists(fullPath))
+                    System.IO.File.Create(fullPath);
+                var errorData = System.IO.File.ReadAllLines(fullPath);
+                var last10records = errorData.Reverse().Take(10).Where(x => x == requestedOrder.Order.Id.ToString());
+                if (last10records.Count() > 5) 
+                    responseOrder.Order.Reason = FaultReason.OUT_OF_DATE;
+                else
+                {
+                    using (System.IO.StreamWriter sw = System.IO.File.AppendText(fullPath))
+                    {
+                        sw.WriteLine(requestedOrder.Order.Id.ToString());
+                    }
+                    return StatusCode(210);
+                    //throw new System.Net.WebException("Conection refused");
+                }
+            }
             return Ok(responseOrder);
         }
         [HttpPost("order/status")]

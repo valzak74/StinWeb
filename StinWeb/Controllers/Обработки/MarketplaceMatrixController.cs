@@ -668,19 +668,19 @@ namespace StinWeb.Controllers.Обработки
                 {
                     _context.Update(entity);
                     _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
-                    var entityUpdatePrice = await _context.VzUpdatingPrices.Where(x => x.MuId == id).FirstOrDefaultAsync();
-                    if (entityUpdatePrice != null)
-                    {
-                        entityUpdatePrice.Flag = true;
-                        _context.Update(entityUpdatePrice);
-                    }
-                    else
-                        _context.Add(new VzUpdatingPrice 
-                        { 
-                            MuId = id,
-                            Flag = true,
-                            Updated = Common.min1cDate
-                        });
+                    //var entityUpdatePrice = await _context.VzUpdatingPrices.Where(x => x.MuId == id).FirstOrDefaultAsync();
+                    //if (entityUpdatePrice != null)
+                    //{
+                    //    entityUpdatePrice.Flag = true;
+                    //    _context.Update(entityUpdatePrice);
+                    //}
+                    //else
+                    //    _context.Add(new VzUpdatingPrice 
+                    //    { 
+                    //        MuId = id,
+                    //        Flag = true,
+                    //        Updated = Common.min1cDate
+                    //    });
                     await _context.SaveChangesAsync();
                 }
             }

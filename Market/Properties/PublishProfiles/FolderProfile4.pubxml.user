@@ -5,7 +5,7 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
 <Project>
   <PropertyGroup>
     <_PublishTargetUrl>\\server8\marketip</_PublishTargetUrl>
-    <History>True|2022-11-17T11:11:28.6701065Z;</History>
+    <History>True|2022-11-24T06:31:59.6540043Z;True|2022-11-22T15:07:10.3760212+04:00;True|2022-11-22T15:03:32.2993911+04:00;True|2022-11-22T13:46:54.5256128+04:00;True|2022-11-22T13:42:29.4936119+04:00;True|2022-11-17T15:11:28.6701065+04:00;</History>
     <LastFailureDetails />
   </PropertyGroup>
 </Project>

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AliExpressClasses
+﻿namespace AliExpressClasses
 {
     public class PriceRequest
     {
@@ -20,6 +14,10 @@ namespace AliExpressClasses
         public string? Sku_code { get; set; }
         public string? Price { get; set; }
         public string? Discount_price { get; set; }
+        public bool ShouldSerializeDiscount_price()
+        {
+            return (Discount_price != null) && (Discount_price != Price);
+        }
     }
     public class PriceProductGlobal
     {

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using YandexClasses;
 
 namespace StinClasses.Документы
 {
@@ -734,32 +735,54 @@ namespace StinClasses.Документы
                 Маршрут = await _маршрут.GetМаршрутByCodeAsync(d.dh.Sp12734),
                 Order = await _order.ПолучитьOrderWithItems(d.dh.Sp14007)
             };
-            var ТаблЧасть = (from dt in _context.Dt12747s
-                            join dh in _context.Dh12747s on dt.Iddoc equals dh.Iddoc
-                            join item in _context.Sc14033s on new { orderId = dh.Sp14007, номенклатураId = dt.Sp12736 } equals new { orderId = item.Parentext, номенклатураId = item.Sp14022 } into _item
-                            from item in _item.DefaultIfEmpty()
-                            where dt.Iddoc == idDoc
+            var groupedDoc = (from dt in _context.Dt12747s
+                              join dh in _context.Dh12747s on dt.Iddoc equals dh.Iddoc
+                              where dt.Iddoc == idDoc 
+                              group new { dh, dt } by new { НоменклатураId = dt.Sp12736, ЕдиницаId = dt.Sp12738, Цена = dt.Sp12740, СтавкаНДСId = dt.Sp12742 } into gr
+                              select new
+                              {
+                                  gr.Key.НоменклатураId,
+                                  gr.Key.ЕдиницаId,
+                                  gr.Key.Цена,
+                                  gr.Key.СтавкаНДСId,
+                                  Количество = gr.Sum(x => x.dt.Sp12737),
+                                  Сумма = gr.Sum(x => x.dt.Sp12741),
+                                  СуммаНДС = gr.Sum(x => x.dt.Sp12743)
+                              }).ToList();
+            var groupedItems = (from item in _context.Sc14033s
+                                where item.Parentext == doc.Order.Id
+                                group item by new { НоменклатураId = item.Sp14022, WarehouseId = item.Sp14030, PartnerWarehouseId = item.Sp14031, Delivery = item.Sp14027 } into itemGr
+                                select new
+                                {
+                                    itemGr.Key.НоменклатураId,
+                                    itemGr.Key.WarehouseId,
+                                    itemGr.Key.PartnerWarehouseId,
+                                    itemGr.Key.Delivery,
+                                    СуммаСоСкидкой = itemGr.Sum(x => x.Sp14023 * x.Sp14025)
+                                }).ToList();
+            var ТаблЧасть = (from grDoc in groupedDoc
+                            join grItem in groupedItems on grDoc.НоменклатураId equals grItem.НоменклатураId into _grItem
+                            from grItem in _grItem.DefaultIfEmpty()
                             select new
                             {
-                                НоменклатураId = dt.Sp12736,
-                                MarketplaceId = dh.Sp14007,
-                                WarehouseId = item != null ? item.Sp14030 : string.Empty,
-                                PartnerWarehouseId = item != null ? item.Sp14031 : string.Empty,
-                                Delivery = item != null ? item.Sp14027 == 1 : false,
-                                Количество = dt.Sp12737,
-                                ЕдиницаId = dt.Sp12738,
-                                Цена = dt.Sp12740,
-                                Сумма = dt.Sp12741,
-                                СуммаСоСкидкой = item != null ? (item.Sp14023 * item.Sp14025) : 0,
-                                СтавкаНДСId = dt.Sp12742,
-                                СуммаНДС = dt.Sp12743
+                                grDoc.НоменклатураId,
+                                grDoc.Количество,
+                                grDoc.ЕдиницаId,
+                                grDoc.Цена,
+                                grDoc.Сумма,
+                                grDoc.СтавкаНДСId,
+                                grDoc.СуммаНДС,
+                                СуммаСоСкидкой = grItem != null ? grItem.СуммаСоСкидкой : 0,
+                                WarehouseId = grItem != null ? grItem.WarehouseId : "",
+                                PartnerWarehouseId = grItem != null ? grItem.PartnerWarehouseId : "",
+                                Delivery = grItem != null ? grItem.Delivery == 1 : true,
                             }).ToList();
             foreach (var row in ТаблЧасть)
             {
                 doc.ТабличнаяЧасть.Add(new ФормаПредварительнаяЗаявкаТЧ
                 {
                     Номенклатура = await _номенклатура.GetНоменклатураByIdAsync(row.НоменклатураId),
-                    НоменклатураMarketplaceId = row.MarketplaceId,
+                    НоменклатураMarketplaceId = doc.Order.Id,
                     WarehouseId = row.WarehouseId,
                     PartnerWarehouseId = row.PartnerWarehouseId,
                     Delivery = row.Delivery,

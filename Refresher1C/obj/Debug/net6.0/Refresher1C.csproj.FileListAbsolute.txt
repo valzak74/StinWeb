@@ -82,3 +82,5 @@ C:\Users\Валентин\source\repos\StinWeb\Refresher1C\bin\Debug\net6.0\AliE
 C:\Users\Валентин\source\repos\StinWeb\Refresher1C\bin\Debug\net6.0\AliExpressClasses.pdb
 C:\Users\Валентин\source\repos\StinWeb\Refresher1C\bin\Debug\net6.0\WbClasses.dll
 C:\Users\Валентин\source\repos\StinWeb\Refresher1C\bin\Debug\net6.0\WbClasses.pdb
+C:\Users\Валентин\source\repos\StinWeb\Refresher1C\bin\Debug\net6.0\SberClasses.dll
+C:\Users\Валентин\source\repos\StinWeb\Refresher1C\bin\Debug\net6.0\SberClasses.pdb

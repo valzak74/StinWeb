@@ -58,6 +58,7 @@
 \\server2012\Refresher1C\HttpExtensions.dll
 \\server2012\Refresher1C\JsonExtensions.dll
 \\server2012\Refresher1C\OzonClasses.dll
+\\server2012\Refresher1C\SberClasses.dll
 \\server2012\Refresher1C\StinClasses.dll
 \\server2012\Refresher1C\WbClasses.dll
 \\server2012\Refresher1C\YandexClasses.dll
@@ -65,6 +66,7 @@
 \\server2012\Refresher1C\HttpExtensions.pdb
 \\server2012\Refresher1C\JsonExtensions.pdb
 \\server2012\Refresher1C\OzonClasses.pdb
+\\server2012\Refresher1C\SberClasses.pdb
 \\server2012\Refresher1C\StinClasses.pdb
 \\server2012\Refresher1C\WbClasses.pdb
 \\server2012\Refresher1C\YandexClasses.pdb
