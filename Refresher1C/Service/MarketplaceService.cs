@@ -15,6 +15,7 @@ using HttpExtensions;
 using System.Data;
 using System.IO;
 using System.Collections;
+using Newtonsoft.Json.Linq;
 
 namespace Refresher1C.Service
 {
@@ -1839,6 +1840,7 @@ namespace Refresher1C.Service
                                                 && (market.Sp14177 == 1)
                                                 && (string.IsNullOrEmpty(defFirmaId) ? true : market.Parentext == defFirmaId)
                                                 //&& (market.Code == "43956")
+                                                //&& (market.Code == "45715133")
                                             select new
                                             {
                                                 Id = market.Id,
@@ -1874,11 +1876,162 @@ namespace Refresher1C.Service
                             marketplace.AuthSecret, marketplace.Authorization, marketplace.AuthToken, regular, maxPerRequestAli,
                             marketplace.Id, marketplace.FirmaId, marketplace.Encoding, marketplace.СкладId, marketplace.StockOriginal, stoppingToken);
                     }
+                    else if (marketplace.Тип.ToUpper() == "ЯНДЕКС")
+                    {
+                        await UpdateYandexStock(marketplace.Id, marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.AuthSecret,
+                            regular, marketplace.FirmaId, marketplace.Encoding,
+                            marketplace.СкладId, marketplace.StockOriginal, stoppingToken);
+                    }
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
+            }
+        }
+        public async Task UpdateYandexStock(string marketplaceId, string campaignId, string clientId, string authToken, string warehouseId, 
+            bool regular, string firmaId, EncodeVersion encoding,
+            string складId, bool stockOriginal, CancellationToken stoppingToken)
+        {
+            var data = await (from markUse in _context.Sc14152s
+                              join nom in _context.Sc84s on markUse.Parentext equals nom.Id
+                              join updStock in _context.VzUpdatingStocks on markUse.Id equals updStock.MuId
+                              where (markUse.Sp14147 == marketplaceId) &&
+                                (markUse.Sp14158 == 1) && //Есть в каталоге 
+                                (((regular ? updStock.Flag : updStock.IsError) &&
+                                  (updStock.Updated < DateTime.Now.AddMinutes(-2))) ||
+                                 (updStock.Updated.Date != DateTime.Today))
+                              select new
+                              {
+                                  Id = markUse.Id,
+                                  Locked = markUse.Ismark,
+                                  NomId = markUse.Parentext,
+                                  OfferId = nom.Code.Encode(encoding),
+                                  Квант = nom.Sp14188,
+                                  DeltaStock = stockOriginal ? 0 : nom.Sp14215, //markUse.Sp14214,
+                                  //WarehouseId = string.IsNullOrWhiteSpace(markUse.Sp14190) ? skladCode : markUse.Sp14190,
+                                  UpdatedAt = updStock.Updated,
+                                  UpdatedFlag = updStock.Flag
+                              })
+                .OrderByDescending(x => x.UpdatedFlag)
+                .ThenBy(x => x.UpdatedAt)
+                .Take(1000)
+                .ToListAsync(stoppingToken);
+            if (data?.Count > 0)
+            {
+                var listIds = data.Select(x => x.Id).ToList();
+                int tryCount = 5;
+                TimeSpan sleepPeriod = TimeSpan.FromSeconds(1);
+                bool success = false;
+                while (true)
+                {
+                    using var tran = await _context.Database.BeginTransactionAsync();
+                    try
+                    {
+                        _context.VzUpdatingStocks
+                            .Where(x => listIds.Contains(x.MuId))
+                            .ToList()
+                            .ForEach(x =>
+                            {
+                                x.Flag = false;
+                                x.Taken = true;
+                                x.IsError = false;
+                            });
+                        await _context.SaveChangesAsync(stoppingToken);
+                        if (_context.Database.CurrentTransaction != null)
+                            tran.Commit();
+                        success = true;
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        if (_context.Database.CurrentTransaction != null)
+                            _context.Database.CurrentTransaction.Rollback();
+                        _logger.LogError(ex.Message);
+                        if (--tryCount == 0)
+                        {
+                            break;
+                        }
+                        await Task.Delay(sleepPeriod);
+                    }
+                }
+                if (success)
+                {
+                    var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(firmaId);
+                    List<string> списокСкладов = null;
+                    if (string.IsNullOrEmpty(складId))
+                        списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
+                    else
+                        списокСкладов = new List<string> { складId };
+
+                    var списокНоменклатуры = await _номенклатура.ПолучитьСвободныеОстатки(разрешенныеФирмы, списокСкладов, data.Select(x => x.NomId).ToList(), false);
+                    var stockData = new Dictionary<string, string>();
+                    foreach (var item in data)
+                    {
+                        var номенклатура = списокНоменклатуры.Where(x => x.Id == item.NomId).FirstOrDefault();
+                        if (номенклатура != null)
+                        {
+                            long остаток = 0;
+                            if (item.Квант > 1)
+                            {
+                                остаток = (long)(((номенклатура.Остатки
+                                    .Where(x => x.СкладId == Common.SkladEkran)
+                                    .Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - item.DeltaStock) / item.Квант);
+                                остаток = остаток * (int)item.Квант;
+                            }
+                            else
+                                остаток = (long)((номенклатура.Остатки.Sum(x => x.СвободныйОстаток) - item.DeltaStock) / номенклатура.Единица.Коэффициент);
+                            остаток = Math.Max(остаток, 0);
+                            stockData.Add(номенклатура.Code.Encode(encoding), item.Locked ? "0" : остаток.ToString());
+                        }
+                    }
+                    if (stockData.Count > 0)
+                    {
+                        var result = await YandexClasses.YandexOperators.UpdateStock(_httpService, campaignId, clientId, authToken, warehouseId,
+                            stockData,
+                            stoppingToken);
+                        if (!string.IsNullOrEmpty(result.error))
+                        {
+                            _logger.LogError(result.error);
+                        }
+                        if (result.success)
+                        {
+                            tryCount = 5;
+                            while (true)
+                            {
+                                using var tran = await _context.Database.BeginTransactionAsync();
+                                try
+                                {
+                                    _context.VzUpdatingStocks
+                                        .Where(x => listIds.Contains(x.MuId) && x.Taken)
+                                        .ToList()
+                                        .ForEach(x =>
+                                        {
+                                            x.Flag = false;
+                                            x.Taken = false;
+                                            x.IsError = false;
+                                            x.Updated = DateTime.Now;
+                                        });
+                                    await _context.SaveChangesAsync(stoppingToken);
+                                    if (_context.Database.CurrentTransaction != null)
+                                        tran.Commit();
+                                    break;
+                                }
+                                catch (Exception ex)
+                                {
+                                    if (_context.Database.CurrentTransaction != null)
+                                        _context.Database.CurrentTransaction.Rollback();
+                                    _logger.LogError(ex.Message);
+                                    if (--tryCount == 0)
+                                    {
+                                        break;
+                                    }
+                                    await Task.Delay(sleepPeriod);
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         public async Task UpdateSberStock(string authToken, bool regular, string marketplaceId, string firmaId, EncodeVersion encoding, 

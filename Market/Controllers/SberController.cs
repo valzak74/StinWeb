@@ -120,6 +120,34 @@ namespace Market.Controllers
                     await Task.Delay(sleepPeriod);
                 }
             }
+            if (response.Success == 0)
+            {
+                string dirPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "error_offers");
+                string fullPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "error_offers", RouteData.Values["controller"] + ".txt");
+                if (!System.IO.Directory.Exists(dirPath))
+                    System.IO.Directory.CreateDirectory(dirPath);
+                if (!System.IO.File.Exists(fullPath))
+                {
+                    using (System.IO.StreamWriter sw = System.IO.File.CreateText(fullPath))
+                    {
+                        sw.WriteLine(DateTime.Now.ToString("dd:MM:yyyy HH:mm:ss") + " " + orderId);
+                    }
+                    return StatusCode((int)System.Net.Sockets.SocketError.ConnectionRefused);
+                }
+                else
+                {
+                    var errorData = System.IO.File.ReadAllLines(fullPath);
+                    var last10records = errorData.Reverse().Take(10).Where(x => x.EndsWith(orderId, StringComparison.InvariantCulture));
+                    if (last10records.Count() < 5)
+                    {
+                        using (System.IO.StreamWriter sw = System.IO.File.AppendText(fullPath))
+                        {
+                            sw.WriteLine(DateTime.Now.ToString("dd:MM:yyyy HH:mm:ss") + " " + orderId);
+                        }
+                        return StatusCode((int)System.Net.Sockets.SocketError.ConnectionRefused);
+                    }
+                }
+            }
             return Ok(response);
         }
         [HttpPost("order/cancel")]

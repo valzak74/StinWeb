@@ -173,7 +173,7 @@ namespace Market.Controllers
             var responseOrder = new ResponseOrder();
             responseOrder.Order = new OrderResponseEntry();
 
-            int tryCount = 1;
+            int tryCount = 5;
             TimeSpan sleepPeriod = TimeSpan.FromSeconds(1);
             while (true)
             {
@@ -201,19 +201,27 @@ namespace Market.Controllers
                 if (!System.IO.Directory.Exists(dirPath))
                     System.IO.Directory.CreateDirectory(dirPath);
                 if (!System.IO.File.Exists(fullPath))
-                    System.IO.File.Create(fullPath);
-                var errorData = System.IO.File.ReadAllLines(fullPath);
-                var last10records = errorData.Reverse().Take(10).Where(x => x == requestedOrder.Order.Id.ToString());
-                if (last10records.Count() > 5) 
-                    responseOrder.Order.Reason = FaultReason.OUT_OF_DATE;
+                {
+                    using (System.IO.StreamWriter sw = System.IO.File.CreateText(fullPath))
+                    {
+                        sw.WriteLine(DateTime.Now.ToString("dd:MM:yyyy HH:mm:ss") + " " + requestedOrder.Order.Id.ToString());
+                    }
+                    return StatusCode((int)System.Net.Sockets.SocketError.ConnectionRefused);
+                }
                 else
                 {
-                    using (System.IO.StreamWriter sw = System.IO.File.AppendText(fullPath))
+                    var errorData = System.IO.File.ReadAllLines(fullPath);
+                    var last10records = errorData.Reverse().Take(10).Where(x => x.EndsWith(requestedOrder.Order.Id.ToString(), StringComparison.InvariantCulture));
+                    if (last10records.Count() >= 5)
+                        responseOrder.Order.Reason = FaultReason.OUT_OF_DATE;
+                    else
                     {
-                        sw.WriteLine(requestedOrder.Order.Id.ToString());
+                        using (System.IO.StreamWriter sw = System.IO.File.AppendText(fullPath))
+                        {
+                            sw.WriteLine(DateTime.Now.ToString("dd:MM:yyyy HH:mm:ss") + " " + requestedOrder.Order.Id.ToString());
+                        }
+                        return StatusCode((int)System.Net.Sockets.SocketError.ConnectionRefused);
                     }
-                    return StatusCode(210);
-                    //throw new System.Net.WebException("Conection refused");
                 }
             }
             return Ok(responseOrder);

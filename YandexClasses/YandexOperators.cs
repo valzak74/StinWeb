@@ -13,18 +13,7 @@ namespace YandexClasses
         public static readonly string urlStatus = "https://api.partner.market.yandex.ru/v2/campaigns/{0}/orders/{1}/status.json";
         public static readonly string urlDetails = "https://api.partner.market.yandex.ru/v2/campaigns/{0}/orders/{1}.json";
         public static readonly string urlOfferUpdate = "https://api.partner.market.yandex.ru/v2/campaigns/{0}/offer-mapping-entries/updates.json";
-        //public static JsonSerializerOptions defJsonOptions = new JsonSerializerOptions
-        //{
-        //    Converters =
-        //                {
-        //                    //new JsonStringEnumConverter( JsonNamingPolicy.CamelCase),
-        //                    new JsonStringEnumConverter(),
-        //                    new JsonDecimalConverter(),
-        //                    new JsonDateTimeConverter(),
-        //                },
-        //    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        //    PropertyNameCaseInsensitive = true
-        //};
+        public static readonly string urlStockUpdate = "https://api.partner.market.yandex.ru/v2/campaigns/{0}/offers/stocks.json";
         public static string ParseErrorResponse(ErrorResponse response)
         {
             if (response != null && response.Errors != null && response.Errors.Count > 0)
@@ -60,62 +49,6 @@ namespace YandexClasses
             }
             return new(ResponseStatus.ERROR, default, default);
         }
-        //public static async Task<(ResponseStatus, byte[], ErrorResponse)> YandexExchange(JsonSerializerOptions jsonOptions, string url, HttpMethod method, string clientId, string authToken, string content)
-        //{
-        //    int tryCount = 5;
-        //    TimeSpan sleepPeriod = TimeSpan.FromSeconds(1);
-        //    while (true)
-        //    {
-        //        using (var client = new HttpClient())
-        //        {
-        //            var request = new HttpRequestMessage(method, url);
-        //            request.Headers.Add("User-Agent", "HttpClientFactory-StinClient");
-        //            request.Headers.Add("Authorization", $"OAuth oauth_token=\"{authToken}\", oauth_client_id=\"{clientId}\"");
-        //            if (!string.IsNullOrEmpty(content))
-        //            {
-        //                request.Content = new StringContent(content, Encoding.UTF8, "application/json");
-        //            }
-        //            try
-        //            {
-        //                var response = await client.SendAsync(request);
-        //                if (response.IsSuccessStatusCode)
-        //                {
-        //                    if (response.Content != null)
-        //                    {
-        //                        var bytes = await response.Content.ReadAsByteArrayAsync();
-        //                        return (ResponseStatus.OK, bytes, null);
-        //                    }
-        //                    else
-        //                    {
-        //                        return (ResponseStatus.OK, null, null);
-        //                    }
-        //                }
-        //                else
-        //                {
-        //                    if (--tryCount == 0)
-        //                    {
-        //                        if (jsonOptions == null)
-        //                            jsonOptions = defJsonOptions;
-        //                        using var responseStream = await response.Content.ReadAsStreamAsync();
-        //                        var errorResponse = await JsonSerializer.DeserializeAsync<ErrorResponse>(responseStream, jsonOptions);
-        //                        return (ResponseStatus.ERROR, null, errorResponse);
-        //                    }
-        //                }
-        //            }
-        //            catch (Exception ex)
-        //            {
-        //                if (--tryCount == 0)
-        //                {
-        //                    var errorList = new List<Error> { new Error { Code = "Internal (" + url + ")", Message = ex.Message + " " + ex.InnerException } };
-        //                    if (!string.IsNullOrEmpty(content))
-        //                        errorList.Add(new Error { Code = "Request", Message = content});
-        //                    return (ResponseStatus.ERROR, null, new ErrorResponse { Status = ResponseStatus.ERROR, Errors = errorList });
-        //                }
-        //                await Task.Delay(sleepPeriod);
-        //            }
-        //        }
-        //    }
-        //}
         public static Region FindRegion(this Region currentNode, RegionType searchType, string searchValue)
         {
             if ((searchType == currentNode.Type) && (currentNode.Name.Equals(searchValue, StringComparison.OrdinalIgnoreCase)))
@@ -291,6 +224,49 @@ namespace YandexClasses
                 return new(true, err);
             }
             return new(false, err);
+        }
+        public static async Task<(bool success, string error)> UpdateStock(IHttpService httpService,
+            string campaignId,
+            string clientId,
+            string authToken,
+            string warehouseId,
+            Dictionary<string, string> data,
+            CancellationToken cancellationToken)
+        {
+            var request = new ResponseStocks();
+            foreach (var item in data)
+            {
+                request.Skus.Add(new SkuEntry
+                {
+                    Sku = item.Key,
+                    WarehouseId = warehouseId,
+                    Items = new List<SkuItem> 
+                    {  
+                        new SkuItem 
+                        { 
+                            Type = ItemType.FIT,
+                            Count = item.Value,
+                            UpdatedAt = DateTime.Now,
+                        } 
+                    }
+                });
+            }
+            var result = await Exchange<ErrorResponse>(httpService,
+                string.Format(urlStockUpdate, campaignId),
+                HttpMethod.Put,
+                clientId,
+                authToken,
+                request,
+                cancellationToken);
+            string err = "";
+            if (result.Item1 == ResponseStatus.ERROR)
+            {
+                if (!string.IsNullOrEmpty(result.Item3) && !result.Item3.Contains("INTERNAL_SERVER_ERROR"))
+                    err = "Yandex update stock " + result.Item3;
+                else
+                    err = "Yandex update stock error with empty description";
+            }
+            return (success: result.Item1 == ResponseStatus.OK, error: err);
         }
     }
 }

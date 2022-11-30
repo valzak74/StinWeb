@@ -2142,3 +2142,249 @@ System.IO.IOException: The process cannot access the file 'C:\Users\Валент
    at Microsoft.AspNetCore.Watch.BrowserRefresh.BrowserRefreshMiddleware.InvokeAsync(HttpContext context)
    at Microsoft.AspNetCore.Server.IIS.Core.IISHttpContextOfT`1.ProcessRequestAsync()
 2022-11-29 18:18:27.960 +04:00 [INF] Request finished HTTP/1.1 POST https://localhost:44373/Yandex/order/accept application/json 3135 - 500 - - 62453.6281ms
+2022-11-29 18:23:06.918 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/index.html - -
+2022-11-29 18:23:07.406 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/index.html - - - 200 - text/html;charset=utf-8 492.3095ms
+2022-11-29 18:23:07.445 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_vs/browserLink - -
+2022-11-29 18:23:07.460 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - -
+2022-11-29 18:23:07.482 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - - - 200 11982 application/javascript;+charset=utf-8 21.5587ms
+2022-11-29 18:23:07.601 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 156.5492ms
+2022-11-29 18:23:07.702 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - -
+2022-11-29 18:23:08.177 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 475.1897ms
+2022-11-29 18:23:11.645 +04:00 [INF] Request starting HTTP/1.1 POST https://localhost:44373/Yandex/order/accept application/json 3135
+2022-11-29 18:23:11.881 +04:00 [INF] Header: {
+  "Accept": [
+    "*/*"
+  ],
+  "Accept-Encoding": [
+    "gzip, deflate, br"
+  ],
+  "Authorization": [
+    "41000001667F97FE"
+  ],
+  "Cache-Control": [
+    "no-cache"
+  ],
+  "Connection": [
+    "keep-alive"
+  ],
+  "Content-Length": [
+    "3135"
+  ],
+  "Content-Type": [
+    "application/json"
+  ],
+  "Host": [
+    "localhost:44373"
+  ],
+  "User-Agent": [
+    "PostmanRuntime/7.29.2"
+  ],
+  "Postman-Token": [
+    "952035d0-b36b-4d17-91e4-aad9f459abf6"
+  ]
+}
+2022-11-29 18:23:11.891 +04:00 [INF] Body: {
+    "order":
+    {
+        "businessId":3298840,
+        "id":153271008,
+        "fake":false,
+        "currency":"RUR",
+        "paymentType":"PREPAID",
+        "paymentMethod":"YANDEX",
+        "itemsTotal":1274,
+        "total":1274,
+        "subsidyTotal":140,
+        "totalWithSubsidy":1414,
+        "buyerItemsTotalBeforeDiscount":1414,
+        "buyerTotalBeforeDiscount":1414,
+        "buyerItemsTotal":1274,
+        "buyerTotal":1274,
+        "taxSystem":"USN_MINUS_COST",
+        "delivery":
+        {
+            "type":"PICKUP",
+            "price":0,
+            "serviceName":"Самовывоз",
+            "deliveryServiceId":93808,
+            "deliveryPartnerType":"YANDEX_MARKET",
+            "dispatchType":"UNKNOWN",
+            "dates":
+            {
+                "fromDate":"19-11-2022",
+                "toDate":"19-11-2022",
+                "fromTime":"09:00",
+                "toTime":"15:00"
+            },
+            "region":
+            {
+                "id":54,
+                "name":"Екатеринбург",
+                "type":"CITY",
+                "parent":
+                {
+                    "id":121110,
+                    "name":"Муниципальное образование Екатеринбург",
+                    "type":"SUBJECT_FEDERATION_DISTRICT",
+                    "parent":
+                    {
+                        "id":11162,
+                        "name":"Свердловская область",
+                        "type":"SUBJECT_FEDERATION",
+                        "parent":
+                        {
+                            "id":52,
+                            "name":"Уральский федеральный округ",
+                            "type":"COUNTRY_DISTRICT",
+                            "parent":
+                            {
+                                "id":225,
+                                "name":"Россия",
+                                "type":"COUNTRY"
+                            }
+                        }
+                    }
+                }
+            },
+            "shipments":
+            [
+                {
+                    "id":148534461,
+                    "shipmentDate":"14-11-2022",
+                    "weight":1500,
+                    "width":21,
+                    "height":22,
+                    "depth":13,
+                    "status":"NEW"
+                }]
+        },"buyer":{"type":"PERSON"},"items":[{"id":229387560,"feedId":3504586,"offerId":"D00027999","feedCategoryId":"1657868757","offerName":"Оголовок скважинный герметичный ОГ 148-160/32 пластик","price":1274,"buyer-price":1274,"buyerPrice":1274,"buyerPriceBeforeDiscount":1414,"subsidy":140,"count":1,"params":"","vat":"NO_VAT","fulfilmentShopId":3697174,"sku":"101381726757","shopSku":"443030303534313838","warehouseId":170165,"partnerWarehouseId":"56b3e377-3d8c-4f41-a644-a5c5a846a5de","promos":[{"type":"MARKET_PROMOCODE","subsidy":140,"marketPromoId":"m61IQopO-XNOahoZbflGyg"}]}]}
+2022-11-29 18:23:11.896 +04:00 [INF] Host: localhost
+2022-11-29 18:23:11.901 +04:00 [INF] Client IP: ::1
+2022-11-29 18:23:11.919 +04:00 [INF] Executing endpoint 'Market.Controllers.YandexController.OrderAccept (Market)'
+2022-11-29 18:23:11.969 +04:00 [INF] Route matched with {action = "OrderAccept", controller = "Yandex"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[YandexClasses.ResponseOrder]] OrderAccept(Market.Services.HeadersParameters, YandexClasses.RequestedOrder, System.Threading.CancellationToken) on controller Market.Controllers.YandexController (Market).
+2022-11-29 18:24:09.996 +04:00 [ERR] Execution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+Operation cancelled by user.
+2022-11-29 18:24:25.184 +04:00 [INF] Executing StatusCodeResult, setting HTTP status code 210
+2022-11-29 18:24:25.198 +04:00 [INF] Executed action Market.Controllers.YandexController.OrderAccept (Market) in 73220.6703ms
+2022-11-29 18:24:25.202 +04:00 [INF] Executed endpoint 'Market.Controllers.YandexController.OrderAccept (Market)'
+2022-11-29 18:24:25.206 +04:00 [INF] 210: 
+2022-11-29 18:24:25.211 +04:00 [INF] Request finished HTTP/1.1 POST https://localhost:44373/Yandex/order/accept application/json 3135 - 210 - - 73566.4577ms
+2022-11-29 18:24:40.348 +04:00 [INF] Request starting HTTP/1.1 POST https://localhost:44373/Yandex/order/accept application/json 3135
+2022-11-29 18:24:40.359 +04:00 [INF] Header: {
+  "Accept": [
+    "*/*"
+  ],
+  "Accept-Encoding": [
+    "gzip, deflate, br"
+  ],
+  "Authorization": [
+    "41000001667F97FE"
+  ],
+  "Cache-Control": [
+    "no-cache"
+  ],
+  "Connection": [
+    "keep-alive"
+  ],
+  "Content-Length": [
+    "3135"
+  ],
+  "Content-Type": [
+    "application/json"
+  ],
+  "Host": [
+    "localhost:44373"
+  ],
+  "User-Agent": [
+    "PostmanRuntime/7.29.2"
+  ],
+  "Postman-Token": [
+    "a847ac17-20d7-49d8-9927-fcd28fc10de4"
+  ]
+}
+2022-11-29 18:24:40.361 +04:00 [INF] Body: {
+    "order":
+    {
+        "businessId":3298840,
+        "id":153271008,
+        "fake":false,
+        "currency":"RUR",
+        "paymentType":"PREPAID",
+        "paymentMethod":"YANDEX",
+        "itemsTotal":1274,
+        "total":1274,
+        "subsidyTotal":140,
+        "totalWithSubsidy":1414,
+        "buyerItemsTotalBeforeDiscount":1414,
+        "buyerTotalBeforeDiscount":1414,
+        "buyerItemsTotal":1274,
+        "buyerTotal":1274,
+        "taxSystem":"USN_MINUS_COST",
+        "delivery":
+        {
+            "type":"PICKUP",
+            "price":0,
+            "serviceName":"Самовывоз",
+            "deliveryServiceId":93808,
+            "deliveryPartnerType":"YANDEX_MARKET",
+            "dispatchType":"UNKNOWN",
+            "dates":
+            {
+                "fromDate":"19-11-2022",
+                "toDate":"19-11-2022",
+                "fromTime":"09:00",
+                "toTime":"15:00"
+            },
+            "region":
+            {
+                "id":54,
+                "name":"Екатеринбург",
+                "type":"CITY",
+                "parent":
+                {
+                    "id":121110,
+                    "name":"Муниципальное образование Екатеринбург",
+                    "type":"SUBJECT_FEDERATION_DISTRICT",
+                    "parent":
+                    {
+                        "id":11162,
+                        "name":"Свердловская область",
+                        "type":"SUBJECT_FEDERATION",
+                        "parent":
+                        {
+                            "id":52,
+                            "name":"Уральский федеральный округ",
+                            "type":"COUNTRY_DISTRICT",
+                            "parent":
+                            {
+                                "id":225,
+                                "name":"Россия",
+                                "type":"COUNTRY"
+                            }
+                        }
+                    }
+                }
+            },
+            "shipments":
+            [
+                {
+                    "id":148534461,
+                    "shipmentDate":"14-11-2022",
+                    "weight":1500,
+                    "width":21,
+                    "height":22,
+                    "depth":13,
+                    "status":"NEW"
+                }]
+        },"buyer":{"type":"PERSON"},"items":[{"id":229387560,"feedId":3504586,"offerId":"D00027999","feedCategoryId":"1657868757","offerName":"Оголовок скважинный герметичный ОГ 148-160/32 пластик","price":1274,"buyer-price":1274,"buyerPrice":1274,"buyerPriceBeforeDiscount":1414,"subsidy":140,"count":1,"params":"","vat":"NO_VAT","fulfilmentShopId":3697174,"sku":"101381726757","shopSku":"443030303534313838","warehouseId":170165,"partnerWarehouseId":"56b3e377-3d8c-4f41-a644-a5c5a846a5de","promos":[{"type":"MARKET_PROMOCODE","subsidy":140,"marketPromoId":"m61IQopO-XNOahoZbflGyg"}]}]}
+2022-11-29 18:24:40.364 +04:00 [INF] Host: localhost
+2022-11-29 18:24:40.367 +04:00 [INF] Client IP: ::1
+2022-11-29 18:24:40.370 +04:00 [INF] Executing endpoint 'Market.Controllers.YandexController.OrderAccept (Market)'
+2022-11-29 18:24:40.373 +04:00 [INF] Route matched with {action = "OrderAccept", controller = "Yandex"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[YandexClasses.ResponseOrder]] OrderAccept(Market.Services.HeadersParameters, YandexClasses.RequestedOrder, System.Threading.CancellationToken) on controller Market.Controllers.YandexController (Market).
+2022-11-29 18:25:14.534 +04:00 [ERR] Execution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+Operation cancelled by user.
+2022-11-29 18:25:48.540 +04:00 [INF] Executing StatusCodeResult, setting HTTP status code 210
+2022-11-29 18:25:48.543 +04:00 [INF] Executed action Market.Controllers.YandexController.OrderAccept (Market) in 68167.7785ms
+2022-11-29 18:25:48.545 +04:00 [INF] Executed endpoint 'Market.Controllers.YandexController.OrderAccept (Market)'
+2022-11-29 18:25:48.547 +04:00 [INF] 210: 
+2022-11-29 18:25:48.551 +04:00 [INF] Request finished HTTP/1.1 POST https://localhost:44373/Yandex/order/accept application/json 3135 - 210 - - 68203.8356ms
