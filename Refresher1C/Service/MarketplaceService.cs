@@ -15,7 +15,6 @@ using HttpExtensions;
 using System.Data;
 using System.IO;
 using System.Collections;
-using Newtonsoft.Json.Linq;
 
 namespace Refresher1C.Service
 {
@@ -2615,7 +2614,7 @@ namespace Refresher1C.Service
                 var marketplaceIds = await (from market in _context.Sc14042s
                                             where !market.Ismark
                                                 //&& (market.Sp14177 == 1)
-                                                //&& (market.Sp14155.Trim() == "AliExpress")
+                                                && (market.Sp14155.Trim() == "AliExpress")
                                             select new
                                             {
                                                 Id = market.Id,
@@ -2652,8 +2651,11 @@ namespace Refresher1C.Service
                     }
                     else if (marketplace.Тип == "ALIEXPRESS")
                     {
-                        await GetAliExpressOrders(marketplace.ClientId, marketplace.AuthSecret, marketplace.Authorization,
-                            marketplace.Id,
+                        //await GetAliExpressOrdersGlobal(marketplace.ClientId, marketplace.AuthSecret, marketplace.Authorization,
+                        //    marketplace.Id,
+                        //    marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId, marketplace.Encoding,
+                        //    stoppingToken);
+                        await GetAliExpressOrders(marketplace.AuthToken, marketplace.Id, marketplace.Authorization,
                             marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId, marketplace.Encoding,
                             stoppingToken);
                     }
@@ -2701,7 +2703,151 @@ namespace Refresher1C.Service
                 _logger.LogError("RefreshSlowOrders : " + ex.Message);
             }
         }
-        private async Task GetAliExpressOrders(string appKey, string appSecret, string authorization,
+        private async Task GetAliExpressOrders(string authToken, string marketplaceId, string authorization,
+            string firmaId, string customerId, string dogovorId, EncodeVersion encoding,
+            CancellationToken cancellationToken)
+        {
+            int limit = 20;
+            int pageNumber = 0;
+            bool nextPage = true;
+            while (nextPage)
+            {
+                pageNumber++;
+                nextPage = false;
+                var result = await AliExpressClasses.Functions.GetOrders(_httpService, authToken, pageNumber, limit, cancellationToken);
+                if (!string.IsNullOrEmpty(result.error))
+                    _logger.LogError(result.error);
+                if (result.data != null)
+                {
+                    nextPage = result.data.Total_count > limit * pageNumber;
+                    foreach (var aliOrder in result.data.Orders)
+                    {
+                        var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, aliOrder.Id);
+                        if (order == null)
+                        {
+                            //new order
+                            if ((aliOrder.Order_display_status == AliExpressClasses.OrderDisplayStatus.WaitSendGoods) ||
+                                (aliOrder.Order_display_status == AliExpressClasses.OrderDisplayStatus.PartialSendGoods) ||
+                                (aliOrder.Order_display_status == AliExpressClasses.OrderDisplayStatus.WaitAcceptGoods) ||
+                                (aliOrder.Order_display_status == AliExpressClasses.OrderDisplayStatus.WaitGroup))
+                            {
+                                var номенклатураCodes = aliOrder.Order_lines?.Select(x => x.Sku_code.Decode(encoding)).ToList();
+                                var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(firmaId);
+                                var списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
+                                var НоменклатураList = await _номенклатура.ПолучитьСвободныеОстатки(
+                                    разрешенныеФирмы,
+                                    списокСкладов,
+                                    номенклатураCodes,
+                                    true);
+                                var nomQuantums = await _номенклатура.ПолучитьКвант(номенклатураCodes, cancellationToken);
+                                bool нетВНаличие = false;
+                                foreach (var номенклатура in НоменклатураList)
+                                {
+                                    decimal остаток = номенклатура.Остатки
+                                                .Sum(z => z.СвободныйОстаток) / номенклатура.Единица.Коэффициент;
+                                    var quantum = (int)nomQuantums.Where(q => q.Key == номенклатура.Id).Select(q => q.Value).FirstOrDefault();
+                                    if (quantum == 0)
+                                        quantum = 1;
+                                    var asked = aliOrder.Order_lines?
+                                                        .Where(b => b.Sku_code.Decode(encoding) == номенклатура.Code)
+                                                        .Select(c => c.Quantity * quantum)
+                                                        .FirstOrDefault();
+                                    if (остаток < asked)
+                                    {
+                                        нетВНаличие = true;
+                                        break;
+                                    }
+                                }
+                                if (нетВНаличие)
+                                {
+                                    _logger.LogError("AliExpress запуск процедуры отмены");
+                                    continue;
+                                }
+                                var orderItems = new List<OrderItem>();
+                                foreach (var item in aliOrder.Order_lines)
+                                {
+                                    decimal цена = 0;
+                                    if (item.Item_price > 0)
+                                        цена = item.Item_price;
+                                    else if (item.Total_amount > 0)
+                                        цена = item.Total_amount / item.Quantity;
+                                    orderItems.Add(new OrderItem
+                                    {
+                                        Id = item.Item_id,
+                                        НоменклатураId = item.Sku_code.Decode(encoding),
+                                        Количество = item.Quantity,
+                                        Цена = цена,
+                                    });
+                                }
+                                DateTime shipmentDate = aliOrder.Cut_off_date;
+                                await _docService.NewOrder(
+                                   "ALIEXPRESS",
+                                   firmaId,
+                                   customerId,
+                                   dogovorId,
+                                   authorization,
+                                   encoding,
+                                   Common.SkladEkran,
+                                   string.Join(", ", aliOrder.Order_lines?.Select(x => x.Buyer_comment)),
+                                   string.Join(", ", aliOrder.Logistic_orders?.Select(x => x.Id.ToString())),
+                                   string.Join(", ", aliOrder.Logistic_orders?.Select(x => x.Track_number)),
+                                   StinDeliveryPartnerType.ALIEXPRESS_LOGISTIC,
+                                   StinDeliveryType.DELIVERY,
+                                   (double)aliOrder.Pre_split_postings?.Sum(x => x.Delivery_fee),
+                                   0,
+                                   StinPaymentType.NotFound,
+                                   StinPaymentMethod.NotFound,
+                                   "0",
+                                   "",
+                                   null,
+                                   aliOrder.Id,
+                                   aliOrder.Id,
+                                   shipmentDate,
+                                   orderItems,
+                                   cancellationToken);
+                            }
+                        }
+                        else
+                        {
+                            if ((aliOrder.Status == AliExpressClasses.OrderStatus.Finished) &&
+                                !string.IsNullOrEmpty(aliOrder.Finish_reason) &&
+                                ((aliOrder.Finish_reason == "ConfirmedByBuyer") ||
+                                 (aliOrder.Finish_reason == "AutoConfirm") ||
+                                 (aliOrder.Finish_reason == "ConfirmedByLogistic")) &&
+                                (order.InternalStatus != 6))
+                            {
+                                await _docService.OrderDeliveried(order);
+                            }
+                            else if (((aliOrder.Order_display_status == AliExpressClasses.OrderDisplayStatus.WaitSendGoods) ||
+                                 (aliOrder.Order_display_status == AliExpressClasses.OrderDisplayStatus.PartialSendGoods)) &&
+                                (order.InternalStatus == 0))
+                            {
+                                DateTime shipmentDate = aliOrder.Cut_off_date;
+                                if (order.ShipmentDate != shipmentDate)
+                                {
+                                    order.ShipmentDate = shipmentDate;
+                                    await _order.ОбновитьOrderShipmentDate(order.Id, shipmentDate);
+                                    await _docService.ОбновитьНомерМаршрута(order);
+                                }
+                                await _order.ОбновитьOrderStatus(order.Id, 8);
+                            }
+                            else if (((aliOrder.Status == AliExpressClasses.OrderStatus.Finished) || (aliOrder.Status == AliExpressClasses.OrderStatus.Cancelled)) &&
+                                !string.IsNullOrEmpty(aliOrder.Finish_reason) &&
+                                ((aliOrder.Finish_reason == "PaymentTimeout") || (aliOrder.Finish_reason == "CancelledByBuyer") ||
+                                (aliOrder.Finish_reason == "SecurityClose") || (aliOrder.Finish_reason == "BuyerDoesNotWantOrder") ||
+                                (aliOrder.Finish_reason == "BuyerChangeLogistic") || (aliOrder.Finish_reason == "BuyerCannotPayment") ||
+                                (aliOrder.Finish_reason == "BuyerOtherReasons") || (aliOrder.Finish_reason == "BuyerCannotContactSeller") ||
+                                (aliOrder.Finish_reason == "BuyerChangeCoupon") || (aliOrder.Finish_reason == "BuyerChangeMailAddress")) &&
+                                (order.InternalStatus != 5) && (order.InternalStatus != 6))
+                            {
+                                await _docService.OrderCancelled(order);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        private async Task GetAliExpressOrdersGlobal(string appKey, string appSecret, string authorization,
             string marketplaceId,
             string firmaId, string customerId, string dogovorId, EncodeVersion encoding,
             CancellationToken cancellationToken)

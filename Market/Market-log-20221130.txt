@@ -753,3 +753,111 @@ Operation cancelled by user.
 2022-11-30 11:45:41.350 +04:00 [INF] Executed endpoint 'Market.Controllers.YandexController.OrderAccept (Market)'
 2022-11-30 11:45:41.352 +04:00 [INF] 200: {"order":{"accepted":false,"reason":"OUT_OF_DATE"}}
 2022-11-30 11:45:41.355 +04:00 [INF] Request finished HTTP/1.1 POST https://localhost:44373/Yandex/order/accept application/json 3135 - 200 51 application/json;+charset=utf-8 50932.4768ms
+2022-11-30 17:52:06.770 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/index.html - -
+2022-11-30 17:52:07.566 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/index.html - - - 200 - text/html;charset=utf-8 800.2103ms
+2022-11-30 17:52:07.618 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - -
+2022-11-30 17:52:07.697 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - - - 200 11982 application/javascript;+charset=utf-8 78.4221ms
+2022-11-30 17:52:07.744 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_vs/browserLink - -
+2022-11-30 17:52:08.355 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 610.9454ms
+2022-11-30 17:52:08.545 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - -
+2022-11-30 17:52:08.960 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 414.2947ms
+2022-11-30 17:52:18.482 +04:00 [INF] Request starting HTTP/1.1 POST https://localhost:44373/Yandex/stocks application/json 117
+2022-11-30 17:52:19.169 +04:00 [INF] Header: {
+  "Accept": [
+    "*/*"
+  ],
+  "Accept-Encoding": [
+    "gzip, deflate, br"
+  ],
+  "Authorization": [
+    "900000018E84C23F"
+  ],
+  "Cache-Control": [
+    "no-cache"
+  ],
+  "Connection": [
+    "keep-alive"
+  ],
+  "Content-Length": [
+    "117"
+  ],
+  "Content-Type": [
+    "application/json"
+  ],
+  "Host": [
+    "localhost:44373"
+  ],
+  "User-Agent": [
+    "PostmanRuntime/7.29.2"
+  ],
+  "Postman-Token": [
+    "bb6f5eae-21cb-42c3-af5f-32099262a430"
+  ]
+}
+2022-11-30 17:52:19.264 +04:00 [INF] Body: {
+  "warehouseId": 488027,
+  "skus": [
+    "75.48.48.48.51.51.53.51.57",
+    "75.48.48.48.51.55.54.54.54"
+  ]
+}
+2022-11-30 17:52:19.267 +04:00 [INF] Host: localhost
+2022-11-30 17:52:19.272 +04:00 [INF] Client IP: ::1
+2022-11-30 17:52:19.279 +04:00 [INF] Request finished HTTP/1.1 POST https://localhost:44373/Yandex/stocks application/json 117 - 403 - - 796.7028ms
+2022-11-30 17:53:18.779 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/index.html - -
+2022-11-30 17:53:19.963 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/index.html - - - 200 - text/html;charset=utf-8 1191.8387ms
+2022-11-30 17:53:20.010 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - -
+2022-11-30 17:53:20.033 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_vs/browserLink - -
+2022-11-30 17:53:20.069 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - - - 200 11982 application/javascript;+charset=utf-8 58.8489ms
+2022-11-30 17:53:20.243 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 210.5851ms
+2022-11-30 17:53:20.410 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - -
+2022-11-30 17:53:21.465 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 1054.8992ms
+2022-11-30 17:53:25.910 +04:00 [INF] Request starting HTTP/1.1 POST https://localhost:44373/Yandex/stocks application/json 117
+2022-11-30 17:53:26.493 +04:00 [INF] Header: {
+  "Accept": [
+    "*/*"
+  ],
+  "Accept-Encoding": [
+    "gzip, deflate, br"
+  ],
+  "Authorization": [
+    "900000018E84C23F"
+  ],
+  "Cache-Control": [
+    "no-cache"
+  ],
+  "Connection": [
+    "keep-alive"
+  ],
+  "Content-Length": [
+    "117"
+  ],
+  "Content-Type": [
+    "application/json"
+  ],
+  "Host": [
+    "localhost:44373"
+  ],
+  "User-Agent": [
+    "PostmanRuntime/7.29.2"
+  ],
+  "Postman-Token": [
+    "3a4e7f1c-979a-4134-a926-b41b360c3068"
+  ]
+}
+2022-11-30 17:53:26.575 +04:00 [INF] Body: {
+  "warehouseId": 488027,
+  "skus": [
+    "75.48.48.48.51.51.53.51.57",
+    "75.48.48.48.51.55.54.54.54"
+  ]
+}
+2022-11-30 17:53:26.578 +04:00 [INF] Host: localhost
+2022-11-30 17:53:26.584 +04:00 [INF] Client IP: ::1
+2022-11-30 17:53:26.625 +04:00 [INF] Executing endpoint 'Market.Controllers.YandexController.Stocks (Market)'
+2022-11-30 17:53:26.732 +04:00 [INF] Route matched with {action = "Stocks", controller = "Yandex"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[YandexClasses.ResponseStocks]] Stocks(Market.Services.HeadersParameters, YandexClasses.RequestStocks, System.Threading.CancellationToken) on controller Market.Controllers.YandexController (Market).
+2022-11-30 17:54:12.064 +04:00 [INF] Executing OkObjectResult, writing value of type 'YandexClasses.ResponseStocks'.
+2022-11-30 17:54:12.138 +04:00 [INF] Executed action Market.Controllers.YandexController.Stocks (Market) in 45378.3008ms
+2022-11-30 17:54:12.146 +04:00 [INF] Executed endpoint 'Market.Controllers.YandexController.Stocks (Market)'
+2022-11-30 17:54:12.150 +04:00 [INF] 200: {"skus":[{"sku":"75.48.48.48.51.51.53.51.57","warehouseId":"488027","items":[{"type":"FIT","count":"4","updatedAt":"2022-11-30T17:54:12+04:00"}]},{"sku":"75.48.48.48.51.55.54.54.54","warehouseId":"488027","items":[{"type":"FIT","count":"19","updatedAt":"2022-11-30T17:54:12+04:00"}]}]}
+2022-11-30 17:54:12.154 +04:00 [INF] Request finished HTTP/1.1 POST https://localhost:44373/Yandex/stocks application/json 117 - 200 285 application/json;+charset=utf-8 46244.0438ms

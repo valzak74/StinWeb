@@ -331,6 +331,29 @@ namespace AliExpressClasses
             }
             return (UpdatedIds: uploadIds, ErrorIds: errorIds, ErrorMessage: err);
         }
+        public static async Task<(ResponseData? data, string error)> GetOrders(IHttpService httpService, string authToken,
+            int currentPage, int limit,
+            CancellationToken cancellationToken)
+        {
+            var request = new LocalOrdersRequest(currentPage, limit);
+            request.Trade_order_info = TradeOrderInfo.LogisticInfo;
+            var result = await httpService.Exchange<LocalOrderResponse, string>(
+                "https://openapi.aliexpress.ru/seller-api/v1/order/get-order-list",
+                HttpMethod.Post,
+                GetCustomHeaders(authToken),
+                request,
+                cancellationToken);
+            string err = "";
+            if (!string.IsNullOrEmpty(result.Item2))
+            {
+                err += "AliGetOrders : " + result.Item2;
+            }
+            if (result.Item1?.Error != null)
+                err = err.ParseError(result.Item1.Error);
+            if (result.Item1?.Data != null)
+                return (data: result.Item1.Data, error: string.IsNullOrEmpty(err) ? string.Empty : "AliGetOrders : " + err);
+            return (null, error: string.IsNullOrEmpty(err) ? string.Empty : "AliGetOrders : " + err);
+        }
         public static async Task<Tuple<GetOrderResult?, string>> GetOrdersGlobal(IHttpService httpService, string appKey, string appSecret, string authorization,
             int currentPage, int limit,
             CancellationToken cancellationToken)

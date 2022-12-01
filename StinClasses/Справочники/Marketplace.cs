@@ -191,11 +191,11 @@ namespace StinClasses.Справочники
                           join market in _context.Sc14042s on marketUsing.Sp14147 equals market.Id
                           where (market.Id == marketId) &&
                             nomenkCodes.Contains(nom.Code) &&
-                            (marketUsing.Sp14214 > 0)
+                            ((marketUsing.Sp14214 > 0) || (nom.Sp14215 > 0))
                           select new
                           {
                               Id = nom.Id,
-                              DeltaStock = market.Sp14216 == 1 ? 0 : nom.Sp14215, //marketUsing.Sp14214,
+                              DeltaStock = market.Sp14216 == 1 ? 0 : (marketUsing.Sp14214 > 0 ? marketUsing.Sp14214 : nom.Sp14215), 
                               IsMark = marketUsing.Ismark
                           }
                 )

@@ -1,0 +1,262 @@
+2022-12-01 09:23:00.201 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/index.html - -
+2022-12-01 09:23:02.681 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/index.html - - - 200 - text/html;charset=utf-8 2484.3023ms
+2022-12-01 09:23:02.696 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - -
+2022-12-01 09:23:02.730 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - - - 200 11982 application/javascript;+charset=utf-8 29.4535ms
+2022-12-01 09:23:02.802 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_vs/browserLink - -
+2022-12-01 09:23:03.201 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 398.4802ms
+2022-12-01 09:23:03.341 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - -
+2022-12-01 09:23:03.725 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 383.5835ms
+2022-12-01 09:23:11.508 +04:00 [INF] Request starting HTTP/1.1 POST https://localhost:44373/Yandex/stocks application/json 117
+2022-12-01 09:23:11.814 +04:00 [INF] Header: {
+  "Accept": [
+    "*/*"
+  ],
+  "Accept-Encoding": [
+    "gzip, deflate, br"
+  ],
+  "Authorization": [
+    "900000018E84C23F"
+  ],
+  "Cache-Control": [
+    "no-cache"
+  ],
+  "Connection": [
+    "keep-alive"
+  ],
+  "Content-Length": [
+    "117"
+  ],
+  "Content-Type": [
+    "application/json"
+  ],
+  "Host": [
+    "localhost:44373"
+  ],
+  "User-Agent": [
+    "PostmanRuntime/7.29.2"
+  ],
+  "Postman-Token": [
+    "09914010-a179-409d-a4e7-7f0dfa2dbc88"
+  ]
+}
+2022-12-01 09:23:11.822 +04:00 [INF] Body: {
+  "warehouseId": 488027,
+  "skus": [
+    "75.48.48.48.51.51.53.51.57",
+    "75.48.48.48.51.55.54.54.54"
+  ]
+}
+2022-12-01 09:23:11.825 +04:00 [INF] Host: localhost
+2022-12-01 09:23:11.830 +04:00 [INF] Client IP: ::1
+2022-12-01 09:23:11.845 +04:00 [INF] Executing endpoint 'Market.Controllers.YandexController.Stocks (Market)'
+2022-12-01 09:23:11.881 +04:00 [INF] Route matched with {action = "Stocks", controller = "Yandex"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[YandexClasses.ResponseStocks]] Stocks(Market.Services.HeadersParameters, YandexClasses.RequestStocks, System.Threading.CancellationToken) on controller Market.Controllers.YandexController (Market).
+2022-12-01 09:24:17.863 +04:00 [INF] Executing OkObjectResult, writing value of type 'YandexClasses.ResponseStocks'.
+2022-12-01 09:24:17.912 +04:00 [INF] Executed action Market.Controllers.YandexController.Stocks (Market) in 66023.7196ms
+2022-12-01 09:24:17.923 +04:00 [INF] Executed endpoint 'Market.Controllers.YandexController.Stocks (Market)'
+2022-12-01 09:24:17.928 +04:00 [INF] 200: {"skus":[{"sku":"75.48.48.48.51.51.53.51.57","warehouseId":"488027","items":[{"type":"FIT","count":"4","updatedAt":"2022-12-01T09:24:17+04:00"}]},{"sku":"75.48.48.48.51.55.54.54.54","warehouseId":"488027","items":[{"type":"FIT","count":"19","updatedAt":"2022-12-01T09:24:17+04:00"}]}]}
+2022-12-01 09:24:17.934 +04:00 [INF] Request finished HTTP/1.1 POST https://localhost:44373/Yandex/stocks application/json 117 - 200 285 application/json;+charset=utf-8 66425.9833ms
+2022-12-01 09:24:53.611 +04:00 [INF] Request starting HTTP/1.1 POST https://localhost:44373/Yandex/stocks application/json 117
+2022-12-01 09:24:53.616 +04:00 [INF] Header: {
+  "Accept": [
+    "*/*"
+  ],
+  "Accept-Encoding": [
+    "gzip, deflate, br"
+  ],
+  "Authorization": [
+    "900000018E84C23F"
+  ],
+  "Cache-Control": [
+    "no-cache"
+  ],
+  "Connection": [
+    "keep-alive"
+  ],
+  "Content-Length": [
+    "117"
+  ],
+  "Content-Type": [
+    "application/json"
+  ],
+  "Host": [
+    "localhost:44373"
+  ],
+  "User-Agent": [
+    "PostmanRuntime/7.29.2"
+  ],
+  "Postman-Token": [
+    "88eb2fea-0981-46a7-9914-04f467e5f41c"
+  ]
+}
+2022-12-01 09:24:53.619 +04:00 [INF] Body: {
+  "warehouseId": 488027,
+  "skus": [
+    "75.48.48.48.51.51.53.51.57",
+    "75.48.48.48.51.55.54.54.54"
+  ]
+}
+2022-12-01 09:24:53.622 +04:00 [INF] Host: localhost
+2022-12-01 09:24:53.625 +04:00 [INF] Client IP: ::1
+2022-12-01 09:24:53.628 +04:00 [INF] Executing endpoint 'Market.Controllers.YandexController.Stocks (Market)'
+2022-12-01 09:24:53.631 +04:00 [INF] Route matched with {action = "Stocks", controller = "Yandex"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[YandexClasses.ResponseStocks]] Stocks(Market.Services.HeadersParameters, YandexClasses.RequestStocks, System.Threading.CancellationToken) on controller Market.Controllers.YandexController (Market).
+2022-12-01 09:28:40.733 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/index.html - -
+2022-12-01 09:28:41.211 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/index.html - - - 200 - text/html;charset=utf-8 484.4681ms
+2022-12-01 09:28:41.270 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - -
+2022-12-01 09:28:41.270 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_vs/browserLink - -
+2022-12-01 09:28:41.294 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - - - 200 11982 application/javascript;+charset=utf-8 18.6541ms
+2022-12-01 09:28:41.391 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 121.3619ms
+2022-12-01 09:28:41.484 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - -
+2022-12-01 09:28:41.906 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 422.2295ms
+2022-12-01 09:29:19.614 +04:00 [INF] Request starting HTTP/1.1 POST https://localhost:44373/Yandex/stocks application/json 117
+2022-12-01 09:29:19.827 +04:00 [INF] Header: {
+  "Accept": [
+    "*/*"
+  ],
+  "Accept-Encoding": [
+    "gzip, deflate, br"
+  ],
+  "Authorization": [
+    "900000018E84C23F"
+  ],
+  "Cache-Control": [
+    "no-cache"
+  ],
+  "Connection": [
+    "keep-alive"
+  ],
+  "Content-Length": [
+    "117"
+  ],
+  "Content-Type": [
+    "application/json"
+  ],
+  "Host": [
+    "localhost:44373"
+  ],
+  "User-Agent": [
+    "PostmanRuntime/7.29.2"
+  ],
+  "Postman-Token": [
+    "3ba65a87-1373-43cd-aa26-d969d95fccfb"
+  ]
+}
+2022-12-01 09:29:19.836 +04:00 [INF] Body: {
+  "warehouseId": 488027,
+  "skus": [
+    "75.48.48.48.51.51.53.51.57",
+    "75.48.48.48.51.55.54.54.54"
+  ]
+}
+2022-12-01 09:29:19.839 +04:00 [INF] Host: localhost
+2022-12-01 09:29:19.844 +04:00 [INF] Client IP: ::1
+2022-12-01 09:29:19.862 +04:00 [INF] Executing endpoint 'Market.Controllers.YandexController.Stocks (Market)'
+2022-12-01 09:29:19.896 +04:00 [INF] Route matched with {action = "Stocks", controller = "Yandex"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[YandexClasses.ResponseStocks]] Stocks(Market.Services.HeadersParameters, YandexClasses.RequestStocks, System.Threading.CancellationToken) on controller Market.Controllers.YandexController (Market).
+2022-12-01 09:32:13.967 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/index.html - -
+2022-12-01 09:32:14.464 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/index.html - - - 200 - text/html;charset=utf-8 502.0063ms
+2022-12-01 09:32:14.510 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - -
+2022-12-01 09:32:14.510 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_vs/browserLink - -
+2022-12-01 09:32:14.537 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - - - 200 11982 application/javascript;+charset=utf-8 20.1978ms
+2022-12-01 09:32:14.618 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 107.7215ms
+2022-12-01 09:32:14.758 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - -
+2022-12-01 09:32:15.140 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 382.1526ms
+2022-12-01 09:32:18.770 +04:00 [INF] Request starting HTTP/1.1 POST https://localhost:44373/Yandex/stocks application/json 117
+2022-12-01 09:32:18.966 +04:00 [INF] Header: {
+  "Accept": [
+    "*/*"
+  ],
+  "Accept-Encoding": [
+    "gzip, deflate, br"
+  ],
+  "Authorization": [
+    "900000018E84C23F"
+  ],
+  "Cache-Control": [
+    "no-cache"
+  ],
+  "Connection": [
+    "keep-alive"
+  ],
+  "Content-Length": [
+    "117"
+  ],
+  "Content-Type": [
+    "application/json"
+  ],
+  "Host": [
+    "localhost:44373"
+  ],
+  "User-Agent": [
+    "PostmanRuntime/7.29.2"
+  ],
+  "Postman-Token": [
+    "3b4f5166-df00-4077-88aa-256f79df4717"
+  ]
+}
+2022-12-01 09:32:18.973 +04:00 [INF] Body: {
+  "warehouseId": 488027,
+  "skus": [
+    "75.48.48.48.51.51.53.51.57",
+    "75.48.48.48.51.55.54.54.54"
+  ]
+}
+2022-12-01 09:32:18.975 +04:00 [INF] Host: localhost
+2022-12-01 09:32:18.981 +04:00 [INF] Client IP: ::1
+2022-12-01 09:32:18.993 +04:00 [INF] Executing endpoint 'Market.Controllers.YandexController.Stocks (Market)'
+2022-12-01 09:32:19.024 +04:00 [INF] Route matched with {action = "Stocks", controller = "Yandex"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[YandexClasses.ResponseStocks]] Stocks(Market.Services.HeadersParameters, YandexClasses.RequestStocks, System.Threading.CancellationToken) on controller Market.Controllers.YandexController (Market).
+2022-12-01 09:34:38.210 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/index.html - -
+2022-12-01 09:34:38.641 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/index.html - - - 200 - text/html;charset=utf-8 436.4162ms
+2022-12-01 09:34:38.677 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_vs/browserLink - -
+2022-12-01 09:34:38.677 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - -
+2022-12-01 09:34:38.702 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - - - 200 11982 application/javascript;+charset=utf-8 23.7931ms
+2022-12-01 09:34:38.776 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 98.9397ms
+2022-12-01 09:34:38.944 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - -
+2022-12-01 09:34:39.323 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 378.4710ms
+2022-12-01 09:34:43.288 +04:00 [INF] Request starting HTTP/1.1 POST https://localhost:44373/Yandex/stocks application/json 117
+2022-12-01 09:34:43.485 +04:00 [INF] Header: {
+  "Accept": [
+    "*/*"
+  ],
+  "Accept-Encoding": [
+    "gzip, deflate, br"
+  ],
+  "Authorization": [
+    "900000018E84C23F"
+  ],
+  "Cache-Control": [
+    "no-cache"
+  ],
+  "Connection": [
+    "keep-alive"
+  ],
+  "Content-Length": [
+    "117"
+  ],
+  "Content-Type": [
+    "application/json"
+  ],
+  "Host": [
+    "localhost:44373"
+  ],
+  "User-Agent": [
+    "PostmanRuntime/7.29.2"
+  ],
+  "Postman-Token": [
+    "7b0c10a6-a736-475e-bdbe-1f16b407c5eb"
+  ]
+}
+2022-12-01 09:34:43.493 +04:00 [INF] Body: {
+  "warehouseId": 488027,
+  "skus": [
+    "75.48.48.48.51.51.53.51.57",
+    "75.48.48.48.51.55.54.54.54"
+  ]
+}
+2022-12-01 09:34:43.496 +04:00 [INF] Host: localhost
+2022-12-01 09:34:43.501 +04:00 [INF] Client IP: ::1
+2022-12-01 09:34:43.512 +04:00 [INF] Executing endpoint 'Market.Controllers.YandexController.Stocks (Market)'
+2022-12-01 09:34:43.544 +04:00 [INF] Route matched with {action = "Stocks", controller = "Yandex"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[YandexClasses.ResponseStocks]] Stocks(Market.Services.HeadersParameters, YandexClasses.RequestStocks, System.Threading.CancellationToken) on controller Market.Controllers.YandexController (Market).
+2022-12-01 09:34:57.820 +04:00 [INF] Executing OkObjectResult, writing value of type 'YandexClasses.ResponseStocks'.
+2022-12-01 09:34:57.870 +04:00 [INF] Executed action Market.Controllers.YandexController.Stocks (Market) in 14316.2413ms
+2022-12-01 09:34:57.878 +04:00 [INF] Executed endpoint 'Market.Controllers.YandexController.Stocks (Market)'
+2022-12-01 09:34:57.883 +04:00 [INF] 200: {"skus":[{"sku":"75.48.48.48.51.51.53.51.57","warehouseId":"488027","items":[{"type":"FIT","count":"3","updatedAt":"2022-12-01T09:34:57+04:00"}]},{"sku":"75.48.48.48.51.55.54.54.54","warehouseId":"488027","items":[{"type":"FIT","count":"18","updatedAt":"2022-12-01T09:34:57+04:00"}]}]}
+2022-12-01 09:34:57.887 +04:00 [INF] Request finished HTTP/1.1 POST https://localhost:44373/Yandex/stocks application/json 117 - 200 285 application/json;+charset=utf-8 14599.2825ms
