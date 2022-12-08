@@ -53,10 +53,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AliExpressClasses\AliExpressClasses.csproj" />
     <ProjectReference Include="..\ExcelExtensions\ExcelHelper.csproj" />
     <ProjectReference Include="..\HttpExtensions\HttpExtensions.csproj" />
     <ProjectReference Include="..\OzonClasses\OzonClasses.csproj" />
     <ProjectReference Include="..\StinClasses\StinClasses.csproj" />
+    <ProjectReference Include="..\WbClasses\WbClasses.csproj" />
     <ProjectReference Include="..\YandexClasses\YandexClasses.csproj" />
   </ItemGroup>
 

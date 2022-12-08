@@ -271,6 +271,9 @@ namespace Refresher1C.Service
                     case "ALIEXPRESS":
                         marketplaceName = "Aliexpress FBS";
                         break;
+                    case "SBER":
+                        marketplaceName = "Sber FBS";
+                        break;
                     case "YANDEX":
                         marketplaceName = "Yandex ";
                         if (partnerType == StinDeliveryPartnerType.SHOP)

@@ -8,6 +8,7 @@
     ".NETCoreApp,Version=v6.0": {
       "StinWeb/1.0.0": {
         "dependencies": {
+          "AliExpressClasses": "1.0.0",
           "ExcelHelper": "1.0.0",
           "HttpExtensions": "1.0.0",
           "Microsoft.EntityFrameworkCore.Proxies": "6.0.1",
@@ -3011,6 +3012,16 @@
           "System.Xml.ReaderWriter": "4.3.0"
         }
       },
+      "AliExpressClasses/1.0.0": {
+        "dependencies": {
+          "HttpExtensions": "1.0.0",
+          "JsonExtensions": "1.0.0",
+          "Newtonsoft.Json": "13.0.1"
+        },
+        "runtime": {
+          "AliExpressClasses.dll": {}
+        }
+      },
       "ExcelHelper/1.0.0": {
         "dependencies": {
           "NPOI": "2.5.1"
@@ -4838,6 +4849,11 @@
       "sha512": "sha512-lJ8AxvkX7GQxpC6GFCeBj8ThYVyQczx2+f/cWHJU8tjS7YfI6Cv6bon70jVEgs2CiFbmmM8b9j1oZVx0dSI2Ww==",
       "path": "system.xml.xmldocument/4.3.0",
       "hashPath": "system.xml.xmldocument.4.3.0.nupkg.sha512"
+    },
+    "AliExpressClasses/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
     },
     "ExcelHelper/1.0.0": {
       "type": "project",

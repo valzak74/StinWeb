@@ -8,6 +8,7 @@
     ".NETCoreApp,Version=v6.0": {
       "Test2/1.0.0": {
         "dependencies": {
+          "AliExpressClasses": "1.0.0",
           "HttpExtensions": "1.0.0",
           "JsonExtensions": "1.0.0",
           "Microsoft.Extensions.DependencyInjection": "6.0.0",
@@ -510,6 +511,16 @@
           }
         }
       },
+      "AliExpressClasses/1.0.0": {
+        "dependencies": {
+          "HttpExtensions": "1.0.0",
+          "JsonExtensions": "1.0.0",
+          "Newtonsoft.Json": "13.0.1"
+        },
+        "runtime": {
+          "AliExpressClasses.dll": {}
+        }
+      },
       "HttpExtensions/1.0.0": {
         "dependencies": {
           "JsonExtensions": "1.0.0",
@@ -889,6 +900,11 @@
       "sha512": "sha512-CeWTdRNfRaSh0pm2gDTJFwVaXfTq6Xwv/sA887iwPTneW7oMtMlpvDIO+U60+3GWTB7Aom6oQwv5VZVUhQRdPQ==",
       "path": "system.windows.extensions/4.7.0",
       "hashPath": "system.windows.extensions.4.7.0.nupkg.sha512"
+    },
+    "AliExpressClasses/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
     },
     "HttpExtensions/1.0.0": {
       "type": "project",

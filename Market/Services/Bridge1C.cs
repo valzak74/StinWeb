@@ -1043,6 +1043,21 @@ namespace Market.Services
                             else
                                 await _order.ОбновитьOrderStatus(order.Id, 5);
                         }
+                        else if (order.Тип == "WILDBERRIES")
+                        {
+                            var cancelResult = await WbClasses.Functions.ChangeOrderStatus(_httpService, order.AuthToken,
+                                order.MarketplaceId, WbClasses.WbStatus.СборочноеЗаданиеОтклонено, stoppingToken);
+                            if (!string.IsNullOrEmpty(cancelResult.error))
+                            {
+                                _logger.LogError(cancelResult.error);
+                                result += cancelResult.error;
+                            }
+                            if (!cancelResult.success)
+                            {
+                                _logger.LogError("Wb order: " + order.MarketplaceId + " can't be cancelled");
+                                result += "Wb order: " + order.MarketplaceId + " can't be cancelled";
+                            }
+                        }
                         _context.ОбновитьСетевуюАктивность();
                         await _context.SaveChangesAsync(stoppingToken);
                     }
@@ -1217,6 +1232,11 @@ namespace Market.Services
                                 }
                             }
                         }
+                        else if (order.Тип == "WILDBERRIES")
+                        {
+                            result += "Частичная отмена заказа Wildberries невозможна";
+                            _logger.LogError("Частичная отмена заказа Wildberries невозможна");
+                        }    
                         _context.ОбновитьСетевуюАктивность();
                         await _context.SaveChangesAsync();
                     }

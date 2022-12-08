@@ -1,5 +1,7 @@
 ﻿using JsonExtensions;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -13,6 +15,30 @@ namespace HttpExtensions
         {
             _httpClient = httpClient;
             _logger = logger;
+        }
+        bool IsValidJson(string stringValue)
+        {
+            if (string.IsNullOrWhiteSpace(stringValue))
+            {
+                return false;
+            }
+
+            var value = stringValue.Trim();
+
+            if ((value.StartsWith("{") && value.EndsWith("}")) || //For object
+                (value.StartsWith("[") && value.EndsWith("]"))) //For array
+            {
+                try
+                {
+                    var obj = JToken.Parse(value);
+                    return true;
+                }
+                catch (JsonReaderException)
+                {
+                    return false;
+                }
+            }
+            return false;
         }
         public async Task<Tuple<T, E>> Exchange<T, E>(string url, HttpMethod method, Dictionary<string, string> queryParameters, CancellationToken stoppingToken, [CallerMemberName] string callerName = "")
         {
@@ -53,9 +79,17 @@ namespace HttpExtensions
                 {
                     if (response.Content != null)
                     {
-                        var errBytes = await response.Content.ReadAsByteArrayAsync();
-                        var obj = errBytes.DeserializeObject<E>();
-                        return new Tuple<T, E>(default, obj);
+                        string r = await response.Content.ReadAsStringAsync();
+                        if (IsValidJson(r))
+                        {
+                            var errBytes = await response.Content.ReadAsByteArrayAsync();
+                            var obj = errBytes.DeserializeObject<E>();
+                            return new Tuple<T, E>(default, obj);
+                        }
+                        else if (typeof(E) == typeof(string))
+                        {
+                            return new Tuple<T, E>(default, (E)(object)r);
+                        }
                     }
                 }
             }
@@ -65,13 +99,21 @@ namespace HttpExtensions
             }
             return new Tuple<T, E>(default, default);
         }
-        public async Task<Tuple<T, E>> Exchange<T, E>(string url, HttpMethod method, Dictionary<string, string> headers, object content, CancellationToken stoppingToken, [CallerMemberName] string callerName = "")
+        public async Task<Tuple<T, E>> Exchange<T, E>(string url, HttpMethod method, Dictionary<string, string> headers, object? content, CancellationToken stoppingToken, [CallerMemberName] string callerName = "")
         {
             try
             {
-                var request = new HttpRequestMessage(method, url);
+                string queryKey = "QueryParameter";
+                var queryParams = headers
+                    .Where(x => x.Key.StartsWith(queryKey))
+                    .ToDictionary(k => k.Key.Substring(queryKey.Length), v => v.Value);
+                HttpRequestMessage request;
+                if (queryParams?.Count > 0)
+                    request = new HttpRequestMessage(method, url) { Content = new FormUrlEncodedContent(queryParams) };
+                else
+                    request = new HttpRequestMessage(method, url);
                 request.Headers.Add("User-Agent", "HttpClientFactory-StinClient");
-                foreach (var header in headers)
+                foreach (var header in headers.Where(x => !x.Key.StartsWith(queryKey)))
                     request.Headers.Add(header.Key, header.Value);
                 if (content != null)
                 {
@@ -108,9 +150,17 @@ namespace HttpExtensions
                 {
                     if (response.Content != null)
                     {
-                        var errBytes = await response.Content.ReadAsByteArrayAsync();
-                        var obj = errBytes.DeserializeObject<E>();
-                        return new Tuple<T, E>(default, obj);
+                        string r = await response.Content.ReadAsStringAsync();
+                        if (IsValidJson(r))
+                        {
+                            var errBytes = await response.Content.ReadAsByteArrayAsync();
+                            var obj = errBytes.DeserializeObject<E>();
+                            return new Tuple<T, E>(default, obj);
+                        }
+                        else if (typeof(E) == typeof(string))
+                        {
+                            return new Tuple<T, E>(default, (E)(object)r);
+                        }
                     }
                 }
             }

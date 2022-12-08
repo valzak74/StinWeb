@@ -813,6 +813,21 @@
           }
         }
       },
+      "AliExpressClasses/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v6.0",
+        "dependencies": {
+          "HttpExtensions": "1.0.0",
+          "JsonExtensions": "1.0.0",
+          "Newtonsoft.Json": "13.0.1"
+        },
+        "compile": {
+          "bin/placeholder/AliExpressClasses.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/AliExpressClasses.dll": {}
+        }
+      },
       "HttpExtensions/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v6.0",
@@ -2155,6 +2170,11 @@
         "version.txt"
       ]
     },
+    "AliExpressClasses/1.0.0": {
+      "type": "project",
+      "path": "../AliExpressClasses/AliExpressClasses.csproj",
+      "msbuildProject": "../AliExpressClasses/AliExpressClasses.csproj"
+    },
     "HttpExtensions/1.0.0": {
       "type": "project",
       "path": "../HttpExtensions/HttpExtensions.csproj",
@@ -2188,6 +2208,7 @@
   },
   "projectFileDependencyGroups": {
     "net6.0": [
+      "AliExpressClasses >= 1.0.0",
       "HttpExtensions >= 1.0.0",
       "JsonExtensions >= 1.0.0",
       "Microsoft.Extensions.DependencyInjection >= 6.0.0",
@@ -2232,6 +2253,9 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "projectReferences": {
+            "C:\\Users\\Валентин\\source\\repos\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj": {
+              "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj"
+            },
             "C:\\Users\\Валентин\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
               "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj"
             },

@@ -286,9 +286,56 @@ namespace SberClasses
                     err = err.ParseError("", "SberPriceResponse : " +JsonConvert.SerializeObject(result.Item1.Error));
                 if (result.Item1.Data?.Warnings?.Count > 0)
                     err = err.ParseError("", "SberPriceResponse : " + JsonConvert.SerializeObject(result.Item1.Data?.Warnings));
-                return ((result.Item1.Success == 1) && (result.Item1.Data?.SavedPrices == 1), err);
+                return ((result.Item1.Success == 1) && (result.Item1.Data?.SavedPrices == request.Data.Prices.Count), err);
             }
             return (false, err);
+        }
+        public static async Task<(List<SberDetailOrder>? orders, string error)> GetOrders(IHttpService httpService, string token,
+            CancellationToken cancellationToken)
+        {
+            var request = new OrderListRequest(token);
+            request.Data.DateFrom = DateTime.Today.AddDays(-30);
+            request.Data.DateTo = DateTime.Today;
+            request.Data.Statuses = new List<SberStatus> { SberStatus.CONFIRMED, SberStatus.CUSTOMER_CANCELED };
+
+            var result = await httpService.Exchange<OrderListResponse, string>(
+                "https://partner.sbermegamarket.ru/api/market/v1/orderService/order/search",
+                HttpMethod.Post,
+                new Dictionary<string, string>(),
+                request,
+                cancellationToken);
+            string err = "";
+            if (!string.IsNullOrEmpty(result.Item2))
+                err = err.ParseError("", result.Item2);
+            if (result.Item1 != null)
+            {
+                if (result.Item1.Error != null)
+                    err = err.ParseError("", JsonConvert.SerializeObject(result.Item1.Error));
+                if (result.Item1.Data?.Warnings?.Count > 0)
+                    err = err.ParseError("", JsonConvert.SerializeObject(result.Item1.Data?.Warnings));
+                if (result.Item1.Data?.Shipments?.Count > 0)
+                {
+                    request.Data.Shipments = result.Item1.Data?.Shipments;
+                    var resultDetails = await httpService.Exchange<OrderListDetailResponse, string>(
+                        "https://partner.sbermegamarket.ru/api/market/v1/orderService/order/get",
+                        HttpMethod.Post,
+                        new Dictionary<string, string>(),
+                        request,
+                        cancellationToken);
+                    if (!string.IsNullOrEmpty(resultDetails.Item2))
+                        err = err.ParseError("", resultDetails.Item2);
+                    if (resultDetails.Item1 != null)
+                    {
+                        if (resultDetails.Item1.Error != null)
+                            err = err.ParseError("", JsonConvert.SerializeObject(resultDetails.Item1.Error));
+                        if (resultDetails.Item1.Data?.Warnings?.Count > 0)
+                            err = err.ParseError("", JsonConvert.SerializeObject(resultDetails.Item1.Data?.Warnings));
+                        return (resultDetails.Item1.Data?.Shipments, string.IsNullOrEmpty(err) ? string.Empty : "SberGetOrders: " + err);
+                    }
+                }
+                return (null, string.IsNullOrEmpty(err) ? string.Empty : "SberGetOrders: " + err);
+            }
+            return (null, string.IsNullOrEmpty(err) ? string.Empty : "SberGetOrders: " + err);
         }
         public static int NDS(decimal percent)
         {

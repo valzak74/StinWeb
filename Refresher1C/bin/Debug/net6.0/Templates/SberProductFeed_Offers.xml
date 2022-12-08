@@ -1,0 +1,19 @@
+         <offer id="{Sku}" available="{Available}">
+            <name>{Name}</name>
+            <price>{Price}</price>
+            <categoryId>{CategoryId}</categoryId>
+            <vat>{Vat}</vat>
+            <shipment-options>
+               <option days="1" order-before="17"/>
+            </shipment-options>
+            <vendor>{Brend}</vendor>
+            <vendorCode>{Vendor}</vendorCode>
+            <description>{Description}</description>
+            <barcode>{Barcode}</barcode>
+            <param name="Вес (кг)">{Weight}</param>
+            <param name="Длина (см)">{Length}</param>
+            <param name="Высота (см)">{Height}</param>
+            <param name="Ширина (см)">{Width}</param>
+            <param name="Бренд">{Brend}</param>
+            <param name="Кол-во в упаковке (шт)">{Квант}</param>
+         </offer>

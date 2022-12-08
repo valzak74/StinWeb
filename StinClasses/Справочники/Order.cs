@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using StinClasses.Models;
@@ -120,6 +121,7 @@ namespace StinClasses.Справочники
             string CustomerNotes);
         Task SetOrdersPrinted(List<string> ids);
         Task ОбновитьOrderShipmentDate(string Id, DateTime ShipmentDate);
+        Task RefreshOrderDeliveryServiceId(string Id, long DeliveryServiceId, string DeliveryServiceName, CancellationToken cancellationToken);
     }
     public class OrderEntity : IOrder
     {
@@ -356,6 +358,18 @@ namespace StinClasses.Справочники
             {
                 entity.Sp13990 = ShipmentDate;
                 _context.Update(entity);
+                await _context.SaveChangesAsync();
+            }
+        }
+        public async Task RefreshOrderDeliveryServiceId(string Id, long DeliveryServiceId, string DeliveryServiceName, CancellationToken cancellationToken)
+        {
+            var entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Id == Id);
+            if (entity != null)
+            {
+                entity.Sp13986 = DeliveryServiceId;
+                entity.Sp13987 = DeliveryServiceName;
+                _context.Update(entity);
+                _context.РегистрацияИзмененийРаспределеннойИБ(13994, entity.Id);
                 await _context.SaveChangesAsync();
             }
         }

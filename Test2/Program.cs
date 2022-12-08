@@ -11,6 +11,7 @@ using Top.Api.Response;
 using StinClasses;
 using System.Net;
 using System.Reflection.PortableExecutable;
+using StinClasses.Справочники;
 //using Top.Api;
 //using Top.Api.Request;
 //using Top.Api.Response;
@@ -89,6 +90,17 @@ namespace HelloWorld
         }
         static async Task Main(string[] args)
         {
+            var stoppingToken = new CancellationTokenSource();
+            var _httpService = new HttpExtensions.HttpService(new HttpClient(), null);
+            List<long> logisticsOrderIds = new List<long> { 9552897 };
+            string authToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzZWxsZXJfaWQiOjM1MzAyOTc2MTYsInRva2VuX2lkIjoyNDI1fQ.LhSOb9x-4fa8axB8TUYoxw6BCViZgDgGh1USgBWwUd-9cJFNU7FoyymVzNw_bj3690yWXBugYoQwcDTYGnOLs25nXdt-DhV8ObFQLmoo9c6I5-n5tjpU4HK2mDZa8pILWYiaPkCPFsipSRt2V40PKIiVInIIkaDz3Morm4BGs3qM7qxZh_fccZMKy5qqn-uxp5Oq09o4tsH-UDxsnfeqEG9PYOnXTpCxLOr88LlOTcIMOgJsTF2Y7UjLL5uiccCuZm8BNAvlaS_CqwufSqeSkge1ULWf2VUUwPTZpdsnrDIhNd43YK9SWxZL1t7qmNSTBHsSeE9Tu2QdG8fQ5DHThM5nhHJ5xz4MiWtWdirnWIGelZbGErLj2OUwQN7HeNL3YiHSgRu4TUJOKgBOQtdgrtZzAIYsGBoNn0M5e8Pj_j-W5Vp5xv4ub8LEpM1aFMqWnJeygRpSzPVbm0nPo_eFqiWgZ4VZ8orU0eaqjkV9_0PgXquzWwmmyVRTReIRBiuKNIr_NHGv2arxsz7OVzrUC1K4liIwWUnL1SSf5IjZBvoekNnDRMDUSrL-NH0G_1DoHjRy_OhYAth6zFIa18atpcP1YLLGcyhceb-nugzdOkjjmXfmeUg1bl6YCGkDWu9vBz9EkjJKJpNRCe2OR7j7Dwo1HkdOVcQfuLqFs_hl4Ac";
+            var result = await AliExpressClasses.Functions.GetLabels(_httpService, authToken,
+                logisticsOrderIds,
+                stoppingToken.Token);
+            if (result.pdf != null)
+            {
+                File.WriteAllBytes(@"f:\\tmp\15\label.pdf", result.pdf);
+            }
             double sec = 27024581;
             var ts = TimeSpan.FromSeconds(sec);
             decimal r = 9m;
@@ -269,7 +281,7 @@ namespace HelloWorld
             string auth = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NJRCI6IjExOGE3ZGI0LTkzOTUtNDRiYy1hYTMyLTg3MDcwNDMyM2Q2OCJ9.CHEH2iO2y_QODLQ4TX59Ct1t7oN4mHM4kbv53sEclR8";
             //using var client = new HttpClient();
             //var httpService = new HttpExtensions.HttpService(httpService, logger);
-            var data = await WbClasses.Functions.GetCatalogInfo(client2, auth, cts.Token);
+            //var data = await WbClasses.Functions.GetCatalogInfo(client2, auth, cts.Token);
             //var statusResult = await YandexClasses.YandexOperators.OrderDetails("22162396", "031efc68e36241429b0d85ac288f00ce", "AQAAAABW9fzMAAeFNGqRShRjaUYBji2iT4tPk1k", "110626877");
             //if ((statusResult.Item1 == YandexClasses.StatusYandex.PROCESSING) &&
             //    (statusResult.Item2 == YandexClasses.SubStatusYandex.READY_TO_SHIP))

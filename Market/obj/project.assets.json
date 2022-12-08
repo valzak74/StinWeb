@@ -1865,6 +1865,21 @@
           "bin/placeholder/StinClasses.dll": {}
         }
       },
+      "WbClasses/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v6.0",
+        "dependencies": {
+          "HttpExtensions": "1.0.0",
+          "JsonExtensions": "1.0.0",
+          "Newtonsoft.Json": "13.0.1"
+        },
+        "compile": {
+          "bin/placeholder/WbClasses.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/WbClasses.dll": {}
+        }
+      },
       "YandexClasses/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v6.0",
@@ -5473,6 +5488,11 @@
       "path": "../StinClasses/StinClasses.csproj",
       "msbuildProject": "../StinClasses/StinClasses.csproj"
     },
+    "WbClasses/1.0.0": {
+      "type": "project",
+      "path": "../WbClasses/WbClasses.csproj",
+      "msbuildProject": "../WbClasses/WbClasses.csproj"
+    },
     "YandexClasses/1.0.0": {
       "type": "project",
       "path": "../YandexClasses/YandexClasses.csproj",
@@ -5494,6 +5514,7 @@
       "Serilog.AspNetCore >= 4.1.0",
       "StinClasses >= 1.0.0",
       "Swashbuckle.AspNetCore >= 5.6.3",
+      "WbClasses >= 1.0.0",
       "YandexClasses >= 1.0.0"
     ]
   },
@@ -5544,6 +5565,9 @@
             },
             "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj": {
               "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj"
+            },
+            "C:\\Users\\Валентин\\source\\repos\\StinWeb\\WbClasses\\WbClasses.csproj": {
+              "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\WbClasses\\WbClasses.csproj"
             },
             "C:\\Users\\Валентин\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj": {
               "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj"

@@ -26,6 +26,7 @@ namespace StinClasses
         OZON_LOGISTIC = 2,
         ALIEXPRESS_LOGISTIC = 3,
         SBER_MEGA_MARKET = 4,
+        WILDBERRIES = 5,
         NotFound
     }
     [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]

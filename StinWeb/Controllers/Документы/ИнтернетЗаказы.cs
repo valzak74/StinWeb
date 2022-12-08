@@ -507,6 +507,143 @@ namespace StinWeb.Controllers
                     if (ozonResult.Item2 != null)
                         return BadRequest(new ExceptionData { Code = -100, Description = ozonResult.Item2 });
                 }
+                else if (data.тип == "ALIEXPRESS")
+                {
+                    DateTime departureDate = limitTime <= DateTime.Now.TimeOfDay ? DateTime.Today.AddDays(1) : DateTime.Today;
+                    if (departureDate.DayOfWeek == DayOfWeek.Saturday)
+                        departureDate = departureDate.AddDays(2);
+                    if (departureDate.DayOfWeek == DayOfWeek.Sunday)
+                        departureDate = departureDate.AddDays(1);
+                    var deliveryServiceIds = await (from o in _context.Sc13994s
+                                                   join m in _context.Sc14042s on o.Sp14038 equals m.Id
+                                                   where !o.Ismark && (m.Code.Trim() == campaignId) &&
+                                                         (o.Sp13990.Date == departureDate)
+                                                   select (long)o.Sp13986)
+                                                   .ToListAsync(cancellationToken);
+                    var handoverIds = new List<long>();
+                    var usedLogisticsOrderIds = new List<long>();
+                    int page = 0;
+                    int pageSize = 100;
+                    int totalPages = 1;
+                    while (page < totalPages)
+                    {
+                        page++;
+                        var aliHandovers = await AliExpressClasses.Functions.GetHandoverList(_httpService, data.token,
+                            page, pageSize, deliveryServiceIds, cancellationToken);
+                        if (!string.IsNullOrEmpty(aliHandovers.error))
+                            return BadRequest(new ExceptionData { Code = -100, Description = aliHandovers.error });
+                        totalPages = aliHandovers.response?.PageInfo?.Total ?? 1;
+                        foreach (var item in aliHandovers.response?.Data?.Data_source)
+                        {
+                            if ((item.Arrival_date != departureDate) && (item.Status == AliExpressClasses.HandoverStatus.Created))
+                            {
+                                var needDeleteLogisticsOrderIds = item.Logistic_order_ids.Where(x => deliveryServiceIds.Contains(x)).ToList();
+                                var deleteResult = await AliExpressClasses.Functions.DeleteFromHandoverList(_httpService, data.token, item.Handover_list_id, needDeleteLogisticsOrderIds, cancellationToken);
+                                if (!string.IsNullOrEmpty(deleteResult.error))
+                                    return BadRequest(new ExceptionData { Code = -100, Description = deleteResult.error });
+                            }
+                            else
+                            {
+                                handoverIds.Add(item.Handover_list_id);
+                                usedLogisticsOrderIds.AddRange(item.Logistic_order_ids);
+                            }
+                        }
+                    }
+                    if (handoverIds.Count == 0)
+                    {
+                        var createHandoverList = await AliExpressClasses.Functions.CreateHandoverList(_httpService, data.token, departureDate, deliveryServiceIds, cancellationToken);
+                        if (!string.IsNullOrEmpty(createHandoverList.error))
+                            return BadRequest(new ExceptionData { Code = -100, Description = createHandoverList.error });
+                        handoverIds.Add(createHandoverList.handoverListId ?? 0);
+                    }
+                    else if ((handoverIds.Count > 0) && (deliveryServiceIds.Where(x => !usedLogisticsOrderIds.Contains(x)).Count() > 0))
+                    {
+                        var addToHandover = await AliExpressClasses.Functions.AddToHandoverList(_httpService, data.token,
+                            handoverIds.FirstOrDefault(),
+                            deliveryServiceIds.Where(x => !usedLogisticsOrderIds.Contains(x)).ToList(),
+                            cancellationToken);
+                        if (!string.IsNullOrEmpty(addToHandover.error))
+                            return BadRequest(new ExceptionData { Code = -100, Description = addToHandover.error });
+                    }
+                    if (handoverIds.Count == 1)
+                    {
+                        var printResult = await AliExpressClasses.Functions.PrintHandoverList(_httpService, data.token, handoverIds.FirstOrDefault(), cancellationToken);
+                        if (!string.IsNullOrEmpty(printResult.error))
+                            return BadRequest(new ExceptionData { Code = -100, Description = printResult.error });
+                        return File(printResult.Item1, "application/pdf");
+                    }
+                    else
+                    {
+                        using var outputStream = new System.IO.MemoryStream();
+                        using PdfSharp.Pdf.PdfDocument output = new PdfSharp.Pdf.PdfDocument(outputStream);
+                        foreach (var handoverId in handoverIds)
+                        {
+                            var printResult = await AliExpressClasses.Functions.PrintHandoverList(_httpService, data.token, handoverId, cancellationToken);
+                            if (!string.IsNullOrEmpty(printResult.error))
+                                return BadRequest(new ExceptionData { Code = -100, Description = printResult.error });
+                            if (printResult.pdf != null)
+                            {
+                                using System.IO.Stream stream = new System.IO.MemoryStream(printResult.pdf);
+                                using PdfSharp.Pdf.PdfDocument pdfFile = PdfSharp.Pdf.IO.PdfReader.Open(stream, PdfSharp.Pdf.IO.PdfDocumentOpenMode.Import);
+                                foreach (var pdfPage in pdfFile.Pages)
+                                {
+                                    output.AddPage(pdfPage);
+                                }
+                            }
+                        }
+                        output.Save(outputStream);
+                        return File(outputStream.ToArray(), "application/pdf");
+                    }
+                }
+                else if (data.тип == "WILDBERRIES")
+                {
+                    DateTime departureDate = limitTime <= DateTime.Now.TimeOfDay ? DateTime.Today.AddDays(1) : DateTime.Today;
+                    if (departureDate.DayOfWeek == DayOfWeek.Saturday)
+                        departureDate = departureDate.AddDays(2);
+                    if (departureDate.DayOfWeek == DayOfWeek.Sunday)
+                        departureDate = departureDate.AddDays(1);
+                    var deliveryServiceNames = await (from o in _context.Sc13994s
+                                                    join m in _context.Sc14042s on o.Sp14038 equals m.Id
+                                                    where !o.Ismark && (m.Code.Trim() == campaignId) &&
+                                                          (o.Sp13990.Date == departureDate)
+                                                    select o.Sp13987)
+                                                    .Distinct()
+                                                    .ToListAsync(cancellationToken);
+                    if (deliveryServiceNames.Count == 0)
+                        return BadRequest(new ExceptionData { Code = -100, Description = "No supplies" });
+                    if (deliveryServiceNames.Count == 1)
+                    {
+                        string supplyId = deliveryServiceNames.FirstOrDefault();
+                        var pdfBarcodeResult = await WbClasses.Functions.GetSupplyBarcode(_httpService, data.token, supplyId, cancellationToken);
+                        if (!string.IsNullOrEmpty(pdfBarcodeResult.error))
+                            return BadRequest(new ExceptionData { Code = -100, Description = pdfBarcodeResult.error });
+                        await WbClasses.Functions.CloseSupply(_httpService, data.token, supplyId, cancellationToken);
+                        return File(pdfBarcodeResult.pdf, "application/pdf");
+                    }
+                    else
+                    {
+                        using var outputStream = new System.IO.MemoryStream();
+                        using PdfSharp.Pdf.PdfDocument output = new PdfSharp.Pdf.PdfDocument(outputStream);
+                        foreach (var dsn in deliveryServiceNames)
+                        {
+                            var pdfBarcodeResult = await WbClasses.Functions.GetSupplyBarcode(_httpService, data.token, dsn, cancellationToken);
+                            if (!string.IsNullOrEmpty(pdfBarcodeResult.error))
+                                return BadRequest(new ExceptionData { Code = -100, Description = pdfBarcodeResult.error });
+                            await WbClasses.Functions.CloseSupply(_httpService, data.token, dsn, cancellationToken);
+                            if (pdfBarcodeResult.pdf != null)
+                            {
+                                using System.IO.Stream stream = new System.IO.MemoryStream(pdfBarcodeResult.pdf);
+                                using PdfSharp.Pdf.PdfDocument pdfFile = PdfSharp.Pdf.IO.PdfReader.Open(stream, PdfSharp.Pdf.IO.PdfDocumentOpenMode.Import);
+                                foreach (var pdfPage in pdfFile.Pages)
+                                {
+                                    output.AddPage(pdfPage);
+                                }
+                            }
+                        }
+                        output.Save(outputStream);
+                        return File(outputStream.ToArray(), "application/pdf");
+                    }
+                }
                 else if (data.тип == "SBER")
                 {
                     string html = await GetSberReestr(campaignId, limitTime, cancellationToken);
@@ -939,7 +1076,7 @@ namespace StinWeb.Controllers
                         ДатаДок = формаНабор.Общие.ДатаДок.ToString("dd.MM.yyyy"),
                         Маршрут = формаНабор.Маршрут?.Наименование ?? "",
                         КолДокументов = "Док-тов = " + формаНабор.ТабличнаяЧасть.Select(x => x.ФирмаНоменклатуры.Id).Distinct().Count().ToString(),
-                        OrderNo = формаНабор.Order?.MarketplaceId ?? "",
+                        OrderNo = формаНабор.Order?.Тип == "ALIEXPRESS" ? (формаНабор.Order?.MarketplaceId ?? "") + " / " + (формаНабор.Order?.DeliveryServiceName ?? "") : (формаНабор.Order?.MarketplaceId ?? ""),
                         Поставщик = формаНабор.Общие.Фирма.Наименование,
                         Покупатель = формаНабор.Контрагент?.Наименование ?? "",
                         Склад = (формаНабор.Склад?.Наименование ?? "") + "/" + (формаНабор.ПодСклад?.Наименование ?? ""),

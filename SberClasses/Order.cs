@@ -1,7 +1,6 @@
 ﻿
 using JsonExtensions;
 using Newtonsoft.Json;
-using System.Reflection.Metadata.Ecma335;
 
 namespace SberClasses
 {
@@ -32,7 +31,6 @@ namespace SberClasses
             Data = new SberData();
             Meta= new Meta();
         }
-        //public bool ShouldSerializeError() => Error != null;
     }
     public class SberResponseSingleError: SberResponse
     {
@@ -181,6 +179,124 @@ namespace SberClasses
         public string? DiscountDescription { get; set; }
         public decimal DiscountAmount { get; set; }
     }
+    public class OrderListRequest
+    {
+        public OrderListData? Data { get; set; }
+        public Meta? Meta { get; set; }
+        public OrderListRequest()
+        {
+            Meta = new Meta();
+            Data = new OrderListData();
+        }
+        public OrderListRequest(string token): this()
+        {
+            Data = new OrderListData { Token = token };
+        }
+    }
+    public class OrderListData
+    {
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string? Token { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
+        public DateTime? DateFrom { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
+        public DateTime? DateTo { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? Count { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public List<SberStatus>? Statuses { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public List<string>? Shipments { get; set; }
+    }
+    public class OrderListResponse
+    {
+        public SberOrderListData? Data { get; set; }
+        public Meta? Meta { get; set; }
+        public int Success { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public List<SberError>? Error { get; set; }
+    }
+    public class OrderListDetailResponse: OrderListResponse
+    {
+        public new SberOrderListDetailData? Data { get; set; }
+    }
+    public class SberOrderListDetailData: SberOrderListData
+    {
+        public new List<SberDetailOrder>? Shipments { get; set; }
+    }
+    public class SberOrderListData
+    {
+        public List<string>? Shipments { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public List<object>? Warnings { get; set; }
+    }
+    public class SberDetailOrder
+    {
+        public string? ShipmentId { get; set; }
+        public string? OrderCode { get; set; }
+        [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
+        public DateTime ConfirmedTimeLimit { get; set; }
+        [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
+        public DateTime PackingTimeLimit { get; set; }
+        [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
+        public DateTime ShippingTimeLimit { get; set; }
+        [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
+        public DateTime ShipmentDateFrom { get; set; }
+        [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
+        public DateTime ShipmentDateTo { get; set; }
+        [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
+        public DateTime PackingDate { get; set; }
+        [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
+        public DateTime ReserveExpirationDate { get; set; }
+        public string? DeliveryId { get; set; }
+        public bool ShipmentDateShift { get; set; }
+        public bool ShipmentIsChangeable { get; set; }
+        public string? CustomerFullName { get; set; }
+        public string? CustomerAddress { get; set; }
+        public string? ShippingPoint { get; set; }
+        [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
+        public DateTime CreationDate { get; set; }
+        [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
+        public DateTime DeliveryDate { get; set; }
+        [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
+        public DateTime DeliveryDateFrom { get; set; }
+        [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
+        public DateTime DeliveryDateTo { get; set; }
+        public string? DeliveryMethodId { get; set; }
+        public string? ServiceScheme { get; set; }
+        public decimal DepositedAmount { get; set; }
+        public List<SberDetailItem>? Items { get; set; }
+    }
+    public class SberDetailItem
+    {
+        public string? ItemIndex { get; set; }
+        public SberStatus Status { get; set; }
+        public SberSubStatus SubStatus { get; set; }
+        public decimal? Price { get; set; }
+        public decimal? FinalPrice { get; set; }
+        public List<Discount>? Discounts { get; set; }
+        public int? Quantity { get; set; }
+        public string? OfferId { get; set; }
+        public string? GoodsId { get; set; }
+        public GoodsInfo? GoodsData { get; set; }
+        public object? BoxIndex { get; set; } 
+        public List<SberEvent>? Events { get; set; }
+    }
+    public class GoodsInfo
+    {
+        public string? Name { get; set; }
+        public string? categoryName { get; set; }
+    }
+    public class SberEvent
+    {
+        [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
+        public DateTime EventDate { get; set; }
+        public string? EventName { get; set; }
+        public string? EventValue { get; set; }
+
+    }
     public class Meta
     {
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
@@ -200,5 +316,30 @@ namespace SberClasses
         NOT_TIME_FOR_SHIPPING = 5,
         FRAUD_ORDER = 6
     }
-
+    [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]
+    public enum SberStatus
+    {
+        NotFound = -1,
+        NEW = 0,
+        CONFIRMED = 1,
+        PACKED = 2,
+        PACKING_EXPIRED = 3,
+        SHIPPED = 4,
+        DELIVERED = 5,
+        MERCHANT_CANCELED = 6,
+        CUSTOMER_CANCELED = 7,
+        PENDING_CONFIRMATION = 8,
+        PENDING_PACKING = 9,
+        PENDING_SHIPPING = 10,
+        SHIPPING_EXPIRED = 11,
+    }
+    [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]
+    public enum SberSubStatus
+    {
+        NotFound = -1,
+        LATE_REJECT = 0,
+        CONFIRMATION_REJECT = 1,
+        CONFIRMATION_EXPIRED = 2,
+        PACKING_EXPIRED = 3
+    }
 }

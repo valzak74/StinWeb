@@ -59,6 +59,7 @@ namespace StinClasses.Справочники
         public string Код { get; set; }
         public string Наименование { get; set; }
         public decimal Коэффициент { get; set; }
+        public string Barcode { get; set; }
         public override bool Equals(object obj)
         {
             if (!(obj is Единица)) return false;
@@ -128,6 +129,8 @@ namespace StinClasses.Справочники
     {
         Task<List<Номенклатура>> GetНоменклатураByListIdAsync(List<string> Ids);
         Task<List<Номенклатура>> GetНоменклатураByListCodeAsync(List<string> Codes);
+        Task<List<string>> GetНоменклатураIdByListBarcodeAsync(List<string> Barcodes, CancellationToken cancellationToken);
+        Task<string> GetНоменклатураIdByBarcodeAsync(string Barcode, CancellationToken cancellationToken);
         Task<string> GetIdByCode(string code);
         Task<Номенклатура> GetНоменклатураByIdAsync(string Id);
         Task<Единица> GetЕдиницаByIdAsync(string Id);
@@ -138,6 +141,7 @@ namespace StinClasses.Справочники
         IQueryable<Номенклатура> ПолучитьНоменклатуруПоАгентуПроизводителя(string контрагентId, IEnumerable<string> списокНоменклатурыId);
         Task<List<Номенклатура>> АналогиНоменклатурыAsync(string номенклатураId);
         Task<decimal> ПолучитьКоличествоМест(string номенклатураId);
+        Task<decimal> ПолучитьКвант(string nomId, CancellationToken cancellationToken);
         Task<Dictionary<string, decimal>> ПолучитьКвант(List<string> nomenkCodes, CancellationToken cancellationToken);
         Task ОбновитьЗначенияПараметров(string code, string краткоеОписание, string подробноеОписание, string комментарий,
             decimal весБруттоКг,
@@ -203,6 +207,7 @@ namespace StinClasses.Справочники
                                   Id = sc75.Id,
                                   Код = sc41.Code,
                                   Наименование = sc41.Descr.Trim(),
+                                  Barcode = sc75.Sp80.Trim(),
                                   Коэффициент = sc75.Sp78 == 0 ? 1 : sc75.Sp78
                               },
                               Производитель = sc8840 != null ? new Производитель
@@ -246,6 +251,7 @@ namespace StinClasses.Справочники
                                   Id = sc75.Id,
                                   Код = sc41.Code,
                                   Наименование = sc41.Descr.Trim(),
+                                  Barcode = sc75.Sp80.Trim(),
                                   Коэффициент = sc75.Sp78 == 0 ? 1 : sc75.Sp78
                               },
                               Производитель = sc8840 != null ? new Производитель
@@ -263,6 +269,22 @@ namespace StinClasses.Справочники
                               } : null
                           })
                           .ToListAsync();
+        }
+        public async Task<string> GetНоменклатураIdByBarcodeAsync(string Barcode, CancellationToken cancellationToken)
+        {
+            return await (from sc84 in _context.Sc84s
+                          join sc75 in _context.Sc75s on sc84.Sp94 equals sc75.Id
+                          where (sc84.Isfolder == 2) && !sc84.Ismark && (sc75.Sp80.Trim() == Barcode)
+                          select sc84.Id)
+                          .FirstOrDefaultAsync(cancellationToken);
+        }
+        public async Task<List<string>> GetНоменклатураIdByListBarcodeAsync(List<string> Barcodes, CancellationToken cancellationToken)
+        {
+            return await (from sc84 in _context.Sc84s
+                          join sc75 in _context.Sc75s on sc84.Sp94 equals sc75.Id
+                          where (sc84.Isfolder == 2) && !sc84.Ismark && Barcodes.Contains(sc75.Sp80.Trim())
+                          select sc84.Id)
+                          .ToListAsync(cancellationToken);
         }
         public async Task<string> GetIdByCode(string code)
         {
@@ -293,6 +315,7 @@ namespace StinClasses.Справочники
                                   Id = sc75.Id,
                                   Код = sc41.Code,
                                   Наименование = sc41.Descr.Trim(),
+                                  Barcode = sc75.Sp80.Trim(),
                                   Коэффициент = sc75.Sp78 == 0 ? 1 : sc75.Sp78
                               },
                               Производитель = sc8840 != null ? new Производитель
@@ -322,6 +345,7 @@ namespace StinClasses.Справочники
                               Id = единицы.Id,
                               Код = океи.Code,
                               Наименование = океи.Descr.Trim(),
+                              Barcode = единицы.Sp80.Trim(),
                               Коэффициент = единицы.Sp78
                           })
                          .FirstOrDefaultAsync();
@@ -470,6 +494,7 @@ namespace StinClasses.Справочники
                               {
                                   Id = sc75.Id,
                                   Наименование = sc41.Descr.Trim(),
+                                  Barcode = sc75.Sp80.Trim(),
                                   Коэффициент = sc75.Sp78 == 0 ? 1 : sc75.Sp78
                               }
                           }).ToListAsync();
@@ -481,6 +506,13 @@ namespace StinClasses.Справочники
                           where nom.Id == номенклатураId
                           select ed.Sp14063).FirstOrDefaultAsync();
         }
+        public async Task<decimal> ПолучитьКвант(string nomId, CancellationToken cancellationToken)
+        {
+            return await _context.Sc84s
+                .Where(x => x.Id == nomId)
+                .Select(x => x.Sp14188 == 0 ? 1 : x.Sp14188)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
         public async Task<Dictionary<string, decimal>> ПолучитьКвант(List<string> nomenkCodes, CancellationToken cancellationToken)
         {
             return await _context.Sc84s
@@ -488,7 +520,7 @@ namespace StinClasses.Справочники
                 .Select(x => new
                 {
                     Id = x.Id,
-                    Quantum = x.Sp14188
+                    Quantum = x.Sp14188 == 0 ? 1 : x.Sp14188
                 })
                 .ToDictionaryAsync(k => k.Id, v => v.Quantum, cancellationToken);
         }

@@ -70,3 +70,5 @@ C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\StinClasse
 C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\topsdk-net-core.dll
 C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\StinClasses.pdb
 C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\topsdk-net-core.pdb
+C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\AliExpressClasses.dll
+C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\AliExpressClasses.pdb

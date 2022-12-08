@@ -1,13 +1,7 @@
 ﻿using HttpExtensions;
 using JsonExtensions;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data.Common;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace AliExpressClasses
 {
@@ -336,6 +330,7 @@ namespace AliExpressClasses
             CancellationToken cancellationToken)
         {
             var request = new LocalOrdersRequest(currentPage, limit);
+            request.Date_start = DateTime.Today.AddDays(-30);
             request.Trade_order_info = TradeOrderInfo.LogisticInfo;
             var result = await httpService.Exchange<LocalOrderResponse, string>(
                 "https://openapi.aliexpress.ru/seller-api/v1/order/get-order-list",
@@ -346,7 +341,7 @@ namespace AliExpressClasses
             string err = "";
             if (!string.IsNullOrEmpty(result.Item2))
             {
-                err += "AliGetOrders : " + result.Item2;
+                err += result.Item2;
             }
             if (result.Item1?.Error != null)
                 err = err.ParseError(result.Item1.Error);
@@ -393,15 +388,179 @@ namespace AliExpressClasses
             }
             return new(null, "GetOrdersGlobal : empty result");
         }
-        public static async Task GetLogisticDetails(IHttpService httpService, string appKey, string appSecret, string authorization,
+        public static async Task<(long? logisticsOrderId, string? trackNumber, string error)> CreateLogisticsOrder(IHttpService httpService, string authToken,
+            LogisticsOrderRequest data,
             CancellationToken cancellationToken)
         {
-            var method = "aliexpress.logistics.redefining.getonlinelogisticsinfo";
-            var result = await httpService.Exchange<string, ErrorGlobal>(
-                "https://api.taobao.com/router/rest",
+            var request = new CreateLogisticsOrderRequest(data);
+            var result = await httpService.Exchange<CreateLogisticsOrderResponse, string>(
+                "https://openapi.aliexpress.ru/seller-api/v1/logistic-order/create",
                 HttpMethod.Post,
-                GetGlobalHeaders(appKey, appSecret, authorization, method, "logistics_order_id", 7771084),
+                GetCustomHeaders(authToken),
+                request,
                 cancellationToken);
+            string err = "";
+            if (!string.IsNullOrEmpty(result.Item2))
+            {
+                err += result.Item2;
+            }
+            if (result.Item1?.Error != null)
+                err = err.ParseError(result.Item1.Error);
+            var singleOrder = result.Item1?.Data?.Orders?.FirstOrDefault();
+
+            return (logisticsOrderId: singleOrder?.Logistic_orders?.Select(x => x.Id).FirstOrDefault(), 
+                    trackNumber: singleOrder?.Logistic_orders?.Select(x => x.Track_number).FirstOrDefault(), 
+                    error: string.IsNullOrEmpty(err) ? string.Empty : "AliCreateLogisticsOrder : " + err);
+        }
+        public static async Task<(GetHandoverListResponse? response, string error)> GetHandoverList(IHttpService httpService, string authToken,
+            int currentPage, int limit,
+            List<long> logisticsOrderIds,
+            CancellationToken cancellationToken)
+        {
+            var request = new GetHandoverListRequest(currentPage, limit);
+            request.Logistic_order_ids = logisticsOrderIds;
+            var result = await httpService.Exchange<GetHandoverListResponse, string>(
+                "https://openapi.aliexpress.ru/seller-api/v1/handover-list/get-by-filter",
+                HttpMethod.Post,
+                GetCustomHeaders(authToken),
+                request,
+                cancellationToken);
+            string err = "";
+            if (!string.IsNullOrEmpty(result.Item2))
+            {
+                err += result.Item2;
+            }
+            if (result.Item1?.Error != null)
+                err = err.ParseError(result.Item1.Error);
+            return (response: result.Item1, error: string.IsNullOrEmpty(err) ? string.Empty : "AliGetHandoverList : " + err);
+        }
+        public static async Task<(byte[]? pdf, string error)> GetLabels(IHttpService httpService, string authToken,
+            List<long> logisticsOrderIds,
+            CancellationToken cancellationToken)
+        {
+            var request = new GetLabelUrlRequest();
+            request.Logistic_order_ids = logisticsOrderIds;
+            var resultUrl = await httpService.Exchange<GetLabelUrlResponse, string>(
+                "https://openapi.aliexpress.ru/seller-api/v1/labels/orders/get",
+                HttpMethod.Post,
+                GetCustomHeaders(authToken),
+                request,
+                cancellationToken);
+            string err = "";
+            if (!string.IsNullOrEmpty(resultUrl.Item2))
+            {
+                err += resultUrl.Item2;
+            }
+            if (resultUrl.Item1?.Error != null)
+                err = err.ParseError(resultUrl.Item1.Error);
+            var url = resultUrl.Item1?.Data?.Label_url;
+            if (!string.IsNullOrEmpty(url))
+            {
+                var result = await httpService.Exchange<byte[], string>(
+                    url,
+                    HttpMethod.Get,
+                    GetCustomHeaders(authToken),
+                    cancellationToken);
+                if (!string.IsNullOrEmpty(result.Item2))
+                    err += result.Item2;
+                return (pdf: result.Item1, error: err);
+            }
+            return (null, err);
+        }
+        public static async Task<(byte[]? pdf, string error)> PrintHandoverList(IHttpService httpService, string authToken,
+            long handoverListId,
+            CancellationToken cancellationToken)
+        {
+            var request = new PrintHandover { Handover_list_id = handoverListId };
+            var resultUrl = await httpService.Exchange<GetLabelUrlResponse, string>(
+                "https://openapi.aliexpress.ru/seller-api/v1/labels/handover-lists/get",
+                HttpMethod.Post,
+                GetCustomHeaders(authToken),
+                request,
+                cancellationToken);
+            string err = "";
+            if (!string.IsNullOrEmpty(resultUrl.Item2))
+            {
+                err += resultUrl.Item2;
+            }
+            if (resultUrl.Item1?.Error != null)
+                err = err.ParseError(resultUrl.Item1.Error);
+            var url = resultUrl.Item1?.Data?.Label_url;
+            if (!string.IsNullOrEmpty(url))
+            {
+                var result = await httpService.Exchange<byte[], string>(
+                    url,
+                    HttpMethod.Get,
+                    GetCustomHeaders(authToken),
+                    cancellationToken);
+                if (!string.IsNullOrEmpty(result.Item2))
+                    err += result.Item2;
+                return (pdf: result.Item1, error: err);
+            }
+            return (null, err);
+        }
+        public static async Task<(long? handoverListId, string error)> CreateHandoverList(IHttpService httpService, string authToken,
+            DateTime shipmentDate,
+            List<long> logisticsOrderIds,
+            CancellationToken cancellationToken)
+        {
+            var request = new CreateHandover { Arrival_date = shipmentDate, Logistic_order_ids = logisticsOrderIds };
+            var result = await httpService.Exchange<CreateHandoverResponse, string>(
+                "https://openapi.aliexpress.ru/seller-api/v1/handover-list/create",
+                HttpMethod.Post,
+                GetCustomHeaders(authToken),
+                request,
+                cancellationToken);
+            string err = "";
+            if (!string.IsNullOrEmpty(result.Item2))
+            {
+                err += result.Item2;
+            }
+            if (result.Item1?.Error != null)
+                err = err.ParseError(result.Item1.Error);
+            return (handoverListId: result.Item1?.Data?.Handover_list_id, error: string.IsNullOrEmpty(err) ? string.Empty : "AliCreateHandoverList : " + err);
+        }
+        public static async Task<(bool success, string error)> AddToHandoverList(IHttpService httpService, string authToken,
+            long handoverId,
+            List<long> logisticsOrderIds,
+            CancellationToken cancellationToken)
+        {
+            var request = new AddToHandover { Handover_list_id = handoverId, Order_ids = logisticsOrderIds };
+            var result = await httpService.Exchange<AddDeleteFromHandoverResponse, string>(
+                "https://openapi.aliexpress.ru/seller-api/v1/handover-list/add-logistic-orders",
+                HttpMethod.Post,
+                GetCustomHeaders(authToken),
+                request,
+                cancellationToken);
+            string err = "";
+            if (!string.IsNullOrEmpty(result.Item2))
+            {
+                err += result.Item2;
+            }
+            if (result.Item1?.Error != null)
+                err = err.ParseError(result.Item1.Error);
+            return (success: string.IsNullOrEmpty(err), error: string.IsNullOrEmpty(err) ? string.Empty : "AliAddToHandoverList : " + err);
+        }
+        public static async Task<(bool success, string error)> DeleteFromHandoverList(IHttpService httpService, string authToken,
+            long handoverId,
+            List<long> logisticsOrderIds,
+            CancellationToken cancellationToken)
+        {
+            var request = new DeleteFromHandover { Handover_list_id = handoverId, Order_ids = logisticsOrderIds.Select(x => x.ToString()).ToList() };
+            var result = await httpService.Exchange<AddDeleteFromHandoverResponse, string>(
+                "https://openapi.aliexpress.ru/seller-api/v1/handover-list/remove-logistic-orders",
+                HttpMethod.Post,
+                GetCustomHeaders(authToken),
+                request,
+                cancellationToken);
+            string err = "";
+            if (!string.IsNullOrEmpty(result.Item2))
+            {
+                err += result.Item2;
+            }
+            if (result.Item1?.Error != null)
+                err = err.ParseError(result.Item1.Error);
+            return (success: string.IsNullOrEmpty(err), error: string.IsNullOrEmpty(err) ? string.Empty : "AliDeleteFromHandoverList : " + err);
         }
     }
 }

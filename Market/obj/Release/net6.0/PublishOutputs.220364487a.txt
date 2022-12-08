@@ -64,12 +64,14 @@ C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\OzonClasses.dll
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\SberClasses.dll
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\StinClasses.dll
+C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\WbClasses.dll
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\YandexClasses.dll
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\AtolOnlineClasses.pdb
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\HttpExtensions.pdb
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\OzonClasses.pdb
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\SberClasses.pdb
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\StinClasses.pdb
+C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\WbClasses.pdb
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\YandexClasses.pdb
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\JsonExtensions.pdb
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\Market.deps.json

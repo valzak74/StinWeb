@@ -4941,6 +4941,21 @@
           "lib/netstandard1.3/System.Xml.XmlDocument.dll": {}
         }
       },
+      "AliExpressClasses/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v6.0",
+        "dependencies": {
+          "HttpExtensions": "1.0.0",
+          "JsonExtensions": "1.0.0",
+          "Newtonsoft.Json": "13.0.1"
+        },
+        "compile": {
+          "bin/placeholder/AliExpressClasses.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/AliExpressClasses.dll": {}
+        }
+      },
       "ExcelHelper/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v6.0",
@@ -5010,6 +5025,21 @@
         },
         "runtime": {
           "bin/placeholder/StinClasses.dll": {}
+        }
+      },
+      "WbClasses/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v6.0",
+        "dependencies": {
+          "HttpExtensions": "1.0.0",
+          "JsonExtensions": "1.0.0",
+          "Newtonsoft.Json": "13.0.1"
+        },
+        "compile": {
+          "bin/placeholder/WbClasses.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/WbClasses.dll": {}
         }
       },
       "YandexClasses/1.0.0": {
@@ -13155,6 +13185,11 @@
         "system.xml.xmldocument.nuspec"
       ]
     },
+    "AliExpressClasses/1.0.0": {
+      "type": "project",
+      "path": "../AliExpressClasses/AliExpressClasses.csproj",
+      "msbuildProject": "../AliExpressClasses/AliExpressClasses.csproj"
+    },
     "ExcelHelper/1.0.0": {
       "type": "project",
       "path": "../ExcelExtensions/ExcelHelper.csproj",
@@ -13180,6 +13215,11 @@
       "path": "../StinClasses/StinClasses.csproj",
       "msbuildProject": "../StinClasses/StinClasses.csproj"
     },
+    "WbClasses/1.0.0": {
+      "type": "project",
+      "path": "../WbClasses/WbClasses.csproj",
+      "msbuildProject": "../WbClasses/WbClasses.csproj"
+    },
     "YandexClasses/1.0.0": {
       "type": "project",
       "path": "../YandexClasses/YandexClasses.csproj",
@@ -13188,6 +13228,7 @@
   },
   "projectFileDependencyGroups": {
     "net6.0": [
+      "AliExpressClasses >= 1.0.0",
       "ExcelHelper >= 1.0.0",
       "HttpExtensions >= 1.0.0",
       "Microsoft.EntityFrameworkCore.Proxies >= 6.0.1",
@@ -13204,6 +13245,7 @@
       "PDFsharp-MigraDoc >= 1.50.5147",
       "Polly.Extensions.Http >= 3.0.0",
       "StinClasses >= 1.0.0",
+      "WbClasses >= 1.0.0",
       "YandexClasses >= 1.0.0",
       "bootstrap-select >= 1.13.5",
       "inputmask >= 5.0.5"
@@ -13242,6 +13284,9 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "projectReferences": {
+            "C:\\Users\\Валентин\\source\\repos\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj": {
+              "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj"
+            },
             "C:\\Users\\Валентин\\source\\repos\\StinWeb\\ExcelExtensions\\ExcelHelper.csproj": {
               "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\ExcelExtensions\\ExcelHelper.csproj"
             },
@@ -13253,6 +13298,9 @@
             },
             "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj": {
               "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj"
+            },
+            "C:\\Users\\Валентин\\source\\repos\\StinWeb\\WbClasses\\WbClasses.csproj": {
+              "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\WbClasses\\WbClasses.csproj"
             },
             "C:\\Users\\Валентин\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj": {
               "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj"

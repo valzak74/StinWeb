@@ -21,6 +21,7 @@
           "Serilog.AspNetCore": "4.1.0",
           "StinClasses": "1.0.0",
           "Swashbuckle.AspNetCore": "5.6.3",
+          "WbClasses": "1.0.0",
           "YandexClasses": "1.0.0"
         },
         "runtime": {
@@ -1060,6 +1061,16 @@
           "StinClasses.dll": {}
         }
       },
+      "WbClasses/1.0.0": {
+        "dependencies": {
+          "HttpExtensions": "1.0.0",
+          "JsonExtensions": "1.0.0",
+          "Newtonsoft.Json": "13.0.1"
+        },
+        "runtime": {
+          "WbClasses.dll": {}
+        }
+      },
       "YandexClasses/1.0.0": {
         "dependencies": {
           "HttpExtensions": "1.0.0",
@@ -1832,6 +1843,11 @@
       "sha512": ""
     },
     "StinClasses/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "WbClasses/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
