@@ -173,6 +173,7 @@ namespace StinWeb.Controllers.Обработки
             columnValues.Add("ЦенаПродажи", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("ЦП_ЗЦ", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("МинЦена", sheet.CreateColumnWithWidth(column++, 2900));
+            columnValues.Add("МинЦенаКвант", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("ЦП_МЦ", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("КоррЦены", sheet.CreateColumnWithWidth(column++, 2900));
             foreach (var marketplace in marketplaceData)
@@ -214,6 +215,7 @@ namespace StinWeb.Controllers.Обработки
             sheet.SetValue(styleHeader, row, columnValues["ЦенаПродажи"], "Цена продажи");
             sheet.SetValue(styleHeader, row, columnValues["ЦП_ЗЦ"], "ЦП/ЗЦ");
             sheet.SetValue(styleHeader, row, columnValues["МинЦена"], "Мин. цена");
+            sheet.SetValue(styleHeader, row, columnValues["МинЦенаКвант"], "Мин. цена кванта");
             sheet.SetValue(styleHeader, row, columnValues["ЦП_МЦ"], "ЦП/МЦ");
             sheet.SetValue(styleHeader, row, columnValues["КоррЦены"], "Корр. Цен, %");
             foreach (var marketplace in marketplaceData)
@@ -392,6 +394,7 @@ namespace StinWeb.Controllers.Обработки
                 sheet.SetValue(styleValueMoney, row, columnValues["ЦенаПродажи"], ценаПродажи);
                 sheet.SetValue(styleValueNum, row, columnValues["ЦП_ЗЦ"], item.ЦенаЗакуп == 0 ? 0 : ценаПродажи / item.ЦенаЗакуп);
                 sheet.SetValue(styleValueMoney, row, columnValues["МинЦена"], item.МинЦена);
+                sheet.SetValue(styleValueMoney, row, columnValues["МинЦенаКвант"], item.МинЦена * (item.Квант == 0 ? 1 : item.Квант));
                 sheet.SetValue(ценаПродажи < item.МинЦена ? styleValueNumRed : styleValueNum, row, columnValues["ЦП_МЦ"], item.МинЦена == 0 ? 0 : ценаПродажи / item.МинЦена);
                 sheet.SetValue(styleDeltaPrice, row, columnValues["КоррЦены"], item.DeltaPrice);
                 bool marked = false;
@@ -470,7 +473,7 @@ namespace StinWeb.Controllers.Обработки
             using (var stream = new MemoryStream())
             {
                 workbook.Write(stream);
-                var fileName = System.Web.HttpUtility.UrlEncode(("Матрица маркетплейс " + campaignData.Наименование + " " + DateTime.Now.ToString("dd-MM-yyyy") + "." + extension).Replace(" ","-"), System.Text.Encoding.UTF8);
+                var fileName = System.Web.HttpUtility.UrlEncode(("Матрица маркетплейс " + campaignData.Type + " " + campaignData.Наименование + " " + DateTime.Now.ToString("dd-MM-yyyy") + "." + extension).Replace(" ","-"), System.Text.Encoding.UTF8);
                 return File(stream.ToArray(), "application/octet-stream", fileName);
             }
         }
