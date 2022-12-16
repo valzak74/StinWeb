@@ -40,6 +40,11 @@ namespace HttpExtensions
             }
             return false;
         }
+        bool IsSingleObjectJson(string stringValue)
+        {
+            var value = stringValue.Trim();
+            return (value.StartsWith("{") && value.EndsWith("}"));
+        }
         public async Task<Tuple<T, E>> Exchange<T, E>(string url, HttpMethod method, Dictionary<string, string> queryParameters, CancellationToken stoppingToken, [CallerMemberName] string callerName = "")
         {
             try
@@ -49,6 +54,8 @@ namespace HttpExtensions
                 var response = await _httpClient.SendAsync(request);
                 if (response.IsSuccessStatusCode)
                 {
+                    if (typeof(T) == typeof(bool))
+                        return new Tuple<T, E>((T)(object)true, default);
                     if (response.Content != null)
                     {
                         //_logger.LogError(await response.Content.ReadAsStringAsync());
@@ -67,28 +74,19 @@ namespace HttpExtensions
                             }
                         }
                     }
-                    else
-                    {
-                        if (typeof(T) == typeof(bool))
-                        {
-                            return new Tuple<T, E>((T)(object)true, default);
-                        }
-                    }
                 }
                 else
                 {
                     if (response.Content != null)
                     {
                         string r = await response.Content.ReadAsStringAsync();
+                        if (typeof(E) == typeof(string))
+                            return new Tuple<T, E>(default, (E)(object)r);
                         if (IsValidJson(r))
                         {
                             var errBytes = await response.Content.ReadAsByteArrayAsync();
                             var obj = errBytes.DeserializeObject<E>();
                             return new Tuple<T, E>(default, obj);
-                        }
-                        else if (typeof(E) == typeof(string))
-                        {
-                            return new Tuple<T, E>(default, (E)(object)r);
                         }
                     }
                 }
@@ -127,6 +125,8 @@ namespace HttpExtensions
                 var response = await _httpClient.SendAsync(request);
                 if (response.IsSuccessStatusCode)
                 {
+                    if (typeof(T) == typeof(bool))
+                        return new Tuple<T, E>((T)(object)true, default);
                     if (response.Content != null)
                     {
                         var bytes = await response.Content.ReadAsByteArrayAsync();
@@ -138,28 +138,20 @@ namespace HttpExtensions
                         else
                             return new Tuple<T, E>(bytes.DeserializeObject<T>(), default);
                     }
-                    else
-                    {
-                        if (typeof(T) == typeof(bool))
-                        {
-                            return new Tuple<T, E>((T)(object)true, default);
-                        }
-                    }
                 }
                 else
                 {
                     if (response.Content != null)
                     {
                         string r = await response.Content.ReadAsStringAsync();
+                        //Console.WriteLine(r);
+                        if (typeof(E) == typeof(string))
+                            return new Tuple<T, E>(default, (E)(object)r);
                         if (IsValidJson(r))
                         {
                             var errBytes = await response.Content.ReadAsByteArrayAsync();
                             var obj = errBytes.DeserializeObject<E>();
                             return new Tuple<T, E>(default, obj);
-                        }
-                        else if (typeof(E) == typeof(string))
-                        {
-                            return new Tuple<T, E>(default, (E)(object)r);
                         }
                     }
                 }
@@ -169,6 +161,70 @@ namespace HttpExtensions
                 _logger.LogError(callerName + " : " + ex.Message);
             }
             return new Tuple<T, E>(default, default);
+        }
+        public async Task<(T? SuccessData, List<E>? Errors)> ExchangeErrorList<T, E>(string url, HttpMethod method, Dictionary<string, string> headers, object? content, CancellationToken stoppingToken, [CallerMemberName] string callerName = "") where E : class, new()
+        {
+            try
+            {
+                string queryKey = "QueryParameter";
+                var queryParams = headers
+                    .Where(x => x.Key.StartsWith(queryKey))
+                    .ToDictionary(k => k.Key.Substring(queryKey.Length), v => v.Value);
+                HttpRequestMessage request;
+                if (queryParams?.Count > 0)
+                    request = new HttpRequestMessage(method, url) { Content = new FormUrlEncodedContent(queryParams) };
+                else
+                    request = new HttpRequestMessage(method, url);
+                request.Headers.Add("User-Agent", "HttpClientFactory-StinClient");
+                foreach (var header in headers.Where(x => !x.Key.StartsWith(queryKey)))
+                    request.Headers.Add(header.Key, header.Value);
+                if (content != null)
+                {
+                    var contentString = content.SerializeObject();
+                    //Console.WriteLine(contentString);
+                    if (!string.IsNullOrEmpty(contentString))
+                    {
+                        request.Content = new StringContent(contentString, Encoding.UTF8, "application/json");
+                    }
+                }
+                var response = await _httpClient.SendAsync(request);
+                if (response.IsSuccessStatusCode)
+                {
+                    if (typeof(T) == typeof(bool))
+                        return (SuccessData: (T)(object)true, Errors: default);
+                    if (response.Content != null)
+                    {
+                        var bytes = await response.Content.ReadAsByteArrayAsync();
+                        //string r = await response.Content.ReadAsStringAsync();
+                        //Console.WriteLine(r);
+                        //System.IO.File.WriteAllText(@"f:\\tmp\15\r2.txt", r);
+                        if (typeof(T) == typeof(byte[]))
+                            return (SuccessData: (T)(object)bytes, Errors: default);
+                        else
+                            return (SuccessData: bytes.DeserializeObject<T>(), Errors: default);
+                    }
+                }
+                else
+                {
+                    if (response.Content != null)
+                    {
+                        string r = await response.Content.ReadAsStringAsync();
+                        if (typeof(E) == typeof(string))
+                            return (SuccessData: default, new List<E> { (E)(object)r });
+                        if (IsValidJson(r))
+                        {
+                            var errBytes = await response.Content.ReadAsByteArrayAsync();
+                            var obj = errBytes.DeserializeObjectToList<E>();
+                            return (SuccessData: default, Errors: obj);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(callerName + " : " + ex.Message);
+            }
+            return (default, default);
         }
         public async Task<byte[]?> DownloadFileAsync(string link, string code, CancellationToken stoppingToken, [CallerMemberName] string callerName = "")
         {

@@ -16,7 +16,12 @@ namespace StinWeb.Models.DataManager
             if (string.IsNullOrEmpty(html))
                 return ReadTemplateFile("PrintPage.htm").InsertStyle(docName).InsertDiv(docName, ДанныеДляПечати);
             else
-                return needNewPage ? html.InsertSplitter().InsertStyle(docName).InsertDiv(docName, ДанныеДляПечати) : html.InsertPageSeparator().InsertDiv(docName, ДанныеДляПечати);
+            {
+                html = needNewPage ? html.InsertSplitter() : html.InsertPageSeparator();
+                if (!html.Contains(docName))
+                    html = html.InsertStyle(docName);
+                return html.InsertDiv(docName, ДанныеДляПечати);
+            }
         }
         public static string ReadTemplateFile(string FileName)
         {

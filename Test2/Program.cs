@@ -12,6 +12,7 @@ using StinClasses;
 using System.Net;
 using System.Reflection.PortableExecutable;
 using StinClasses.Справочники;
+using WbClasses;
 //using Top.Api;
 //using Top.Api.Request;
 //using Top.Api.Response;
@@ -88,8 +89,23 @@ namespace HelloWorld
         {
             string ass = "";
         }
+        static List<T> DeserializeObject<T>(string data) where T : class, new() 
+        { 
+            //string json = System.IO.File.ReadAllText(@"f:\tmp\31\text.txt", Encoding.UTF8);
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<List<T>>(data,
+                new Newtonsoft.Json.JsonSerializerSettings
+                {
+                    ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+                    Converters = { new SingleObjectOrArrayJsonConverter<T>() }
+                });
+        }
         static async Task Main(string[] args)
         {
+            string re = "{\"code\": \"NotFound\", \"message\": \"Не найдено\"}";
+            //string re = $"[\r\n  {{\r\n    \"code\": \"SubjectDBSRestriction\",\r\n    \"message\": \"Категория товара недоступна для продажи по схеме 'Везу на склад Wildberries'.\",\r\n    \"data\": [\r\n      {{\r\n        \"sku\": \"skuTest1\",\r\n        \"stock\": 0\r\n      }}\r\n    ]\r\n  }},\r\n  {{\r\n    \"code\": \"SubjectFBSRestriction\",\r\n    \"message\": \"Категория товара недоступна для продажи по схеме 'Везу самостоятельно до клиента'.\",\r\n    \"data\": [\r\n      {{\r\n        \"sku\": \"skuTest2\",\r\n        \"stock\": 1\r\n      }}\r\n    ]\r\n  }},\r\n  {{\r\n    \"code\": \"UploadDataLimit\",\r\n    \"message\": \"Превышен лимит загружаемых данных\",\r\n    \"data\": [\r\n      {{\r\n        \"sku\": \"skuTest2\",\r\n        \"stock\": 10001\r\n      }}\r\n    ]\r\n  }},\r\n  {{\r\n    \"code\": \"CargoWarehouseRestriction\",\r\n    \"message\": \"Выбранный склад не предназначен для крупногабаритных товаров. Добавьте их на соответствующий склад\",\r\n    \"data\": [\r\n      {{\r\n        \"sku\": \"skuTest3\",\r\n        \"stock\": 10\r\n      }}\r\n    ]\r\n  }},\r\n  {{\r\n    \"code\": \"NotFound\",\r\n    \"message\": \"Не найдено\",\r\n    \"data\": [\r\n      {{\r\n        \"sku\": \"skuTest4\",\r\n        \"stock\": 10\r\n      }}\r\n    ]\r\n  }}\r\n]";
+            byte[] bytes = Encoding.UTF8.GetBytes(re);
+            var rez = DeserializeObject<StockError>(re);
+            var rez2 = bytes.DeserializeObjectToList<StockError>();
             var stoppingToken = new CancellationTokenSource();
             var _httpService = new HttpExtensions.HttpService(new HttpClient(), null);
             List<long> logisticsOrderIds = new List<long> { 9552897 };

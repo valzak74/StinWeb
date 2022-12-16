@@ -89,7 +89,7 @@ namespace SberClasses
     public class SberShipping
     {
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")] 
+        [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
         public DateTime? ShippingDate { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public int? ShippingPoint { get; set; }
@@ -105,8 +105,9 @@ namespace SberClasses
         public string? MerchantName { get; set; }
         public int MerchantId { get; set; }
         public string? ShipmentId { get; set; }
-        [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")] 
-        public DateTime ShippingDate { get; set; }
+        private DateTime _shippingDate;
+        [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
+        public DateTime ShippingDate { get { return _shippingDate; } set { _shippingDate = value.ToUniversalTime().Date; } }
         public string? DeliveryType { get; set; }
         public string? LabelText { get; set; }
     }
@@ -216,6 +217,7 @@ namespace SberClasses
         public Meta? Meta { get; set; }
         public int Success { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        [JsonConverter(typeof(SingleObjectOrArrayJsonConverter<SberError>))]
         public List<SberError>? Error { get; set; }
     }
     public class OrderListDetailResponse: OrderListResponse
@@ -230,6 +232,7 @@ namespace SberClasses
     {
         public List<string>? Shipments { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        [JsonConverter(typeof(SingleObjectOrArrayJsonConverter<object>))]
         public List<object>? Warnings { get; set; }
     }
     public class SberDetailOrder

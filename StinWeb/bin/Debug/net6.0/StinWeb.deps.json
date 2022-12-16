@@ -25,6 +25,7 @@
           "PDFsharp-MigraDoc": "1.50.5147",
           "Polly.Extensions.Http": "3.0.0",
           "StinClasses": "1.0.0",
+          "WbClasses": "1.0.0",
           "YandexClasses": "1.0.0",
           "bootstrap-select": "1.13.5",
           "inputmask": "5.0.5"
@@ -3068,6 +3069,16 @@
           "StinClasses.dll": {}
         }
       },
+      "WbClasses/1.0.0": {
+        "dependencies": {
+          "HttpExtensions": "1.0.0",
+          "JsonExtensions": "1.0.0",
+          "Newtonsoft.Json": "13.0.1"
+        },
+        "runtime": {
+          "WbClasses.dll": {}
+        }
+      },
       "YandexClasses/1.0.0": {
         "dependencies": {
           "HttpExtensions": "1.0.0",
@@ -4876,6 +4887,11 @@
       "sha512": ""
     },
     "StinClasses/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "WbClasses/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

@@ -26,5 +26,14 @@ namespace JsonExtensions
                     ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
                 });
         }
+        public static List<T> DeserializeObjectToList<T>(this byte[] data) where T : class, new()
+        {
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<List<T>>(Encoding.UTF8.GetString(data),
+                new Newtonsoft.Json.JsonSerializerSettings
+                {
+                    ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+                    Converters = { new SingleObjectOrArrayJsonConverter<T>() }
+                });
+        }
     }
 }

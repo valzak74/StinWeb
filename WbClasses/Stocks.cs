@@ -1,4 +1,6 @@
-﻿using System;
+﻿using JsonExtensions;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,29 +8,34 @@ using System.Threading.Tasks;
 
 namespace WbClasses
 {
-    public class StocksRequest
+    public class StocksRequestV3
     {
-        public string? Barcode { get; set; }
-        public int Stock { get; set; }
-        public int WarehouseId { get; set; }
-        public StocksRequest(string barcode, int stock, int warehouseId)
+        public List<StocksEntryV3> Stocks { get; set; }
+        public StocksRequestV3() => Stocks = new List<StocksEntryV3>();
+        public StocksRequestV3(Dictionary<string, int> items) : this()
         {
-            Barcode = barcode;
-            Stock = stock;
-            WarehouseId = warehouseId;
+            foreach (var item in items)
+                Stocks.Add(new StocksEntryV3(item.Key, item.Value));
+        }
+        public class StocksEntryV3
+        {
+            public string? Sku { get; set; }
+            public int Amount { get; set; }
+            public StocksEntryV3(string barcode, int amount)
+            {
+                Sku = barcode;
+                Amount = amount;
+            }
         }
     }
-    public class StocksResponse: Response
+    //[JsonConverter(typeof(SingleObjectOrArrayJsonConverter<StockError>))]
+    public class StockError : ResponseV3
     {
-        public StockData? Data { get; set; }
-        public class StockData
+        public List<ErrorDetail>? Data { get; set; }
+        public class ErrorDetail
         {
-            public List<StockError>? Error { get; set; }
-            public class StockError
-            {
-                public string? Barcode { get; set;}
-                public string? Err { get; set; }
-            }
+            public string? Sku { get; set; }
+            public int Stock { get; set; }
         }
     }
 }

@@ -73,7 +73,7 @@ namespace Market.Controllers
                 Country = "",
                 City = singleShipment?.Label?.City ?? "",
                 Subway = "",
-                Street = "",
+                Street = singleShipment?.Label?.Address ?? "",
                 House = "",
                 Block = "",
                 Entrance = "",
@@ -81,7 +81,14 @@ namespace Market.Controllers
                 Floor = "",
                 Apartment = ""
             };
-
+            OrderBuyerRecipient recipient = new OrderBuyerRecipient
+            {
+                FirstName = "",
+                MiddleName = "",
+                LastName = "",
+                Recipient = singleShipment?.Label?.FullName ?? "",
+                Phone = ""
+            };
             int tryCount = 5;
             TimeSpan sleepPeriod = TimeSpan.FromSeconds(1);
             while (true)
@@ -109,6 +116,7 @@ namespace Market.Controllers
                     "0",
                     regionName,
                     "",
+                    recipient,
                     cancellationToken);
                 response.Success = string.IsNullOrEmpty(orderResult.orderNo) ? 0 : 1;
                 if (response.Success == 1)

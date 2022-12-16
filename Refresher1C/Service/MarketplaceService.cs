@@ -16,7 +16,6 @@ using System.Data;
 using System.IO;
 using System.Collections;
 using System.Xml.Linq;
-using AliExpressClasses;
 
 namespace Refresher1C.Service
 {
@@ -278,7 +277,7 @@ namespace Refresher1C.Service
                                     status = -1;
                                 else if (!string.IsNullOrEmpty(supplyIdResult.supplyId)) 
                                 {
-                                    var addToSupplyResult = await WbClasses.Functions.AddToSupply(_httpService, obj.Key.AuthToken, supplyIdResult.supplyId, new List<string> { obj.Key.MarketplaceId }, stoppingToken);
+                                    var addToSupplyResult = await WbClasses.Functions.AddToSupply(_httpService, obj.Key.AuthToken, supplyIdResult.supplyId, obj.Key.MarketplaceId, stoppingToken);
                                     if (!string.IsNullOrEmpty(addToSupplyResult.error))
                                         err = addToSupplyResult.error;
                                     if (!addToSupplyResult.success)
@@ -432,7 +431,7 @@ namespace Refresher1C.Service
                                 var result = await WbClasses.Functions.GetLabel(_httpService, order.AuthToken,
                                     new List<long> { Convert.ToInt64(order.MarketplaceId) },
                                     stoppingToken);
-                                label = result.pdf;
+                                label = result.png;
                             }
                             if (!string.IsNullOrEmpty(err))
                                 entity.Sp14055 = err;
@@ -907,6 +906,7 @@ namespace Refresher1C.Service
                                                 (updPrice.Flag || (updPrice.Updated < limitDate))
                                                 //&& (market.Code.Trim() == "3530297616")
                                                 //&& (market.Code.Trim() == "43956")
+                                                //&& (market.Sp14155.Trim() == "Wildberries")
                                             select new
                                             {
                                                 Id = market.Id,
@@ -1412,23 +1412,14 @@ namespace Refresher1C.Service
                     foreach (var entry in wbData.Cards)
                     {
                         string nmId = entry.NmID.ToString();
-                        if (entry?.Sizes.Count > 0)
-                            foreach (var size in entry.Sizes)
-                                if (size?.Skus.Count > 0)
-                                {
-                                    var decodeSkus = size.Skus.Select(x =>
-                                    {
-                                        var nomCode = x.Decode(encoding);
-                                        if (string.IsNullOrEmpty(nomCode))
-                                        {
-                                            _logger.LogError("UpdateCatalogInfo : Wildberries wrong encoded sku " + x);
-                                            nomCode = "";
-                                        }
-                                        return nomCode;
-                                    });
-                                    skus.AddRange(decodeSkus);
-                                    productIdToSku.Add(nmId, decodeSkus.FirstOrDefault() ?? "");
-                                }
+                        string nomCode = entry.VendorCode.Decode(encoding);
+                        if (string.IsNullOrEmpty(nomCode))
+                        {
+                            _logger.LogError("UpdateCatalogInfo : Wildberries wrong encoded sku " + entry.VendorCode);
+                            continue;
+                        }
+                        skus.Add(nomCode);
+                        productIdToSku.Add(nmId, nomCode);
                     }
             }
             try
@@ -1827,7 +1818,9 @@ namespace Refresher1C.Service
                 var marketplaceIds = await (from market in _context.Sc14042s 
                                             where !market.Ismark
                                                 //&& (market.Sp14155.Trim() == "Яндекс")
+                                                //&& (market.Sp14155.Trim() == "Wildberries")
                                                 //&& (market.Code.Trim() == "43956")
+                                                //&& (market.Code.Trim() == "D0000000000000000001")
                                             select new
                                             {
                                                 Id = market.Id,
@@ -1907,6 +1900,7 @@ namespace Refresher1C.Service
                                                 && (string.IsNullOrEmpty(defFirmaId) ? true : market.Parentext == defFirmaId)
                                                 //&& (market.Code == "43956")
                                                 //&& (market.Code == "45715133")
+                                                //&& (market.Sp14155.Trim() == "Wildberries")
                                             select new
                                             {
                                                 Id = market.Id,
@@ -1950,7 +1944,7 @@ namespace Refresher1C.Service
                     }
                     else if (marketplace.Тип == "WILDBERRIES")
                     {
-                        await UpdateWbStock(marketplace.AuthToken, marketplace.AuthSecret, regular, marketplace.Id, marketplace.FirmaId,
+                        await UpdateWbStock(marketplace.AuthToken, marketplace.Code, regular, marketplace.Id, marketplace.FirmaId,
                             marketplace.СкладId, marketplace.StockOriginal, stoppingToken);
                     }
                 }
@@ -2117,6 +2111,7 @@ namespace Refresher1C.Service
                                  (((regular ? updStock.Flag : updStock.IsError) &&
                                    (updStock.Updated < DateTime.Now.AddMinutes(-2))) ||
                                   (updStock.Updated.Date != DateTime.Today))
+                               //(nom.Code == "D00040383")
                                select new
                                {
                                    Id = markUse.Id,
@@ -2866,6 +2861,8 @@ namespace Refresher1C.Service
                                             where !market.Ismark
                                                 //&& (market.Sp14177 == 1)
                                                 //&& (market.Sp14155.Trim() == "AliExpress")
+                                                //&& (market.Sp14155.Trim() == "Sber")
+                                                //&& (market.Sp14155.Trim() == "Wildberries")
                                             select new
                                             {
                                                 Id = market.Id,
@@ -2918,7 +2915,7 @@ namespace Refresher1C.Service
                     }
                     else if (marketplace.Тип == "WILDBERRIES")
                     {
-                        await GetWbOrders(marketplace.AuthToken, 1000, 0,
+                        await GetWbOrders(marketplace.AuthToken,
                             marketplace.Id, marketplace.Authorization, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
                             marketplace.Encoding, stoppingToken);
                     }
@@ -3072,7 +3069,7 @@ namespace Refresher1C.Service
         }
         async Task<bool> SameWorkingDay(DateTime lastDate)
         {
-            if (!TimeSpan.TryParse("16:00", out TimeSpan limitTime))
+            if (!TimeSpan.TryParse("17:00", out TimeSpan limitTime))
                 limitTime = TimeSpan.MaxValue;
             var supplyDateIsWorking = await _склад.ЭтоРабочийДень(Common.SkladEkran, 0, lastDate) == 0;
             if (lastDate.Date == DateTime.Today)
@@ -3100,7 +3097,7 @@ namespace Refresher1C.Service
                 _logger.LogError(supplyListResult.error);
                 return (success: false, supplyId: "");
             }
-            var supplyId = supplyListResult.supplyIds?.FirstOrDefault();
+            var supplyId = supplyListResult.supplyIds.FirstOrDefault();
             if (!string.IsNullOrEmpty(supplyId))
             {
                 var supplyOrdersResult = await WbClasses.Functions.GetSupplyOrders(_httpService, authToken, supplyId, cancellationToken);
@@ -3485,141 +3482,125 @@ namespace Refresher1C.Service
                 }
             }
         }
-        private async Task GetWbOrders(string authToken, int limit, int skip, string id, string authorization, string firmaId, string customerId, string dogovorId, EncodeVersion encoding, CancellationToken stoppingToken)
+        private async Task GetWbOrders(string authToken, string id, string authorization, string firmaId, string customerId, string dogovorId, EncodeVersion encoding, CancellationToken stoppingToken)
         {
-            DateTime startDate = DateTime.Today.AddDays(-30);
-            var result = await WbClasses.Functions.GetOrders(_httpService, authToken,
-                startDate,
-                DateTime.MinValue,
-                (int)WbClasses.WbStatus.NotFound,
-                skip,
-                limit,
-                -1,
-                stoppingToken);
-            if (result.error != null)
+            var result = await WbClasses.Functions.GetNewOrders(_httpService, authToken, stoppingToken);
+            if (!string.IsNullOrEmpty(result.error))
                 _logger.LogError(result.error);
-            if (result.data != null)
-            {
-                if (result.data.Orders?.Count > 0)
-                    foreach (var wbOrder in result.data.Orders)
+            if (result.data?.Orders?.Count > 0)
+                foreach (var wbOrder in result.data.Orders)
+                {
+                    var order = await _order.ПолучитьOrderByMarketplaceId(id, wbOrder.Id.ToString());
+                    if (order == null)
                     {
-                        var order = await _order.ПолучитьOrderByMarketplaceId(id, wbOrder.OrderId);
-                        if (order == null)
+                        var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(firmaId);
+                        var списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
+                        var номенклатураIds = await _номенклатура.GetНоменклатураIdByListBarcodeAsync(wbOrder.Skus, stoppingToken);
+                        var НоменклатураList = await _номенклатура.ПолучитьСвободныеОстатки(
+                            разрешенныеФирмы,
+                            списокСкладов,
+                            номенклатураIds,
+                            false);
+                        bool нетВНаличие = false;
+                        var orderItems = new List<OrderItem>();
+                        foreach (var номенклатура in НоменклатураList)
                         {
-                            if ((wbOrder.Status == WbClasses.WbStatus.НовыйЗаказ) || (wbOrder.Status == WbClasses.WbStatus.ВРаботе))
+                            var nomQuant = await _номенклатура.ПолучитьКвант(номенклатура.Id, stoppingToken);
+                            decimal остаток = номенклатура.Остатки
+                                        .Sum(z => z.СвободныйОстаток) / номенклатура.Единица.Коэффициент;
+                            var asked = 1 * nomQuant;
+                            if (остаток < asked)
                             {
-                                var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(firmaId);
-                                var списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
-                                var номенклатураId = await _номенклатура.GetНоменклатураIdByBarcodeAsync(wbOrder.Barcode, stoppingToken);
-                                var НоменклатураList = await _номенклатура.ПолучитьСвободныеОстатки(
-                                    разрешенныеФирмы,
-                                    списокСкладов,
-                                    new List<string> { номенклатураId },
-                                    false);
-                                var nomQuant = await _номенклатура.ПолучитьКвант(номенклатураId, stoppingToken);
-                                bool нетВНаличие = false;
-                                var orderItems = new List<OrderItem>();
-                                foreach (var номенклатура in НоменклатураList)
-                                {
-                                    decimal остаток = номенклатура.Остатки
-                                                .Sum(z => z.СвободныйОстаток) / номенклатура.Единица.Коэффициент;
-                                    var asked = 1;
-                                    if (остаток < asked)
-                                    {
-                                        нетВНаличие = true;
-                                        break;
-                                    }
-                                    orderItems.Add(new OrderItem
-                                    {
-                                        Id = wbOrder.Barcode,
-                                        НоменклатураId = номенклатура.Code,
-                                        Количество = asked,
-                                        Цена = wbOrder.TotalPrice
-                                    });
-                                }
-                                if (нетВНаличие)
-                                {
-                                    //запуск процедуры отмены
-                                    var cancelResult = await WbClasses.Functions.ChangeOrderStatus(_httpService, authToken,
-                                        wbOrder.OrderId, WbClasses.WbStatus.СборочноеЗаданиеОтклонено, stoppingToken);
-                                    if (!string.IsNullOrEmpty(cancelResult.error))
-                                        _logger.LogError(cancelResult.error);
-                                    if (!cancelResult.success)
-                                        _logger.LogError("Wb order: " + wbOrder.OrderId + " can't be cancelled");
-                                    continue;
-                                }
-                                if (!TimeSpan.TryParse("16:00", out TimeSpan limitTime))
-                                {
-                                    limitTime = TimeSpan.MaxValue;
-                                }
-                                int departureDays = limitTime <= DateTime.Now.TimeOfDay ? 2 : 1;
-                                DateTime shipmentDate = DateTime.Today.AddDays(await _склад.ЭтоРабочийДень(Common.SkladEkran, departureDays));
-                                string deliveryServiceName = ""; //wbOrder.ScOfficesNames.FirstOrDefault() ?? string.Empty;
-                                var address = new OrderRecipientAddress
-                                {
-                                    City = wbOrder.DeliveryAddressDetails?.City,
-                                    Street = wbOrder.DeliveryAddressDetails?.Street,
-                                    House = wbOrder.DeliveryAddressDetails?.Home,
-                                    Apartment = wbOrder.DeliveryAddressDetails?.Flat,
-                                    Entrance = wbOrder.DeliveryAddressDetails?.Entrance,
-                                    Subway = "",
-                                    Block = "",
-                                    Country = "",
-                                    Entryphone = "",
-                                    Floor = "",
-                                    Postcode = ""
-                                };
-                                await _docService.NewOrder(
-                                   "WILDBERRIES",
-                                   firmaId,
-                                   customerId,
-                                   dogovorId,
-                                   authorization,
-                                   encoding,
-                                   Common.SkladEkran,
-                                   "",
-                                   "0",
-                                   deliveryServiceName,
-                                   StinDeliveryPartnerType.WILDBERRIES,
-                                   StinDeliveryType.DELIVERY,
-                                   0,
-                                   0,
-                                   StinPaymentType.NotFound,
-                                   StinPaymentMethod.NotFound,
-                                   "0",
-                                   "",
-                                   address,
-                                   wbOrder.OrderId,
-                                   wbOrder.OrderId,
-                                   shipmentDate,
-                                   orderItems,
-                                   stoppingToken);
+                                нетВНаличие = true;
+                                break;
                             }
+                            orderItems.Add(new OrderItem
+                            {
+                                Id = номенклатура.Единица.Barcode,
+                                НоменклатураId = номенклатура.Code,
+                                Количество = asked,
+                                Цена = wbOrder.Price
+                            });
                         }
-                        else
+                        if (нетВНаличие)
                         {
-                            if (((wbOrder.Status == WbClasses.WbStatus.НаДоставкеКурьером) ||
-                                 (wbOrder.Status == WbClasses.WbStatus.КурьерДовезКлиентПринялТовар)) &&
-                                (order.InternalStatus != 6))
-                            {
-                                await _docService.OrderDeliveried(order);
-                            }
-                            else if (((wbOrder.Status == WbClasses.WbStatus.НовыйЗаказ) ||
-                                      (wbOrder.Status == WbClasses.WbStatus.ВРаботе)) &&
-                                     (order.InternalStatus == 0))
-                            {
-                                await _order.ОбновитьOrderStatus(order.Id, 8);
-                            }
-                            else if ((wbOrder.Status == WbClasses.WbStatus.СборочноеЗаданиеОтклонено) &&
-                                (order.InternalStatus != 5) && (order.InternalStatus != 6))
-                            {
-                                await _docService.OrderCancelled(order);
-                            }
+                            //запуск процедуры отмены
+                            var cancelResult = await WbClasses.Functions.ChangeOrderStatus(_httpService, authToken,
+                                wbOrder.Id.ToString(), WbClasses.WbStatus.СборочноеЗаданиеОтклонено, stoppingToken);
+                            if (!string.IsNullOrEmpty(cancelResult.error))
+                                _logger.LogError(cancelResult.error);
+                            if (!cancelResult.success)
+                                _logger.LogError("Wb order: " + wbOrder.Id.ToString() + " can't be cancelled");
+                            continue;
                         }
+                        if (!TimeSpan.TryParse("16:00", out TimeSpan limitTime))
+                        {
+                            limitTime = TimeSpan.MaxValue;
+                        }
+                        int departureDays = limitTime <= DateTime.Now.TimeOfDay ? 2 : 1;
+                        DateTime shipmentDate = DateTime.Today.AddDays(await _склад.ЭтоРабочийДень(Common.SkladEkran, departureDays));
+                        string deliveryServiceName = ""; //wbOrder.ScOfficesNames.FirstOrDefault() ?? string.Empty;
+                        var address = new OrderRecipientAddress
+                        {
+                            City = wbOrder.Address?.City,
+                            Street = wbOrder.Address?.Street,
+                            House = wbOrder.Address?.Home,
+                            Apartment = wbOrder.Address?.Flat,
+                            Entrance = wbOrder.Address?.Entrance,
+                            Subway = "",
+                            Block = "",
+                            Country = "",
+                            Entryphone = "",
+                            Floor = "",
+                            Postcode = ""
+                        };
+                        await _docService.NewOrder(
+                           "WILDBERRIES",
+                           firmaId,
+                           customerId,
+                           dogovorId,
+                           authorization,
+                           encoding,
+                           Common.SkladEkran,
+                           "",
+                           "0",
+                           deliveryServiceName,
+                           StinDeliveryPartnerType.WILDBERRIES,
+                           StinDeliveryType.DELIVERY,
+                           0,
+                           0,
+                           StinPaymentType.NotFound,
+                           StinPaymentMethod.NotFound,
+                           "0",
+                           "",
+                           address,
+                           wbOrder.Id.ToString(),
+                           wbOrder.Id.ToString(),
+                           shipmentDate,
+                           orderItems,
+                           stoppingToken);
                     }
-                if (result.data.Total > skip + result.data.Orders?.Count)
-                    await GetWbOrders(authToken, limit, skip + (result.data.Orders?.Count ?? 0), id, authorization, firmaId, customerId, dogovorId, encoding, stoppingToken);
-            }
+                    //else
+                    //{
+                        //if (((wbOrder.Status == WbClasses.WbStatus.НаДоставкеКурьером) ||
+                        //     (wbOrder.Status == WbClasses.WbStatus.КурьерДовезКлиентПринялТовар)) &&
+                        //    (order.InternalStatus != 6))
+                        //{
+                        //    await _docService.OrderDeliveried(order);
+                        //}
+                        //else if (((wbOrder.Status == WbClasses.WbStatus.НовыйЗаказ) ||
+                        //          (wbOrder.Status == WbClasses.WbStatus.ВРаботе)) &&
+                        //         (order.InternalStatus == 0))
+                        //{
+                        //    await _order.ОбновитьOrderStatus(order.Id, 8);
+                        //}
+                        //else if ((wbOrder.Status == WbClasses.WbStatus.СборочноеЗаданиеОтклонено) &&
+                        //    (order.InternalStatus != 5) && (order.InternalStatus != 6))
+                        //{
+                        //    await _docService.OrderCancelled(order);
+                        //}
+                    //}
+                }
         }
         private async Task GetOzonNewOrders(string clientId, string authToken, string id, string firmaId, string customerId, string dogovorId, EncodeVersion encoding, CancellationToken stoppingToken)
         {

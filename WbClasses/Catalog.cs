@@ -5,8 +5,8 @@ namespace WbClasses
 {
     public class CardsListRequest
     {
-        public CardsListRequest(int limit) => new RequestData(limit);
-        public CardsListRequest(int limit, long nmId, DateTime updatedAt) => new RequestData(limit, nmId, updatedAt);
+        public CardsListRequest(int limit) => Sort = new RequestData(limit);
+        public CardsListRequest(int limit, long nmId, DateTime updatedAt) => Sort = new RequestData(limit, nmId, updatedAt);
         public RequestData? Sort { get; set; }
         public class RequestData
         {

@@ -22,35 +22,36 @@ namespace WbClasses
     }
     public class OrderList
     {
-        public int Total { get; set; }
+        //public int Total { get; set; }
         public List<Order>? Orders { get; set; }
     }
     public class Order
     {
-        public string? OrderId { get; set; }
+        public long Id { get; set; }
+        public string? Rid { get; set; }
         [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
         public DateTime DateCreated { get; set; }
-        public long WbWhId { get; set; }
-        public long StoreId { get; set; }
-        public long Pid { get; set; }
-        public string? OfficeAddress { get; set; }
-        public double OfficeLatitude { get; set; }
-        public double OfficeLongitude { get; set; }
-        public string? DeliveryAddress { get; set; }
-        public WbAddressDetails? DeliveryAddressDetails { get; set; }
-        public WbUserInfo? UserInfo { get; set; }
-        public long ChrtId { get; set; }
-        public string? Barcode { get; set;}
-        public List<string>? Barcodes { get; set; }
-        public List<string>? ScOfficesNames { get; set; }
-        public WbStatus Status { get; set; }
-        public WbUserStatus UserStatus { get; set; }
-        public string? Rid { get; set; }
-        decimal _totalPrice;
-        public decimal TotalPrice { get => _totalPrice; set { _totalPrice = value / 100; } }
+        public long WarehouseId { get; set; }
+        public string? SupplyId { get; set; }
+        public List<string>? PrioritySc { get; set; }
+        public List<string>? Offices { get; set; }
+        public WbAddressDetails? Address { get; set; }
+        public WbUserInfo? User { get; set; }
+        public List<string>? Skus { get; set; }
+        decimal _price;
+        public decimal Price { get => _price; set { _price = value / 100; } }
+        decimal _convertedPrice;
+        public decimal ConvertedPrice { get => _convertedPrice; set { _convertedPrice = value / 100; } }
         public int CurrencyCode { get; set; }
+        public int ConvertedCurrencyCode { get; set; }
         public string? OrderUID { get; set; }
         public WbDeliveryType DeliveryType { get; set; }
+        public long NmId { get; set; }
+        public long ChrtId { get; set; }
+        public string? Article { get; set; }
+        public bool IsLargeCargo { get; set; }
+        [JsonConverter(typeof(SingleObjectOrArrayJsonConverter<object>))]
+        public List<object>? Meta { get; set; }
         public class WbAddressDetails
         {
             public string? Province { get; set; }
@@ -65,19 +66,18 @@ namespace WbClasses
         }
         public class WbUserInfo
         {
-            public long UserId { get; set; }
             public string? Fio { get; set; }
             public string? Phone { get; set; }
         }
     }
     public class StickerRequest
     { 
-        public List<long>? OrderIds { get; set; }
-        public StickerRequest(List<long>? orderIds) => OrderIds = orderIds;
+        public List<long>? Orders { get; set; }
+        public StickerRequest(List<long>? orderIds) => Orders = orderIds;
     }
     public class StickerResponse: Response
     {
-        public WbBarcode? Data { get; set; }
+        public List<WbBarcode>? Stickers { get; set; }
     }
     [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]
     public enum WbStatus
@@ -108,7 +108,7 @@ namespace WbClasses
     public enum WbDeliveryType
     {
         NotFound = -1,
-        ОбычнаяДоставка = 1,
-        ДоставкаСиламиПоставщика = 2
+        dbs = 1,
+        fbs = 2
     }
 }

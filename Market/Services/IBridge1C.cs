@@ -34,6 +34,7 @@ namespace Market.Services
                     string orderDeliveryRegionId,
                     string orderDeliveryRegionName,
                     string orderNotes,
+                    OrderBuyerRecipient recipientInfo,
                     CancellationToken cancellationToken);
         Task ChangeStatus(Order order, string authorizationApi, long Id, StatusYandex newStatus, SubStatusYandex newSubStatus, string userId = null, ReceiverPaymentType receiverPaymentType = ReceiverPaymentType.NotFound, string receiverEmail = null, string receiverPhone = null);
         Task<bool> ReduceCancelItems(string orderNo, string authorizationApi, List<OrderItem> cancelItems, CancellationToken cancellationToken);

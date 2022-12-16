@@ -150,6 +150,7 @@ namespace Market.Services
             string orderDeliveryRegionId,
             string orderDeliveryRegionName,
             string orderNotes,
+            OrderBuyerRecipient recipientInfo,
             CancellationToken cancellationToken)
         {
             var defFirma = _configuration["Settings:Firma"];
@@ -240,6 +241,25 @@ namespace Market.Services
                                 await _order.ОбновитьOrderNo(формаПредварительнаяЗаявка.Order.Id, orderNo);
                             else
                                 await _order.ОбновитьOrderNoAndStatus(формаПредварительнаяЗаявка.Order.Id, orderNo, 8);
+                            if ((recipientInfo != null) && (address != null))
+                                await _order.ОбновитьПолучателяЗаказаАдрес(формаПредварительнаяЗаявка.Order.Id, 
+                                    recipientInfo.LastName, 
+                                    recipientInfo.FirstName, 
+                                    recipientInfo.MiddleName, 
+                                    recipientInfo.Recipient, 
+                                    recipientInfo.Phone,
+                                    address.Postcode,
+                                    address.Country,
+                                    address.City,
+                                    address.Subway,
+                                    address.Street,
+                                    address.House,
+                                    address.Block,
+                                    address.Entrance,
+                                    address.Entryphone,
+                                    address.Floor,
+                                    address.Apartment,
+                                    orderNotes);
                             result = await _предварительнаяЗаявка.ПровестиAsync(формаПредварительнаяЗаявка);
                             if (result != null)
                             {
