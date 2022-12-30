@@ -8,20 +8,10 @@ namespace WbClasses
 {
     public abstract class Response
     {
-        public bool Error { get; set; }
-        public string? ErrorText { get; set; }
-        public object? AdditionalErrors { get; set; }
-    }
-    public class WbErrorResponse : Response
-    {
-        public object? Data { get; set; }
-    }
-    public abstract class ResponseV3
-    {
         public string? Code { get; set; }
         public string? Message { get; set; }
     }
-    public class WbErrorResponseV3 : ResponseV3
+    public class WbErrorResponse : Response
     {
         public object? Data { get; set; }
     }

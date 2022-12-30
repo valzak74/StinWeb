@@ -936,7 +936,7 @@ namespace Market.Services
                 return false;
             }
             var order = await _order.ПолучитьOrderWithItems(market.Id, orderNo);
-            if (order != null && (order.Status != (int)StinOrderStatus.CANCELLED))
+            if (order != null && (order.InternalStatus != 5) && (order.InternalStatus != 6))
             {
                 var reduceList = new List<OrderItem>();
                 foreach (var item in order.Items)
@@ -1065,8 +1065,8 @@ namespace Market.Services
                         }
                         else if (order.Тип == "WILDBERRIES")
                         {
-                            var cancelResult = await WbClasses.Functions.ChangeOrderStatus(_httpService, order.AuthToken,
-                                order.MarketplaceId, WbClasses.WbStatus.СборочноеЗаданиеОтклонено, stoppingToken);
+                            var cancelResult = await WbClasses.Functions.CancelOrder(_httpService, order.AuthToken,
+                                order.MarketplaceId, stoppingToken);
                             if (!string.IsNullOrEmpty(cancelResult.error))
                             {
                                 _logger.LogError(cancelResult.error);

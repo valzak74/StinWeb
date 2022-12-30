@@ -79,31 +79,39 @@ namespace WbClasses
     {
         public List<WbBarcode>? Stickers { get; set; }
     }
+    public class OrderStatusResponse
+    {
+        public List<OrderStatus>? Orders { get; set; }
+        public class OrderStatus
+        {
+            public long Id { get; set; }
+            public WbSupplierStatus SupplierStatus { get; set; }
+            public WbStatus WbStatus { get; set; }
+        }
+    }
     [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]
     public enum WbStatus
     {
         NotFound = -1,
-        НовыйЗаказ = 0,
-        ВРаботе = 1,
-        СборочноеЗаданиеЗавершено = 2,
-        СборочноеЗаданиеОтклонено = 3,
-        НаДоставкеКурьером = 5,
-        КурьерДовезКлиентПринялТовар = 6,
-        КлиентНеПринялТовар = 7,
-        ТоварДляСамовывозаИзМагазинаПринятКРаботе = 8,
-        ТоварДляСамовывозаИзМагазинаГотовКВыдаче = 9
+        waiting = 0,
+        sorted = 1,
+        sold = 2,
+        canceled = 3,
+        canceled_by_client = 4,
     }
     [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]
-    public enum WbUserStatus
+    public enum WbSupplierStatus
     {
         NotFound = -1,
-        НовыйЗаказ = 0,
-        ОтменаКлиента = 1,
-        Доставлен = 2,
-        Возврат = 3,
-        Ожидает = 4,
-        Брак = 5
-    }
+        [JsonProperty("new")]
+        newOrder = 0,
+        confirm = 1,
+        complete = 2,
+        cancel = 3,
+        deliver = 4,
+        receive = 5,
+        reject = 6
+}
     [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]
     public enum WbDeliveryType
     {

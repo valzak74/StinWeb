@@ -57,7 +57,7 @@ namespace Market.Controllers
                     Количество = item.Quantity ?? 0,
                     Цена = item.Price ?? 0,
                     ЦенаСоСкидкой = item.FinalPrice ?? 0,
-                    //Вознаграждение = (decimal)x.Subsidy,
+                    Вознаграждение = (item.Price ?? 0) - (item.FinalPrice ?? 0),
                     Доставка = delivery,
                     //ДопПараметры = x.Params,
                     ИдентификаторПоставщика = singleShipment?.Label?.MerchantName,

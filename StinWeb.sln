@@ -33,7 +33,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WbClasses", "WbClasses\WbCl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "topsdk-net-core", "F:\tmp\aliexpress_net_core\topsdk-net-core.csproj", "{F68B8C49-1E6B-4E26-BCFB-4B98E2F32F06}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SberClasses", "SberClasses\SberClasses.csproj", "{40699948-D0A7-48EB-8480-BE46EAE62275}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SberClasses", "SberClasses\SberClasses.csproj", "{40699948-D0A7-48EB-8480-BE46EAE62275}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PdfHelper", "PdfHelper\PdfHelper.csproj", "{A91049A6-DB42-4C68-BE6C-C8D6FE9E8962}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReverseProxyAPI", "ReverseProxyAPI\ReverseProxyAPI.csproj", "{DA898853-F71B-4368-9008-3193B90A5D53}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -105,6 +109,14 @@ Global
 		{40699948-D0A7-48EB-8480-BE46EAE62275}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{40699948-D0A7-48EB-8480-BE46EAE62275}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{40699948-D0A7-48EB-8480-BE46EAE62275}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A91049A6-DB42-4C68-BE6C-C8D6FE9E8962}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A91049A6-DB42-4C68-BE6C-C8D6FE9E8962}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A91049A6-DB42-4C68-BE6C-C8D6FE9E8962}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A91049A6-DB42-4C68-BE6C-C8D6FE9E8962}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA898853-F71B-4368-9008-3193B90A5D53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA898853-F71B-4368-9008-3193B90A5D53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA898853-F71B-4368-9008-3193B90A5D53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA898853-F71B-4368-9008-3193B90A5D53}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

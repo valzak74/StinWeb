@@ -1,0 +1,12 @@
+C:\Users\Валентин\source\repos\StinWeb\PdfHelper\bin\Release\net6.0\PdfHelper.deps.json
+C:\Users\Валентин\source\repos\StinWeb\PdfHelper\bin\Release\net6.0\PdfHelper.dll
+C:\Users\Валентин\source\repos\StinWeb\PdfHelper\bin\Release\net6.0\PdfHelper.pdb
+C:\Users\Валентин\source\repos\StinWeb\PdfHelper\obj\Release\net6.0\PdfHelper.csproj.AssemblyReference.cache
+C:\Users\Валентин\source\repos\StinWeb\PdfHelper\obj\Release\net6.0\PdfHelper.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Валентин\source\repos\StinWeb\PdfHelper\obj\Release\net6.0\PdfHelper.AssemblyInfoInputs.cache
+C:\Users\Валентин\source\repos\StinWeb\PdfHelper\obj\Release\net6.0\PdfHelper.AssemblyInfo.cs
+C:\Users\Валентин\source\repos\StinWeb\PdfHelper\obj\Release\net6.0\PdfHelper.csproj.CoreCompileInputs.cache
+C:\Users\Валентин\source\repos\StinWeb\PdfHelper\obj\Release\net6.0\PdfHelper.dll
+C:\Users\Валентин\source\repos\StinWeb\PdfHelper\obj\Release\net6.0\refint\PdfHelper.dll
+C:\Users\Валентин\source\repos\StinWeb\PdfHelper\obj\Release\net6.0\PdfHelper.pdb
+C:\Users\Валентин\source\repos\StinWeb\PdfHelper\obj\Release\net6.0\ref\PdfHelper.dll

@@ -29,7 +29,7 @@ namespace WbClasses
         }
     }
     //[JsonConverter(typeof(SingleObjectOrArrayJsonConverter<StockError>))]
-    public class StockError : ResponseV3
+    public class StockError : Response
     {
         public List<ErrorDetail>? Data { get; set; }
         public class ErrorDetail

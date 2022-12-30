@@ -27,6 +27,8 @@ namespace Refresher1C.Service
         private IHttpService _httpService;
         private IDocCreateOrUpdate _docService;
 
+        private readonly Dictionary<string, string> _firmProxy;
+
         private IOrder _order;
         private IФирма _фирма;
         private IНоменклатура _номенклатура;
@@ -51,6 +53,7 @@ namespace Refresher1C.Service
                     _набор.Dispose();
                     _отменаНабора.Dispose();
                     _context.Dispose();
+                    _firmProxy.Clear();
                 }
             }
             this.disposed = true;
@@ -74,6 +77,15 @@ namespace Refresher1C.Service
             _заявкаПокупателя = new ЗаявкаПокупателя(context);
             _набор = new Набор(context);
             _отменаНабора = new ОтменаНабора(context);
+
+            _firmProxy = new Dictionary<string, string>();
+            foreach (var item in _configuration.GetSection("CommonSettings:FirmData").GetChildren())
+            {
+                var configData = item.AsEnumerable();
+                var firmaId = configData.FirstOrDefault(x => x.Key.EndsWith("FirmaId")).Value;
+                var proxy = configData.FirstOrDefault(x => x.Key.EndsWith("Proxy")).Value;
+                _firmProxy.Add(firmaId, proxy);
+            }
         }
         public async Task CheckNaborNeeded(CancellationToken stoppingToken)
         {
@@ -90,7 +102,7 @@ namespace Refresher1C.Service
                                            (nom.Sp2417 == ВидыНоменклатуры.Товар) &&
                                            (order.Sp13982 == 8) && //order статус = 8
                                            ((doc.Sp4760 == видОперацииЗаявкаОдобренная) || (doc.Sp4760 == видОперацииСчетНаОплату))
-                                       //market.Sp14077.Trim() == _yandexFbsAuthToken
+                                           //&& order.Code.Trim() == "172517024"
                                        group new { doc, docT } by new { ЗаявкаId = doc.Iddoc, OrderId = doc.Sp13995, НоменклатураId = docT.Sp2446, Коэффициент = docT.Sp2449 } into gr
                                        select new
                                        {
@@ -100,13 +112,13 @@ namespace Refresher1C.Service
                                            КолДокумента = gr.Sum(x => x.docT.Sp2447) * gr.Key.Коэффициент,
                                        } into docData
                                        join r in _context.Rg4674s.Where(x => x.Period == dateRegTA) on new { IdDoc = docData.ЗаявкаId, НоменклатураId = docData.НоменклатураId } equals new { IdDoc = r.Sp4671, НоменклатураId = r.Sp4669 }
-                                       group new { docData, r } by new { docData.ЗаявкаId, docData.OrderId, docData.НоменклатураId } into gr
+                                       group new { docData, r } by new { docData.ЗаявкаId, docData.OrderId, docData.НоменклатураId, docData.КолДокумента } into gr
                                        select new
                                        {
                                            ЗаявкаId = gr.Key.ЗаявкаId,
                                            OrderId = gr.Key.OrderId,
                                            НоменклатураId = gr.Key.НоменклатураId,
-                                           КолДокумента = gr.Sum(x => x.docData.КолДокумента),
+                                           КолДокумента = gr.Key.КолДокумента,
                                            КолДоступно = gr.Sum(x => x.r.Sp4672)
                                        };
                 var notReadyЗаявкиIds = остаткиРегЗаявки.Where(x => x.КолДокумента != x.КолДоступно).Select(x => new { x.ЗаявкаId, x.OrderId }).Distinct();
@@ -116,9 +128,8 @@ namespace Refresher1C.Service
                     await _docService.CreateNabor(data.ЗаявкаId, stoppingToken);
             }
         }
-        public async Task PrepareYandexFbsBoxes(CancellationToken stoppingToken)
+        public async Task PrepareYandexFbsBoxes(bool regular, CancellationToken stoppingToken)
         {
-            var urlBoxes = _configuration["Marketplace:urlBoxes"];
             using var tran = await _context.Database.BeginTransactionAsync(stoppingToken);
             try
             {
@@ -132,19 +143,21 @@ namespace Refresher1C.Service
                                   //join markUse in _context.Sc14152s.Where(x => !x.Ismark) on new { NomId = nom.Id, MarketId = market.Id } equals new { NomId = markUse.Parentext, MarketId = markUse.Sp14147 } into _markUse
                                   //from markUse in _markUse.DefaultIfEmpty()
                                   where r.Period == dateRegTA && ((r.Sp14011 == 10) || (r.Sp14011 == 11)) &&
-                                    order.Sp13982 == 8 //order статус = 8
+                                    (regular ? (order.Sp13982 == 8) : (order.Sp13982 == -1)) //order статус = 8
                                     && (((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.YANDEX_MARKET) ||
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.SBER_MEGA_MARKET) ||
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.ALIEXPRESS_LOGISTIC) ||
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.WILDBERRIES) ||
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.OZON_LOGISTIC))
-                                    //&& market.Code.Trim() == "18795"
+                                          //&& market.Code.Trim() == "18795"
+                                          //&& order.Code.Trim() == "172517024"
                                   group new { r, order, market, nom, ed, item } by new
                                   {
                                       OrderId = order.Id,
                                       MarketplaceId = order.Code,
                                       OrderOurId = order.Sp13981,
                                       ShipmentId = order.Sp13989,
+                                      FirmaId = market.Parentext,
                                       Тип = market.Sp14155,
                                       CampaignId = market.Code,
                                       ClientId = market.Sp14053,
@@ -164,6 +177,7 @@ namespace Refresher1C.Service
                                       MarketplaceId = gr.Key.MarketplaceId.Trim(),
                                       OrderOurId = gr.Key.OrderOurId.Trim(),
                                       ShipmentId = gr.Key.ShipmentId.Trim(),
+                                      FirmaId = gr.Key.FirmaId,
                                       Тип = gr.Key.Тип.ToUpper().Trim(),
                                       CampaignId = gr.Key.CampaignId.Trim(),
                                       ClientId = gr.Key.ClientId.Trim(),
@@ -180,14 +194,15 @@ namespace Refresher1C.Service
                 {
                     var dataGrouped = data.GroupBy(x => new
                     {
-                        OrderId = x.OrderId,
-                        MarketplaceId = x.MarketplaceId,
-                        OrderOurId = x.OrderOurId,
-                        ShipmentId = x.ShipmentId,
-                        Тип = x.Тип,
-                        CampaignId = x.CampaignId,
-                        ClientId = x.ClientId,
-                        AuthToken = x.AuthToken,
+                        x.OrderId,
+                        x.MarketplaceId,
+                        x.OrderOurId,
+                        x.ShipmentId,
+                        x.FirmaId,
+                        x.Тип,
+                        x.CampaignId,
+                        x.ClientId,
+                        x.AuthToken,
                     });
                     foreach (var obj in dataGrouped)
                     {
@@ -218,8 +233,12 @@ namespace Refresher1C.Service
                                         });
                                     }
                                 }
+                                var proxy = _firmProxy[obj.Key.FirmaId];
+                                var campaignId = obj.Key.CampaignId;
+                                var orderId = obj.Key.MarketplaceId;
+                                var shipmentId = obj.Key.ShipmentId;
                                 var result = await YandexClasses.YandexOperators.Exchange<YandexClasses.BoxesResponse>(_httpService,
-                                    string.Format(urlBoxes, obj.Key.CampaignId, obj.Key.MarketplaceId, obj.Key.ShipmentId),
+                                    $"https://{proxy}api.partner.market.yandex.ru/v2/campaigns/{campaignId}/orders/{orderId}/delivery/shipments/{shipmentId}/boxes.json",
                                     HttpMethod.Put,
                                     obj.Key.ClientId,
                                     obj.Key.AuthToken,
@@ -260,6 +279,7 @@ namespace Refresher1C.Service
                                     items.Add(new(item.ItemIndex, item.Sku));
                                 }
                                 var result = await SberClasses.Functions.OrderConfirm(_httpService,
+                                    _firmProxy[obj.Key.FirmaId],
                                     obj.Key.AuthToken,
                                     obj.Key.MarketplaceId,
                                     obj.Key.OrderOurId,
@@ -272,12 +292,12 @@ namespace Refresher1C.Service
                             }
                             else if (obj.Key.Тип == "WILDBERRIES")
                             {
-                                var supplyIdResult = await GetWbActiveSupplyId(obj.Key.AuthToken, stoppingToken);
+                                var supplyIdResult = await GetWbActiveSupplyId(_firmProxy[obj.Key.FirmaId], obj.Key.AuthToken, stoppingToken);
                                 if (!supplyIdResult.success)
                                     status = -1;
                                 else if (!string.IsNullOrEmpty(supplyIdResult.supplyId)) 
                                 {
-                                    var addToSupplyResult = await WbClasses.Functions.AddToSupply(_httpService, obj.Key.AuthToken, supplyIdResult.supplyId, obj.Key.MarketplaceId, stoppingToken);
+                                    var addToSupplyResult = await WbClasses.Functions.AddToSupply(_httpService, _firmProxy[obj.Key.FirmaId], obj.Key.AuthToken, supplyIdResult.supplyId, obj.Key.MarketplaceId, stoppingToken);
                                     if (!string.IsNullOrEmpty(addToSupplyResult.error))
                                         err = addToSupplyResult.error;
                                     if (!addToSupplyResult.success)
@@ -316,7 +336,7 @@ namespace Refresher1C.Service
                 _logger.LogError(ex.Message);
             }
         }
-        public async Task PrepareFbsLabels(CancellationToken stoppingToken)
+        public async Task PrepareFbsLabels(bool regular, CancellationToken stoppingToken)
         {
             using var tran = await _context.Database.BeginTransactionAsync(stoppingToken);
             try
@@ -325,7 +345,7 @@ namespace Refresher1C.Service
                                   join market in _context.Sc14042s on order.Sp14038 equals market.Id
                                   join binary in _context.VzOrderBinaries.Where(x => x.Extension.Trim().ToUpper() == "LABELS") on order.Id equals binary.Id into _binary
                                   from binary in _binary.DefaultIfEmpty()
-                                  where ((order.Sp13982 == 1) || (order.Sp13982 == 3)) && //order статус = 1 (грузовые места сформированы)
+                                  where (regular ? ((order.Sp13982 == 1) || (order.Sp13982 == 3)) : (order.Sp13982 == -2)) && //order статус = 1 (грузовые места сформированы)
                                         (((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.YANDEX_MARKET) ||
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.SBER_MEGA_MARKET) ||
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.ALIEXPRESS_LOGISTIC) ||
@@ -333,11 +353,13 @@ namespace Refresher1C.Service
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.OZON_LOGISTIC)) &&
                                         (binary == null)
                                         //&& market.Code.Trim() == "18795"
-                                  group new { order, market } by new { order.Id, order.Code, campaignId = market.Code, clientId = market.Sp14053, token = market.Sp14054, тип = market.Sp14155 } into gr
+                                        //&& order.Code.Trim() == "172517024"
+                                  group new { order, market } by new { order.Id, order.Code, firmaId = market.Parentext, campaignId = market.Code, clientId = market.Sp14053, token = market.Sp14054, тип = market.Sp14155 } into gr
                                   select new
                                   {
                                       OrderId = gr.Key.Id,
                                       MarketplaceId = gr.Key.Code.Trim(),
+                                      FirmaId = gr.Key.firmaId,
                                       CampaignId = gr.Key.campaignId.Trim(),
                                       ClientId = gr.Key.clientId.Trim(),
                                       AuthToken = gr.Key.token.Trim(),
@@ -345,7 +367,6 @@ namespace Refresher1C.Service
                                   }).ToListAsync(stoppingToken);
                 if ((data != null) && (data.Count() > 0))
                 {
-                    var urlLabels = _configuration["Marketplace:urlLabels"];
                     foreach (var order in data)
                     {
                         var entity = await _context.Sc13994s.OrderBy(x => x.RowId).FirstOrDefaultAsync(x => x.Id == order.OrderId, stoppingToken);
@@ -356,8 +377,11 @@ namespace Refresher1C.Service
                             string err = "";
                             if (order.Тип == "ЯНДЕКС")
                             {
+                                var proxyHost = _firmProxy[order.FirmaId];
+                                var campaignId = order.CampaignId;
+                                var orderId = order.MarketplaceId;
                                 var result = await YandexClasses.YandexOperators.Exchange<byte[]>(_httpService,
-                                    string.Format(urlLabels, order.CampaignId, order.MarketplaceId),
+                                    $"https://{proxyHost}api.partner.market.yandex.ru/v2/campaigns/{campaignId}/orders/{orderId}/delivery/labels.json",
                                     HttpMethod.Get,
                                     order.ClientId,
                                     order.AuthToken,
@@ -377,7 +401,7 @@ namespace Refresher1C.Service
                                 List<KeyValuePair<string, int>> items = orderEntry.Items
                                     .Select(x => new KeyValuePair<string, int>(x.Id, (int)x.КолМест))
                                     .ToList();
-                                var result = await SberClasses.Functions.StickerPrint(_httpService, orderEntry.CampaignId, orderEntry.AuthToken,
+                                var result = await SberClasses.Functions.StickerPrint(_httpService, _firmProxy[order.FirmaId], orderEntry.CampaignId, orderEntry.AuthToken,
                                     orderEntry.MarketplaceId, orderEntry.OrderNo, items,
                                     stoppingToken);
                                 if (result.pdf != null)
@@ -391,7 +415,7 @@ namespace Refresher1C.Service
                                 int tryCount = 5;
                                 while (true)
                                 {
-                                    var result = await OzonClasses.OzonOperators.GetLabels(_httpService, order.ClientId, order.AuthToken,
+                                    var result = await OzonClasses.OzonOperators.GetLabels(_httpService, _firmProxy[order.FirmaId], order.ClientId, order.AuthToken,
                                         new List<string> { order.MarketplaceId },
                                         stoppingToken);
                                     if (result.Item1 != null)
@@ -418,30 +442,44 @@ namespace Refresher1C.Service
                             {
                                 var orderEntry = await _order.ПолучитьOrder(order.OrderId);
                                 List<long> logisticsOrderIds = orderEntry.DeliveryServiceId.Split(", ").Select(x => Convert.ToInt64(x)).ToList();
-                                var result = await AliExpressClasses.Functions.GetLabels(_httpService, orderEntry.AuthToken,
+                                var result = await AliExpressClasses.Functions.GetLabels(_httpService, _firmProxy[order.FirmaId], orderEntry.AuthToken,
                                     logisticsOrderIds,
                                     stoppingToken);
                                 if (result.pdf != null)
                                 {
                                     label = result.pdf;
+                                    if (string.IsNullOrEmpty(orderEntry.DeliveryServiceName))
+                                    {
+                                        var updateTrackingNumberResult = await AliExpressClasses.Functions.GetLogisticsOrders(_httpService, _firmProxy[order.FirmaId], orderEntry.AuthToken,
+                                            logisticsOrderIds, 
+                                            stoppingToken);
+                                        if (updateTrackingNumberResult.logisticsOrderTrackingNumbers?.Count > 0)
+                                        {
+                                            var firstLogisticsOrder = updateTrackingNumberResult.logisticsOrderTrackingNumbers.FirstOrDefault();
+                                            await _order.RefreshOrderDeliveryServiceId(orderEntry.Id, firstLogisticsOrder.Key, firstLogisticsOrder.Value, stoppingToken);
+                                        }
+                                    }
                                 }
                             }
                             else if (order.Тип == "WILDBERRIES")
                             {
-                                var result = await WbClasses.Functions.GetLabel(_httpService, order.AuthToken,
+                                var result = await WbClasses.Functions.GetLabel(_httpService, _firmProxy[order.FirmaId], order.AuthToken,
                                     new List<long> { Convert.ToInt64(order.MarketplaceId) },
                                     stoppingToken);
-                                label = result.png;
+                                if (result.png != null)
+                                    label = PdfHelper.PdfFunctions.Instance.GetPdfFromImage(result.png);
                             }
                             if (!string.IsNullOrEmpty(err))
                                 entity.Sp14055 = err;
-                            if (((status > 0) && (entity.Sp13982 == 1)) || (status < 0))
+                            if (((status > 0) && ((entity.Sp13982 == 1) || (entity.Sp13982 == -2))) || ((status < 0) && (entity.Sp13982 > 0)))
                                 entity.Sp13982 = status;
                             _context.Update(entity);
                             _context.РегистрацияИзмененийРаспределеннойИБ(13994, entity.Id);
                             if (label != null)
                             {
-                                var orderBinary = await _context.VzOrderBinaries.OrderBy(x => x.RowId).FirstOrDefaultAsync(x => x.Id == order.OrderId && x.Extension.Trim().ToUpper() == "LABELS");
+                                var orderBinary = await _context.VzOrderBinaries
+                                    .OrderBy(x => x.RowId)
+                                    .FirstOrDefaultAsync(x => (x.Id == order.OrderId) && (x.Extension.Trim().ToUpper() == "LABELS"));
                                 if (orderBinary == null)
                                 {
                                     orderBinary = new VzOrderBinary
@@ -491,6 +529,7 @@ namespace Refresher1C.Service
                                  {
                                      OrderId = order.Id,
                                      MarketplaceOrderId = order.Code.Trim(),
+                                     FirmaId = market.Parentext,
                                      Тип = market.Sp14155.ToUpper().Trim(),
                                      CampaignId = market.Code.Trim(),
                                      ClientId = market.Sp14053.Trim(),
@@ -505,7 +544,7 @@ namespace Refresher1C.Service
                     {
                         if (row.Тип == "ЯНДЕКС")
                         {
-                            var result = await YandexClasses.YandexOperators.BuyerDetails(_httpService, row.CampaignId, row.ClientId, row.AuthToken, 
+                            var result = await YandexClasses.YandexOperators.BuyerDetails(_httpService, _firmProxy[row.FirmaId], row.CampaignId, row.ClientId, row.AuthToken, 
                                 row.MarketplaceOrderId, 
                                 stoppingToken);
                             if (result != null)
@@ -551,12 +590,13 @@ namespace Refresher1C.Service
                                      from r in _r.DefaultIfEmpty()
                                      where (r.Period == dateRegTA) && (r.Sp14011 == 11) 
                                        //&& market.Code.Trim() == "18795"
-                                     group new { orderData, market, r } by new { orderData.OrderId, orderData.Code, orderData.ItemsCount, тип = market.Sp14155, campaignId = market.Code, clientId = market.Sp14053, token = market.Sp14054 } into gr
+                                     group new { orderData, market, r } by new { orderData.OrderId, orderData.Code, orderData.ItemsCount, firmaId = market.Parentext, тип = market.Sp14155, campaignId = market.Code, clientId = market.Sp14053, token = market.Sp14054 } into gr
                                      where gr.Key.ItemsCount == gr.Sum(x => x.r.Sp14017)
                                      select new
                                      {
                                          OrderId = gr.Key.OrderId,
                                          MarketplaceId = gr.Key.Code.Trim(),
+                                         FirmaId = gr.Key.firmaId,
                                          Тип = gr.Key.тип.ToUpper().Trim(),
                                          CampaignId = gr.Key.campaignId.Trim(),
                                          ClientId = gr.Key.clientId.Trim(),
@@ -577,7 +617,7 @@ namespace Refresher1C.Service
                             needSaveChanges = true;
                             if (row.Тип == "ЯНДЕКС")
                             {
-                                var statusResult = await YandexClasses.YandexOperators.OrderDetails(_httpService, row.CampaignId, row.ClientId, row.AuthToken, row.MarketplaceId, stoppingToken);
+                                var statusResult = await YandexClasses.YandexOperators.OrderDetails(_httpService, _firmProxy[row.FirmaId], row.CampaignId, row.ClientId, row.AuthToken, row.MarketplaceId, stoppingToken);
                                 if ((statusResult.Item1 == YandexClasses.StatusYandex.PROCESSING) &&
                                     (statusResult.Item2 == YandexClasses.SubStatusYandex.READY_TO_SHIP))
                                 {
@@ -589,7 +629,7 @@ namespace Refresher1C.Service
                                 }
                                 else
                                 {
-                                    var result = await YandexClasses.YandexOperators.ChangeStatus(_httpService,
+                                    var result = await YandexClasses.YandexOperators.ChangeStatus(_httpService, _firmProxy[row.FirmaId],
                                         order.CampaignId, order.MarketplaceId,
                                         order.ClientId, order.AuthToken,
                                         YandexClasses.StatusYandex.PROCESSING, YandexClasses.SubStatusYandex.READY_TO_SHIP,
@@ -608,7 +648,7 @@ namespace Refresher1C.Service
                                 {
                                     items.Add(new(item.Id, (int)item.КолМест));
                                 }
-                                var result = await SberClasses.Functions.OrderPicking(_httpService,
+                                var result = await SberClasses.Functions.OrderPicking(_httpService, _firmProxy[row.FirmaId],
                                     order.CampaignId,
                                     order.AuthToken,
                                     order.MarketplaceId,
@@ -620,16 +660,7 @@ namespace Refresher1C.Service
                                 else
                                     await _order.ОбновитьOrderStatus(order.Id, -3, result.error);
                             }
-                            else if (row.Тип == "WILDBERRIES")
-                            {
-                                var result = await WbClasses.Functions.ChangeOrderStatus(_httpService, order.AuthToken,
-                                    order.MarketplaceId, WbClasses.WbStatus.СборочноеЗаданиеЗавершено, stoppingToken);
-                                if (result.success)
-                                    await _order.ОбновитьOrderStatus(order.Id, 3);
-                                else
-                                    await _order.ОбновитьOrderStatus(order.Id, -3, result.error);
-                            }
-                            else if ((row.Тип == "OZON") || (row.Тип == "ALIEXPRESS"))
+                            else if ((row.Тип == "OZON") || (row.Тип == "ALIEXPRESS") || (row.Тип == "WILDBERRIES"))
                                 await _order.ОбновитьOrderStatus(order.Id, 3);
                         }
                     }
@@ -652,6 +683,7 @@ namespace Refresher1C.Service
                                          НоменклатураId = items.Sp14022,
                                          Коэффициент = ed.Sp78,
                                          MarketplaceId = order.Code,
+                                         FirmaId = market.Parentext,
                                          CampaignId = market.Code,
                                          ClientId = market.Sp14053,
                                          Token = market.Sp14054
@@ -662,6 +694,7 @@ namespace Refresher1C.Service
                                          OrderId = gr.Key.OrderId,
                                          DeliveryType = gr.Key.DeliveryType,
                                          MarketplaceId = gr.Key.MarketplaceId.Trim(),
+                                         FirmaId = gr.Key.FirmaId,
                                          CampaignId = gr.Key.CampaignId.Trim(),
                                          ClientId = gr.Key.ClientId.Trim(),
                                          AuthToken = gr.Key.Token.Trim(),
@@ -676,13 +709,13 @@ namespace Refresher1C.Service
                         if ((order != null) && (order.Status == (int)StinOrderStatus.PROCESSING) && (order.SubStatus == (int)StinOrderSubStatus.READY_TO_SHIP))
                         {
                             needSaveChanges = true;
-                            var statusResult = await YandexClasses.YandexOperators.OrderDetails(_httpService, row.CampaignId, row.ClientId, row.AuthToken, row.MarketplaceId, stoppingToken);
+                            var statusResult = await YandexClasses.YandexOperators.OrderDetails(_httpService, _firmProxy[row.FirmaId], row.CampaignId, row.ClientId, row.AuthToken, row.MarketplaceId, stoppingToken);
                             if ((statusResult.Item1 == YandexClasses.StatusYandex.DELIVERY) &&
                                 (statusResult.Item2 == YandexClasses.SubStatusYandex.DELIVERY_SERVICE_RECEIVED))
                             {
                                 if (order.DeliveryType == StinDeliveryType.PICKUP)
                                 {
-                                    var result = await YandexClasses.YandexOperators.ChangeStatus(_httpService,
+                                    var result = await YandexClasses.YandexOperators.ChangeStatus(_httpService, _firmProxy[row.FirmaId],
                                         order.CampaignId, order.MarketplaceId,
                                         order.ClientId, order.AuthToken,
                                         YandexClasses.StatusYandex.PICKUP, YandexClasses.SubStatusYandex.NotFound,
@@ -707,7 +740,7 @@ namespace Refresher1C.Service
                             }
                             else
                             {
-                                var result = await YandexClasses.YandexOperators.ChangeStatus(_httpService,
+                                var result = await YandexClasses.YandexOperators.ChangeStatus(_httpService, _firmProxy[row.FirmaId],
                                     order.CampaignId, order.MarketplaceId,
                                     order.ClientId, order.AuthToken,
                                     YandexClasses.StatusYandex.DELIVERY, YandexClasses.SubStatusYandex.NotFound,
@@ -717,7 +750,7 @@ namespace Refresher1C.Service
                                 {
                                     if (order.DeliveryType == StinDeliveryType.PICKUP)
                                     {
-                                        result = await YandexClasses.YandexOperators.ChangeStatus(_httpService,
+                                        result = await YandexClasses.YandexOperators.ChangeStatus(_httpService, _firmProxy[row.FirmaId],
                                             order.CampaignId, order.MarketplaceId,
                                             order.ClientId, order.AuthToken,
                                             YandexClasses.StatusYandex.PICKUP, YandexClasses.SubStatusYandex.NotFound,
@@ -774,10 +807,10 @@ namespace Refresher1C.Service
                                         order.Sp13988 == (decimal)StinDeliveryType.PICKUP &&
                                         ((order.Sp13990 < limitDate) || (order.Sp13982 == 7)) &&
                                         (StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.SHOP
-                                      group new { r, order } by new
+                                      group new { r, order, market } by new
                                       {
                                           OrderId = order.Id,
-                                          //MarketplaceId = order.Code, 
+                                          FirmaId = market.Parentext, 
                                           НаборId = r.Sp11970,
                                           //CampaignId = market.Code,
                                           //ClientId = market.Sp14053,
@@ -787,7 +820,7 @@ namespace Refresher1C.Service
                                       select new
                                       {
                                           OrderId = gr.Key.OrderId,
-                                          //MarketplaceId = gr.Key.MarketplaceId.Trim(),
+                                          FirmaId = gr.Key.FirmaId,
                                           НаборId = gr.Key.НаборId,
                                           //CampaignId = gr.Key.CampaignId.Trim(),
                                           //ClientId = gr.Key.ClientId.Trim(),
@@ -795,36 +828,42 @@ namespace Refresher1C.Service
                                       })
                                       .ToListAsync();
                     var реквизитыПроведенныхДокументов = new List<ОбщиеРеквизиты>();
-                    foreach (var groupedData in data.GroupBy(x => x.OrderId))
+                    foreach (var groupedData in data.GroupBy(x => new { x.OrderId, x.FirmaId }))
                     {
-                        var order = await _order.ПолучитьOrder(groupedData.Key);
-                        var yandexResult = await YandexClasses.YandexOperators.ChangeStatus(_httpService,
+                        var order = await _order.ПолучитьOrder(groupedData.Key.OrderId);
+                        var orderDetails = await YandexClasses.YandexOperators.OrderDetailsFull(_httpService, _firmProxy[groupedData.Key.FirmaId],
+                            order.CampaignId, order.ClientId, order.AuthToken, order.MarketplaceId, stoppingToken);
+                        var expiredDate = orderDetails?.Order?.Delivery?.OutletStorageLimitDate;
+                        if (expiredDate.HasValue && (expiredDate.Value < DateTime.Today))
+                        {
+                            var yandexResult = await YandexClasses.YandexOperators.ChangeStatus(_httpService, _firmProxy[groupedData.Key.FirmaId],
                             order.CampaignId, order.MarketplaceId,
                             order.ClientId, order.AuthToken,
                             YandexClasses.StatusYandex.CANCELLED, order.InternalStatus == 7 ? YandexClasses.SubStatusYandex.USER_CHANGED_MIND : YandexClasses.SubStatusYandex.PICKUP_EXPIRED,
                             (YandexClasses.DeliveryType)order.DeliveryType,
-                            stoppingToken);
-                        if (yandexResult.Item1)
-                            await _order.ОбновитьOrderStatus(order.Id, 5);
-                        else
-                            await _order.ОбновитьOrderStatus(order.Id, -5, yandexResult.Item2);
-                        if (yandexResult.Item1)
-                        {
-                            ExceptionData result = null;
-                            foreach (var наборId in groupedData.Select(x => x.НаборId))
+                                stoppingToken);
+                            if (yandexResult.Item1)
+                                await _order.ОбновитьOrderStatus(order.Id, 5);
+                            else
+                                await _order.ОбновитьOrderStatus(order.Id, -5, yandexResult.Item2);
+                            if (yandexResult.Item1)
                             {
-                                var набор = await _набор.GetФормаНаборById(наборId);
-                                var формаОтменаНабора = await _отменаНабора.ВводНаОснованииAsync(набор, DateTime.Now);
-                                result = await _отменаНабора.ЗаписатьПровестиAsync(формаОтменаНабора);
-                                реквизитыПроведенныхДокументов.Add(формаОтменаНабора.Общие);
+                                ExceptionData result = null;
+                                foreach (var наборId in groupedData.Select(x => x.НаборId))
+                                {
+                                    var набор = await _набор.GetФормаНаборById(наборId);
+                                    var формаОтменаНабора = await _отменаНабора.ВводНаОснованииAsync(набор, DateTime.Now);
+                                    result = await _отменаНабора.ЗаписатьПровестиAsync(формаОтменаНабора);
+                                    реквизитыПроведенныхДокументов.Add(формаОтменаНабора.Общие);
+                                    if (result != null)
+                                        break;
+                                }
                                 if (result != null)
+                                {
+                                    if (_context.Database.CurrentTransaction != null)
+                                        _context.Database.CurrentTransaction.Rollback();
                                     break;
-                            }
-                            if (result != null)
-                            {
-                                if (_context.Database.CurrentTransaction != null)
-                                    _context.Database.CurrentTransaction.Rollback();
-                                break;
+                                }
                             }
                         }
                     }
@@ -835,7 +874,6 @@ namespace Refresher1C.Service
                 {
                     if (_context.Database.CurrentTransaction != null)
                         _context.Database.CurrentTransaction.Rollback();
-                    _logger.LogError("Период не открыт");
                 }
 
                 if (_context.Database.CurrentTransaction != null)
@@ -2915,9 +2953,10 @@ namespace Refresher1C.Service
                     }
                     else if (marketplace.Тип == "WILDBERRIES")
                     {
-                        await GetWbOrders(marketplace.AuthToken,
+                        await GetWbNewOrders(marketplace.AuthToken,
                             marketplace.Id, marketplace.Authorization, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
                             marketplace.Encoding, stoppingToken);
+                        await GetWbCanceledOrders(marketplace.AuthToken, marketplace.Id, stoppingToken);
                     }
                 }
             }
@@ -3009,6 +3048,10 @@ namespace Refresher1C.Service
                             if (нетВНаличие)
                             {
                                 _logger.LogError("Sber запуск процедуры отмены");
+                                var sberResult = await SberClasses.Functions.OrderReject(_httpService, authToken, sberOrder.ShipmentId, SberClasses.SberReason.OUT_OF_STOCK,
+                                    sberOrder.Items.Select(x => new KeyValuePair<string, string>(x.ItemIndex, x.OfferId)).ToList(), cancellationToken);
+                                if (!string.IsNullOrEmpty(sberResult.error))
+                                    _logger.LogError(sberResult.error);
                                 continue;
                             }
                             bool delivery = !string.IsNullOrEmpty(sberOrder.DeliveryId);
@@ -3022,7 +3065,7 @@ namespace Refresher1C.Service
                                     Количество = item.Quantity ?? 0,
                                     Цена = item.Price ?? 0,
                                     ЦенаСоСкидкой = item.FinalPrice ?? 0,
-                                    //Вознаграждение = (decimal)x.Subsidy,
+                                    Вознаграждение = (item.Price ?? 0) - (item.FinalPrice ?? 0),
                                     Доставка =  delivery,
                                     //ДопПараметры = x.Params,
                                     ИдентификаторПоставщика = sberOrder.CustomerFullName,
@@ -3089,9 +3132,9 @@ namespace Refresher1C.Service
                 return true;
             }
         }
-        async Task<(bool success, string supplyId)> GetWbActiveSupplyId(string authToken, CancellationToken cancellationToken)
+        async Task<(bool success, string supplyId)> GetWbActiveSupplyId(string proxyHost, string authToken, CancellationToken cancellationToken)
         {
-            var supplyListResult = await WbClasses.Functions.GetSuppliesList(_httpService, authToken, cancellationToken);
+            var supplyListResult = await WbClasses.Functions.GetSuppliesList(_httpService, proxyHost, authToken, cancellationToken);
             if (!string.IsNullOrEmpty(supplyListResult.error))
             {
                 _logger.LogError(supplyListResult.error);
@@ -3100,7 +3143,7 @@ namespace Refresher1C.Service
             var supplyId = supplyListResult.supplyIds.FirstOrDefault();
             if (!string.IsNullOrEmpty(supplyId))
             {
-                var supplyOrdersResult = await WbClasses.Functions.GetSupplyOrders(_httpService, authToken, supplyId, cancellationToken);
+                var supplyOrdersResult = await WbClasses.Functions.GetSupplyOrders(_httpService, proxyHost, authToken, supplyId, cancellationToken);
                 if (!string.IsNullOrEmpty(supplyOrdersResult.error))
                 {
                     _logger.LogError(supplyOrdersResult.error);
@@ -3112,7 +3155,7 @@ namespace Refresher1C.Service
             }
             else
             {
-                var supplyCreateResult = await WbClasses.Functions.CreateSupply(_httpService, authToken, cancellationToken);
+                var supplyCreateResult = await WbClasses.Functions.CreateSupply(_httpService, proxyHost, authToken, cancellationToken);
                 if (!string.IsNullOrEmpty(supplyCreateResult.error))
                 {
                     _logger.LogError(supplyCreateResult.error);
@@ -3482,7 +3525,7 @@ namespace Refresher1C.Service
                 }
             }
         }
-        private async Task GetWbOrders(string authToken, string id, string authorization, string firmaId, string customerId, string dogovorId, EncodeVersion encoding, CancellationToken stoppingToken)
+        private async Task GetWbNewOrders(string authToken, string id, string authorization, string firmaId, string customerId, string dogovorId, EncodeVersion encoding, CancellationToken stoppingToken)
         {
             var result = await WbClasses.Functions.GetNewOrders(_httpService, authToken, stoppingToken);
             if (!string.IsNullOrEmpty(result.error))
@@ -3525,11 +3568,13 @@ namespace Refresher1C.Service
                         if (нетВНаличие)
                         {
                             //запуск процедуры отмены
-                            var cancelResult = await WbClasses.Functions.ChangeOrderStatus(_httpService, authToken,
-                                wbOrder.Id.ToString(), WbClasses.WbStatus.СборочноеЗаданиеОтклонено, stoppingToken);
+                            var cancelResult = await WbClasses.Functions.CancelOrder(_httpService, authToken,
+                                wbOrder.Id.ToString(), stoppingToken);
                             if (!string.IsNullOrEmpty(cancelResult.error))
                                 _logger.LogError(cancelResult.error);
-                            if (!cancelResult.success)
+                            if (cancelResult.success)
+                                _logger.LogError("Wb order: " + wbOrder.Id.ToString() + " cancelled");
+                            else
                                 _logger.LogError("Wb order: " + wbOrder.Id.ToString() + " can't be cancelled");
                             continue;
                         }
@@ -3601,6 +3646,34 @@ namespace Refresher1C.Service
                         //}
                     //}
                 }
+        }
+        private async Task GetWbCanceledOrders(string authToken, string marketplaceId, CancellationToken cancellationToken)
+        {
+            var activeOrders = _context.Sc13994s
+                .Where(x => (x.Sp13982 > 0) && (x.Sp13982 != 5) && (x.Sp13982 != 6) &&
+                    ((StinDeliveryPartnerType)x.Sp13985 == StinDeliveryPartnerType.WILDBERRIES) &&
+                    (x.Sp14038 == marketplaceId))
+                .Select(x => Convert.ToInt64(x.Code.Trim()))
+                .OrderBy(x => x);
+            int limit = 1000;
+            for (int i = 0; i < activeOrders.Count(); i = i + limit)
+            {
+                var data = await activeOrders.Skip(i).Take(limit).ToListAsync(cancellationToken);
+                if (data?.Count > 0)
+                {
+                    var result = await WbClasses.Functions.GetOrderStatuses(_httpService, authToken, data, cancellationToken);
+                    if (!string.IsNullOrEmpty(result.error))
+                        _logger.LogError(result.error);
+                    var cancelOrderIds = result.orders?.Where(x => (x.Value == WbClasses.WbStatus.canceled) || (x.Value == WbClasses.WbStatus.canceled_by_client))
+                        .Select(x => x.Key);
+                    foreach (var wbOrderId in cancelOrderIds) 
+                    {
+                        var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, wbOrderId.ToString());
+                        if (order != null)
+                            await _docService.OrderCancelled(order);
+                    }
+                }
+            }
         }
         private async Task GetOzonNewOrders(string clientId, string authToken, string id, string firmaId, string customerId, string dogovorId, EncodeVersion encoding, CancellationToken stoppingToken)
         {
@@ -4003,6 +4076,11 @@ namespace Refresher1C.Service
                                    orderItems,
                                    cancellationToken);
                             }
+                            else
+                            {
+                                if ((ts.TotalMinutes > 30) && (order.InternalStatus == 0))
+                                    await _order.ОбновитьOrderStatus(order.Id, 8);
+                            }
                         }
                     }
                 }
@@ -4117,6 +4195,7 @@ namespace Refresher1C.Service
                                             where !market.Ismark
                                                 //&& market.Code.Trim() == "43956" //tmp
                                                 //&& market.Sp14155.Trim().ToUpper() == "OZON" //tmp
+                                                //&& market.Sp14155.Trim().ToUpper() == "WILDBERRIES"
                                             select new
                                             {
                                                 Id = market.Id,
@@ -4147,6 +4226,11 @@ namespace Refresher1C.Service
                     }
                     else if (marketplace.Тип == "ALIEXPRESS")
                     {
+                        await UpdateTariffsAliexpress(marketplace.Id, cancellationToken);
+                    }
+                    else if (marketplace.Тип == "WILDBERRIES")
+                    {
+                        await UpdateTariffsWildberries(marketplace.Id, cancellationToken);
                     }
                 }
             }
@@ -4241,7 +4325,141 @@ namespace Refresher1C.Service
                             minPrice += tariff.limMax;
                         else
                             minPrice += c_delivery;
+                        minPrice += 10; //за прием заказов в СЦ (фиксированная 10 руб за отправление)
+                        var tariffLastMile = (percent: 4.0, limMin: 30.0, limMax: 215.0);
+                        var c_deliveryLastMile = minPrice * tariffLastMile.percent / 100;
+                        if (c_deliveryLastMile < tariffLastMile.limMin)
+                            minPrice += tariffLastMile.limMin;
+                        else if (c_deliveryLastMile > tariffLastMile.limMax)
+                            minPrice += tariffLastMile.limMax;
+                        else
+                            minPrice += c_deliveryLastMile;
+
                         decimal updateMinPrice = decimal.Round((decimal)minPrice / item.Квант, 2, MidpointRounding.AwayFromZero);
+                        if (updateMinPrice != entity.Sp14198)
+                        {
+                            entity.Sp14198 = updateMinPrice;
+                            _context.Update(entity);
+                            _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
+                            needUpdate = true;
+                        }
+                    }
+                }
+                if (needUpdate)
+                    await _context.SaveChangesAsync(cancellationToken);
+            }
+        }
+        private async Task UpdateTariffsWildberries(string marketplaceId, CancellationToken cancellationToken)
+        {
+            decimal baseLogistics = 55;
+            decimal addPerLiter = 5.5m;
+            decimal includeLiters = 5;
+            decimal minHard = 1000;
+            decimal maxSize = 1.2m;
+            decimal maxSumSize = 2;
+            decimal maxWeight = 25;
+
+            int requestLimit = 500;
+            var query = from markUse in _context.Sc14152s
+                        join nom in _context.Sc84s on markUse.Parentext equals nom.Id
+                        join nomParent in _context.Sc84s on nom.Parentid equals nomParent.Id 
+                        join ed in _context.Sc75s on nom.Sp94 equals ed.Id
+                        join vzTovar in _context.VzTovars on nom.Id equals vzTovar.Id into _vzTovar
+                        from vzTovar in _vzTovar.DefaultIfEmpty()
+                        where !markUse.Ismark && (markUse.Sp14147 == marketplaceId) &&
+                          (markUse.Sp14158 == 1) //Есть в каталоге 
+                          && !string.IsNullOrEmpty(nomParent.Sp95)
+                          && nomParent.Sp95.Contains("WB")
+                        orderby nom.Code
+                        select new
+                        {
+                            Id = markUse.Id,
+                            ParentComment = nomParent.Sp95,
+                            WeightBrutto = ed.Sp14056,
+                            Height = ed.Sp14035,
+                            Width = ed.Sp14036,
+                            Lenght = ed.Sp14037,
+                            ЦенаЗакуп = vzTovar != null ? vzTovar.Zakup ?? 0 : 0,
+                            Квант = nom.Sp14188 == 0 ? 1 : nom.Sp14188,
+                        };
+            for (int i = 0; i < query.Count(); i = i + requestLimit)
+            {
+                var data = await query
+                    .Skip(i)
+                    .Take(requestLimit)
+                    .ToListAsync(cancellationToken);
+                bool needUpdate = false;
+                foreach (var dataItem in data)
+                {
+                    var entity = await _context.Sc14152s.FirstOrDefaultAsync(x => x.Id == dataItem.Id, cancellationToken);
+                    if (entity != null)
+                    {
+                        var categoryPercent = dataItem.ParentComment
+                            .Split(";", StringSplitOptions.TrimEntries)
+                            .Where(y => y.StartsWith("WB", StringComparison.InvariantCultureIgnoreCase))
+                            .Select(z => { decimal.TryParse(z.Substring(2), out decimal p); return p; })
+                            .FirstOrDefault();
+                        decimal КоэфМинНаценки = 10; 
+                        var Порог = (dataItem.ЦенаЗакуп * dataItem.Квант) * (100 + КоэфМинНаценки) / 100;
+                        var minPrice = Порог / (1 - categoryPercent / 100);
+
+                        decimal liters = dataItem.Lenght * dataItem.Width * dataItem.Height * 1000;
+                        decimal oversizeLiters = Math.Max(liters - includeLiters, 0);
+                        bool isHard = (dataItem.WeightBrutto > maxWeight)
+                            || ((dataItem.Lenght > maxSize) || (dataItem.Width > maxSize) || (dataItem.Height > maxSize))
+                            || (dataItem.Lenght + dataItem.Width + dataItem.Height > maxSumSize);
+                        decimal sumLogistics = baseLogistics + (oversizeLiters * addPerLiter);
+                        if (isHard)
+                            sumLogistics = Math.Max(sumLogistics, minHard);
+                        minPrice += sumLogistics;
+                        decimal updateMinPrice = decimal.Round(minPrice / dataItem.Квант, 2, MidpointRounding.AwayFromZero);
+                        if (updateMinPrice != entity.Sp14198)
+                        {
+                            entity.Sp14198 = updateMinPrice;
+                            _context.Update(entity);
+                            _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
+                            needUpdate = true;
+                        }
+                    }
+                }
+                if (needUpdate)
+                    await _context.SaveChangesAsync(cancellationToken);
+            }
+        }
+        private async Task UpdateTariffsAliexpress(string marketplaceId, CancellationToken cancellationToken)
+        {
+            double baseTariff = 8;
+            int requestLimit = 500;
+            var query = from markUse in _context.Sc14152s
+                        join nom in _context.Sc84s on markUse.Parentext equals nom.Id
+                        join vzTovar in _context.VzTovars on nom.Id equals vzTovar.Id into _vzTovar
+                        from vzTovar in _vzTovar.DefaultIfEmpty()
+                        where !markUse.Ismark && (markUse.Sp14147 == marketplaceId) &&
+                          (markUse.Sp14158 == 1) //Есть в каталоге 
+                        orderby nom.Code
+                        select new
+                        {
+                            Id = markUse.Id,
+                            ЦенаЗакуп = vzTovar != null ? vzTovar.Zakup ?? 0 : 0,
+                            Квант = nom.Sp14188 == 0 ? 1 : nom.Sp14188,
+                        };
+            for (int i = 0; i < query.Count(); i = i + requestLimit)
+            {
+                var data = await query
+                    .Skip(i)
+                    .Take(requestLimit)
+                    .ToListAsync(cancellationToken);
+                bool needUpdate = false;
+                foreach (var dataItem in data)
+                {
+                    var entity = await _context.Sc14152s.FirstOrDefaultAsync(x => x.Id == dataItem.Id, cancellationToken);
+                    if (entity != null)
+                    {
+                        var КоэфМинНаценки = 10;
+                        var Порог = (double)(dataItem.ЦенаЗакуп * dataItem.Квант) * (100 + КоэфМинНаценки) / 100;
+                        var minPrice = Порог / (1 - baseTariff / 100);
+                        decimal updateMinPrice = decimal.Round((decimal)minPrice / dataItem.Квант, 2, MidpointRounding.AwayFromZero);
+
                         if (updateMinPrice != entity.Sp14198)
                         {
                             entity.Sp14198 = updateMinPrice;

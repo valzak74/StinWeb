@@ -13,6 +13,17 @@ using System.Net;
 using System.Reflection.PortableExecutable;
 using StinClasses.Справочники;
 using WbClasses;
+using Microsoft.EntityFrameworkCore;
+using PdfSharpCore.Pdf;
+using System.Reflection.Metadata;
+using PdfSharpCore.Drawing;
+using PdfSharpCore;
+using SixLabors.Fonts;
+using System.Globalization;
+using Microsoft.Win32;
+using System.Text.RegularExpressions;
+using SixLabors.ImageSharp;
+using YandexClasses;
 //using Top.Api;
 //using Top.Api.Request;
 //using Top.Api.Response;
@@ -99,8 +110,139 @@ namespace HelloWorld
                     Converters = { new SingleObjectOrArrayJsonConverter<T>() }
                 });
         }
+        public static string GetWindowsFamilyName(string fontN = "EAN-13")
+   {
+        // Note that many fonts are charged, so find free fonts, if not, download free fonts from the official website and install
+        // Free fonts (commercially available) : Founder Black Body (FZHei-B01S), Founder Book Song (FZShuSong-Z01S), Founder Fang Song (FZFangSong-Z02S), Founder Regular Regular (FZKai-Z03S) 
+       var fontDir = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\Fonts");
+            DirectoryInfo d = new DirectoryInfo(fontDir); //Assuming Test is your Folder
+
+            FileInfo[] Files = d.GetFiles(); //Getting Text files
+            //string str = "";
+
+            foreach (FileInfo file in Files)
+            {
+                //string fontPathFile = Path.Combine($"{fontDir}\\{file}.ttf ");
+                try
+                {
+                    FontDescription fontDescription = FontDescription.LoadDescription(file.FullName);
+                    string fontName = fontDescription.FontName(CultureInfo.InvariantCulture);
+                    //string fontFamilyName = fontDescription.FontFamily(CultureInfo.InvariantCulture);
+                    if (fontName == "Code 128")
+                    {
+                        return file.Name;
+                    }
+                }
+                catch { }
+                //str = str + ", " + file.Name;
+            }
+   
+        return "";
+    }
+        public static string GetSystemFontFileName(Font font)
+        {
+            RegistryKey fonts = null;
+            try
+            {
+                fonts = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts", false);
+                if (fonts == null)
+                {
+                    fonts = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Fonts", false);
+                    if (fonts == null)
+                    {
+                        throw new Exception("Can't find font registry database.");
+                    }
+                }
+
+                string suffix = "";
+                //if (font.Bold)
+                //    suffix += "(?: Bold)?";
+                //if (font.Italic)
+                //    suffix += "(?: Italic)?";
+
+                var regex = new Regex(@"^(?:.+ & )?" + Regex.Escape(font.Name) + @"(?: & .+)?(?<suffix>" + suffix + @") \(TrueType\)$");
+
+                string[] names = fonts.GetValueNames();
+
+                string name = names.Select(n => regex.Match(n)).Where(m => m.Success).OrderByDescending(m => m.Groups["suffix"].Length).Select(m => m.Value).FirstOrDefault();
+
+                if (name != null)
+                {
+                    return fonts.GetValue(name).ToString();
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            finally
+            {
+                if (fonts != null)
+                {
+                    fonts.Dispose();
+                }
+            }
+        }        //private List<string> GetFilesForFont(string fontName)
+        //{
+        //    var fontNameToFiles = new Dictionary<string, List<string>>();
+
+        //    foreach (var fontFile in Directory.GetFiles(Environment.GetFolderPath(Environment.SpecialFolder.Fonts)))
+        //    {
+        //        var fc = new PrivateFontCollection();
+
+        //        if (File.Exists(fontFile))
+        //            fc.AddFontFile(fontFile);
+
+        //        if ((!fc.Families.Any()))
+        //            continue;
+
+        //        var name = fc.Families[0].Name;
+
+        //        // If you care about bold, italic, etc, you can filter here.
+        //        if (!fontNameToFiles.TryGetValue(name, out var files))
+        //        {
+        //            files = new List<string>();
+        //            fontNameToFiles[name] = files;
+        //        }
+
+        //        files.Add(fontFile);
+        //    }
+
+        //    if (!fontNameToFiles.TryGetValue(fontName, out var result))
+        //        return null;
+
+        //    return result;
+        //}
         static async Task Main(string[] args)
         {
+            IPAddress.TryParse("192.168.229.145", out IPAddress ip);
+            if (ip != null)
+            //foreach (var ip in Dns.GetHostAddresses(Dns.GetHostName()))
+            {
+                var endPoint = new IPEndPoint(ip, 0);
+                Console.WriteLine("Request from: " + ip);
+                var request = (HttpWebRequest)HttpWebRequest.Create("https://api.onlinemarket.su/marketip/sber/products/feed_43956_001.xml");
+                WebProxy myproxy = new WebProxy("192.168.229.145");
+                myproxy.BypassProxyOnLocal = false;
+                request.Proxy = myproxy;
+
+                //request.ServicePoint.BindIPEndPointDelegate = delegate {
+                //    return endPoint;
+                //};
+                var response = (HttpWebResponse)request.GetResponse();
+                Console.WriteLine("Actual IP: " + response.GetResponseHeader("X-YourIP"));
+                response.Close();
+            }
+            Console.ReadKey();
+            var barcodeText = "%97W%2ALA9D%%";
+            var barcodeBytes = PdfHelper.PdfFunctions.Instance.GenerateBarcode128(barcodeText);
+            //var co = SystemFonts.Collection;
+            //var fo = SystemFonts.Families.FirstOrDefault(x => x.Name == "Code 128");
+            //Font font = new Font(fo, 24, FontStyle.Regular);
+            //Console.WriteLine(GetSystemFontFileName(font));
+            //var sre = GetFilesForFont("Code 128");
+            //Console.WriteLine(GetWindowsFamilyName("7fonts.ru_code128"));
+            File.WriteAllBytes("f://tmp/15/1/test.pdf", PdfHelper.PdfFunctions.Instance.ProductSticker("%97W%2ADCSD%%", "name", "443030303430333834"));
             string re = "{\"code\": \"NotFound\", \"message\": \"Не найдено\"}";
             //string re = $"[\r\n  {{\r\n    \"code\": \"SubjectDBSRestriction\",\r\n    \"message\": \"Категория товара недоступна для продажи по схеме 'Везу на склад Wildberries'.\",\r\n    \"data\": [\r\n      {{\r\n        \"sku\": \"skuTest1\",\r\n        \"stock\": 0\r\n      }}\r\n    ]\r\n  }},\r\n  {{\r\n    \"code\": \"SubjectFBSRestriction\",\r\n    \"message\": \"Категория товара недоступна для продажи по схеме 'Везу самостоятельно до клиента'.\",\r\n    \"data\": [\r\n      {{\r\n        \"sku\": \"skuTest2\",\r\n        \"stock\": 1\r\n      }}\r\n    ]\r\n  }},\r\n  {{\r\n    \"code\": \"UploadDataLimit\",\r\n    \"message\": \"Превышен лимит загружаемых данных\",\r\n    \"data\": [\r\n      {{\r\n        \"sku\": \"skuTest2\",\r\n        \"stock\": 10001\r\n      }}\r\n    ]\r\n  }},\r\n  {{\r\n    \"code\": \"CargoWarehouseRestriction\",\r\n    \"message\": \"Выбранный склад не предназначен для крупногабаритных товаров. Добавьте их на соответствующий склад\",\r\n    \"data\": [\r\n      {{\r\n        \"sku\": \"skuTest3\",\r\n        \"stock\": 10\r\n      }}\r\n    ]\r\n  }},\r\n  {{\r\n    \"code\": \"NotFound\",\r\n    \"message\": \"Не найдено\",\r\n    \"data\": [\r\n      {{\r\n        \"sku\": \"skuTest4\",\r\n        \"stock\": 10\r\n      }}\r\n    ]\r\n  }}\r\n]";
             byte[] bytes = Encoding.UTF8.GetBytes(re);

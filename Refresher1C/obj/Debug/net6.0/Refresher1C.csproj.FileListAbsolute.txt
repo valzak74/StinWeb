@@ -84,3 +84,14 @@ C:\Users\Валентин\source\repos\StinWeb\Refresher1C\bin\Debug\net6.0\WbCl
 C:\Users\Валентин\source\repos\StinWeb\Refresher1C\bin\Debug\net6.0\WbClasses.pdb
 C:\Users\Валентин\source\repos\StinWeb\Refresher1C\bin\Debug\net6.0\SberClasses.dll
 C:\Users\Валентин\source\repos\StinWeb\Refresher1C\bin\Debug\net6.0\SberClasses.pdb
+C:\Users\Валентин\source\repos\StinWeb\Refresher1C\bin\Debug\net6.0\BarcodeStandard.dll
+C:\Users\Валентин\source\repos\StinWeb\Refresher1C\bin\Debug\net6.0\MigraDocCore.DocumentObjectModel.dll
+C:\Users\Валентин\source\repos\StinWeb\Refresher1C\bin\Debug\net6.0\MigraDocCore.Rendering.dll
+C:\Users\Валентин\source\repos\StinWeb\Refresher1C\bin\Debug\net6.0\PdfSharpCore.dll
+C:\Users\Валентин\source\repos\StinWeb\Refresher1C\bin\Debug\net6.0\PdfSharpCore.Charting.dll
+C:\Users\Валентин\source\repos\StinWeb\Refresher1C\bin\Debug\net6.0\ICSharpCode.SharpZipLib.dll
+C:\Users\Валентин\source\repos\StinWeb\Refresher1C\bin\Debug\net6.0\SixLabors.Fonts.dll
+C:\Users\Валентин\source\repos\StinWeb\Refresher1C\bin\Debug\net6.0\SixLabors.ImageSharp.dll
+C:\Users\Валентин\source\repos\StinWeb\Refresher1C\bin\Debug\net6.0\de\PdfSharpCore.resources.dll
+C:\Users\Валентин\source\repos\StinWeb\Refresher1C\bin\Debug\net6.0\PdfHelper.dll
+C:\Users\Валентин\source\repos\StinWeb\Refresher1C\bin\Debug\net6.0\PdfHelper.pdb

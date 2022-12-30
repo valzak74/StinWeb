@@ -11,12 +11,15 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="PdfSharpCore" Version="1.3.43" />
+    <PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\AliExpressClasses\AliExpressClasses.csproj" />
     <ProjectReference Include="..\HttpExtensions\HttpExtensions.csproj" />
     <ProjectReference Include="..\JsonExtensions\JsonExtensions.csproj" />
+    <ProjectReference Include="..\PdfHelper\PdfHelper.csproj" />
     <ProjectReference Include="..\StinClasses\StinClasses.csproj" />
     <ProjectReference Include="..\WbClasses\WbClasses.csproj" />
     <ProjectReference Include="..\YandexClasses\YandexClasses.csproj" />

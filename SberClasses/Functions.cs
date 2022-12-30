@@ -22,7 +22,7 @@ namespace SberClasses
             }
             return errorText;
         }
-        public static async Task<(bool success, string error)> OrderConfirm(IHttpService httpService, string token,
+        public static async Task<(bool success, string error)> OrderConfirm(IHttpService httpService, string proxyHost, string token,
             string shipmentId,
             string orderCode,
             List<KeyValuePair<string,string>> items,
@@ -39,7 +39,7 @@ namespace SberClasses
                 });
             }
             var result = await httpService.Exchange<SberResponse, string>(
-                "https://partner.sbermegamarket.ru/api/market/v1/orderService/order/confirm",
+                $"https://{proxyHost}partner.sbermegamarket.ru/api/market/v1/orderService/order/confirm",
                 HttpMethod.Post,
                 new Dictionary<string, string>(),
                 request,
@@ -55,7 +55,7 @@ namespace SberClasses
             }
             return (false, err);
         }
-        public static async Task<(byte[]? pdf, string error)> StickerPrint(IHttpService httpService, string clientId, string token,
+        public static async Task<(byte[]? pdf, string error)> StickerPrint(IHttpService httpService, string proxyHost, string clientId, string token,
             string shipmentId,
             string orderCode,
             List<KeyValuePair<string, int>> items,
@@ -91,7 +91,7 @@ namespace SberClasses
             request.Data.PrintAsPdf = true;
             request.Data.Shipments = new List<SberShipment> { new SberShipment { ShipmentId = shipmentId, BoxCodes = boxCodes, Items = requestItems } };
             var result = await httpService.Exchange<byte[], string>(
-                "https://partner.sbermegamarket.ru/api/market/v1/orderService/sticker/print",
+                $"https://{proxyHost}partner.sbermegamarket.ru/api/market/v1/orderService/sticker/print",
                 HttpMethod.Post,
                 new Dictionary<string, string>(),
                 request,
@@ -103,7 +103,7 @@ namespace SberClasses
                 return (result.Item1, err);
             return (null, err);
         }
-        public static async Task<(bool success, string error)> OrderPicking(IHttpService httpService, string clientId, string token,
+        public static async Task<(bool success, string error)> OrderPicking(IHttpService httpService, string proxyHost, string clientId, string token,
             string shipmentId,
             string orderCode,
             List<KeyValuePair<string, int>> items,
@@ -132,7 +132,7 @@ namespace SberClasses
                 });
             }
             var result = await httpService.Exchange<SberResponse, string>(
-                "https://partner.sbermegamarket.ru/api/market/v1/orderService/order/packing",
+                $"https://{proxyHost}partner.sbermegamarket.ru/api/market/v1/orderService/order/packing",
                 HttpMethod.Post,
                 new Dictionary<string, string>(),
                 request,

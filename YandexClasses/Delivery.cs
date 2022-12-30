@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using JsonExtensions;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 
 namespace YandexClasses
 {
@@ -25,5 +28,8 @@ namespace YandexClasses
         public Date Dates { get; set; }
         public Outlet Outlet { get; set; }
         public Region Region { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        [JsonConverter(typeof(DateFormatConverter), "dd-MM-yyyy")]
+        public DateTime? OutletStorageLimitDate { get; set; }
     }
 }

@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "dgSpecHash": "GqAvIEyXlkyXtaKnl7eFXBd7vpH4Fz37txbbvgLVd3ZY9HraB7s0+FU9RFR8Dm9ckf8Z1ymZplYebHxF5Yhr0Q==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\ReverseProxyAPI\\ReverseProxyAPI.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Валентин\\.nuget\\packages\\microsoft.extensions.apidescription.server\\3.0.0\\microsoft.extensions.apidescription.server.3.0.0.nupkg.sha512",
+    "C:\\Users\\Валентин\\.nuget\\packages\\microsoft.openapi\\1.2.3\\microsoft.openapi.1.2.3.nupkg.sha512",
+    "C:\\Users\\Валентин\\.nuget\\packages\\swashbuckle.aspnetcore\\6.2.3\\swashbuckle.aspnetcore.6.2.3.nupkg.sha512",
+    "C:\\Users\\Валентин\\.nuget\\packages\\swashbuckle.aspnetcore.swagger\\6.2.3\\swashbuckle.aspnetcore.swagger.6.2.3.nupkg.sha512",
+    "C:\\Users\\Валентин\\.nuget\\packages\\swashbuckle.aspnetcore.swaggergen\\6.2.3\\swashbuckle.aspnetcore.swaggergen.6.2.3.nupkg.sha512",
+    "C:\\Users\\Валентин\\.nuget\\packages\\swashbuckle.aspnetcore.swaggerui\\6.2.3\\swashbuckle.aspnetcore.swaggerui.6.2.3.nupkg.sha512"
+  ],
+  "logs": []
+}

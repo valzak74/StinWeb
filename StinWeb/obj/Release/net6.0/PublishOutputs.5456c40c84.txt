@@ -4,6 +4,7 @@ C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\StinWeb.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\StinWeb.runtimeconfig.json
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\StinWeb.pdb
+C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\BarcodeStandard.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\Castle.Core.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\Humanizer.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\MessagePack.dll
@@ -55,6 +56,8 @@ C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\Microsoft.VisualStudio.Web.CodeGeneration.Utils.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\Microsoft.VisualStudio.Web.CodeGenerators.Mvc.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\Microsoft.Win32.SystemEvents.dll
+C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\MigraDocCore.DocumentObjectModel.dll
+C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\MigraDocCore.Rendering.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\Newtonsoft.Json.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\Newtonsoft.Json.Bson.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\Mvc.Grid.Core.dll
@@ -72,15 +75,14 @@ C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\NuGet.ProjectModel.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\NuGet.Protocol.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\NuGet.Versioning.dll
-C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\MigraDoc.DocumentObjectModel.dll
-C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\MigraDoc.Rendering.dll
-C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\MigraDoc.RtfRendering.dll
-C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\PdfSharp.Charting.dll
-C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\PdfSharp.dll
+C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\PdfSharpCore.dll
+C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\PdfSharpCore.Charting.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\Polly.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\Polly.Extensions.Http.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\BouncyCastle.Crypto.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\ICSharpCode.SharpZipLib.dll
+C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\SixLabors.Fonts.dll
+C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\SixLabors.ImageSharp.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\SQLitePCLRaw.batteries_v2.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\SQLitePCLRaw.core.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\SQLitePCLRaw.provider.e_sqlite3.dll
@@ -253,11 +255,7 @@ C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\tr\Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\zh-Hans\Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\zh-Hant\Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
-C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\de\MigraDoc.DocumentObjectModel.resources.dll
-C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\de\MigraDoc.Rendering.resources.dll
-C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\de\MigraDoc.RtfRendering.resources.dll
-C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\de\PdfSharp.Charting.resources.dll
-C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\de\PdfSharp.resources.dll
+C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\de\PdfSharpCore.resources.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\runtimes\unix\lib\netcoreapp3.1\Microsoft.Data.SqlClient.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\runtimes\win\lib\netcoreapp3.1\Microsoft.Data.SqlClient.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll
@@ -292,6 +290,7 @@ C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\HttpExtensions.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\JsonExtensions.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\OzonClasses.dll
+C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\PdfHelper.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\StinClasses.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\WbClasses.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\YandexClasses.dll
@@ -299,6 +298,7 @@ C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\ExcelHelper.pdb
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\HttpExtensions.pdb
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\OzonClasses.pdb
+C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\PdfHelper.pdb
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\StinClasses.pdb
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\WbClasses.pdb
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\YandexClasses.pdb

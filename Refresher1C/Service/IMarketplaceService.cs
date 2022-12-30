@@ -9,8 +9,8 @@ namespace Refresher1C.Service
 {
     public interface IMarketplaceService: IDisposable
     {
-        Task PrepareYandexFbsBoxes(CancellationToken stoppingToken);
-        Task PrepareFbsLabels(CancellationToken stoppingToken);
+        Task PrepareYandexFbsBoxes(bool regular, CancellationToken stoppingToken);
+        Task PrepareFbsLabels(bool regular, CancellationToken stoppingToken);
         Task ChangeOrderStatus(CancellationToken stoppingToken);
         Task RefreshBuyerInfo(CancellationToken stoppingToken);
         Task CheckNaborNeeded(CancellationToken stoppingToken);

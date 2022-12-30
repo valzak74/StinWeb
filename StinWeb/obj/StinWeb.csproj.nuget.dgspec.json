@@ -352,6 +352,84 @@
         }
       }
     },
+    "C:\\Users\\Валентин\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj",
+        "projectName": "PdfHelper",
+        "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj",
+        "packagesPath": "C:\\Users\\Валентин\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\PdfHelper\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\Валентин\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net6.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net6.0": {
+            "targetAlias": "net6.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net6.0": {
+          "targetAlias": "net6.0",
+          "dependencies": {
+            "BarcodeLib": {
+              "target": "Package",
+              "version": "[2.4.0, )"
+            },
+            "MigraDocCore.DocumentObjectModel": {
+              "target": "Package",
+              "version": "[1.3.43, )"
+            },
+            "MigraDocCore.Rendering": {
+              "target": "Package",
+              "version": "[1.3.43, )"
+            },
+            "PdfSharpCore": {
+              "target": "Package",
+              "version": "[1.3.43, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
+        }
+      }
+    },
     "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj": {
       "version": "1.0.0",
       "restore": {
@@ -476,6 +554,9 @@
               "C:\\Users\\Валентин\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj": {
                 "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj"
               },
+              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj": {
+                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj"
+              },
               "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj": {
                 "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj"
               },
@@ -539,10 +620,6 @@
             "NonFactors.Lookup.Core.Mvc6": {
               "target": "Package",
               "version": "[5.1.2, )"
-            },
-            "PDFsharp-MigraDoc": {
-              "target": "Package",
-              "version": "[1.50.5147, )"
             },
             "Polly.Extensions.Http": {
               "target": "Package",

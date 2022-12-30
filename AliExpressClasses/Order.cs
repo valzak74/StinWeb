@@ -407,7 +407,8 @@ namespace AliExpressClasses
     public class PreSplitPosition
     {
         public long Id { get; set; }
-        public decimal Delivery_fee { get; set; }
+        private decimal _deliveryFee;
+        public decimal Delivery_fee { get { return _deliveryFee; } set { _deliveryFee = value / 100; } }
         public FirstMileType First_mile_type { get; set; }
         public string? Logistic_method { get; set; }
         public string? Logistics_type { get; set; }

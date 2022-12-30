@@ -43,6 +43,7 @@ namespace StinClasses.Справочники
     public interface IMarketplace : IDisposable
     {
         Task<Marketplace> ПолучитьMarketplace(string authApi, string campaignId);
+        Task<Marketplace> ПолучитьMarketplaceByOrderId(string orderId);
         Task<Marketplace> ПолучитьMarketplaceByFirma(string authApi, string firmaId);
         Task<Marketplace> ПолучитьMarketplace(string Id);
         Task<List<string>> GetLockedMarketplaceCatalogEntries(string authApi, List<string> nomenkCodes);
@@ -74,86 +75,128 @@ namespace StinClasses.Справочники
         {
             _context = context;
         }
+        static Marketplace Map(Sc14042 entity)
+        {
+            if (entity == null)
+                return null;
+            return new Marketplace
+            {
+                Id = entity.Id,
+                CampaignId = entity.Code.Trim(),
+                Тип = entity.Sp14155.Trim().ToUpper(),
+                Модель = entity.Sp14164.Trim().ToUpper(),
+                Наименование = entity.Descr.Trim(),
+                ShortName = entity.Sp14156.Trim(),
+                Сортировка = entity.Sp14157,
+                ClientId = entity.Sp14053.Trim(),
+                TokenKey = entity.Sp14054.Trim(),
+                UrlApi = entity.Sp14076.Trim(),
+                Authorization = entity.Sp14077.Trim(),
+                Encoding = (EncodeVersion)entity.Sp14153,
+                FeedId = entity.Sp14154.Trim(),
+                КоэфПроверкиЦен = entity.Sp14165,
+                КонтрагентId = entity.Sp14175,
+                ДоговорId = entity.Sp14176,
+                СкладId = entity.Sp14241,
+                NeedStockUpdate = entity.Sp14177 == 1,
+            };
+        }
         public async Task<Marketplace> ПолучитьMarketplace(string Id)
         {
-            return await _context.Sc14042s
-                .Where(x => x.Id == Id)
-                .Select(entity => new Marketplace
-                {
-                    Id = entity.Id,
-                    CampaignId = entity.Code.Trim(),
-                    Тип = entity.Sp14155.Trim().ToUpper(),
-                    Модель = entity.Sp14164.Trim().ToUpper(),
-                    Наименование = entity.Descr.Trim(),
-                    ShortName = entity.Sp14156.Trim(),
-                    Сортировка = entity.Sp14157,
-                    ClientId = entity.Sp14053.Trim(),
-                    TokenKey = entity.Sp14054.Trim(),
-                    UrlApi = entity.Sp14076.Trim(),
-                    Authorization = entity.Sp14077.Trim(),
-                    Encoding = (EncodeVersion)entity.Sp14153,
-                    FeedId = entity.Sp14154.Trim(),
-                    КоэфПроверкиЦен = entity.Sp14165,
-                    КонтрагентId = entity.Sp14175,
-                    ДоговорId = entity.Sp14176,
-                    СкладId = entity.Sp14241,
-                    NeedStockUpdate = entity.Sp14177 == 1,
-                })
-                .FirstOrDefaultAsync();
+            var entity = await _context.Sc14042s
+                .FirstOrDefaultAsync(x => x.Id == Id);
+            return Map(entity);
+                //.Where(x => x.Id == Id)
+                //.Select(entity => new Marketplace
+                //{
+                //    Id = entity.Id,
+                //    CampaignId = entity.Code.Trim(),
+                //    Тип = entity.Sp14155.Trim().ToUpper(),
+                //    Модель = entity.Sp14164.Trim().ToUpper(),
+                //    Наименование = entity.Descr.Trim(),
+                //    ShortName = entity.Sp14156.Trim(),
+                //    Сортировка = entity.Sp14157,
+                //    ClientId = entity.Sp14053.Trim(),
+                //    TokenKey = entity.Sp14054.Trim(),
+                //    UrlApi = entity.Sp14076.Trim(),
+                //    Authorization = entity.Sp14077.Trim(),
+                //    Encoding = (EncodeVersion)entity.Sp14153,
+                //    FeedId = entity.Sp14154.Trim(),
+                //    КоэфПроверкиЦен = entity.Sp14165,
+                //    КонтрагентId = entity.Sp14175,
+                //    ДоговорId = entity.Sp14176,
+                //    СкладId = entity.Sp14241,
+                //    NeedStockUpdate = entity.Sp14177 == 1,
+                //})
+                //.FirstOrDefaultAsync()
+                //;
         }
         public async Task<Marketplace> ПолучитьMarketplace(string authApi, string campaignId)
         {
-            return await _context.Sc14042s
-                .Where(x => (x.Code.Trim() == campaignId) && (x.Sp14077.Trim() == authApi))
-                .Select(entity => new Marketplace
-                {
-                    Id = entity.Id,
-                    CampaignId = entity.Code.Trim(),
-                    Тип = entity.Sp14155.Trim().ToUpper(),
-                    Модель = entity.Sp14164.Trim().ToUpper(),
-                    Наименование = entity.Descr.Trim(),
-                    ShortName = entity.Sp14156.Trim(),
-                    Сортировка = entity.Sp14157,
-                    ClientId = entity.Sp14053.Trim(),
-                    TokenKey = entity.Sp14054.Trim(),
-                    UrlApi = entity.Sp14076.Trim(),
-                    Authorization = entity.Sp14077.Trim(),
-                    Encoding = (EncodeVersion)entity.Sp14153,
-                    FeedId = entity.Sp14154.Trim(),
-                    КоэфПроверкиЦен = entity.Sp14165,
-                    КонтрагентId = entity.Sp14175,
-                    ДоговорId = entity.Sp14176,
-                    СкладId = entity.Sp14241,
-                    NeedStockUpdate = entity.Sp14177 == 1,
-                })
-                .FirstOrDefaultAsync();
+            var entity = await _context.Sc14042s
+                .FirstOrDefaultAsync(x => (x.Code.Trim() == campaignId) && (x.Sp14077.Trim() == authApi));
+            return Map(entity);
+                //.Where(x => (x.Code.Trim() == campaignId) && (x.Sp14077.Trim() == authApi))
+                //.Select(entity => new Marketplace
+                //{
+                //    Id = entity.Id,
+                //    CampaignId = entity.Code.Trim(),
+                //    Тип = entity.Sp14155.Trim().ToUpper(),
+                //    Модель = entity.Sp14164.Trim().ToUpper(),
+                //    Наименование = entity.Descr.Trim(),
+                //    ShortName = entity.Sp14156.Trim(),
+                //    Сортировка = entity.Sp14157,
+                //    ClientId = entity.Sp14053.Trim(),
+                //    TokenKey = entity.Sp14054.Trim(),
+                //    UrlApi = entity.Sp14076.Trim(),
+                //    Authorization = entity.Sp14077.Trim(),
+                //    Encoding = (EncodeVersion)entity.Sp14153,
+                //    FeedId = entity.Sp14154.Trim(),
+                //    КоэфПроверкиЦен = entity.Sp14165,
+                //    КонтрагентId = entity.Sp14175,
+                //    ДоговорId = entity.Sp14176,
+                //    СкладId = entity.Sp14241,
+                //    NeedStockUpdate = entity.Sp14177 == 1,
+                //})
+                //.FirstOrDefaultAsync();
         }
         public async Task<Marketplace> ПолучитьMarketplaceByFirma(string authApi, string firmaId)
         {
-            return await _context.Sc14042s
-                .Where(x => (x.Parentext == firmaId) && (x.Sp14077.Trim() == authApi))
-                .Select(entity => new Marketplace 
-                {
-                    Id = entity.Id,
-                    CampaignId = entity.Code.Trim(),
-                    Тип = entity.Sp14155.Trim().ToUpper(),
-                    Модель = entity.Sp14164.Trim().ToUpper(),
-                    Наименование = entity.Descr.Trim(),
-                    ShortName = entity.Sp14156.Trim(),
-                    Сортировка = entity.Sp14157,
-                    ClientId = entity.Sp14053.Trim(),
-                    TokenKey = entity.Sp14054.Trim(),
-                    UrlApi = entity.Sp14076.Trim(),
-                    Authorization = entity.Sp14077.Trim(),
-                    Encoding = (EncodeVersion)entity.Sp14153,
-                    FeedId = entity.Sp14154.Trim(),
-                    КоэфПроверкиЦен = entity.Sp14165,
-                    КонтрагентId = entity.Sp14175,
-                    ДоговорId = entity.Sp14176,
-                    СкладId = entity.Sp14241,
-                    NeedStockUpdate = entity.Sp14177 == 1,
-                })
-                .FirstOrDefaultAsync();
+            var entity = await _context.Sc14042s
+                .FirstOrDefaultAsync(x => (x.Parentext == firmaId) && (x.Sp14077.Trim() == authApi));
+            return Map(entity);
+                //.Where(x => (x.Parentext == firmaId) && (x.Sp14077.Trim() == authApi))
+                //.Select(entity => new Marketplace 
+                //{
+                //    Id = entity.Id,
+                //    CampaignId = entity.Code.Trim(),
+                //    Тип = entity.Sp14155.Trim().ToUpper(),
+                //    Модель = entity.Sp14164.Trim().ToUpper(),
+                //    Наименование = entity.Descr.Trim(),
+                //    ShortName = entity.Sp14156.Trim(),
+                //    Сортировка = entity.Sp14157,
+                //    ClientId = entity.Sp14053.Trim(),
+                //    TokenKey = entity.Sp14054.Trim(),
+                //    UrlApi = entity.Sp14076.Trim(),
+                //    Authorization = entity.Sp14077.Trim(),
+                //    Encoding = (EncodeVersion)entity.Sp14153,
+                //    FeedId = entity.Sp14154.Trim(),
+                //    КоэфПроверкиЦен = entity.Sp14165,
+                //    КонтрагентId = entity.Sp14175,
+                //    ДоговорId = entity.Sp14176,
+                //    СкладId = entity.Sp14241,
+                //    NeedStockUpdate = entity.Sp14177 == 1,
+                //})
+                //.FirstOrDefaultAsync();
+        }
+        public async Task<Marketplace> ПолучитьMarketplaceByOrderId(string orderId)
+        {
+            var entity = await (from market in _context.Sc14042s
+                                join order in _context.Sc13994s on market.Id equals order.Sp14038
+                                where order.Id == orderId
+                                select market)
+                                .FirstOrDefaultAsync();
+            return Map(entity);
         }
         public async Task<List<string>> GetLockedMarketplaceCatalogEntries(string authApi, List<string> nomenkCodes)
         {

@@ -1,4 +1,5 @@
 ﻿using HttpExtensions;
+using JsonExtensions;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -10,8 +11,6 @@ namespace YandexClasses
     public static class YandexOperators
     {
         public static readonly string urlChangeItems = "https://api.partner.market.yandex.ru/v2/campaigns/{0}/orders/{1}/items.json";
-        public static readonly string urlStatus = "https://api.partner.market.yandex.ru/v2/campaigns/{0}/orders/{1}/status.json";
-        public static readonly string urlDetails = "https://api.partner.market.yandex.ru/v2/campaigns/{0}/orders/{1}.json";
         public static readonly string urlOfferUpdate = "https://api.partner.market.yandex.ru/v2/campaigns/{0}/offer-mapping-entries/updates.json";
         public static readonly string urlStockUpdate = "https://api.partner.market.yandex.ru/v2/campaigns/{0}/offers/stocks.json";
         public static string ParseErrorResponse(ErrorResponse response)
@@ -79,11 +78,10 @@ namespace YandexClasses
             }
             return null;
         }
-        public static async Task<Buyer> BuyerDetails(IHttpService httpService, string campaignId, string clientId, string authToken, string orderNo, CancellationToken cancellationToken)
+        public static async Task<Buyer> BuyerDetails(IHttpService httpService, string proxyHost, string campaignId, string clientId, string authToken, string orderNo, CancellationToken cancellationToken)
         {
-            var url = @"https://api.partner.market.yandex.ru/v2/campaigns/{0}/orders/{1}/buyer.json";
             var result = await Exchange<BuyerDetailsResponse>(httpService,
-                string.Format(url, campaignId, orderNo),
+                $"https://{proxyHost}api.partner.market.yandex.ru/v2/campaigns/{campaignId}/orders/{orderNo}/buyer.json",
                 HttpMethod.Get,
                 clientId,
                 authToken,
@@ -93,10 +91,10 @@ namespace YandexClasses
                 return result.Item2.Result;
             return null;
         }
-        public static async Task<Tuple<StatusYandex, SubStatusYandex>> OrderDetails(IHttpService httpService, string campaignId, string clientId, string authToken, string orderNo, CancellationToken cancellationToken)
+        public static async Task<Tuple<StatusYandex, SubStatusYandex>> OrderDetails(IHttpService httpService, string proxyHost, string campaignId, string clientId, string authToken, string orderNo, CancellationToken cancellationToken)
         {
             var result = await Exchange<OrderDetailsResponse>(httpService,
-                string.Format(urlDetails, campaignId, orderNo),
+                $"https://{proxyHost}api.partner.market.yandex.ru/v2/campaigns/{campaignId}/orders/{orderNo}.json",
                 HttpMethod.Get,
                 clientId,
                 authToken,
@@ -114,6 +112,18 @@ namespace YandexClasses
                 catch { }
             }
             return new(StatusYandex.NotFound, SubStatusYandex.NotFound);
+        }
+        public static async Task<OrderDetailsResponse> OrderDetailsFull(IHttpService httpService, string proxyHost, 
+            string campaignId, string clientId, string authToken, string orderNo, CancellationToken cancellationToken)
+        {
+            var result = await Exchange<OrderDetailsResponse>(httpService,
+                $"https://{proxyHost}api.partner.market.yandex.ru/v2/campaigns/{campaignId}/orders/{orderNo}.json",
+                HttpMethod.Get,
+                clientId,
+                authToken,
+                null,
+                cancellationToken);
+            return result.Item2;
         }
         public static async Task<List<Tuple<string, StatusYandex, SubStatusYandex, bool>>> OrderCancelList(IHttpService httpService, string campaignId, string clientId, string authToken, int pageNumber, CancellationToken cancellationToken)
         {
@@ -190,7 +200,7 @@ namespace YandexClasses
                 catch { }
             return new(false, err);
         }
-        public static async Task<Tuple<bool,string>> ChangeStatus(IHttpService httpService,
+        public static async Task<Tuple<bool,string>> ChangeStatus(IHttpService httpService, string proxyHost,
             string campaignId, string marketplaceId, 
             string clientId, string authToken,
             StatusYandex status, SubStatusYandex subStatus,
@@ -198,10 +208,10 @@ namespace YandexClasses
             CancellationToken cancellationToken)
         {
             var request = new StatusRequest { Order = new OrderStatus { Status = status, Substatus = subStatus } };
-            if ((deliveryType == DeliveryType.PICKUP) && (status == StatusYandex.PICKUP))
-                request.Order.Delivery = new StatusDelivery { Dates = new StatusDates { RealDeliveryDate = DateTime.Now } };
+            //if ((deliveryType == DeliveryType.PICKUP) && (status == StatusYandex.PICKUP))
+            //    request.Order.Delivery = new StatusDelivery { Dates = new StatusDates { RealDeliveryDate = DateTime.Now } };
             var result = await Exchange<StatusResponse>(httpService,
-                string.Format(urlStatus, campaignId, marketplaceId),
+                $"https://{proxyHost}api.partner.market.yandex.ru/v2/campaigns/{campaignId}/orders/{marketplaceId}/status.json",
                 HttpMethod.Put,
                 clientId,
                 authToken,

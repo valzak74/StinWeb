@@ -50,4 +50,30 @@ namespace AliExpressClasses
         public long Trade_order_id { get; set; }
         public List<LogisticsOrder>? Logistic_orders { get; set; }
     }
+    public class LogisticsOrderListRequest
+    {
+        public List<long>? Logistic_order_ids { get; set; }
+        public int Page_size { get; set; }
+        public int Page { get; set; }
+        public LogisticsOrderListRequest() => Page = 1;
+        public LogisticsOrderListRequest(int pageSize, List<long> logisticsOrderIds): this()
+        {
+            Page_size = pageSize;
+            Logistic_order_ids = logisticsOrderIds;
+        }
+    }
+    public class LogisticsOrderListResponse
+    {
+        public LogisticsOrderListData? Data { get; set; }
+        public Error? Error { get; set; }
+        public class LogisticsOrderListData
+        {
+            public List<GetLogisticsOrder>? Logistic_orders { get; set; }
+            public class GetLogisticsOrder
+            {
+                public long Logistic_order_id { get; set; }
+                public string? Platform_tracking_code { get; set; }
+            }
+        }
+    }
 }

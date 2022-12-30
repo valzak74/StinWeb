@@ -28,6 +28,7 @@ namespace StinWeb.Controllers
 {
     public class ИнтернетЗаказы : Controller
     {
+        bool disposed = false;
         private IHttpService _httpService;
         private StinDbContext _context;
         private UserRepository _userRepository;
@@ -47,6 +48,7 @@ namespace StinWeb.Controllers
         {
             _httpService = httpService;
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
             _userRepository = new UserRepository(context);
             _фирмаRepository = new ФирмаRepository(context);
             _складRepository = new СкладRepository(context);
@@ -56,7 +58,27 @@ namespace StinWeb.Controllers
             _номенклатура = new StinClasses.Справочники.НоменклатураEntity(context);
             _набор = new StinClasses.Документы.Набор(context);
             _регистрНабор = new StinClasses.Регистры.Регистр_НаборНаСкладе(context);
-            _webHostEnvironment = webHostEnvironment;
+        }
+        protected override void Dispose(bool disposing)
+        {
+            if (!this.disposed)
+            {
+                if (disposing)
+                {
+                    _userRepository.Dispose();
+                    _фирмаRepository.Dispose();
+                    _складRepository.Dispose();
+                    _контрагентRepository.Dispose();
+                    _номенклатураRepository.Dispose();
+                    _order.Dispose();
+                    _номенклатура.Dispose();
+                    _набор.Dispose();
+                    _регистрНабор.Dispose();
+                    _context.Dispose();
+                    base.Dispose(disposing);
+                }
+            }
+            this.disposed = true;
         }
         public IActionResult Index()
         {
@@ -94,12 +116,12 @@ namespace StinWeb.Controllers
             ViewBag.CampaignIds = new SelectList(CampaignIds, "CampaignId", "Description");
 
             var типыОплат = new List<Tuple<int, string>>();
-            типыОплат.Add(new ((int)StinClasses.ReceiverPaymentType.Наличными, "Наличными"));
+            типыОплат.Add(new((int)StinClasses.ReceiverPaymentType.Наличными, "Наличными"));
             типыОплат.Add(new((int)StinClasses.ReceiverPaymentType.БанковскойКартой, "Банковской картой"));
             ViewBag.PaymentTypes = new SelectList(типыОплат.AsEnumerable(), "Item1", "Item2");
 
             ViewBag.ЭтоВодитель = Пользователь.Department.ToLower().Trim() == "водители";
-            ViewBag.DriverId = Пользователь.Role.Replace(" ","_");
+            ViewBag.DriverId = Пользователь.Role.Replace(" ", "_");
             ViewBag.СкладыСтрокой = string.Join(',', _складRepository.ПолучитьРазрешенныеСклады(Пользователь.Id).Select(x => x.Id));
             ViewBag.DefaultEmail = Startup.sConfiguration["Settings:DefaultEmailforCashReceipt"];
             return View("Console");
@@ -113,7 +135,7 @@ namespace StinWeb.Controllers
                 limitTime = TimeSpan.MaxValue;
             }
             var reportDate = currentTime > limitTime ? DateTime.Today.AddDays(1) : DateTime.Today;
-            reportDate = reportDate.DayOfWeek switch 
+            reportDate = reportDate.DayOfWeek switch
             {
                 DayOfWeek.Saturday => reportDate.AddDays(2),
                 DayOfWeek.Sunday => reportDate.AddDays(1),
@@ -211,7 +233,7 @@ namespace StinWeb.Controllers
             var dataE = from d in data
                         join reg in dataReg on d.OrderId equals reg.orderId into _reg
                         from reg in _reg.DefaultIfEmpty()
-                        group new {d,reg} by new
+                        group new { d, reg } by new
                         {
                             d.OrderNo,
                             d.Status,
@@ -220,7 +242,7 @@ namespace StinWeb.Controllers
                             d.КолТовара,
                             d.СуммаТовара
                         } into gr
-                        orderby gr.Key.OrderNo
+                        orderby gr.Key.OrderNo.Contains("-") ? gr.Key.OrderNo : gr.Key.OrderNo.Substring(gr.Key.OrderNo.Length - 3)
                         select new
                         {
                             OrderNo = gr.Key.OrderNo,
@@ -233,7 +255,7 @@ namespace StinWeb.Controllers
                             Склады = string.Join(", ", gr.Select(y => y.reg.складName).Distinct()),
                             МаршрутНаименование = string.Join(", ", gr.Select(y => y.reg.маршрутName).Distinct()),
                         };
-            
+
             var printData = Enumerable.Repeat(new
             {
                 ДатаЛистаСборки = reportDate.ToString("dd.MM.yyyy"),
@@ -241,7 +263,7 @@ namespace StinWeb.Controllers
                 Итого = dataE.Sum(x => x.КолТовара).ToString("0", CultureInfo.InvariantCulture),
                 ИтогоГрузомест = dataE.Sum(x => x.КолГрузоМест).ToString("0", CultureInfo.InvariantCulture),
                 ИтогоСумма = dataE.Sum(x => x.СуммаТовара).ToString("N2", CultureInfo.InvariantCulture),
-                ТаблЧасть = dataE.Select((x,y) => new
+                ТаблЧасть = dataE.Select((x, y) => new
                 {
                     ном = (y + 1).ToString("0", CultureInfo.InvariantCulture),
                     OrderNo = x.OrderNo,
@@ -323,7 +345,7 @@ namespace StinWeb.Controllers
                         boxNos.Add(boxPref + boxCount);
                         boxCosts.Add((item.Цена / boxes).ToString(Common.ФорматЦеныСи, CultureInfo.InvariantCulture));
                     }
-                    return new 
+                    return new
                     {
                         Ном = (y + 1).ToString("0", CultureInfo.InvariantCulture),
                         gr.Key.DeliveryId,
@@ -343,7 +365,7 @@ namespace StinWeb.Controllers
                 ДатаДок = DateTime.Today.ToString("dd.MM.yyyy"),
                 НазваниеФирмы = dataFirma.НазваниеФирмы,
                 Директор,
-                ДокУстава = dataFirma.ИНН.Length == 12 ? "Свидетельства" : "Устава", 
+                ДокУстава = dataFirma.ИНН.Length == 12 ? "Свидетельства" : "Устава",
                 Договор = dataFirma.Договор,
                 ТаблЧасть = dataOrderNum,
                 ИтогоМест = dataOrderNum.Sum(x => x.КолМестNum).ToString("0", CultureInfo.InvariantCulture),
@@ -391,7 +413,7 @@ namespace StinWeb.Controllers
                         HttpMethod.Put,
                         data.clientId,
                         data.token,
-                        request, 
+                        request,
                         cancellationToken);
                     //string context = request.SerializeObject();
                     //var result = await YandexClasses.YandexOperators.YandexExchange(null, string.Format(Startup.sConfiguration["Settings:UrlFirstMileShipments"], campaignId), HttpMethod.Put, data.clientId, data.token, context);
@@ -412,7 +434,7 @@ namespace StinWeb.Controllers
                                 HttpMethod.Get,
                                 data.clientId,
                                 data.token,
-                                null, 
+                                null,
                                 cancellationToken);
                             //await YandexClasses.YandexOperators.YandexExchange(null, string.Format(Startup.sConfiguration["Settings:UrlFirstMileShipmentInfo"], campaignId, shipmentId), HttpMethod.Get, data.clientId, data.token, null);
                             if ((resultInfo.Item1 == YandexClasses.ResponseStatus.ERROR) && !string.IsNullOrEmpty(resultInfo.Item3))
@@ -464,9 +486,7 @@ namespace StinWeb.Controllers
                                         if ((resultDownload.Item1 == YandexClasses.ResponseStatus.ERROR) && !string.IsNullOrEmpty(resultDownload.Item3))
                                             err += resultDownload.Item3;
                                         if ((resultDownload.Item1 == YandexClasses.ResponseStatus.OK) && (resultDownload.Item2 != null))
-                                        {
                                             return File(resultDownload.Item2, "application/pdf");
-                                        }
                                     }
                                 }
                             }
@@ -515,10 +535,10 @@ namespace StinWeb.Controllers
                     if (departureDate.DayOfWeek == DayOfWeek.Sunday)
                         departureDate = departureDate.AddDays(1);
                     var deliveryServiceIds = await (from o in _context.Sc13994s
-                                                   join m in _context.Sc14042s on o.Sp14038 equals m.Id
-                                                   where !o.Ismark && (m.Code.Trim() == campaignId) &&
-                                                         (o.Sp13990.Date == departureDate)
-                                                   select (long)o.Sp13986)
+                                                    join m in _context.Sc14042s on o.Sp14038 equals m.Id
+                                                    where !o.Ismark && (m.Code.Trim() == campaignId) &&
+                                                          (o.Sp13990.Date == departureDate)
+                                                    select (long)o.Sp13986)
                                                    .ToListAsync(cancellationToken);
                     var handoverIds = new List<long>();
                     var usedLogisticsOrderIds = new List<long>();
@@ -574,25 +594,16 @@ namespace StinWeb.Controllers
                     }
                     else
                     {
-                        using var outputStream = new System.IO.MemoryStream();
-                        using PdfSharp.Pdf.PdfDocument output = new PdfSharp.Pdf.PdfDocument(outputStream);
+                        var pdfLibrary = new List<byte[]>();
                         foreach (var handoverId in handoverIds)
                         {
                             var printResult = await AliExpressClasses.Functions.PrintHandoverList(_httpService, data.token, handoverId, cancellationToken);
                             if (!string.IsNullOrEmpty(printResult.error))
                                 return BadRequest(new ExceptionData { Code = -100, Description = printResult.error });
                             if (printResult.pdf != null)
-                            {
-                                using System.IO.Stream stream = new System.IO.MemoryStream(printResult.pdf);
-                                using PdfSharp.Pdf.PdfDocument pdfFile = PdfSharp.Pdf.IO.PdfReader.Open(stream, PdfSharp.Pdf.IO.PdfDocumentOpenMode.Import);
-                                foreach (var pdfPage in pdfFile.Pages)
-                                {
-                                    output.AddPage(pdfPage);
-                                }
-                            }
+                                pdfLibrary.Add(printResult.pdf);
                         }
-                        output.Save(outputStream);
-                        return File(outputStream.ToArray(), "application/pdf");
+                        return File(PdfHelper.PdfFunctions.Instance.MergePdf(pdfLibrary), "application/pdf");
                     }
                 }
                 else if (data.тип == "WILDBERRIES")
@@ -603,10 +614,10 @@ namespace StinWeb.Controllers
                     if (departureDate.DayOfWeek == DayOfWeek.Sunday)
                         departureDate = departureDate.AddDays(1);
                     var deliveryServiceNames = await (from o in _context.Sc13994s
-                                                    join m in _context.Sc14042s on o.Sp14038 equals m.Id
-                                                    where !o.Ismark && (m.Code.Trim() == campaignId) &&
-                                                          (o.Sp13990.Date == departureDate)
-                                                    select o.Sp13987)
+                                                      join m in _context.Sc14042s on o.Sp14038 equals m.Id
+                                                      where !o.Ismark && (m.Code.Trim() == campaignId) &&
+                                                            (o.Sp13990.Date == departureDate)
+                                                      select o.Sp13987)
                                                     .Distinct()
                                                     .ToListAsync(cancellationToken);
                     if (deliveryServiceNames.Count == 0)
@@ -614,42 +625,33 @@ namespace StinWeb.Controllers
                     if (deliveryServiceNames.Count == 1)
                     {
                         string supplyId = deliveryServiceNames.FirstOrDefault();
-                        var pdfBarcodeResult = await WbClasses.Functions.GetSupplyBarcode(_httpService, data.token, supplyId, cancellationToken);
-                        if (!string.IsNullOrEmpty(pdfBarcodeResult.error))
-                            return BadRequest(new ExceptionData { Code = -100, Description = pdfBarcodeResult.error });
+                        var pngBarcodeResult = await WbClasses.Functions.GetSupplyBarcode(_httpService, data.token, supplyId, cancellationToken);
+                        if (!string.IsNullOrEmpty(pngBarcodeResult.error))
+                            return BadRequest(new ExceptionData { Code = -100, Description = pngBarcodeResult.error });
                         var supplyInfo = await WbClasses.Functions.GetSupplyInfo(_httpService, data.token, supplyId, cancellationToken);
                         if (!string.IsNullOrEmpty(supplyInfo.error))
                             return BadRequest(new ExceptionData { Code = -100, Description = supplyInfo.error });
                         if (supplyInfo.supply?.ClosedAt == DateTime.MinValue)
                             await WbClasses.Functions.CloseSupply(_httpService, data.token, supplyId, cancellationToken);
-                        return File(pdfBarcodeResult.png, "image/png");
+                        return File(pngBarcodeResult.png, "image/png");
                     }
                     else
                     {
-                        using var outputStream = new System.IO.MemoryStream();
-                        using PdfSharp.Pdf.PdfDocument output = new PdfSharp.Pdf.PdfDocument(outputStream);
+                        var pngLibrary = new List<byte[]>();
                         foreach (var dsn in deliveryServiceNames)
                         {
-                            var pdfBarcodeResult = await WbClasses.Functions.GetSupplyBarcode(_httpService, data.token, dsn, cancellationToken);
-                            if (!string.IsNullOrEmpty(pdfBarcodeResult.error))
-                                return BadRequest(new ExceptionData { Code = -100, Description = pdfBarcodeResult.error });
+                            var pngBarcodeResult = await WbClasses.Functions.GetSupplyBarcode(_httpService, data.token, dsn, cancellationToken);
+                            if (!string.IsNullOrEmpty(pngBarcodeResult.error))
+                                return BadRequest(new ExceptionData { Code = -100, Description = pngBarcodeResult.error });
                             var supplyInfo = await WbClasses.Functions.GetSupplyInfo(_httpService, data.token, dsn, cancellationToken);
                             if (!string.IsNullOrEmpty(supplyInfo.error))
                                 return BadRequest(new ExceptionData { Code = -100, Description = supplyInfo.error });
                             if (supplyInfo.supply?.ClosedAt == DateTime.MinValue)
                                 await WbClasses.Functions.CloseSupply(_httpService, data.token, dsn, cancellationToken);
-                            if (pdfBarcodeResult.png != null)
-                            {
-                                using System.IO.Stream stream = new System.IO.MemoryStream(pdfBarcodeResult.png);
-                                using PdfSharp.Pdf.PdfDocument pdfFile = PdfSharp.Pdf.IO.PdfReader.Open(stream, PdfSharp.Pdf.IO.PdfDocumentOpenMode.Import);
-                                foreach (var pdfPage in pdfFile.Pages)
-                                {
-                                    output.AddPage(pdfPage);
-                                }
-                            }
+                            if (pngBarcodeResult.png != null)
+                                pngLibrary.Add(pngBarcodeResult.png);
                         }
-                        output.Save(outputStream);
-                        return File(outputStream.ToArray(), "image/png");
+                        return File(PdfHelper.PdfFunctions.Instance.GetPdfFromImage(pngLibrary), "application/pdf");
                     }
                 }
                 else if (data.тип == "SBER")
@@ -768,27 +770,27 @@ namespace StinWeb.Controllers
 
             var dataResult = dataE
             .GroupBy(x => new
-                {
-                    x.Id,
-                    x.Тип,
-                    x.MarketplaceId,
-                    x.MarketplaceType,
-                    x.ShipmentDate,
-                    x.ПредварительнаяЗаявкаНомер,
-                    x.CustomerNotes,
-                    x.Address,
-                    x.Статус,
-                    x.Recipient,
-                    x.Phone,
-                    x.isFBS,
-                    x.ТипДоставки,
-                    x.Сумма,
-                    x.СуммаКОплате,
-                    x.NeedToGetPayment,
-                    x.ИнформацияAPI,
-                    x.Printed,
-                    x.Labels
-                })
+            {
+                x.Id,
+                x.Тип,
+                x.MarketplaceId,
+                x.MarketplaceType,
+                x.ShipmentDate,
+                x.ПредварительнаяЗаявкаНомер,
+                x.CustomerNotes,
+                x.Address,
+                x.Статус,
+                x.Recipient,
+                x.Phone,
+                x.isFBS,
+                x.ТипДоставки,
+                x.Сумма,
+                x.СуммаКОплате,
+                x.NeedToGetPayment,
+                x.ИнформацияAPI,
+                x.Printed,
+                x.Labels
+            })
                 .Select(gr => new MarketplaceOrder
                 {
                     Id = gr.Key.Id,
@@ -816,7 +818,7 @@ namespace StinWeb.Controllers
                              gr.Min(o => o.состояние) == 2 ? "Резерв" :
                              gr.Min(o => o.состояние) == 3 ? "Набор" :
                              gr.Min(o => o.состояние) == 5 ? "Отменен" :
-                             gr.Min(o => o.состояние) == 4 ? "Готов" + 
+                             gr.Min(o => o.состояние) == 4 ? "Готов" +
                                  (gr.Key.Статус == 1 ? "/Груз сформирован" :
                                  (gr.Key.Статус == 2 ? "/Этикетки получены" :
                                  (gr.Key.Статус == 3 ? "/Готов к отгрузке" :
@@ -836,10 +838,24 @@ namespace StinWeb.Controllers
             if (!string.IsNullOrEmpty(id))
                 id = id.Replace('_', ' ');
             var f = await (from b in _context.VzOrderBinaries
-                           where b.Id == id && b.Extension == "LABELS"
+                           where b.Id == id && (b.Extension == "LABELS")
                            select b.Binary).FirstOrDefaultAsync();
-            if (f != null && f.Length > 0)
+            if (f?.Length > 0)
+            {
+                var order = await _order.ПолучитьOrderWithItems(id);
+                if (order?.Тип == "WILDBERRIES")
+                {
+                    var products = await _номенклатура.GetНоменклатураByListIdAsync(order.Items?.Select(x => x.НоменклатураId).ToList());
+                    var stickers = new List<byte[]> { f };
+                    foreach (var product in products)
+                    {
+                        var sticker = PdfHelper.PdfFunctions.Instance.ProductSticker(name: product.Наименование, barcodeText: product.Единица.Barcode, vendor: StinClasses.Common.Encode(product.Code, order.Encode));
+                        stickers.Add(sticker);
+                    }
+                    f = PdfHelper.PdfFunctions.Instance.MergePdf(stickers);
+                }
                 return File(f, "application/pdf");
+            }
             else
             {
                 string webRootPath = _webHostEnvironment.WebRootPath;
@@ -850,30 +866,41 @@ namespace StinWeb.Controllers
             }
         }
         [HttpGet]
-        public IActionResult GetMultiLabelsPdf(string[] ids)
+        public async Task<IActionResult> GetMultiLabelsPdf(string[] ids)
         {
-            var orderIds = ids.Select(x => x.Replace('_',' ')).ToList();
-            var files = from b in _context.VzOrderBinaries
-                        where orderIds.Contains(b.Id) && b.Extension == "LABELS"
-                        orderby b.Id
-                        select b.Binary;
-            using var outputStream = new System.IO.MemoryStream();
-            using PdfSharp.Pdf.PdfDocument output = new PdfSharp.Pdf.PdfDocument(outputStream);
-            foreach (var f in files)
+            var orderIds = ids.Select(x => x.Replace('_', ' ')).ToList();
+            var files = (from b in _context.VzOrderBinaries
+                         where orderIds.Contains(b.Id) && b.Extension == "LABELS"
+                         orderby b.Id
+                         select new { b.Id, b.Binary }).ToList();
+            if (files?.Count > 0)
             {
-                using (System.IO.Stream stream = new System.IO.MemoryStream(f))
+                var stickers = new List<byte[]>();
+                foreach (var file in files)
                 {
-                    using (PdfSharp.Pdf.PdfDocument pdfFile = PdfSharp.Pdf.IO.PdfReader.Open(stream, PdfSharp.Pdf.IO.PdfDocumentOpenMode.Import))
+                    stickers.Add(file.Binary);
+                    var order = await _order.ПолучитьOrderWithItems(file.Id);
+                    if (order?.Тип == "WILDBERRIES")
                     {
-                        foreach (var page in pdfFile.Pages)
+                        var products = await _номенклатура.GetНоменклатураByListIdAsync(order.Items?.Select(x => x.НоменклатураId).ToList());
+                        foreach (var product in products)
                         {
-                            output.AddPage(page);
+                            //var sticker = PdfHelper.PdfFunctions.Instance.Test();
+                            var sticker = PdfHelper.PdfFunctions.Instance.ProductSticker(name: product.Наименование, barcodeText: product.Единица.Barcode, vendor: StinClasses.Common.Encode(product.Code, order.Encode));
+                            stickers.Add(sticker);
                         }
                     }
                 }
+                return File(PdfHelper.PdfFunctions.Instance.MergePdf(stickers), "application/pdf");
             }
-            output.Save(outputStream);
-            return File(outputStream.ToArray(), "application/pdf");
+            else
+            {
+                string webRootPath = _webHostEnvironment.WebRootPath;
+                string contentRootPath = _webHostEnvironment.ContentRootPath;
+
+                string path = System.IO.Path.Combine(webRootPath, "lib", "images", "not-found-image.jpg");
+                return File(System.IO.File.ReadAllBytes(path), "image/png");
+            }
         }
         private async Task<string> SendOrderShippedAsync(string orderId, StinClasses.ReceiverPaymentType receiverPaymentType, string receiverEmail, string receiverPhone)
         {
@@ -995,8 +1022,9 @@ namespace StinWeb.Controllers
         {
             string message = "";
             var printedOrderIds = new List<string>();
-            var data = Enumerable.Repeat(new 
+            var data = Enumerable.Repeat(new
             {
+                Barcode = "",
                 НомерДок = "",
                 ДатаДок = "",
                 Маршрут = "",
@@ -1018,11 +1046,15 @@ namespace StinWeb.Controllers
                     Количество = "",
                     Единица = "",
                     Цена = "",
-                    Сумма = ""
+                    ЦенаСоСкидкой = "",
+                    Сумма = "",
+                    СуммаСоСкидкой = ""
                 }, 0).ToList(),
                 Итого = "",
+                ИтогоСоСкидкой = "",
                 КолСтрок = "",
                 СуммаПрописью = "",
+                СуммаПрописьюСоСкидкой = "",
                 ФирмаНаименование = "",
                 ФирмаАдрес = "",
                 ФирмаИНН = "",
@@ -1033,7 +1065,8 @@ namespace StinWeb.Controllers
                 КлиентАдрес = "",
                 КлиентТелефон = "",
                 ИтКолВо = "",
-                СуммаНДС = ""
+                СуммаНДС = "",
+                СуммаНДСсоСкидкой = ""
             }, 0).ToList();
             foreach (var orderId in ids.Select(x => x.Replace('_', ' ')))
             {
@@ -1045,7 +1078,7 @@ namespace StinWeb.Controllers
                     var наборНаСкладе_Остатки = await _регистрНабор.ПолучитьОстаткиAsync(DateTime.Now, null, false,
                         СписокФирм, формаНабор.Склад.Id, формаНабор.Договор.Id, НоменклатураIds, формаНабор.Общие.IdDoc);
                     var groupedОстатки = наборНаСкладе_Остатки.GroupBy(x => x.НоменклатураId).Select(gr => new { НоменклатураId = gr.Key, Остаток = gr.Sum(s => s.Количество) });
-                    int номСтроки = 0; decimal итого = 0;
+                    int номСтроки = 0; decimal итого = 0; decimal итогоСоСкидкой = 0;
                     var nomQuantums = new Dictionary<string, decimal>();
                     if ((формаНабор.Order?.Модель == "FBY") || (формаНабор.Order?.Модель == "FBS"))
                     {
@@ -1062,7 +1095,9 @@ namespace StinWeb.Controllers
                         Количество = "",
                         Единица = "",
                         Цена = "",
-                        Сумма = ""
+                        ЦенаСоСкидкой = "",
+                        Сумма = "",
+                        СуммаСоСкидкой = ""
                     }, 0).ToList();
                     foreach (var row in формаНабор.ТабличнаяЧасть)
                     {
@@ -1073,8 +1108,14 @@ namespace StinWeb.Controllers
                             if (можноОтпустить > 0)
                             {
                                 номСтроки++;
+                                var orderItems = формаНабор.Order.Items.Where(x => x.НоменклатураId == row.Номенклатура.Id);
+                                var orderCount = orderItems.Sum(x => x.Количество);
+                                var orderPriceDiscount = orderItems.Sum(x => x.ЦенаСоСкидкой) / orderItems.Count();
+                                var ценаСоСкидкой = row.Количество == orderCount ? orderPriceDiscount : (row.Количество * orderPriceDiscount / orderCount);
                                 var сумма = row.Количество == можноОтпустить ? row.Сумма : (row.Количество * row.Цена);
+                                var суммаСоСкидкой = ценаСоСкидкой * row.Количество;
                                 итого = итого + сумма;
+                                итогоСоСкидкой += суммаСоСкидкой;
                                 var quantum = (int)nomQuantums.Where(q => q.Key == row.Номенклатура.Id).Select(q => q.Value).FirstOrDefault();
                                 таблЧасть.Add(new
                                 {
@@ -1087,7 +1128,9 @@ namespace StinWeb.Controllers
                                     Количество = можноОтпустить.ToString("0", CultureInfo.InvariantCulture),
                                     Единица = row.Единица.Наименование,
                                     Цена = row.Цена.ToString("0.00", CultureInfo.InvariantCulture),
-                                    Сумма = сумма.ToString("0.00", CultureInfo.InvariantCulture)
+                                    ЦенаСоСкидкой = ценаСоСкидкой.ToString("0.00", CultureInfo.InvariantCulture),
+                                    Сумма = сумма.ToString("0.00", CultureInfo.InvariantCulture),
+                                    СуммаСоСкидкой = суммаСоСкидкой.ToString("0.00", CultureInfo.InvariantCulture)
                                 });
                                 groupedОстатки = groupedОстатки
                                     .Select(item => new
@@ -1099,8 +1142,10 @@ namespace StinWeb.Controllers
                         }
                     }
                     var суммаПрописью = итого.Прописью();
+                    var barcodeText = формаНабор.Общие.ВидДокумента36.PadLeft(4,'%') + формаНабор.Общие.IdDoc.Replace(' ', '%');
                     data.Add(new
                     {
+                        Barcode = Convert.ToBase64String(PdfHelper.PdfFunctions.Instance.GenerateBarcode128(barcodeText, 45, 400, true)),
                         НомерДок = формаНабор.Общие.НомерДок,
                         ДатаДок = формаНабор.Общие.ДатаДок.ToString("dd.MM.yyyy"),
                         Маршрут = формаНабор.Маршрут?.Наименование ?? "",
@@ -1113,8 +1158,10 @@ namespace StinWeb.Controllers
                         Склад = (формаНабор.Склад?.Наименование ?? "") + "/" + (формаНабор.ПодСклад?.Наименование ?? ""),
                         ТаблЧасть = таблЧасть,
                         Итого = итого.ToString("0.00", CultureInfo.InvariantCulture),
+                        ИтогоСоСкидкой = итогоСоСкидкой.ToString("0.00", CultureInfo.InvariantCulture),
                         КолСтрок = номСтроки.ToString("0", CultureInfo.InvariantCulture),
                         СуммаПрописью = суммаПрописью,
+                        СуммаПрописьюСоСкидкой = итогоСоСкидкой.Прописью(),
                         ФирмаНаименование = формаНабор.Общие.Фирма.ЮрЛицо.Наименование,
                         ФирмаАдрес = формаНабор.Общие.Фирма.ЮрЛицо.Адрес,
                         ФирмаИНН = формаНабор.Общие.Фирма.ЮрЛицо.ИНН,
@@ -1125,7 +1172,8 @@ namespace StinWeb.Controllers
                         КлиентАдрес = формаНабор.Order?.Address?.Street ?? "",
                         КлиентТелефон = формаНабор.Order?.Recipient?.Phone ?? "",
                         ИтКолВо = таблЧасть.Sum(x => x.КолВо).ToString("0", CultureInfo.InvariantCulture),
-                        СуммаНДС = формаНабор.Общие.Фирма.ЮрЛицо.УчитыватьНДС == 1 ? "В том числе НДС " + (итого * 0.166666666666666666666666666667m).ToString("0.00", CultureInfo.InvariantCulture) + " руб." : "Без НДС"
+                        СуммаНДС = формаНабор.Общие.Фирма.ЮрЛицо.УчитыватьНДС == 1 ? "В том числе НДС " + (итого * 0.166666666666666666666666666667m).ToString("0.00", CultureInfo.InvariantCulture) + " руб." : "Без НДС",
+                        СуммаНДСсоСкидкой = формаНабор.Общие.Фирма.ЮрЛицо.УчитыватьНДС == 1 ? "В том числе НДС " + (итогоСоСкидкой * 0.166666666666666666666666666667m).ToString("0.00", CultureInfo.InvariantCulture) + " руб." : "Без НДС"
                     });
                     if (!printedOrderIds.Contains(orderId))
                         printedOrderIds.Add(orderId);
@@ -1250,7 +1298,7 @@ namespace StinWeb.Controllers
 
             return ViewComponent("Order", new
             {
-                orderId 
+                orderId
             });
         }
         [HttpGet]
@@ -1356,8 +1404,8 @@ namespace StinWeb.Controllers
                 var tree = from t in _context.fn_GetTreeById(id.Replace("_", " "), false)
                            join j in _context._1sjourns on t.Iddoc equals j.Iddoc
                            where j.Closed == 1
-                           select new 
-                           { 
+                           select new
+                           {
                                t.Iddoc,
                                t.Parentid,
                                j.Iddocdef
@@ -1395,12 +1443,12 @@ namespace StinWeb.Controllers
                               from docЗаякаОдобр in _docЗаякаОдобр.DefaultIfEmpty()
                               join docНабор in _context.Dh11948s on j.Iddoc equals docНабор.Iddoc into _docНабор
                               from docНабор in _docНабор.DefaultIfEmpty()
-                              //join docРеализация in _context.Dh1611s on j.Iddoc equals docРеализация.Iddoc into _docРеализация
-                              //from docРеализация in _docРеализация.DefaultIfEmpty()
-                              //join docОтчетККМ in _context.Dh3114s on j.Iddoc equals docОтчетККМ.Iddoc into _docОтчетККМ
-                              //from docОтчетККМ in _docОтчетККМ.DefaultIfEmpty()
-                              //join docЧекККМ in _context.Dh3046s on j.Iddoc equals docЧекККМ.Iddoc into _docЧекККМ
-                              //from docЧекККМ in _docЧекККМ.DefaultIfEmpty()
+                                  //join docРеализация in _context.Dh1611s on j.Iddoc equals docРеализация.Iddoc into _docРеализация
+                                  //from docРеализация in _docРеализация.DefaultIfEmpty()
+                                  //join docОтчетККМ in _context.Dh3114s on j.Iddoc equals docОтчетККМ.Iddoc into _docОтчетККМ
+                                  //from docОтчетККМ in _docОтчетККМ.DefaultIfEmpty()
+                                  //join docЧекККМ in _context.Dh3046s on j.Iddoc equals docЧекККМ.Iddoc into _docЧекККМ
+                                  //from docЧекККМ in _docЧекККМ.DefaultIfEmpty()
 
                               select new
                               {
@@ -1427,36 +1475,36 @@ namespace StinWeb.Controllers
                 result = result.Concat(Продажи);
 
                 return Json((from t in result
-                          group t by t.id into gr
-                          select new
-                          {
-                              id = gr.Key,
-                              parent = id,
-                              text = gr.Key == "СчетНаОплату" ? "Счета на оплату" :
-                                   gr.Key == "НеподтвержденныйСчет" ? "Неподтвержденные счета" :
-                                   gr.Key == "ЗаявкаНаСогл" ? "Заявки (на согласование)" :
-                                   gr.Key == "ЗаякаСогл" ? "Заявки (согласованные)" :
-                                   gr.Key == "ЗаякаОдобр" ? "Заяки (одобренные)" :
-                                   gr.Key == "12784" ? "Неудовлетворенный спрос" :
-                                   gr.Key == "11948" ? "Набор" :
-                                   gr.Key == "Продажа" ? "Продажи" :
-                                   "Прочее",
-                              children = false,
-                              icon = "jstree-file",
-                              data = new
-                              {
-                                  priority = gr.Key == "12784" ? 10 :
-                                           gr.Key == "НеподтвержденныйСчет" ? 20 :
-                                           gr.Key == "СчетНаОплату" ? 30 :
-                                           gr.Key == "ЗаявкаНаСогл" ? 40 :
-                                           gr.Key == "ЗаякаСогл" ? 50 :
-                                           gr.Key == "ЗаякаОдобр" ? 60 :
-                                           gr.Key == "11948" ? 100 :
-                                           gr.Key == "Продажа" ? 150 :
-                                           1000,
-                                  сумма = gr.Sum(x => x.сумма),
-                              }
-                          })
+                             group t by t.id into gr
+                             select new
+                             {
+                                 id = gr.Key,
+                                 parent = id,
+                                 text = gr.Key == "СчетНаОплату" ? "Счета на оплату" :
+                                      gr.Key == "НеподтвержденныйСчет" ? "Неподтвержденные счета" :
+                                      gr.Key == "ЗаявкаНаСогл" ? "Заявки (на согласование)" :
+                                      gr.Key == "ЗаякаСогл" ? "Заявки (согласованные)" :
+                                      gr.Key == "ЗаякаОдобр" ? "Заяки (одобренные)" :
+                                      gr.Key == "12784" ? "Неудовлетворенный спрос" :
+                                      gr.Key == "11948" ? "Набор" :
+                                      gr.Key == "Продажа" ? "Продажи" :
+                                      "Прочее",
+                                 children = false,
+                                 icon = "jstree-file",
+                                 data = new
+                                 {
+                                     priority = gr.Key == "12784" ? 10 :
+                                              gr.Key == "НеподтвержденныйСчет" ? 20 :
+                                              gr.Key == "СчетНаОплату" ? 30 :
+                                              gr.Key == "ЗаявкаНаСогл" ? 40 :
+                                              gr.Key == "ЗаякаСогл" ? 50 :
+                                              gr.Key == "ЗаякаОдобр" ? 60 :
+                                              gr.Key == "11948" ? 100 :
+                                              gr.Key == "Продажа" ? 150 :
+                                              1000,
+                                     сумма = gr.Sum(x => x.сумма),
+                                 }
+                             })
                           .OrderBy(x => x.data.priority));
             }
             else
@@ -1468,9 +1516,9 @@ namespace StinWeb.Controllers
                 string j_startDateTime = startDate.JournalDateTime();
                 string j_endDateTime = endDate.JournalDateTime();
 
-                var ПредварительнаяЗаявка = (from doc in _context.Dh12747s 
+                var ПредварительнаяЗаявка = (from doc in _context.Dh12747s
                                              join j in _context._1sjourns on doc.Iddoc equals j.Iddoc
-                                             join docSpros in _context.Dh12784s on doc.Iddoc equals docSpros.Sp12748.Substring(4,9) into _docSpros
+                                             join docSpros in _context.Dh12784s on doc.Iddoc equals docSpros.Sp12748.Substring(4, 9) into _docSpros
                                              from docSpros in _docSpros.DefaultIfEmpty()
                                              where j.Iddocdef == 12747 &&
                                               j.DateTimeIddoc.CompareTo(j_startDateTime) >= 0 &&
@@ -1480,7 +1528,7 @@ namespace StinWeb.Controllers
                                              {
                                                  id = j.Iddoc.Replace(' ', '_'),
                                                  parent = "#",
-                                                 text = "Предварительная заявка №" + j.Docno + " от " + 
+                                                 text = "Предварительная заявка №" + j.Docno + " от " +
                                                     j.DateTimeIddoc.Substring(6, 2) + "." +
                                                     j.DateTimeIddoc.Substring(4, 2) + "." +
                                                     j.DateTimeIddoc.Substring(0, 4) + ".",
@@ -1586,7 +1634,7 @@ namespace StinWeb.Controllers
                             Sp12740 = item.Цена,
                             Sp12741 = item.Сумма,
                             Sp12742 = ставкаНДС.Id,
-                            Sp12743 = item.Сумма * (ставкаНДС.Процент/(100 + ставкаНДС.Процент)),
+                            Sp12743 = item.Сумма * (ставкаНДС.Процент / (100 + ставкаНДС.Процент)),
                             Sp12744 = Common.ПустоеЗначение,
                             Sp12745 = 0,
                             Sp13041 = 0
@@ -1621,7 +1669,7 @@ namespace StinWeb.Controllers
             }
             return message;
         }
-        public async Task<string> СоздатьДокументСчет(ИнтернетЗаказ doc, Dictionary<string,List<ДанныеТабличнойЧасти>> переченьНаличия, List<string> СписокФирм, List<string> СписокСкладов)
+        public async Task<string> СоздатьДокументСчет(ИнтернетЗаказ doc, Dictionary<string, List<ДанныеТабличнойЧасти>> переченьНаличия, List<string> СписокФирм, List<string> СписокСкладов)
         {
             string message = "";
             DateTime dateReg = Common.GetRegTA(_context);
@@ -1731,7 +1779,7 @@ namespace StinWeb.Controllers
                                     new SqlParameter("@Количество", МожноЗарезервировать),
                                     new SqlParameter("@docDate", docDate.ToShortDateString()),
                                     new SqlParameter("@CurPeriod", dateReg.ToShortDateString()));
-                                
+
                                 КоличествоДвижений++;
                                 //Заявки
                                 j.Rf4674 = true;
@@ -1970,8 +2018,8 @@ namespace StinWeb.Controllers
             int КоличествоДвижений = 0;
             bool Приход = true;
             IEnumerable<ТаблицаСвободныхОстатков> ТзОстатки = _номенклатураRepository.ПодготовитьОстатки(
-                dateReg, 
-                new List<string>() { ФирмаАлко.Id }, 
+                dateReg,
+                new List<string>() { ФирмаАлко.Id },
                 new List<string>() { doc.Склад.Id },
                 ТаблицаДилерскойЗаявки.Select(x => x.Id).ToList())
                 .AsEnumerable();
@@ -2355,8 +2403,9 @@ namespace StinWeb.Controllers
         }
         public IActionResult CallChangeCost(string TovarId, string текущееЗначение, string договорId, string типЦен, string картаId, bool доставка, int типДоставки)
         {
-            return ViewComponent("ИзменениеЦены", new { 
-                номенклатураId = TovarId, 
+            return ViewComponent("ИзменениеЦены", new
+            {
+                номенклатураId = TovarId,
                 текущееЗначение = текущееЗначение,
                 договорId = договорId,
                 типЦен = типЦен,
@@ -2395,7 +2444,7 @@ namespace StinWeb.Controllers
                 {
                     item.Цена = (await gg.FirstOrDefaultAsync(x => x.Id == item.Id)).Цена.Клиента;
                     HttpContext.Session.AddOrUpdateObjectAsJson(key, item, false);
-                }    
+                }
             }
             return Ok();
         }
@@ -2442,16 +2491,6 @@ namespace StinWeb.Controllers
             if (результат == null)
                 результат = new Долги();
             return PartialView("_IndexИнфоДолги", результат);
-        }
-        protected override void Dispose(bool disposing)
-        {
-            _userRepository.Dispose();
-            _фирмаRepository.Dispose();
-            _складRepository.Dispose();
-            _контрагентRepository.Dispose();
-            _номенклатураRepository.Dispose();
-            _context.Dispose();
-            base.Dispose(disposing);
         }
     }
 }

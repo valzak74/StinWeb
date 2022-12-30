@@ -25,6 +25,7 @@ namespace SberClasses
         public Meta? Meta { get; set; }
         public int Success { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        [JsonConverter(typeof(SingleObjectOrArrayJsonConverter<SberError>))]
         public List<SberError>? Error { get; set; }
         public SberResponse() 
         {

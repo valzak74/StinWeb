@@ -412,6 +412,28 @@ namespace AliExpressClasses
                     trackNumber: singleOrder?.Logistic_orders?.Select(x => x.Track_number).FirstOrDefault(), 
                     error: string.IsNullOrEmpty(err) ? string.Empty : "AliCreateLogisticsOrder : " + err);
         }
+        public static async Task<(Dictionary<long,string>? logisticsOrderTrackingNumbers, string error)> GetLogisticsOrders(IHttpService httpService, string proxyHost, string authToken,
+            List<long> logisticsOrderIds,
+            CancellationToken cancellationToken)
+        {
+            var request = new LogisticsOrderListRequest(100, logisticsOrderIds);
+            var result = await httpService.Exchange<LogisticsOrderListResponse, string>(
+                $"https://{proxyHost}openapi.aliexpress.ru/seller-api/v1/logistic-order/get",
+                HttpMethod.Post,
+                GetCustomHeaders(authToken),
+                request,
+                cancellationToken);
+            string err = "";
+            if (!string.IsNullOrEmpty(result.Item2))
+            {
+                err += result.Item2;
+            }
+            if (result.Item1?.Error != null)
+                err = err.ParseError(result.Item1.Error);
+
+            return (logisticsOrderTrackingNumbers: result.Item1?.Data?.Logistic_orders?.ToDictionary(k => k.Logistic_order_id, v => v.Platform_tracking_code ?? ""),
+                    error: string.IsNullOrEmpty(err) ? string.Empty : "AliGetLogisticsOrders : " + err);
+        }
         public static async Task<(GetHandoverListResponse? response, string error)> GetHandoverList(IHttpService httpService, string authToken,
             int currentPage, int limit,
             List<long> logisticsOrderIds,
@@ -434,14 +456,14 @@ namespace AliExpressClasses
                 err = err.ParseError(result.Item1.Error);
             return (response: result.Item1, error: string.IsNullOrEmpty(err) ? string.Empty : "AliGetHandoverList : " + err);
         }
-        public static async Task<(byte[]? pdf, string error)> GetLabels(IHttpService httpService, string authToken,
+        public static async Task<(byte[]? pdf, string error)> GetLabels(IHttpService httpService, string proxyHost, string authToken,
             List<long> logisticsOrderIds,
             CancellationToken cancellationToken)
         {
             var request = new GetLabelUrlRequest();
             request.Logistic_order_ids = logisticsOrderIds;
             var resultUrl = await httpService.Exchange<GetLabelUrlResponse, string>(
-                "https://openapi.aliexpress.ru/seller-api/v1/labels/orders/get",
+                $"https://{proxyHost}openapi.aliexpress.ru/seller-api/v1/labels/orders/get",
                 HttpMethod.Post,
                 GetCustomHeaders(authToken),
                 request,

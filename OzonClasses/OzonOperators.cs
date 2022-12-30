@@ -399,14 +399,14 @@ namespace OzonClasses
             }
             return (updatedOfferIds: uploadIds, tooManyRequests: tooManyIds, errorOfferIds: errorIds, errorMessage: err);
         }
-        public static async Task<Tuple<byte[]?,string?>> GetLabels(IHttpService httpService, string clientId, string authToken,
+        public static async Task<Tuple<byte[]?,string?>> GetLabels(IHttpService httpService, string proxyHost, string clientId, string authToken,
             List<string> postingNumbers,
             CancellationToken cancellationToken)
         {
             var request = new PackageLabelRequest();
             request.Posting_number = postingNumbers;
             var result = await httpService.Exchange<byte[], ErrorResponse>(
-                "https://api-seller.ozon.ru/v2/posting/fbs/package-label",
+                $"https://{proxyHost}api-seller.ozon.ru/v2/posting/fbs/package-label",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,

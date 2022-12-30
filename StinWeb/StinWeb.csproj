@@ -40,7 +40,6 @@
     <PackageReference Include="NonFactors.Grid.Core.Mvc6" Version="6.2.2" />
     <PackageReference Include="NonFactors.Lookup.Core.Mvc6" Version="5.1.2" />
     <PackageReference Include="NPOI" Version="2.5.1" />
-    <PackageReference Include="PDFsharp-MigraDoc" Version="1.50.5147" />
     <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />
   </ItemGroup>
 
@@ -57,6 +56,7 @@
     <ProjectReference Include="..\ExcelExtensions\ExcelHelper.csproj" />
     <ProjectReference Include="..\HttpExtensions\HttpExtensions.csproj" />
     <ProjectReference Include="..\OzonClasses\OzonClasses.csproj" />
+    <ProjectReference Include="..\PdfHelper\PdfHelper.csproj" />
     <ProjectReference Include="..\StinClasses\StinClasses.csproj" />
     <ProjectReference Include="..\WbClasses\WbClasses.csproj" />
     <ProjectReference Include="..\YandexClasses\YandexClasses.csproj" />

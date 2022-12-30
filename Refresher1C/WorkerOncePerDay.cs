@@ -75,10 +75,6 @@ namespace Refresher1C
                     pickupExpired,
                     tariffs
                     );
-                //using IMarketplaceService MarketplaceScope = _scopeFactory.CreateScope()
-                //       .ServiceProvider.GetService<IMarketplaceService>();
-                //await MarketplaceScope.CheckPickupExpired(stoppingToken);
-                //await MarketplaceScope.UpdateTariffs(stoppingToken);
             }
             catch
             {

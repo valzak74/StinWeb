@@ -29,10 +29,10 @@ namespace WbClasses
             StringBuilder sb = new StringBuilder();
             if (!string.IsNullOrEmpty(commonError))
                 sb.Append("common: " + commonError);
-            if (!string.IsNullOrEmpty(response.ErrorText))
-                sb.Append("errorText:" + response.ErrorText);
-            if (response.AdditionalErrors != null)
-                sb.Append("additionalError: " + JsonConvert.SerializeObject(response.AdditionalErrors));
+            if (!string.IsNullOrEmpty(response.Code))
+                sb.Append("code:" + response.Code);
+            if (!string.IsNullOrEmpty(response.Message))
+                sb.Append("message:" + response.Message);
             return sb.ToString();
         }
         public static Dictionary<string, string> GetCustomHeaders(string authToken)
@@ -122,34 +122,46 @@ namespace WbClasses
                 err = result.Item2;
             return (data: result.Item1, error: string.IsNullOrEmpty(err) ? "" : "WbGetOrders: " + err);
         }
-        public static async Task<(bool success, string error)> ChangeOrderStatus(IHttpService httpService, string authToken,
-            string orderId,
-            WbStatus newStatus,
+        public static async Task<(Dictionary<long, WbStatus>? orders, string error)> GetOrderStatuses(IHttpService httpService, string authToken,
+            List<long> orderIds,
             CancellationToken cancellationToken)
         {
-            var request = new ChangeOrderStatusRequest();
-            request.OrderId = orderId;
-            request.Status = newStatus;
-            var result = await httpService.Exchange<bool, ChangeOrderStatusErrorResponse>(
-                "https://suppliers-api.wildberries.ru/api/v2/orders",
-                HttpMethod.Put,
+            var request = new StickerRequest(orderIds);
+            var result = await httpService.Exchange<OrderStatusResponse, WbErrorResponse>(
+                "https://suppliers-api.wildberries.ru/api/v3/orders/status",
+                HttpMethod.Post,
                 GetCustomHeaders(authToken),
                 request,
                 cancellationToken);
             string err = "";
             if (result.Item2 != null)
                 err = result.Item2.LogWbErrors("");
-            return (success: result.Item1, error: string.IsNullOrEmpty(err) ? "" : "WbChangeOrderStatus: " + err);
+            return (orders: result.Item1?.Orders?.ToDictionary(k => k.Id, v => v.WbStatus), error: string.IsNullOrEmpty(err) ? "" : "WbGetOrderStatuses: " + err);
+        }
+        public static async Task<(bool success, string error)> CancelOrder(IHttpService httpService, string authToken,
+            string orderId,
+            CancellationToken cancellationToken)
+        {
+            var result = await httpService.Exchange<bool, WbErrorResponse>(
+                $"https://suppliers-api.wildberries.ru/api/v3/orders/{orderId}/cancel",
+                HttpMethod.Patch,
+                GetCustomHeaders(authToken),
+                null,
+                cancellationToken);
+            string err = "";
+            if (result.Item2 != null)
+                err = result.Item2.LogWbErrors("");
+            return (success: result.Item1, error: string.IsNullOrEmpty(err) ? "" : "WbCancelOrder: " + err);
 
         }
-        public static async Task<(byte[]? png, string error)> GetLabel(IHttpService httpService, string authToken, List<long> orders, CancellationToken cancellationToken)
+        public static async Task<(byte[]? png, string error)> GetLabel(IHttpService httpService, string proxyHost, string authToken, List<long> orders, CancellationToken cancellationToken)
         {
             var headers = GetCustomHeaders(authToken);
             headers.Add(queryKey + "type", Enum.GetName(WbSupplyBarcodeType.png) ?? "");
             headers.Add(queryKey + "width", "58");
             headers.Add(queryKey + "height", "40");
             var result = await httpService.Exchange<StickerResponse, WbErrorResponse>(
-                "https://suppliers-api.wildberries.ru/api/v3/orders/stickers",
+                $"https://{proxyHost}suppliers-api.wildberries.ru/api/v3/orders/stickers",
                 HttpMethod.Post,
                 headers,
                 new StickerRequest(orders),
@@ -179,7 +191,7 @@ namespace WbClasses
                 err = result.Item2.LogWbErrors("");
             return (png: result.Item1?.Data, error: string.IsNullOrEmpty(err) ? "" : "WbGetSupplyBarcode: " + err);
         }
-        public static async Task<(List<string> supplyIds, string error)> GetSuppliesList(IHttpService httpService, string authToken, CancellationToken cancellationToken)
+        public static async Task<(List<string> supplyIds, string error)> GetSuppliesList(IHttpService httpService, string proxyHost, string authToken, CancellationToken cancellationToken)
         {
             List<string> data = new List<string>();
             int limit = 1000;
@@ -195,7 +207,7 @@ namespace WbClasses
             {
                 nextPage = false;
                 var result = await httpService.Exchange<SuppliesList, WbErrorResponse>(
-                    "https://suppliers-api.wildberries.ru/api/v3/supplies",
+                    $"https://{proxyHost}suppliers-api.wildberries.ru/api/v3/supplies",
                     HttpMethod.Get,
                     headers,
                     null,
@@ -214,10 +226,10 @@ namespace WbClasses
             }
             return (supplyIds: data, error: string.IsNullOrEmpty(err) ? "" : "WbGetSuppliesList: " + err);
         }
-        public static async Task<(List<Order>? orders, string error)> GetSupplyOrders(IHttpService httpService, string authToken, string supplyId, CancellationToken cancellationToken)
+        public static async Task<(List<Order>? orders, string error)> GetSupplyOrders(IHttpService httpService, string proxyHost, string authToken, string supplyId, CancellationToken cancellationToken)
         {
             var result = await httpService.Exchange<OrderList, WbErrorResponse>(
-                $"https://suppliers-api.wildberries.ru/api/v3/supplies/{supplyId}/orders",
+                $"https://{proxyHost}suppliers-api.wildberries.ru/api/v3/supplies/{supplyId}/orders",
                 HttpMethod.Get,
                 GetCustomHeaders(authToken),
                 null,
@@ -227,10 +239,10 @@ namespace WbClasses
                 err = result.Item2.LogWbErrors("");
             return (orders: result.Item1?.Orders, error: string.IsNullOrEmpty(err) ? "" : "WbGetSupplyOrders: " + err);
         }
-        public static async Task<(string? supplyId, string error)> CreateSupply(IHttpService httpService, string authToken, CancellationToken cancellationToken)
+        public static async Task<(string? supplyId, string error)> CreateSupply(IHttpService httpService, string proxyHost, string authToken, CancellationToken cancellationToken)
         {
             var result = await httpService.Exchange<Supply, WbErrorResponse>(
-                "https://suppliers-api.wildberries.ru/api/v3/supplies",
+                $"https://{proxyHost}suppliers-api.wildberries.ru/api/v3/supplies",
                 HttpMethod.Post,
                 GetCustomHeaders(authToken),
                 new SupplyName { Name = DateTime.Today.ToString("ddMMyyyymmss") },
@@ -240,12 +252,12 @@ namespace WbClasses
                 err = result.Item2.LogWbErrors("");
             return (supplyId: result.Item1?.Id, error: string.IsNullOrEmpty(err) ? "" : "WbCreateSupply: " + err);
         }
-        public static async Task<(bool success, string error)> AddToSupply(IHttpService httpService, string authToken, 
+        public static async Task<(bool success, string error)> AddToSupply(IHttpService httpService, string proxyHost, string authToken, 
             string supplyId, string orderId,
             CancellationToken cancellationToken)
         {
             var result = await httpService.Exchange<bool, WbErrorResponse>(
-                $"https://suppliers-api.wildberries.ru/api/v3/supplies/{supplyId}/orders/{orderId}",
+                $"https://{proxyHost}suppliers-api.wildberries.ru/api/v3/supplies/{supplyId}/orders/{orderId}",
                 HttpMethod.Patch,
                 GetCustomHeaders(authToken),
                 null,

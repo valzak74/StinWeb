@@ -2,6 +2,19 @@
   "version": 3,
   "targets": {
     "net6.0": {
+      "BarcodeLib/2.4.0": {
+        "type": "package",
+        "dependencies": {
+          "System.Drawing.Common": "5.0.2",
+          "System.Text.Json": "5.0.2"
+        },
+        "compile": {
+          "lib/netstandard2.0/BarcodeStandard.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/BarcodeStandard.dll": {}
+        }
+      },
       "bootstrap/3.0.0": {
         "type": "package",
         "dependencies": {
@@ -2262,7 +2275,7 @@
           }
         }
       },
-      "Microsoft.NETCore.Platforms/3.1.0": {
+      "Microsoft.NETCore.Platforms/5.0.0": {
         "type": "package",
         "compile": {
           "lib/netstandard1.0/_._": {}
@@ -2476,10 +2489,10 @@
           }
         }
       },
-      "Microsoft.Win32.SystemEvents/4.7.0": {
+      "Microsoft.Win32.SystemEvents/5.0.0": {
         "type": "package",
         "dependencies": {
-          "Microsoft.NETCore.Platforms": "3.1.0"
+          "Microsoft.NETCore.Platforms": "5.0.0"
         },
         "compile": {
           "ref/netstandard2.0/_._": {
@@ -2496,6 +2509,36 @@
             "assetType": "runtime",
             "rid": "win"
           }
+        }
+      },
+      "MigraDocCore.DocumentObjectModel/1.3.43": {
+        "type": "package",
+        "dependencies": {
+          "PdfSharpCore": "1.3.43",
+          "System.Collections.NonGeneric": "4.3.0",
+          "System.Reflection.TypeExtensions": "4.7.0"
+        },
+        "compile": {
+          "lib/net6.0/MigraDocCore.DocumentObjectModel.dll": {}
+        },
+        "runtime": {
+          "lib/net6.0/MigraDocCore.DocumentObjectModel.dll": {}
+        }
+      },
+      "MigraDocCore.Rendering/1.3.43": {
+        "type": "package",
+        "dependencies": {
+          "MigraDocCore.DocumentObjectModel": "1.3.43",
+          "PdfSharpCore": "1.3.43",
+          "PdfSharpCore.Charting": "1.3.43",
+          "System.Diagnostics.Debug": "4.3.0",
+          "System.Diagnostics.Tracing": "4.3.0"
+        },
+        "compile": {
+          "lib/net6.0/MigraDocCore.Rendering.dll": {}
+        },
+        "runtime": {
+          "lib/net6.0/MigraDocCore.Rendering.dll": {}
         }
       },
       "NETStandard.Library/1.6.1": {
@@ -2770,58 +2813,36 @@
           }
         }
       },
-      "PDFsharp-MigraDoc/1.50.5147": {
+      "PdfSharpCore/1.3.43": {
         "type": "package",
+        "dependencies": {
+          "SharpZipLib": "1.3.3",
+          "SixLabors.Fonts": "1.0.0-beta17",
+          "SixLabors.ImageSharp": "1.0.4"
+        },
         "compile": {
-          "lib/net20/MigraDoc.DocumentObjectModel.dll": {
-            "related": ".xml"
-          },
-          "lib/net20/MigraDoc.Rendering.dll": {
-            "related": ".xml"
-          },
-          "lib/net20/MigraDoc.RtfRendering.dll": {
-            "related": ".xml"
-          },
-          "lib/net20/PdfSharp.Charting.dll": {
-            "related": ".xml"
-          },
-          "lib/net20/PdfSharp.dll": {
-            "related": ".Charting.xml;.xml"
-          }
+          "lib/net6.0/PdfSharpCore.dll": {}
         },
         "runtime": {
-          "lib/net20/MigraDoc.DocumentObjectModel.dll": {
-            "related": ".xml"
-          },
-          "lib/net20/MigraDoc.Rendering.dll": {
-            "related": ".xml"
-          },
-          "lib/net20/MigraDoc.RtfRendering.dll": {
-            "related": ".xml"
-          },
-          "lib/net20/PdfSharp.Charting.dll": {
-            "related": ".xml"
-          },
-          "lib/net20/PdfSharp.dll": {
-            "related": ".Charting.xml;.xml"
-          }
+          "lib/net6.0/PdfSharpCore.dll": {}
         },
         "resource": {
-          "lib/net20/de/MigraDoc.DocumentObjectModel.resources.dll": {
-            "locale": "de"
-          },
-          "lib/net20/de/MigraDoc.Rendering.resources.dll": {
-            "locale": "de"
-          },
-          "lib/net20/de/MigraDoc.RtfRendering.resources.dll": {
-            "locale": "de"
-          },
-          "lib/net20/de/PdfSharp.Charting.resources.dll": {
-            "locale": "de"
-          },
-          "lib/net20/de/PdfSharp.resources.dll": {
+          "lib/net6.0/de/PdfSharpCore.resources.dll": {
             "locale": "de"
           }
+        }
+      },
+      "PdfSharpCore.Charting/1.3.43": {
+        "type": "package",
+        "dependencies": {
+          "PdfSharpCore": "1.3.43",
+          "System.Collections.NonGeneric": "4.3.0"
+        },
+        "compile": {
+          "lib/net6.0/PdfSharpCore.Charting.dll": {}
+        },
+        "runtime": {
+          "lib/net6.0/PdfSharpCore.Charting.dll": {}
         }
       },
       "Polly/7.2.2": {
@@ -3037,16 +3058,42 @@
           }
         }
       },
-      "SharpZipLib/1.2.0": {
+      "SharpZipLib/1.3.3": {
         "type": "package",
         "compile": {
-          "lib/netstandard2.0/ICSharpCode.SharpZipLib.dll": {
+          "lib/netstandard2.1/ICSharpCode.SharpZipLib.dll": {
             "related": ".pdb;.xml"
           }
         },
         "runtime": {
-          "lib/netstandard2.0/ICSharpCode.SharpZipLib.dll": {
+          "lib/netstandard2.1/ICSharpCode.SharpZipLib.dll": {
             "related": ".pdb;.xml"
+          }
+        }
+      },
+      "SixLabors.Fonts/1.0.0-beta17": {
+        "type": "package",
+        "compile": {
+          "lib/netcoreapp3.1/SixLabors.Fonts.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netcoreapp3.1/SixLabors.Fonts.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "SixLabors.ImageSharp/1.0.4": {
+        "type": "package",
+        "compile": {
+          "lib/netcoreapp3.1/SixLabors.ImageSharp.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netcoreapp3.1/SixLabors.ImageSharp.dll": {
+            "related": ".xml"
           }
         }
       },
@@ -3576,11 +3623,10 @@
           }
         }
       },
-      "System.Drawing.Common/4.7.0": {
+      "System.Drawing.Common/5.0.2": {
         "type": "package",
         "dependencies": {
-          "Microsoft.NETCore.Platforms": "3.1.0",
-          "Microsoft.Win32.SystemEvents": "4.7.0"
+          "Microsoft.Win32.SystemEvents": "5.0.0"
         },
         "compile": {
           "ref/netcoreapp3.0/System.Drawing.Common.dll": {
@@ -3588,7 +3634,9 @@
           }
         },
         "runtime": {
-          "lib/netstandard2.0/System.Drawing.Common.dll": {}
+          "lib/netcoreapp3.0/System.Drawing.Common.dll": {
+            "related": ".xml"
+          }
         },
         "runtimeTargets": {
           "runtimes/unix/lib/netcoreapp3.0/System.Drawing.Common.dll": {
@@ -4121,19 +4169,13 @@
           }
         }
       },
-      "System.Reflection.TypeExtensions/4.3.0": {
+      "System.Reflection.TypeExtensions/4.7.0": {
         "type": "package",
-        "dependencies": {
-          "System.Reflection": "4.3.0",
-          "System.Runtime": "4.3.0"
-        },
         "compile": {
-          "ref/netstandard1.5/System.Reflection.TypeExtensions.dll": {
-            "related": ".xml"
-          }
+          "ref/netcoreapp2.0/_._": {}
         },
         "runtime": {
-          "lib/netstandard1.5/System.Reflection.TypeExtensions.dll": {}
+          "lib/netcoreapp2.0/_._": {}
         }
       },
       "System.Resources.ResourceManager/4.3.0": {
@@ -5011,6 +5053,22 @@
           "bin/placeholder/OzonClasses.dll": {}
         }
       },
+      "PdfHelper/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v6.0",
+        "dependencies": {
+          "BarcodeLib": "2.4.0",
+          "MigraDocCore.DocumentObjectModel": "1.3.43",
+          "MigraDocCore.Rendering": "1.3.43",
+          "PdfSharpCore": "1.3.43"
+        },
+        "compile": {
+          "bin/placeholder/PdfHelper.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/PdfHelper.dll": {}
+        }
+      },
       "StinClasses/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v6.0",
@@ -5060,6 +5118,20 @@
     }
   },
   "libraries": {
+    "BarcodeLib/2.4.0": {
+      "sha512": "SXMILkQm3jpngFmSa6AafsaJNid8UWCZh1v4w2oWxBzXnuVaL/S7H+nMxslWbPOPz1AVaLenRbFgy3OtX9J4dQ==",
+      "type": "package",
+      "path": "barcodelib/2.4.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "barcodelib.2.4.0.nupkg.sha512",
+        "barcodelib.nuspec",
+        "lib/netstandard2.0/BarcodeStandard.dll",
+        "upca.jpg"
+      ]
+    },
     "bootstrap/3.0.0": {
       "sha512": "d1JUd1ZjfbhGGTxjBSjCLIV+O//hZDcvI0hnaeTL3VHAD+6Z89vgPwV0K/nmPM4hZKq172iPV55lCSpohT6WmA==",
       "type": "package",
@@ -7399,17 +7471,18 @@
         "notices/THIRDPARTYNOTICES.txt"
       ]
     },
-    "Microsoft.NETCore.Platforms/3.1.0": {
-      "sha512": "z7aeg8oHln2CuNulfhiLYxCVMPEwBl3rzicjvIX+4sUuCwvXw5oXQEtbiU2c0z4qYL5L3Kmx0mMA/+t/SbY67w==",
+    "Microsoft.NETCore.Platforms/5.0.0": {
+      "sha512": "VyPlqzH2wavqquTcYpkIIAQ6WdenuKoFN0BdYBbCWsclXacSOHNQn66Gt4z5NBqEYW0FAPm5rlvki9ZiCij5xQ==",
       "type": "package",
-      "path": "microsoft.netcore.platforms/3.1.0",
+      "path": "microsoft.netcore.platforms/5.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
+        "Icon.png",
         "LICENSE.TXT",
         "THIRD-PARTY-NOTICES.TXT",
         "lib/netstandard1.0/_._",
-        "microsoft.netcore.platforms.3.1.0.nupkg.sha512",
+        "microsoft.netcore.platforms.5.0.0.nupkg.sha512",
         "microsoft.netcore.platforms.nuspec",
         "runtime.json",
         "useSharedDesignerContext.txt",
@@ -8086,25 +8159,24 @@
         "version.txt"
       ]
     },
-    "Microsoft.Win32.SystemEvents/4.7.0": {
-      "sha512": "mtVirZr++rq+XCDITMUdnETD59XoeMxSpLRIII7JRI6Yj0LEDiO1pPn0ktlnIj12Ix8bfvQqQDMMIF9wC98oCA==",
+    "Microsoft.Win32.SystemEvents/5.0.0": {
+      "sha512": "Bh6blKG8VAKvXiLe2L+sEsn62nc1Ij34MrNxepD2OCrS5cpCwQa9MeLyhVQPQ/R4Wlzwuy6wMK8hLb11QPDRsQ==",
       "type": "package",
-      "path": "microsoft.win32.systemevents/4.7.0",
+      "path": "microsoft.win32.systemevents/5.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
+        "Icon.png",
         "LICENSE.TXT",
         "THIRD-PARTY-NOTICES.TXT",
         "lib/net461/Microsoft.Win32.SystemEvents.dll",
         "lib/net461/Microsoft.Win32.SystemEvents.xml",
         "lib/netstandard2.0/Microsoft.Win32.SystemEvents.dll",
         "lib/netstandard2.0/Microsoft.Win32.SystemEvents.xml",
-        "microsoft.win32.systemevents.4.7.0.nupkg.sha512",
+        "microsoft.win32.systemevents.5.0.0.nupkg.sha512",
         "microsoft.win32.systemevents.nuspec",
         "ref/net461/Microsoft.Win32.SystemEvents.dll",
         "ref/net461/Microsoft.Win32.SystemEvents.xml",
-        "ref/net472/Microsoft.Win32.SystemEvents.dll",
-        "ref/net472/Microsoft.Win32.SystemEvents.xml",
         "ref/netstandard2.0/Microsoft.Win32.SystemEvents.dll",
         "ref/netstandard2.0/Microsoft.Win32.SystemEvents.xml",
         "runtimes/win/lib/netcoreapp2.0/Microsoft.Win32.SystemEvents.dll",
@@ -8113,6 +8185,38 @@
         "runtimes/win/lib/netcoreapp3.0/Microsoft.Win32.SystemEvents.xml",
         "useSharedDesignerContext.txt",
         "version.txt"
+      ]
+    },
+    "MigraDocCore.DocumentObjectModel/1.3.43": {
+      "sha512": "T1JCqJoViEsviPsTC+ZD6vvLRnt2jdpu6AYLG8tCHHiTuBNC/zXua9JAUSEFNzO8VrKabudIgdM/+W/48V1s/w==",
+      "type": "package",
+      "path": "migradoccore.documentobjectmodel/1.3.43",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.md",
+        "lib/net5.0/MigraDocCore.DocumentObjectModel.dll",
+        "lib/net6.0/MigraDocCore.DocumentObjectModel.dll",
+        "lib/netcoreapp3.1/MigraDocCore.DocumentObjectModel.dll",
+        "lib/netstandard2.0/MigraDocCore.DocumentObjectModel.dll",
+        "migradoccore.documentobjectmodel.1.3.43.nupkg.sha512",
+        "migradoccore.documentobjectmodel.nuspec"
+      ]
+    },
+    "MigraDocCore.Rendering/1.3.43": {
+      "sha512": "nKYe9eU68raOPJ0P9oqZHnIYtXcIJumS7fOcCS2AFtQC3HZ+DxAxuhJ85bKr+zXZAum587LRGJkCo7Cd2xcing==",
+      "type": "package",
+      "path": "migradoccore.rendering/1.3.43",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.md",
+        "lib/net5.0/MigraDocCore.Rendering.dll",
+        "lib/net6.0/MigraDocCore.Rendering.dll",
+        "lib/netcoreapp3.1/MigraDocCore.Rendering.dll",
+        "lib/netstandard2.0/MigraDocCore.Rendering.dll",
+        "migradoccore.rendering.1.3.43.nupkg.sha512",
+        "migradoccore.rendering.nuspec"
       ]
     },
     "NETStandard.Library/1.6.1": {
@@ -8383,30 +8487,40 @@
         "nuget.versioning.nuspec"
       ]
     },
-    "PDFsharp-MigraDoc/1.50.5147": {
-      "sha512": "YMtUVAQF281GuSrQwfs4x86S6ZaWuIYdjGoRRLZWCPG45keasqSpSGtUKIQN0zRSFT9jjvScVRfAJpfRV5L8DA==",
+    "PdfSharpCore/1.3.43": {
+      "sha512": "ADyhiAhn/baBiQqi8IDu2UBDZjPR/N9WNSho/6vMkrQviSGfAK+6X1JVk/Lpe1iH8MEYvFYDuFi/tr5GVLc87Q==",
       "type": "package",
-      "path": "pdfsharp-migradoc/1.50.5147",
+      "path": "pdfsharpcore/1.3.43",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "lib/net20/MigraDoc.DocumentObjectModel.dll",
-        "lib/net20/MigraDoc.DocumentObjectModel.xml",
-        "lib/net20/MigraDoc.Rendering.dll",
-        "lib/net20/MigraDoc.Rendering.xml",
-        "lib/net20/MigraDoc.RtfRendering.dll",
-        "lib/net20/MigraDoc.RtfRendering.xml",
-        "lib/net20/PdfSharp.Charting.dll",
-        "lib/net20/PdfSharp.Charting.xml",
-        "lib/net20/PdfSharp.dll",
-        "lib/net20/PdfSharp.xml",
-        "lib/net20/de/MigraDoc.DocumentObjectModel.resources.dll",
-        "lib/net20/de/MigraDoc.Rendering.resources.dll",
-        "lib/net20/de/MigraDoc.RtfRendering.resources.dll",
-        "lib/net20/de/PdfSharp.Charting.resources.dll",
-        "lib/net20/de/PdfSharp.resources.dll",
-        "pdfsharp-migradoc.1.50.5147.nupkg.sha512",
-        "pdfsharp-migradoc.nuspec"
+        "LICENSE.md",
+        "lib/net5.0/PdfSharpCore.dll",
+        "lib/net5.0/de/PdfSharpCore.resources.dll",
+        "lib/net6.0/PdfSharpCore.dll",
+        "lib/net6.0/de/PdfSharpCore.resources.dll",
+        "lib/netcoreapp3.1/PdfSharpCore.dll",
+        "lib/netcoreapp3.1/de/PdfSharpCore.resources.dll",
+        "lib/netstandard2.0/PdfSharpCore.dll",
+        "lib/netstandard2.0/de/PdfSharpCore.resources.dll",
+        "pdfsharpcore.1.3.43.nupkg.sha512",
+        "pdfsharpcore.nuspec"
+      ]
+    },
+    "PdfSharpCore.Charting/1.3.43": {
+      "sha512": "ExLKcFMrfmcAYUDk0ryZx3BskoEflnUzdmiAXhpzSkyTqN08/kgPXyiJ+2kcrpMcinfRzdOlQENG5cTwgMc6RA==",
+      "type": "package",
+      "path": "pdfsharpcore.charting/1.3.43",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.md",
+        "lib/net5.0/PdfSharpCore.Charting.dll",
+        "lib/net6.0/PdfSharpCore.Charting.dll",
+        "lib/netcoreapp3.1/PdfSharpCore.Charting.dll",
+        "lib/netstandard2.0/PdfSharpCore.Charting.dll",
+        "pdfsharpcore.charting.1.3.43.nupkg.sha512",
+        "pdfsharpcore.charting.nuspec"
       ]
     },
     "Polly/7.2.2": {
@@ -8670,21 +8784,67 @@
         "runtimes/ubuntu.16.10-x64/native/System.Security.Cryptography.Native.OpenSsl.so"
       ]
     },
-    "SharpZipLib/1.2.0": {
-      "sha512": "zvWa/L02JHNatdtjya6Swpudb2YEHaOLHL1eRrqpjm71iGRNUNONO5adUF/9CHbSJbzhELW1UoH4NGy7n7+3bQ==",
+    "SharpZipLib/1.3.3": {
+      "sha512": "N8+hwhsKZm25tDJfWpBSW7EGhH/R7EMuiX+KJ4C4u+fCWVc1lJ5zg1u3S1RPPVYgTqhx/C3hxrqUpi6RwK5+Tg==",
       "type": "package",
-      "path": "sharpziplib/1.2.0",
+      "path": "sharpziplib/1.3.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
+        "images/sharpziplib-nuget-256x256.png",
         "lib/net45/ICSharpCode.SharpZipLib.dll",
         "lib/net45/ICSharpCode.SharpZipLib.pdb",
         "lib/net45/ICSharpCode.SharpZipLib.xml",
         "lib/netstandard2.0/ICSharpCode.SharpZipLib.dll",
         "lib/netstandard2.0/ICSharpCode.SharpZipLib.pdb",
         "lib/netstandard2.0/ICSharpCode.SharpZipLib.xml",
-        "sharpziplib.1.2.0.nupkg.sha512",
+        "lib/netstandard2.1/ICSharpCode.SharpZipLib.dll",
+        "lib/netstandard2.1/ICSharpCode.SharpZipLib.pdb",
+        "lib/netstandard2.1/ICSharpCode.SharpZipLib.xml",
+        "sharpziplib.1.3.3.nupkg.sha512",
         "sharpziplib.nuspec"
+      ]
+    },
+    "SixLabors.Fonts/1.0.0-beta17": {
+      "sha512": "qubgVovAoSR7vyv9tJ68gSzRIPWz7HBjTM9rwAaLjpcJ6T50arnX+GHAZcC0r2mVagyRMknCNda3DGoe8StUUQ==",
+      "type": "package",
+      "path": "sixlabors.fonts/1.0.0-beta17",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/netcoreapp3.1/SixLabors.Fonts.dll",
+        "lib/netcoreapp3.1/SixLabors.Fonts.xml",
+        "lib/netstandard2.0/SixLabors.Fonts.dll",
+        "lib/netstandard2.0/SixLabors.Fonts.xml",
+        "lib/netstandard2.1/SixLabors.Fonts.dll",
+        "lib/netstandard2.1/SixLabors.Fonts.xml",
+        "sixlabors.fonts.1.0.0-beta17.nupkg.sha512",
+        "sixlabors.fonts.128.png",
+        "sixlabors.fonts.nuspec"
+      ]
+    },
+    "SixLabors.ImageSharp/1.0.4": {
+      "sha512": "H2rPiEr2ddBOltOuqRYhpLBAsQXDAhbzMMhhuksnBG2oefup1MXMchALe7yYkKJksNbtxbZHKeM6dn/68I75qw==",
+      "type": "package",
+      "path": "sixlabors.imagesharp/1.0.4",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net472/SixLabors.ImageSharp.dll",
+        "lib/net472/SixLabors.ImageSharp.xml",
+        "lib/netcoreapp2.1/SixLabors.ImageSharp.dll",
+        "lib/netcoreapp2.1/SixLabors.ImageSharp.xml",
+        "lib/netcoreapp3.1/SixLabors.ImageSharp.dll",
+        "lib/netcoreapp3.1/SixLabors.ImageSharp.xml",
+        "lib/netstandard1.3/SixLabors.ImageSharp.dll",
+        "lib/netstandard1.3/SixLabors.ImageSharp.xml",
+        "lib/netstandard2.0/SixLabors.ImageSharp.dll",
+        "lib/netstandard2.0/SixLabors.ImageSharp.xml",
+        "lib/netstandard2.1/SixLabors.ImageSharp.dll",
+        "lib/netstandard2.1/SixLabors.ImageSharp.xml",
+        "sixlabors.imagesharp.1.0.4.nupkg.sha512",
+        "sixlabors.imagesharp.128.png",
+        "sixlabors.imagesharp.nuspec"
       ]
     },
     "SQLitePCLRaw.bundle_e_sqlite3/2.0.6": {
@@ -9742,18 +9902,21 @@
         "system.diagnostics.tracing.nuspec"
       ]
     },
-    "System.Drawing.Common/4.7.0": {
-      "sha512": "v+XbyYHaZjDfn0ENmJEV1VYLgGgCTx1gnfOBcppowbpOAriglYgGCvFCPr2EEZyBvXlpxbEsTwkOlInl107ahA==",
+    "System.Drawing.Common/5.0.2": {
+      "sha512": "rvr/M1WPf24ljpvvrVd74+NdjRUJu1bBkspkZcnzSZnmAUQWSvanlQ0k/hVHk+cHufZbZfu7vOh/vYc0q5Uu/A==",
       "type": "package",
-      "path": "system.drawing.common/4.7.0",
+      "path": "system.drawing.common/5.0.2",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
+        "Icon.png",
         "LICENSE.TXT",
         "THIRD-PARTY-NOTICES.TXT",
         "lib/MonoAndroid10/_._",
         "lib/MonoTouch10/_._",
         "lib/net461/System.Drawing.Common.dll",
+        "lib/netcoreapp3.0/System.Drawing.Common.dll",
+        "lib/netcoreapp3.0/System.Drawing.Common.xml",
         "lib/netstandard2.0/System.Drawing.Common.dll",
         "lib/xamarinios10/_._",
         "lib/xamarinmac20/_._",
@@ -9775,7 +9938,7 @@
         "runtimes/win/lib/netcoreapp2.0/System.Drawing.Common.dll",
         "runtimes/win/lib/netcoreapp3.0/System.Drawing.Common.dll",
         "runtimes/win/lib/netcoreapp3.0/System.Drawing.Common.xml",
-        "system.drawing.common.4.7.0.nupkg.sha512",
+        "system.drawing.common.5.0.2.nupkg.sha512",
         "system.drawing.common.nuspec",
         "useSharedDesignerContext.txt",
         "version.txt"
@@ -11205,20 +11368,30 @@
         "system.reflection.primitives.nuspec"
       ]
     },
-    "System.Reflection.TypeExtensions/4.3.0": {
-      "sha512": "7u6ulLcZbyxB5Gq0nMkQttcdBTx57ibzw+4IOXEfR+sXYQoHvjW5LTLyNr8O22UIMrqYbchJQJnos4eooYzYJA==",
+    "System.Reflection.TypeExtensions/4.7.0": {
+      "sha512": "VybpaOQQhqE6siHppMktjfGBw1GCwvCqiufqmP8F1nj7fTUNtW35LOEt3UZTEsECfo+ELAl/9o9nJx3U91i7vA==",
       "type": "package",
-      "path": "system.reflection.typeextensions/4.3.0",
+      "path": "system.reflection.typeextensions/4.7.0",
       "files": [
         ".nupkg.metadata",
-        "ThirdPartyNotices.txt",
-        "dotnet_library_license.txt",
+        ".signature.p7s",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
         "lib/MonoAndroid10/_._",
         "lib/MonoTouch10/_._",
         "lib/net46/System.Reflection.TypeExtensions.dll",
-        "lib/net462/System.Reflection.TypeExtensions.dll",
+        "lib/net461/System.Reflection.TypeExtensions.dll",
+        "lib/net461/System.Reflection.TypeExtensions.xml",
         "lib/netcore50/System.Reflection.TypeExtensions.dll",
+        "lib/netcoreapp1.0/System.Reflection.TypeExtensions.dll",
+        "lib/netcoreapp2.0/_._",
+        "lib/netstandard1.3/System.Reflection.TypeExtensions.dll",
+        "lib/netstandard1.3/System.Reflection.TypeExtensions.xml",
         "lib/netstandard1.5/System.Reflection.TypeExtensions.dll",
+        "lib/netstandard1.5/System.Reflection.TypeExtensions.xml",
+        "lib/netstandard2.0/System.Reflection.TypeExtensions.dll",
+        "lib/netstandard2.0/System.Reflection.TypeExtensions.xml",
+        "lib/uap10.0.16299/_._",
         "lib/xamarinios10/_._",
         "lib/xamarinmac20/_._",
         "lib/xamarintvos10/_._",
@@ -11226,7 +11399,11 @@
         "ref/MonoAndroid10/_._",
         "ref/MonoTouch10/_._",
         "ref/net46/System.Reflection.TypeExtensions.dll",
-        "ref/net462/System.Reflection.TypeExtensions.dll",
+        "ref/net461/System.Reflection.TypeExtensions.dll",
+        "ref/net461/System.Reflection.TypeExtensions.xml",
+        "ref/net472/System.Reflection.TypeExtensions.dll",
+        "ref/net472/System.Reflection.TypeExtensions.xml",
+        "ref/netcoreapp2.0/_._",
         "ref/netstandard1.3/System.Reflection.TypeExtensions.dll",
         "ref/netstandard1.3/System.Reflection.TypeExtensions.xml",
         "ref/netstandard1.3/de/System.Reflection.TypeExtensions.xml",
@@ -11249,13 +11426,19 @@
         "ref/netstandard1.5/ru/System.Reflection.TypeExtensions.xml",
         "ref/netstandard1.5/zh-hans/System.Reflection.TypeExtensions.xml",
         "ref/netstandard1.5/zh-hant/System.Reflection.TypeExtensions.xml",
+        "ref/netstandard2.0/System.Reflection.TypeExtensions.dll",
+        "ref/netstandard2.0/System.Reflection.TypeExtensions.xml",
+        "ref/uap10.0.16299/_._",
         "ref/xamarinios10/_._",
         "ref/xamarinmac20/_._",
         "ref/xamarintvos10/_._",
         "ref/xamarinwatchos10/_._",
         "runtimes/aot/lib/netcore50/System.Reflection.TypeExtensions.dll",
-        "system.reflection.typeextensions.4.3.0.nupkg.sha512",
-        "system.reflection.typeextensions.nuspec"
+        "runtimes/aot/lib/uap10.0.16299/_._",
+        "system.reflection.typeextensions.4.7.0.nupkg.sha512",
+        "system.reflection.typeextensions.nuspec",
+        "useSharedDesignerContext.txt",
+        "version.txt"
       ]
     },
     "System.Resources.ResourceManager/4.3.0": {
@@ -13210,6 +13393,11 @@
       "path": "../OzonClasses/OzonClasses.csproj",
       "msbuildProject": "../OzonClasses/OzonClasses.csproj"
     },
+    "PdfHelper/1.0.0": {
+      "type": "project",
+      "path": "../PdfHelper/PdfHelper.csproj",
+      "msbuildProject": "../PdfHelper/PdfHelper.csproj"
+    },
     "StinClasses/1.0.0": {
       "type": "project",
       "path": "../StinClasses/StinClasses.csproj",
@@ -13242,7 +13430,7 @@
       "NonFactors.Grid.Core.Mvc6 >= 6.2.2",
       "NonFactors.Lookup.Core.Mvc6 >= 5.1.2",
       "OzonClasses >= 1.0.0",
-      "PDFsharp-MigraDoc >= 1.50.5147",
+      "PdfHelper >= 1.0.0",
       "Polly.Extensions.Http >= 3.0.0",
       "StinClasses >= 1.0.0",
       "WbClasses >= 1.0.0",
@@ -13295,6 +13483,9 @@
             },
             "C:\\Users\\Валентин\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj": {
               "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj"
+            },
+            "C:\\Users\\Валентин\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj": {
+              "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj"
             },
             "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj": {
               "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj"
@@ -13360,10 +13551,6 @@
             "target": "Package",
             "version": "[5.1.2, )"
           },
-          "PDFsharp-MigraDoc": {
-            "target": "Package",
-            "version": "[1.50.5147, )"
-          },
           "Polly.Extensions.Http": {
             "target": "Package",
             "version": "[3.0.0, )"
@@ -13399,17 +13586,5 @@
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
       }
     }
-  },
-  "logs": [
-    {
-      "code": "NU1701",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Package 'PDFsharp-MigraDoc 1.50.5147' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net6.0'. This package may not be fully compatible with your project.",
-      "libraryId": "PDFsharp-MigraDoc",
-      "targetGraphs": [
-        "net6.0"
-      ]
-    }
-  ]
+  }
 }
