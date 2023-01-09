@@ -1,8 +1,6 @@
 ﻿using HttpExtensions;
 using JsonExtensions;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using Top.Api;
@@ -10,20 +8,11 @@ using Top.Api.Request;
 using Top.Api.Response;
 using StinClasses;
 using System.Net;
-using System.Reflection.PortableExecutable;
-using StinClasses.Справочники;
 using WbClasses;
-using Microsoft.EntityFrameworkCore;
-using PdfSharpCore.Pdf;
-using System.Reflection.Metadata;
-using PdfSharpCore.Drawing;
-using PdfSharpCore;
 using SixLabors.Fonts;
 using System.Globalization;
 using Microsoft.Win32;
 using System.Text.RegularExpressions;
-using SixLabors.ImageSharp;
-using YandexClasses;
 //using Top.Api;
 //using Top.Api.Request;
 //using Top.Api.Response;
@@ -252,7 +241,7 @@ namespace HelloWorld
             var _httpService = new HttpExtensions.HttpService(new HttpClient(), null);
             List<long> logisticsOrderIds = new List<long> { 9552897 };
             string authToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzZWxsZXJfaWQiOjM1MzAyOTc2MTYsInRva2VuX2lkIjoyNDI1fQ.LhSOb9x-4fa8axB8TUYoxw6BCViZgDgGh1USgBWwUd-9cJFNU7FoyymVzNw_bj3690yWXBugYoQwcDTYGnOLs25nXdt-DhV8ObFQLmoo9c6I5-n5tjpU4HK2mDZa8pILWYiaPkCPFsipSRt2V40PKIiVInIIkaDz3Morm4BGs3qM7qxZh_fccZMKy5qqn-uxp5Oq09o4tsH-UDxsnfeqEG9PYOnXTpCxLOr88LlOTcIMOgJsTF2Y7UjLL5uiccCuZm8BNAvlaS_CqwufSqeSkge1ULWf2VUUwPTZpdsnrDIhNd43YK9SWxZL1t7qmNSTBHsSeE9Tu2QdG8fQ5DHThM5nhHJ5xz4MiWtWdirnWIGelZbGErLj2OUwQN7HeNL3YiHSgRu4TUJOKgBOQtdgrtZzAIYsGBoNn0M5e8Pj_j-W5Vp5xv4ub8LEpM1aFMqWnJeygRpSzPVbm0nPo_eFqiWgZ4VZ8orU0eaqjkV9_0PgXquzWwmmyVRTReIRBiuKNIr_NHGv2arxsz7OVzrUC1K4liIwWUnL1SSf5IjZBvoekNnDRMDUSrL-NH0G_1DoHjRy_OhYAth6zFIa18atpcP1YLLGcyhceb-nugzdOkjjmXfmeUg1bl6YCGkDWu9vBz9EkjJKJpNRCe2OR7j7Dwo1HkdOVcQfuLqFs_hl4Ac";
-            var result = await AliExpressClasses.Functions.GetLabels(_httpService, authToken,
+            var result = await AliExpressClasses.Functions.GetLabels(_httpService,"" , authToken,
                 logisticsOrderIds,
                 stoppingToken.Token);
             if (result.pdf != null)

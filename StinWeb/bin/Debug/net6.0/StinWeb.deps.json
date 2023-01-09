@@ -11,6 +11,7 @@
           "AliExpressClasses": "1.0.0",
           "ExcelHelper": "1.0.0",
           "HttpExtensions": "1.0.0",
+          "JsonExtensions": "1.0.0",
           "Microsoft.EntityFrameworkCore.Proxies": "6.0.1",
           "Microsoft.EntityFrameworkCore.SqlServer": "6.0.1",
           "Microsoft.EntityFrameworkCore.Sqlite": "6.0.1",

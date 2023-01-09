@@ -118,13 +118,7 @@ namespace ReverseProxyAPI
 
         private Uri BuildTargetUri(HttpRequest request)
         {
-            //Uri targetUri = null;
-            //if (request.Path.StartsWithSegments("/https", out PathString remainingPath))
-            //    targetUri = new Uri("https:/" + remainingPath);
-            //else if (request.Path.StartsWithSegments("/http", out remainingPath))
-            //    targetUri = new Uri("http:/" + remainingPath);
-
-            return new Uri(request.Scheme + ":/" + request.Path);
+            return new Uri(request.Scheme + ":/" + request.Path + request.QueryString);
         }
     }
 }

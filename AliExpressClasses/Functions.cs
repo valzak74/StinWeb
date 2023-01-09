@@ -82,14 +82,14 @@ namespace AliExpressClasses
             }
             return result.ToString();
         }
-        public static async Task<Tuple<List<CatalogInfo>?, string?>> GetCatalogInfo(IHttpService httpService, string authToken,
+        public static async Task<Tuple<List<CatalogInfo>?, string?>> GetCatalogInfo(IHttpService httpService, string proxyHost, string authToken,
             string lastProductId,
             int limit,
             CancellationToken cancellationToken)
         {
             var request = new CatalogListRequest { Last_product_id = lastProductId, Limit = limit.ToString() };
             var result = await httpService.Exchange<CatalogListResponse, Error>(
-                "https://openapi.aliexpress.ru/public/api/v1/scroll-short-product-by-filter",
+                $"https://{proxyHost}openapi.aliexpress.ru/public/api/v1/scroll-short-product-by-filter",
                 HttpMethod.Post,
                 GetCustomHeaders(authToken),
                 request,
@@ -222,14 +222,14 @@ namespace AliExpressClasses
             }
             return (null, null, "");
         }
-        public static async Task<(List<string>? UpdatedIds, string ErrorMessage)> UpdatePrice(IHttpService httpService, string authToken,
+        public static async Task<(List<string>? UpdatedIds, string ErrorMessage)> UpdatePrice(IHttpService httpService, string proxyHost, string authToken,
             List<PriceProduct> priceData,
             CancellationToken cancellationToken)
         {
             var request = new PriceRequest();
             request.Products = priceData;
             var result = await httpService.Exchange<AliResponse, Error>(
-                "https://openapi.aliexpress.ru/public/api/v1/product/update-sku-price",
+                $"https://{proxyHost}openapi.aliexpress.ru/public/api/v1/product/update-sku-price",
                 HttpMethod.Post,
                 GetCustomHeaders(authToken),
                 request,
@@ -272,14 +272,14 @@ namespace AliExpressClasses
                 return (UpdatedIds: null, ErrorMessage: "AliPriceResponse Internal: both sides are null");
             }
         }
-        public static async Task<(List<string> UpdatedIds, List<string> ErrorIds, string ErrorMessage)> UpdateStock(IHttpService httpService, string authToken,
+        public static async Task<(List<string> UpdatedIds, List<string> ErrorIds, string ErrorMessage)> UpdateStock(IHttpService httpService, string proxyHost, string authToken,
             List<Product> stockData,
             CancellationToken cancellationToken)
         {
             var request = new StockRequest();
             request.Products = stockData;
             var result = await httpService.Exchange<AliResponse, Error>(
-                "https://openapi.aliexpress.ru/public/api/v1/product/update-sku-stock",
+                $"https://{proxyHost}openapi.aliexpress.ru/public/api/v1/product/update-sku-stock",
                 HttpMethod.Post,
                 GetCustomHeaders(authToken),
                 request,
@@ -325,7 +325,7 @@ namespace AliExpressClasses
             }
             return (UpdatedIds: uploadIds, ErrorIds: errorIds, ErrorMessage: err);
         }
-        public static async Task<(ResponseData? data, string error)> GetOrders(IHttpService httpService, string authToken,
+        public static async Task<(ResponseData? data, string error)> GetOrders(IHttpService httpService, string proxyHost, string authToken,
             int currentPage, int limit,
             CancellationToken cancellationToken)
         {
@@ -333,7 +333,7 @@ namespace AliExpressClasses
             request.Date_start = DateTime.Today.AddDays(-30);
             request.Trade_order_info = TradeOrderInfo.LogisticInfo;
             var result = await httpService.Exchange<LocalOrderResponse, string>(
-                "https://openapi.aliexpress.ru/seller-api/v1/order/get-order-list",
+                $"https://{proxyHost}openapi.aliexpress.ru/seller-api/v1/order/get-order-list",
                 HttpMethod.Post,
                 GetCustomHeaders(authToken),
                 request,
@@ -388,13 +388,13 @@ namespace AliExpressClasses
             }
             return new(null, "GetOrdersGlobal : empty result");
         }
-        public static async Task<(long? logisticsOrderId, string? trackNumber, string error)> CreateLogisticsOrder(IHttpService httpService, string authToken,
+        public static async Task<(long? logisticsOrderId, string? trackNumber, string error)> CreateLogisticsOrder(IHttpService httpService, string proxyHost, string authToken,
             LogisticsOrderRequest data,
             CancellationToken cancellationToken)
         {
             var request = new CreateLogisticsOrderRequest(data);
             var result = await httpService.Exchange<CreateLogisticsOrderResponse, string>(
-                "https://openapi.aliexpress.ru/seller-api/v1/logistic-order/create",
+                $"https://{proxyHost}openapi.aliexpress.ru/seller-api/v1/logistic-order/create",
                 HttpMethod.Post,
                 GetCustomHeaders(authToken),
                 request,

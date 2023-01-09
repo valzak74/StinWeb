@@ -924,7 +924,6 @@ namespace Refresher1C.Service
         }
         public async Task UpdatePrices(CancellationToken stoppingToken)
         {
-            var yandexUrl = _configuration["Pricer:yandexUrl"];
             if (int.TryParse(_configuration["Pricer:maxPerRequest"], out int maxPerRequest))
                 maxPerRequest = Math.Max(maxPerRequest, 1);
             else
@@ -948,6 +947,7 @@ namespace Refresher1C.Service
                                             select new
                                             {
                                                 Id = market.Id,
+                                                FirmaId = market.Parentext,
                                                 Тип = market.Sp14155.Trim(),
                                                 Наименование = market.Descr.Trim(),
                                                 CampaignId = market.Code.Trim(),
@@ -964,6 +964,7 @@ namespace Refresher1C.Service
                 List<string> uploadIds = new List<string>();
                 var uploadData = Enumerable.Repeat(new
                 {
+                    FirmaId = "",
                     Тип = "",
                     CampaignId = "",
                     ClientId = "",
@@ -1045,6 +1046,7 @@ namespace Refresher1C.Service
                         if (Цена > 0)
                             uploadData.Add(new
                             {
+                                FirmaId = marketplace.FirmaId,
                                 Тип = marketplace.Тип.ToUpper(),
                                 CampaignId = marketplace.CampaignId,
                                 ClientId = marketplace.ClientId,
@@ -1063,7 +1065,7 @@ namespace Refresher1C.Service
                             _logger.LogError("UpdatePrice : code " + Код + " цена не превышает 0");
                     }
                 }
-                foreach (var priceData in uploadData.GroupBy(x => new { x.Тип, x.CampaignId, x.ClientId, x.AuthToken, x.AuthSecret, x.Authorization, x.FeedId }))
+                foreach (var priceData in uploadData.GroupBy(x => new { x.FirmaId, x.Тип, x.CampaignId, x.ClientId, x.AuthToken, x.AuthSecret, x.Authorization, x.FeedId }))
                 {
                     uploadIds.Clear();
                     if (priceData.Key.Тип == "ЯНДЕКС")
@@ -1086,7 +1088,7 @@ namespace Refresher1C.Service
                             uploadIds.Add(data.Id);
                         }
                         var result = await YandexClasses.YandexOperators.Exchange<YandexClasses.ErrorResponse>(_httpService,
-                            string.Format(yandexUrl, priceData.Key.CampaignId),
+                            $"https://{_firmProxy[priceData.Key.FirmaId]}api.partner.market.yandex.ru/v2/campaigns/{priceData.Key.CampaignId}/offer-prices/updates.json",
                             HttpMethod.Post,
                             priceData.Key.ClientId,
                             priceData.Key.AuthToken,
@@ -1104,7 +1106,7 @@ namespace Refresher1C.Service
                     }
                     else if (priceData.Key.Тип == "OZON")
                     {
-                        var result = await OzonClasses.OzonOperators.UpdatePrice(_httpService, priceData.Key.ClientId, priceData.Key.AuthToken,
+                        var result = await OzonClasses.OzonOperators.UpdatePrice(_httpService, _firmProxy[priceData.Key.FirmaId], priceData.Key.ClientId, priceData.Key.AuthToken,
                             priceData.Select(x =>
                             {
                                 var oldPrice = x.ЦенаДоСкидки * x.Квант;
@@ -1143,7 +1145,7 @@ namespace Refresher1C.Service
                     }
                     else if (priceData.Key.Тип == "SBER")
                     {
-                        var result = await SberClasses.Functions.UpdatePrice(_httpService, priceData.Key.AuthToken,
+                        var result = await SberClasses.Functions.UpdatePrice(_httpService, _firmProxy[priceData.Key.FirmaId], priceData.Key.AuthToken,
                             priceData.Select(x => new
                             {
                                 Offer_id = x.Код,
@@ -1204,7 +1206,7 @@ namespace Refresher1C.Service
                         //}
 
                         //local API
-                        var result = await AliExpressClasses.Functions.UpdatePrice(_httpService, priceData.Key.AuthToken,
+                        var result = await AliExpressClasses.Functions.UpdatePrice(_httpService, _firmProxy[priceData.Key.FirmaId], priceData.Key.AuthToken,
                             priceData.Select(x => new AliExpressClasses.PriceProduct
                             {
 
@@ -1236,7 +1238,7 @@ namespace Refresher1C.Service
                     }
                     else if (priceData.Key.Тип == "WILDBERRIES")
                     {
-                        var result = await WbClasses.Functions.UpdatePrice(_httpService, priceData.Key.AuthToken,
+                        var result = await WbClasses.Functions.UpdatePrice(_httpService, _firmProxy[priceData.Key.FirmaId], priceData.Key.AuthToken,
                             priceData.Select(x => 
                             {
                                 long.TryParse(x.ProductId, out long nmId);
@@ -1317,7 +1319,7 @@ namespace Refresher1C.Service
                 _logger.LogError(ex.Message);
             }
         }
-        private async Task UpdateQuantum(string campaignId, string clientId, string authToken, string marketplaceId, 
+        private async Task UpdateQuantum(string firmaId, string campaignId, string clientId, string authToken, string marketplaceId, 
             EncodeVersion encoding, 
             IList<YandexClasses.OfferMappingEntry> offerEntries,
             CancellationToken cancellationToken)
@@ -1354,7 +1356,7 @@ namespace Refresher1C.Service
                                  .ToList();
                 if ((updateData != null) && (updateData.Count > 0))
                 {
-                    var result = await YandexClasses.YandexOperators.UpdateOfferEntries(_httpService, campaignId, clientId, authToken, updateData, cancellationToken);
+                    var result = await YandexClasses.YandexOperators.UpdateOfferEntries(_httpService, _firmProxy[firmaId], campaignId, clientId, authToken, updateData, cancellationToken);
                     if (!string.IsNullOrEmpty(result.Item2))
                         _logger.LogError(result.Item2);
                 }
@@ -1522,10 +1524,11 @@ namespace Refresher1C.Service
                 _logger.LogError(ex.Message);
             }
         }
-        private async Task ParseNextPageCatalogRequest(string url, string campaignId, string clientId, string authToken, int limit, string nextPageToken, string marketplaceId, string marketplaceModel, EncodeVersion encoding, CancellationToken stoppingToken)
+        private async Task ParseNextPageCatalogRequest(string proxyHost, string campaignId, string clientId, string authToken, int limit, string nextPageToken, string marketplaceId, string marketplaceModel, EncodeVersion encoding, CancellationToken stoppingToken)
         {
             var result = await YandexClasses.YandexOperators.Exchange<YandexClasses.OfferMappingEntriesResponse>(_httpService,
-                string.Format(url, campaignId, limit) + (string.IsNullOrEmpty(nextPageToken) ? "" : "&page_token=" + nextPageToken),
+                $"https://{proxyHost}api.partner.market.yandex.ru/v2/campaigns/{campaignId}/offer-mapping-entries.json?limit={limit}"
+                + (string.IsNullOrEmpty(nextPageToken) ? "" : "&page_token=" + nextPageToken),
                 HttpMethod.Get,
                 clientId,
                 authToken,
@@ -1549,7 +1552,7 @@ namespace Refresher1C.Service
                             await UpdateCatalogInfo(catalogResponse.Result.OfferMappingEntries, marketplaceId, encoding, stoppingToken);
                             if ((catalogResponse.Result.Paging != null) && (!string.IsNullOrEmpty(catalogResponse.Result.Paging.NextPageToken)))
                             {
-                                await ParseNextPageCatalogRequest(url, campaignId, clientId, authToken, limit, catalogResponse.Result.Paging.NextPageToken, marketplaceId, marketplaceModel, encoding, stoppingToken);
+                                await ParseNextPageCatalogRequest(proxyHost, campaignId, clientId, authToken, limit, catalogResponse.Result.Paging.NextPageToken, marketplaceId, marketplaceModel, encoding, stoppingToken);
                             }
                         }
                         else
@@ -1563,9 +1566,9 @@ namespace Refresher1C.Service
                     }
             }
         }
-        private async Task ParseNextPageCatalogOzon(string clientId, string authToken, int limit, string nextPageToken, string marketplaceId, EncodeVersion encoding, CancellationToken stoppingToken)
+        private async Task ParseNextPageCatalogOzon(string proxyHost, string clientId, string authToken, int limit, string nextPageToken, string marketplaceId, EncodeVersion encoding, CancellationToken stoppingToken)
         {
-            var result = await OzonClasses.OzonOperators.ParseCatalog(_httpService, clientId, authToken, nextPageToken, limit, stoppingToken);
+            var result = await OzonClasses.OzonOperators.ParseCatalog(_httpService, proxyHost, clientId, authToken, nextPageToken, limit, stoppingToken);
             if (result.Item2 != null && !string.IsNullOrEmpty(result.Item2))
             {
                 _logger.LogError(result.Item2);
@@ -1576,7 +1579,7 @@ namespace Refresher1C.Service
                     await UpdateCatalogInfo(result.Item1.Items, marketplaceId, encoding, stoppingToken);
                     if (!string.IsNullOrEmpty(result.Item1.Last_id))
                     {
-                        await ParseNextPageCatalogOzon(clientId, authToken, limit, result.Item1.Last_id, marketplaceId, encoding, stoppingToken);
+                        await ParseNextPageCatalogOzon(proxyHost, clientId, authToken, limit, result.Item1.Last_id, marketplaceId, encoding, stoppingToken);
                     }
                 }
                 catch (Exception ex)
@@ -1614,9 +1617,9 @@ namespace Refresher1C.Service
                     _logger.LogError("ParseMextPageCatalogAliExpress internal : " + ex.Message);
                 }
         }
-        public async Task ParseNextPageCatalogAliExpress(string authToken, string lastProductId, int limit, string marketplaceId, EncodeVersion encoding, CancellationToken stoppingToken)
+        public async Task ParseNextPageCatalogAliExpress(string proxyHost, string authToken, string lastProductId, int limit, string marketplaceId, EncodeVersion encoding, CancellationToken stoppingToken)
         {
-            var result = await AliExpressClasses.Functions.GetCatalogInfo(_httpService, authToken, lastProductId, limit, stoppingToken);
+            var result = await AliExpressClasses.Functions.GetCatalogInfo(_httpService, proxyHost, authToken, lastProductId, limit, stoppingToken);
             if (result.Item2 != null && !string.IsNullOrEmpty(result.Item2))
             {
                 _logger.LogError(result.Item2);
@@ -1628,7 +1631,7 @@ namespace Refresher1C.Service
                     lastProductId = result.Item1.LastOrDefault()?.Id;
                     if (!string.IsNullOrEmpty(lastProductId))
                     {
-                        await ParseNextPageCatalogAliExpress(authToken, lastProductId, limit, marketplaceId, encoding, stoppingToken);
+                        await ParseNextPageCatalogAliExpress(proxyHost, authToken, lastProductId, limit, marketplaceId, encoding, stoppingToken);
                     }
                 }
                 catch (Exception ex)
@@ -1824,9 +1827,9 @@ namespace Refresher1C.Service
             offers.Clear();
             offersFirstFile.Clear();
         }
-        private async Task ParseNextPageWildberriesCatalog(string authToken, int limit, DateTime updatedAt, long nmId, string marketplaceId, EncodeVersion encoding, CancellationToken stoppingToken)
+        private async Task ParseNextPageWildberriesCatalog(string proxyHost, string authToken, int limit, DateTime updatedAt, long nmId, string marketplaceId, EncodeVersion encoding, CancellationToken stoppingToken)
         {
-            var result = await WbClasses.Functions.GetCatalogInfo(_httpService, authToken, limit, updatedAt, nmId, stoppingToken);
+            var result = await WbClasses.Functions.GetCatalogInfo(_httpService, proxyHost, authToken, limit, updatedAt, nmId, stoppingToken);
             if (!string.IsNullOrEmpty(result.error))
                 _logger.LogError(result.error);
             if (result.data != null)
@@ -1837,7 +1840,7 @@ namespace Refresher1C.Service
                     var lastNmId = result.data.Cursor?.NmID ?? 0;
                     var total = result.data.Cursor?.Total ?? 0;
                     if (total >= limit)
-                        await ParseNextPageWildberriesCatalog(authToken, limit, lastUpdatedAt, lastNmId, marketplaceId, encoding, stoppingToken);
+                        await ParseNextPageWildberriesCatalog(proxyHost, authToken, limit, lastUpdatedAt, lastNmId, marketplaceId, encoding, stoppingToken);
                 }
                 catch (Exception ex)
                 {
@@ -1846,7 +1849,6 @@ namespace Refresher1C.Service
         }
         public async Task CheckCatalog(CancellationToken stoppingToken)
         {
-            var yandexUrl = _configuration["Catalog:yandexUrl"];
             if (int.TryParse(_configuration["Catalog:maxEntriesResponse"], out int maxResponseEntries))
                 maxResponseEntries = Math.Max(maxResponseEntries, 1);
             else
@@ -1881,7 +1883,7 @@ namespace Refresher1C.Service
                 {
                     if (marketplace.Тип == "ЯНДЕКС")
                         await ParseNextPageCatalogRequest(
-                            yandexUrl, 
+                            _firmProxy[marketplace.FirmaId], 
                             marketplace.CampaignId, 
                             marketplace.ClientId, 
                             marketplace.AuthToken, 
@@ -1893,7 +1895,7 @@ namespace Refresher1C.Service
                             stoppingToken);
                     else if (marketplace.Тип == "OZON")
                     {
-                        await ParseNextPageCatalogOzon(
+                        await ParseNextPageCatalogOzon(_firmProxy[marketplace.FirmaId],
                             marketplace.ClientId, marketplace.AuthToken, maxResponseEntries, null,
                             marketplace.Id, marketplace.Encoding, stoppingToken);
                     }
@@ -1901,7 +1903,7 @@ namespace Refresher1C.Service
                     {
                         //await ParseMextPageCatalogAliExpressGlobal(marketplace.ClientId, marketplace.Authorization, marketplace.AuthToken,
                         //    1, 50, marketplace.Id, marketplace.HexEncoding, stoppingToken);
-                        await ParseNextPageCatalogAliExpress(
+                        await ParseNextPageCatalogAliExpress(_firmProxy[marketplace.FirmaId],
                             marketplace.AuthToken, "0", 50, marketplace.Id, marketplace.Encoding, stoppingToken);
                     }
                     else if (marketplace.Тип == "SBER")
@@ -1910,7 +1912,7 @@ namespace Refresher1C.Service
                     }
                     else if (marketplace.Тип == "WILDBERRIES")
                     {
-                        await ParseNextPageWildberriesCatalog(marketplace.AuthToken, 1000, DateTime.MinValue, 0, marketplace.Id, marketplace.Encoding, stoppingToken);
+                        await ParseNextPageWildberriesCatalog(_firmProxy[marketplace.FirmaId], marketplace.AuthToken, 1000, DateTime.MinValue, 0, marketplace.Id, marketplace.Encoding, stoppingToken);
                     }
                 }
             }
@@ -2090,7 +2092,7 @@ namespace Refresher1C.Service
                     }
                     if (stockData.Count > 0)
                     {
-                        var result = await YandexClasses.YandexOperators.UpdateStock(_httpService, campaignId, clientId, authToken, warehouseId,
+                        var result = await YandexClasses.YandexOperators.UpdateStock(_httpService, _firmProxy[firmaId], campaignId, clientId, authToken, warehouseId,
                             stockData,
                             stoppingToken);
                         if (!string.IsNullOrEmpty(result.error))
@@ -2234,7 +2236,7 @@ namespace Refresher1C.Service
                     }
                     if (stockData.Count > 0)
                     {
-                        var result = await WbClasses.Functions.UpdateStock(_httpService, authToken, warehouseId,
+                        var result = await WbClasses.Functions.UpdateStock(_httpService, _firmProxy[firmaId], authToken, warehouseId,
                             stockData,
                             stoppingToken);
                         List<string> uploadIds = new List<string>();
@@ -2413,7 +2415,7 @@ namespace Refresher1C.Service
                     }
                     if (stockData.Count > 0)
                     {
-                        var result = await SberClasses.Functions.UpdateStock(_httpService, authToken,
+                        var result = await SberClasses.Functions.UpdateStock(_httpService, _firmProxy[firmaId], authToken,
                             stockData,
                             stoppingToken);
                         if (!string.IsNullOrEmpty(result.error))
@@ -2588,7 +2590,7 @@ namespace Refresher1C.Service
                     }
                     if (stockData.Count > 0)
                     {
-                        var result = await OzonClasses.OzonOperators.UpdateStock(_httpService, clientId, authToken,
+                        var result = await OzonClasses.OzonOperators.UpdateStock(_httpService, _firmProxy[firmaId], clientId, authToken,
                             stockData,
                             stoppingToken);
                         if (result.errorMessage != null && !string.IsNullOrEmpty(result.errorMessage))
@@ -2814,7 +2816,7 @@ namespace Refresher1C.Service
                     }
                     //var result = await AliExpressClasses.Functions.UpdateStockGlobal(_httpService,
                     //    appKey, appSecret, authorization, stockData, stoppingToken);
-                    var result = await AliExpressClasses.Functions.UpdateStock(_httpService, authToken,
+                    var result = await AliExpressClasses.Functions.UpdateStock(_httpService, _firmProxy[firmaId], authToken,
                         stockData,
                         stoppingToken);
                     if (result.ErrorMessage != null && !string.IsNullOrEmpty(result.ErrorMessage))
@@ -2898,6 +2900,7 @@ namespace Refresher1C.Service
                 var marketplaceIds = await (from market in _context.Sc14042s
                                             where !market.Ismark
                                                 //&& (market.Sp14177 == 1)
+                                                //&& (market.Sp14155.Trim() == "Яндекс")
                                                 //&& (market.Sp14155.Trim() == "AliExpress")
                                                 //&& (market.Sp14155.Trim() == "Sber")
                                                 //&& (market.Sp14155.Trim() == "Wildberries")
@@ -2923,17 +2926,17 @@ namespace Refresher1C.Service
                         await GetOzonNewOrders(marketplace.ClientId, marketplace.AuthToken,
                             marketplace.Id, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
                             marketplace.Encoding, stoppingToken);
-                        await GetOzonCancelOrders(marketplace.ClientId, marketplace.AuthToken,
+                        await GetOzonCancelOrders(marketplace.FirmaId, marketplace.ClientId, marketplace.AuthToken,
                             marketplace.Id, stoppingToken);
                         //moved to Slow
-                        await GetOzonDeliveringOrders(marketplace.Id, marketplace.ClientId, marketplace.AuthToken,
+                        await GetOzonDeliveringOrders(marketplace.Id, marketplace.FirmaId, marketplace.ClientId, marketplace.AuthToken,
                             marketplace.Id, stoppingToken);
                     }
                     else if (marketplace.Тип == "ЯНДЕКС")
                     {
                         await GetYandexNewOrders(marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Authorization, marketplace.Id,
                             marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId, marketplace.Encoding, stoppingToken);
-                        await GetYandexCancelOrders(marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Id, stoppingToken);
+                        await GetYandexCancelOrders(marketplace.FirmaId, marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Id, stoppingToken);
                     }
                     else if (marketplace.Тип == "ALIEXPRESS")
                     {
@@ -2956,7 +2959,7 @@ namespace Refresher1C.Service
                         await GetWbNewOrders(marketplace.AuthToken,
                             marketplace.Id, marketplace.Authorization, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
                             marketplace.Encoding, stoppingToken);
-                        await GetWbCanceledOrders(marketplace.AuthToken, marketplace.Id, stoppingToken);
+                        await GetWbCanceledOrders(marketplace.AuthToken, marketplace.Id, marketplace.FirmaId, stoppingToken);
                     }
                 }
             }
@@ -2992,7 +2995,7 @@ namespace Refresher1C.Service
                 {
                     if (marketplace.Тип == "OZON")
                     {
-                        await GetOzonDeliveringOrders(marketplace.Id, marketplace.ClientId, marketplace.AuthToken,
+                        await GetOzonDeliveringOrders(marketplace.Id, marketplace.FirmaId, marketplace.ClientId, marketplace.AuthToken,
                             marketplace.Id, stoppingToken);
                     }
                 }
@@ -3006,7 +3009,7 @@ namespace Refresher1C.Service
             string firmaId, string customerId, string dogovorId, EncodeVersion encoding,
             CancellationToken cancellationToken)
         {
-            var orderListResult = await SberClasses.Functions.GetOrders(_httpService, authToken, cancellationToken);
+            var orderListResult = await SberClasses.Functions.GetOrders(_httpService, _firmProxy[firmaId], authToken, cancellationToken);
             if (!string.IsNullOrEmpty(orderListResult.error))
                 _logger.LogError(orderListResult.error);
             if (orderListResult.orders?.Count > 0)
@@ -3027,7 +3030,7 @@ namespace Refresher1C.Service
                                 номенклатураCodes,
                                 true);
                             var nomQuantums = await _номенклатура.ПолучитьКвант(номенклатураCodes, cancellationToken);
-                            bool нетВНаличие = false;
+                            bool нетВНаличие = НоменклатураList.Count == 0;
                             foreach (var номенклатура in НоменклатураList)
                             {
                                 decimal остаток = номенклатура.Остатки
@@ -3048,7 +3051,7 @@ namespace Refresher1C.Service
                             if (нетВНаличие)
                             {
                                 _logger.LogError("Sber запуск процедуры отмены");
-                                var sberResult = await SberClasses.Functions.OrderReject(_httpService, authToken, sberOrder.ShipmentId, SberClasses.SberReason.OUT_OF_STOCK,
+                                var sberResult = await SberClasses.Functions.OrderReject(_httpService, _firmProxy[firmaId], authToken, sberOrder.ShipmentId, SberClasses.SberReason.OUT_OF_STOCK,
                                     sberOrder.Items.Select(x => new KeyValuePair<string, string>(x.ItemIndex, x.OfferId)).ToList(), cancellationToken);
                                 if (!string.IsNullOrEmpty(sberResult.error))
                                     _logger.LogError(sberResult.error);
@@ -3165,12 +3168,12 @@ namespace Refresher1C.Service
             }
             return (success: true, supplyId: "");
         }
-        private async Task CreateLogisticsOrder(string orderId, AliExpressClasses.AliOrder aliOrder, string authToken, CancellationToken cancellationToken)
+        private async Task CreateLogisticsOrder(string firmaId, string orderId, AliExpressClasses.AliOrder aliOrder, string authToken, CancellationToken cancellationToken)
         {
             var firstOrderLine = aliOrder.Order_lines.FirstOrDefault();
             var logisticsOrderRequest = new AliExpressClasses.LogisticsOrderRequest(Convert.ToInt64(aliOrder.Id), firstOrderLine.Length ?? 0, firstOrderLine.Width ?? 0, firstOrderLine.Height ?? 0, (firstOrderLine.Weight ?? 0) / 1000);
             logisticsOrderRequest.Items.Add(new AliExpressClasses.LogisticsItem { Sku_id = Convert.ToInt64(firstOrderLine.Sku_id), Quantity = (int)firstOrderLine.Quantity });
-            var result = await AliExpressClasses.Functions.CreateLogisticsOrder(_httpService, authToken, logisticsOrderRequest, cancellationToken);
+            var result = await AliExpressClasses.Functions.CreateLogisticsOrder(_httpService, _firmProxy[firmaId], authToken, logisticsOrderRequest, cancellationToken);
             if (!string.IsNullOrEmpty(result.error))
                 _logger.LogError(result.error);
             if (result.logisticsOrderId.HasValue && (result.logisticsOrderId.Value > 0))
@@ -3187,7 +3190,7 @@ namespace Refresher1C.Service
             {
                 pageNumber++;
                 nextPage = false;
-                var result = await AliExpressClasses.Functions.GetOrders(_httpService, authToken, pageNumber, limit, cancellationToken);
+                var result = await AliExpressClasses.Functions.GetOrders(_httpService, _firmProxy[firmaId], authToken, pageNumber, limit, cancellationToken);
                 if (!string.IsNullOrEmpty(result.error))
                     _logger.LogError(result.error);
                 if (result.data != null)
@@ -3211,7 +3214,7 @@ namespace Refresher1C.Service
                                     номенклатураCodes,
                                     true);
                                 var nomQuantums = await _номенклатура.ПолучитьКвант(номенклатураCodes, cancellationToken);
-                                bool нетВНаличие = false;
+                                bool нетВНаличие = НоменклатураList.Count == 0;
                                 foreach (var номенклатура in НоменклатураList)
                                 {
                                     decimal остаток = номенклатура.Остатки
@@ -3332,7 +3335,7 @@ namespace Refresher1C.Service
                                     await _order.ОбновитьOrderStatus(order.Id, 8);
                                 }
                                 if (aliOrder.Logistic_orders?.Count == 0)
-                                    await CreateLogisticsOrder(order.Id, aliOrder, authToken, cancellationToken);
+                                    await CreateLogisticsOrder(firmaId, order.Id, aliOrder, authToken, cancellationToken);
                             }
                             else if (((aliOrder.Status == AliExpressClasses.OrderStatus.Finished) || (aliOrder.Status == AliExpressClasses.OrderStatus.Cancelled)) &&
                                 !string.IsNullOrEmpty(aliOrder.Finish_reason) &&
@@ -3527,7 +3530,7 @@ namespace Refresher1C.Service
         }
         private async Task GetWbNewOrders(string authToken, string id, string authorization, string firmaId, string customerId, string dogovorId, EncodeVersion encoding, CancellationToken stoppingToken)
         {
-            var result = await WbClasses.Functions.GetNewOrders(_httpService, authToken, stoppingToken);
+            var result = await WbClasses.Functions.GetNewOrders(_httpService, _firmProxy[firmaId], authToken, stoppingToken);
             if (!string.IsNullOrEmpty(result.error))
                 _logger.LogError(result.error);
             if (result.data?.Orders?.Count > 0)
@@ -3544,7 +3547,7 @@ namespace Refresher1C.Service
                             списокСкладов,
                             номенклатураIds,
                             false);
-                        bool нетВНаличие = false;
+                        bool нетВНаличие = НоменклатураList.Count == 0;
                         var orderItems = new List<OrderItem>();
                         foreach (var номенклатура in НоменклатураList)
                         {
@@ -3568,7 +3571,7 @@ namespace Refresher1C.Service
                         if (нетВНаличие)
                         {
                             //запуск процедуры отмены
-                            var cancelResult = await WbClasses.Functions.CancelOrder(_httpService, authToken,
+                            var cancelResult = await WbClasses.Functions.CancelOrder(_httpService, _firmProxy[firmaId], authToken,
                                 wbOrder.Id.ToString(), stoppingToken);
                             if (!string.IsNullOrEmpty(cancelResult.error))
                                 _logger.LogError(cancelResult.error);
@@ -3647,7 +3650,7 @@ namespace Refresher1C.Service
                     //}
                 }
         }
-        private async Task GetWbCanceledOrders(string authToken, string marketplaceId, CancellationToken cancellationToken)
+        private async Task GetWbCanceledOrders(string authToken, string marketplaceId, string firmaId, CancellationToken cancellationToken)
         {
             var activeOrders = _context.Sc13994s
                 .Where(x => (x.Sp13982 > 0) && (x.Sp13982 != 5) && (x.Sp13982 != 6) &&
@@ -3661,7 +3664,7 @@ namespace Refresher1C.Service
                 var data = await activeOrders.Skip(i).Take(limit).ToListAsync(cancellationToken);
                 if (data?.Count > 0)
                 {
-                    var result = await WbClasses.Functions.GetOrderStatuses(_httpService, authToken, data, cancellationToken);
+                    var result = await WbClasses.Functions.GetOrderStatuses(_httpService, _firmProxy[firmaId], authToken, data, cancellationToken);
                     if (!string.IsNullOrEmpty(result.error))
                         _logger.LogError(result.error);
                     var cancelOrderIds = result.orders?.Where(x => (x.Value == WbClasses.WbStatus.canceled) || (x.Value == WbClasses.WbStatus.canceled_by_client))
@@ -3681,7 +3684,7 @@ namespace Refresher1C.Service
                 maxPerRequest = Math.Max(maxPerRequest, 1);
             else
                 maxPerRequest = 100;
-            var result = await OzonClasses.OzonOperators.UnfulfilledOrders(_httpService, clientId, authToken,
+            var result = await OzonClasses.OzonOperators.UnfulfilledOrders(_httpService, _firmProxy[firmaId], clientId, authToken,
                 maxPerRequest,
                 stoppingToken);
             if (result.Item2 != null)
@@ -3727,7 +3730,7 @@ namespace Refresher1C.Service
                             if (нетВНаличие)
                             {
                                 //запуск процедуры отмены
-                                var cancelResult = await OzonClasses.OzonOperators.CancelOrder(_httpService, clientId, authToken,
+                                var cancelResult = await OzonClasses.OzonOperators.CancelOrder(_httpService, _firmProxy[firmaId], clientId, authToken,
                                     posting.Posting_number, 352, "Product is out of stock", null, stoppingToken);
                                 if (!string.IsNullOrEmpty(cancelResult))
                                     _logger.LogError(cancelResult);
@@ -3737,7 +3740,7 @@ namespace Refresher1C.Service
                         var orderItems = new List<OrderItem>();
                         if (posting.Status == Enum.GetName(OzonClasses.OrderStatus.awaiting_packaging))
                         {
-                            orderItems = await OzonMakeOrdersPosting(clientId, authToken, encoding, posting, stoppingToken);
+                            orderItems = await OzonMakeOrdersPosting(_firmProxy[firmaId], clientId, authToken, encoding, posting, stoppingToken);
                         }
                         else
                         {
@@ -3795,7 +3798,7 @@ namespace Refresher1C.Service
                 }
             }
         }
-        private async Task<List<OrderItem>> OzonMakeOrdersPosting(string clientId, string authToken, EncodeVersion encoding, OzonClasses.FbsPosting posting, CancellationToken stoppingToken)
+        private async Task<List<OrderItem>> OzonMakeOrdersPosting(string proxyHost, string clientId, string authToken, EncodeVersion encoding, OzonClasses.FbsPosting posting, CancellationToken stoppingToken)
         {
             var orderItems = new List<OrderItem>();
             var postingPackageData = new List<OzonClasses.PostingPackage>();
@@ -3829,7 +3832,7 @@ namespace Refresher1C.Service
                             default:
                                 {
                                     var countryCodeResult = await OzonClasses.OzonOperators.GetCountryCode(
-                                        _httpService, clientId, authToken, страна, stoppingToken);
+                                        _httpService, proxyHost, clientId, authToken, страна, stoppingToken);
                                     if (countryCodeResult.Item2 != null && !string.IsNullOrEmpty(countryCodeResult.Item2))
                                         _logger.LogError(countryCodeResult.Item2);
                                     if (string.IsNullOrEmpty(countryCodeResult.Item1))
@@ -3840,7 +3843,7 @@ namespace Refresher1C.Service
                                 }
                         }
                         var setCountryResult = await OzonClasses.OzonOperators.SetCountryCode(
-                            _httpService, clientId, authToken,
+                            _httpService, proxyHost, clientId, authToken,
                             posting.Posting_number,
                             product.Sku,
                             string.IsNullOrWhiteSpace(countryCode) ? "RU" : countryCode,
@@ -3900,7 +3903,7 @@ namespace Refresher1C.Service
                     });
                 }
             }
-            var result = await OzonClasses.OzonOperators.SetOrderPosting(_httpService, clientId, authToken,
+            var result = await OzonClasses.OzonOperators.SetOrderPosting(_httpService, proxyHost, clientId, authToken,
                 posting.Posting_number,
                 postingPackageData,
                 stoppingToken);
@@ -3938,7 +3941,8 @@ namespace Refresher1C.Service
             {
                 pageNumber++;
                 nextPage = false;
-                var result = await YandexClasses.YandexOperators.OrdersList(_httpService, 
+                var result = await YandexClasses.YandexOperators.OrdersList(_httpService,
+                    _firmProxy[firmaId],
                     campaignId, 
                     clientId, 
                     authToken,
@@ -3966,7 +3970,7 @@ namespace Refresher1C.Service
                                     номенклатураCodes,
                                     true);
                                 //var nomQuantums = await _номенклатура.ПолучитьКвант(номенклатураCodes, stoppingToken);
-                                bool нетВНаличие = false;
+                                bool нетВНаличие = НоменклатураList.Count == 0;
                                 foreach (var номенклатура in НоменклатураList)
                                 {
                                     decimal остаток = номенклатура.Остатки
@@ -4086,7 +4090,7 @@ namespace Refresher1C.Service
                 }
             }
         }
-        private async Task GetYandexCancelOrders(string campaignId, string clientId, string authToken, string marketplaceId, CancellationToken cancellationToken)
+        private async Task GetYandexCancelOrders(string firmaId, string campaignId, string clientId, string authToken, string marketplaceId, CancellationToken cancellationToken)
         {
             int pageNumber = 0;
             bool nextPage = true;
@@ -4094,7 +4098,7 @@ namespace Refresher1C.Service
             {
                 pageNumber++;
                 nextPage = false;
-                var result = await YandexClasses.YandexOperators.OrderCancelList(_httpService, campaignId, clientId, authToken, pageNumber, cancellationToken);
+                var result = await YandexClasses.YandexOperators.OrderCancelList(_httpService, _firmProxy[firmaId], campaignId, clientId, authToken, pageNumber, cancellationToken);
                 if ((result != null) && (result.Count > 0))
                 {
                     nextPage = result[0].Item4;
@@ -4109,14 +4113,14 @@ namespace Refresher1C.Service
                 }
             }
         }
-        private async Task GetOzonCancelOrders(string clientId, string authToken, string id, CancellationToken stoppingToken)
+        private async Task GetOzonCancelOrders(string firmaId, string clientId, string authToken, string id, CancellationToken stoppingToken)
         {
             int limit = 1000;
             int numberCount = 0;
             bool nextPage = true;
             while (nextPage)
             {
-                var result = await OzonClasses.OzonOperators.DetailOrders(_httpService, clientId, authToken,
+                var result = await OzonClasses.OzonOperators.DetailOrders(_httpService, _firmProxy[firmaId], clientId, authToken,
                     OzonClasses.OrderStatus.cancelled,
                     30,
                     limit,
@@ -4139,14 +4143,14 @@ namespace Refresher1C.Service
                 nextPage = result.Item2.HasValue ? result.Item2.Value : false;
             }
         }
-        private async Task GetOzonDeliveringOrders(string marketplaceId, string clientId, string authToken, string id, CancellationToken stoppingToken)
+        private async Task GetOzonDeliveringOrders(string marketplaceId, string firmaId, string clientId, string authToken, string id, CancellationToken stoppingToken)
         {
             var activeOrders = await ActiveOrders(marketplaceId, stoppingToken);
             if ((activeOrders != null) && (activeOrders.Count > 0))
             {
                 foreach (var postingNumber in activeOrders)
                 {
-                    var result = await OzonClasses.OzonOperators.OrderDetails(_httpService, clientId, authToken,
+                    var result = await OzonClasses.OzonOperators.OrderDetails(_httpService, _firmProxy[firmaId], clientId, authToken,
                         postingNumber,
                         stoppingToken);
                     if (result.Item2 != null)
@@ -4214,11 +4218,11 @@ namespace Refresher1C.Service
                 {
                     if (marketplace.Тип == "ЯНДЕКС")
                     {
-                        await UpdateTariffsYandex(marketplace.Id, marketplace.CampaignId, marketplace.ClientId, marketplace.AuthToken, marketplace.Encoding, marketplace.Модель, cancellationToken);
+                        await UpdateTariffsYandex(marketplace.Id, marketplace.FirmaId, marketplace.CampaignId, marketplace.ClientId, marketplace.AuthToken, marketplace.Encoding, marketplace.Модель, cancellationToken);
                     }
                     else if (marketplace.Тип == "OZON")
                     {
-                        await UpdateTariffsOzon(marketplace.Id, marketplace.CampaignId, marketplace.ClientId, marketplace.AuthToken, marketplace.Encoding, marketplace.Модель, cancellationToken);
+                        await UpdateTariffsOzon(marketplace.Id, marketplace.FirmaId, marketplace.CampaignId, marketplace.ClientId, marketplace.AuthToken, marketplace.Encoding, marketplace.Модель, cancellationToken);
                     }
                     else if (marketplace.Тип == "SBER")
                     {
@@ -4473,7 +4477,7 @@ namespace Refresher1C.Service
                     await _context.SaveChangesAsync(cancellationToken);
             }
         }
-        private async Task UpdateTariffsYandex(string marketplaceId,
+        private async Task UpdateTariffsYandex(string marketplaceId, string firmaId, 
             string campaignId,
             string clientId,
             string authToken,
@@ -4481,7 +4485,6 @@ namespace Refresher1C.Service
             string model,
             CancellationToken cancellationToken)
         {
-            string detailUrl = "https://api.partner.market.yandex.ru/v2/campaigns/{0}/stats/skus.json";
             int requestLimit = 500;
 
             double tariffPerOrder = model == "FBS" ? 10 : 0;
@@ -4525,7 +4528,7 @@ namespace Refresher1C.Service
                     .ToListAsync(cancellationToken);
                 var request = new YandexClasses.SkuDetailsRequest { ShopSkus = data.Select(x => x.Sku.Encode(encoding)).ToList() };
                 var result = await YandexClasses.YandexOperators.Exchange<YandexClasses.SkuDetailsResponse>(_httpService,
-                    string.Format(detailUrl, campaignId),
+                    $"https://{_firmProxy[firmaId]}api.partner.market.yandex.ru/v2/campaigns/{campaignId}/stats/skus.json",
                     HttpMethod.Post,
                     clientId,
                     authToken,
@@ -4753,7 +4756,7 @@ namespace Refresher1C.Service
 
             return values;
         }
-        private async Task UpdateTariffsOzon(string marketplaceId,
+        private async Task UpdateTariffsOzon(string marketplaceId, string firmaId,
             string campaignId,
             string clientId,
             string authToken,
@@ -4762,7 +4765,6 @@ namespace Refresher1C.Service
             CancellationToken cancellationToken)
         {
             int requestLimit = 100;
-
 
             var query = from markUse in _context.Sc14152s
                         join nom in _context.Sc84s on markUse.Parentext equals nom.Id
@@ -4790,7 +4792,7 @@ namespace Refresher1C.Service
                 bool needUpdate = false;
                 foreach (var item in data)
                 {
-                    var comResult = await OzonClasses.OzonOperators.ProductComission(_httpService, clientId, authToken,
+                    var comResult = await OzonClasses.OzonOperators.ProductComission(_httpService, _firmProxy[firmaId], clientId, authToken,
                         item.Sku.Encode(encoding),
                         item.realFbs ? "rfbs" : "fbs",
                         cancellationToken);

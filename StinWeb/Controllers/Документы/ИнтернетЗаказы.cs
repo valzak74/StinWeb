@@ -22,7 +22,6 @@ using StinClasses.Models;
 using JsonExtensions;
 using HttpExtensions;
 using System.Threading;
-using System.Text;
 
 namespace StinWeb.Controllers
 {
@@ -657,7 +656,7 @@ namespace StinWeb.Controllers
                 else if (data.тип == "SBER")
                 {
                     string html = await GetSberReestr(campaignId, limitTime, cancellationToken);
-                    return File(Encoding.UTF8.GetBytes(html), "text/html;charset=utf-8");
+                    return File(System.Text.Encoding.UTF8.GetBytes(html), "text/html;charset=utf-8");
                 }
                 return BadRequest(new ExceptionData { Code = -100, Description = "Unhandling exception" });
             }

@@ -185,7 +185,7 @@ namespace SberClasses
             }
             return (false, err);
         }
-        public static async Task<(bool success, string error)> OrderReject(IHttpService httpService, string token,
+        public static async Task<(bool success, string error)> OrderReject(IHttpService httpService, string proxyHost, string token,
             string shipmentId,
             SberReason reason,
             List<KeyValuePair<string, string>> items,
@@ -205,7 +205,7 @@ namespace SberClasses
             request.Data.Shipments = new List<SberShipment> { new SberShipment { ShipmentId = shipmentId, Items = sberItems } };
 
             var result = await httpService.Exchange<SberResponse, string>(
-                "https://partner.sbermegamarket.ru/api/market/v1/orderService/order/reject",
+                $"https://{proxyHost}partner.sbermegamarket.ru/api/market/v1/orderService/order/reject",
                 HttpMethod.Post,
                 new Dictionary<string, string>(),
                 request,
@@ -221,7 +221,7 @@ namespace SberClasses
             }
             return (false, err);
         }
-        public static async Task<(bool success, string error)> UpdateStock(IHttpService httpService, string token,
+        public static async Task<(bool success, string error)> UpdateStock(IHttpService httpService, string proxyHost, string token,
             Dictionary<string, int> items,
             CancellationToken cancellationToken)
         {
@@ -238,7 +238,7 @@ namespace SberClasses
             request.Data.Stocks = sberStock;
 
             var result = await httpService.Exchange<SberResponseSingleError, string>(
-                "https://partner.sbermegamarket.ru/api/merchantIntegration/v1/offerService/stock/update",
+                $"https://{proxyHost}partner.sbermegamarket.ru/api/merchantIntegration/v1/offerService/stock/update",
                 HttpMethod.Post,
                 new Dictionary<string, string>(),
                 request,
@@ -254,7 +254,7 @@ namespace SberClasses
             }
             return (false, err);
         }
-        public static async Task<(bool success, string error)> UpdatePrice(IHttpService httpService, string token,
+        public static async Task<(bool success, string error)> UpdatePrice(IHttpService httpService, string proxyHost, string token,
             Dictionary<string, int> items,
             CancellationToken cancellationToken)
         {
@@ -272,7 +272,7 @@ namespace SberClasses
             request.Data.Prices = sberPrice;
 
             var result = await httpService.Exchange<SberResponseSingleError, string>(
-                "https://partner.sbermegamarket.ru/api/merchantIntegration/v1/offerService/manualPrice/save",
+                $"https://{proxyHost}partner.sbermegamarket.ru/api/merchantIntegration/v1/offerService/manualPrice/save",
                 HttpMethod.Post,
                 new Dictionary<string, string>(),
                 request,
@@ -290,7 +290,7 @@ namespace SberClasses
             }
             return (false, err);
         }
-        public static async Task<(List<SberDetailOrder>? orders, string error)> GetOrders(IHttpService httpService, string token,
+        public static async Task<(List<SberDetailOrder>? orders, string error)> GetOrders(IHttpService httpService, string proxyHost, string token,
             CancellationToken cancellationToken)
         {
             var request = new OrderListRequest(token);
@@ -299,7 +299,7 @@ namespace SberClasses
             request.Data.Statuses = new List<SberStatus> { SberStatus.CONFIRMED, SberStatus.CUSTOMER_CANCELED };
 
             var result = await httpService.Exchange<OrderListResponse, string>(
-                "https://partner.sbermegamarket.ru/api/market/v1/orderService/order/search",
+                $"https://{proxyHost}partner.sbermegamarket.ru/api/market/v1/orderService/order/search",
                 HttpMethod.Post,
                 new Dictionary<string, string>(),
                 request,
@@ -317,7 +317,7 @@ namespace SberClasses
                 {
                     request.Data.Shipments = result.Item1.Data?.Shipments;
                     var resultDetails = await httpService.Exchange<OrderListDetailResponse, string>(
-                        "https://partner.sbermegamarket.ru/api/market/v1/orderService/order/get",
+                        $"https://{proxyHost}partner.sbermegamarket.ru/api/market/v1/orderService/order/get",
                         HttpMethod.Post,
                         new Dictionary<string, string>(),
                         request,

@@ -1023,7 +1023,7 @@ namespace Market.Services
                         //только отмена
                         if (order.Тип == "ЯНДЕКС")
                         {
-                            var yandexResult = await YandexClasses.YandexOperators.ChangeStatus(_httpService,
+                            var yandexResult = await YandexClasses.YandexOperators.ChangeStatus(_httpService, "",
                                 order.CampaignId, order.MarketplaceId,
                                 order.ClientId, order.AuthToken,
                                 YandexClasses.StatusYandex.CANCELLED, YandexClasses.SubStatusYandex.SHOP_FAILED,
@@ -1291,7 +1291,7 @@ namespace Market.Services
                 {
                     if (order.Тип == "ЯНДЕКС")
                     {
-                        var yandexResult = await YandexClasses.YandexOperators.ChangeStatus(_httpService,
+                        var yandexResult = await YandexClasses.YandexOperators.ChangeStatus(_httpService, "",
                             order.CampaignId, order.MarketplaceId,
                             order.ClientId, order.AuthToken,
                             order.DeliveryPartnerType == StinDeliveryPartnerType.YANDEX_MARKET ? YandexClasses.StatusYandex.PROCESSING : YandexClasses.StatusYandex.DELIVERED,
@@ -1348,7 +1348,7 @@ namespace Market.Services
                 using var tran = await _context.Database.BeginTransactionAsync();
                 try
                 {
-                    var yandexResult = await YandexClasses.YandexOperators.ChangeStatus(_httpService,
+                    var yandexResult = await YandexClasses.YandexOperators.ChangeStatus(_httpService, "",
                         order.CampaignId, order.MarketplaceId,
                         order.ClientId, order.AuthToken,
                         YandexClasses.StatusYandex.CANCELLED,

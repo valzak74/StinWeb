@@ -18,7 +18,6 @@
   <ItemGroup>
     <ProjectReference Include="..\AliExpressClasses\AliExpressClasses.csproj" />
     <ProjectReference Include="..\HttpExtensions\HttpExtensions.csproj" />
-    <ProjectReference Include="..\JsonExtensions\JsonExtensions.csproj" />
     <ProjectReference Include="..\PdfHelper\PdfHelper.csproj" />
     <ProjectReference Include="..\StinClasses\StinClasses.csproj" />
     <ProjectReference Include="..\WbClasses\WbClasses.csproj" />

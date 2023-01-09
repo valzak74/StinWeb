@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\AtolOnlineClasses\AtolOnlineClasses.csproj" />
     <ProjectReference Include="..\HttpExtensions\HttpExtensions.csproj" />
+    <ProjectReference Include="..\JsonExtensions\JsonExtensions.csproj" />
     <ProjectReference Include="..\OzonClasses\OzonClasses.csproj" />
     <ProjectReference Include="..\SberClasses\SberClasses.csproj" />
     <ProjectReference Include="..\StinClasses\StinClasses.csproj" />

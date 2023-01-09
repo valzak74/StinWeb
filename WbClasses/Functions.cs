@@ -41,7 +41,7 @@ namespace WbClasses
             result.Add("Authorization", authToken);
             return result;
         }
-        public static async Task<(CardListData? data, string error)> GetCatalogInfo(IHttpService httpService, string authToken,
+        public static async Task<(CardListData? data, string error)> GetCatalogInfo(IHttpService httpService, string proxyHost, string authToken,
             int limit,
             DateTime updatedAt,
             long nmId,
@@ -53,7 +53,7 @@ namespace WbClasses
             else
                 request = new CardsListRequest(limit);
             var result = await httpService.Exchange<CardListResponse, string>(
-                "https://suppliers-api.wildberries.ru/content/v1/cards/cursor/list",
+                $"https://{proxyHost}suppliers-api.wildberries.ru/content/v1/cards/cursor/list",
                 HttpMethod.Post,
                 GetCustomHeaders(authToken),
                 request,
@@ -65,12 +65,12 @@ namespace WbClasses
                 err = result.Item2;
             return (data: result.Item1?.Data, error: string.IsNullOrEmpty(err) ? "" : "WbGetCatalogInfo: " + err);
         }
-        public static async Task<(bool, string?)> UpdatePrice(IHttpService httpService, string authToken,
+        public static async Task<(bool, string?)> UpdatePrice(IHttpService httpService, string proxyHost, string authToken,
             List<PriceRequest> priceData,
             CancellationToken cancellationToken)
         {
             var result = await httpService.Exchange<bool, List<string>>(
-                "https://suppliers-api.wildberries.ru/public/api/v1/prices",
+                $"https://{proxyHost}suppliers-api.wildberries.ru/public/api/v1/prices",
                 HttpMethod.Post,
                 GetCustomHeaders(authToken),
                 priceData,
@@ -81,14 +81,14 @@ namespace WbClasses
             }
             return (result.Item1, null);
         }
-        public static async Task<(bool success, Dictionary<string, string>? errors)> UpdateStock(IHttpService httpService, string authToken,
+        public static async Task<(bool success, Dictionary<string, string>? errors)> UpdateStock(IHttpService httpService, string proxyHost, string authToken,
             int warehouseId,
             Dictionary<string, int> data,
             CancellationToken cancellationToken)
         {
             var request = new StocksRequestV3(data);
             var result = await httpService.ExchangeErrorList<bool, StockError>(
-                $"https://suppliers-api.wildberries.ru/api/v3/stocks/{warehouseId}",
+                $"https://{proxyHost}suppliers-api.wildberries.ru/api/v3/stocks/{warehouseId}",
                 HttpMethod.Put,
                 GetCustomHeaders(authToken),
                 request,
@@ -108,11 +108,11 @@ namespace WbClasses
                 .ToDictionary(k => k.Key, v => v.Value);
             return (success: result.SuccessData, errors);
         }
-        public static async Task<(OrderList data, string error)> GetNewOrders(IHttpService httpService, string authToken,
+        public static async Task<(OrderList data, string error)> GetNewOrders(IHttpService httpService, string proxyHost, string authToken,
             CancellationToken cancellationToken)
         {
             var result = await httpService.Exchange<OrderList, string>(
-                "https://suppliers-api.wildberries.ru/api/v3/orders/new",
+                $"https://{proxyHost}suppliers-api.wildberries.ru/api/v3/orders/new",
                 HttpMethod.Get,
                 GetCustomHeaders(authToken),
                 null,
@@ -122,13 +122,13 @@ namespace WbClasses
                 err = result.Item2;
             return (data: result.Item1, error: string.IsNullOrEmpty(err) ? "" : "WbGetOrders: " + err);
         }
-        public static async Task<(Dictionary<long, WbStatus>? orders, string error)> GetOrderStatuses(IHttpService httpService, string authToken,
+        public static async Task<(Dictionary<long, WbStatus>? orders, string error)> GetOrderStatuses(IHttpService httpService, string proxyHost, string authToken,
             List<long> orderIds,
             CancellationToken cancellationToken)
         {
             var request = new StickerRequest(orderIds);
             var result = await httpService.Exchange<OrderStatusResponse, WbErrorResponse>(
-                "https://suppliers-api.wildberries.ru/api/v3/orders/status",
+                $"https://{proxyHost}suppliers-api.wildberries.ru/api/v3/orders/status",
                 HttpMethod.Post,
                 GetCustomHeaders(authToken),
                 request,
@@ -138,12 +138,12 @@ namespace WbClasses
                 err = result.Item2.LogWbErrors("");
             return (orders: result.Item1?.Orders?.ToDictionary(k => k.Id, v => v.WbStatus), error: string.IsNullOrEmpty(err) ? "" : "WbGetOrderStatuses: " + err);
         }
-        public static async Task<(bool success, string error)> CancelOrder(IHttpService httpService, string authToken,
+        public static async Task<(bool success, string error)> CancelOrder(IHttpService httpService, string proxyHost, string authToken,
             string orderId,
             CancellationToken cancellationToken)
         {
             var result = await httpService.Exchange<bool, WbErrorResponse>(
-                $"https://suppliers-api.wildberries.ru/api/v3/orders/{orderId}/cancel",
+                $"https://{proxyHost}suppliers-api.wildberries.ru/api/v3/orders/{orderId}/cancel",
                 HttpMethod.Patch,
                 GetCustomHeaders(authToken),
                 null,

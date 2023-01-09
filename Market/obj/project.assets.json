@@ -5503,6 +5503,7 @@
     "net6.0": [
       "AtolOnlineClasses >= 1.0.0",
       "HttpExtensions >= 1.0.0",
+      "JsonExtensions >= 1.0.0",
       "Microsoft.AspNetCore.Mvc.NewtonsoftJson >= 6.0.1",
       "Microsoft.EntityFrameworkCore.Design >= 6.0.1",
       "Microsoft.EntityFrameworkCore.SqlServer >= 6.0.1",
@@ -5556,6 +5557,9 @@
             },
             "C:\\Users\\Валентин\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
               "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj"
+            },
+            "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
+              "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
             },
             "C:\\Users\\Валентин\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj": {
               "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj"

@@ -11,8 +11,6 @@ namespace YandexClasses
     public static class YandexOperators
     {
         public static readonly string urlChangeItems = "https://api.partner.market.yandex.ru/v2/campaigns/{0}/orders/{1}/items.json";
-        public static readonly string urlOfferUpdate = "https://api.partner.market.yandex.ru/v2/campaigns/{0}/offer-mapping-entries/updates.json";
-        public static readonly string urlStockUpdate = "https://api.partner.market.yandex.ru/v2/campaigns/{0}/offers/stocks.json";
         public static string ParseErrorResponse(ErrorResponse response)
         {
             if (response != null && response.Errors != null && response.Errors.Count > 0)
@@ -125,11 +123,11 @@ namespace YandexClasses
                 cancellationToken);
             return result.Item2;
         }
-        public static async Task<List<Tuple<string, StatusYandex, SubStatusYandex, bool>>> OrderCancelList(IHttpService httpService, string campaignId, string clientId, string authToken, int pageNumber, CancellationToken cancellationToken)
+        public static async Task<List<Tuple<string, StatusYandex, SubStatusYandex, bool>>> OrderCancelList(IHttpService httpService, string proxyHost, string campaignId, string clientId, string authToken, int pageNumber, CancellationToken cancellationToken)
         {
-            var url = @"https://api.partner.market.yandex.ru/v2/campaigns/{0}/orders.json?status=CANCELLED&page={1}";
+            var url = $"https://{proxyHost}api.partner.market.yandex.ru/v2/campaigns/{campaignId}/orders.json?status=CANCELLED&page={pageNumber}";
             var result = await Exchange<OrderDetailListResponse>(httpService,
-                string.Format(url, campaignId, pageNumber),
+                url,
                 HttpMethod.Get,
                 clientId,
                 authToken,
@@ -156,6 +154,7 @@ namespace YandexClasses
             return null;
         }
         public static async Task<(List<DetailOrder> Orders, bool NextPage)> OrdersList(IHttpService httpService, 
+            string proxyHost,
             string campaignId, 
             string clientId, 
             string authToken, 
@@ -164,9 +163,9 @@ namespace YandexClasses
             int pageNumber, 
             CancellationToken cancellationToken)
         {
-            var url = @"https://api.partner.market.yandex.ru/v2/campaigns/{0}/orders.json?status={1}&fromDate={2}&page={3}";
+            var url = $"https://{proxyHost}api.partner.market.yandex.ru/v2/campaigns/{campaignId}/orders.json?status={status}&fromDate={fromDate.ToString("dd-MM-yyyy")}&page={pageNumber}";
             var result = await Exchange<OrderDetailListResponse>(httpService,
-                string.Format(url, campaignId, status, fromDate.ToString("dd-MM-yyyy"), pageNumber),
+                url,
                 HttpMethod.Get,
                 clientId,
                 authToken,
@@ -174,11 +173,11 @@ namespace YandexClasses
                 cancellationToken);
             return (Orders: result.Item2?.Orders, NextPage: result.Item2?.Pager?.CurrentPage < result.Item2?.Pager?.PagesCount);
         }
-        public static async Task<Tuple<bool, string>> UpdateOfferEntries(IHttpService httpService, string campaignId, string clientId, string authToken, List<OfferMappingEntry> data, CancellationToken cancellationToken)
+        public static async Task<Tuple<bool, string>> UpdateOfferEntries(IHttpService httpService, string proxyHost, string campaignId, string clientId, string authToken, List<OfferMappingEntry> data, CancellationToken cancellationToken)
         {
             var request = new OfferMappingUpdateRequest { OfferMappingEntries = data };
             var result = await Exchange<OfferMappingUpdateResponse>(httpService,
-                string.Format(urlOfferUpdate, campaignId),
+                $"https://{proxyHost}api.partner.market.yandex.ru/v2/campaigns/{campaignId}/offer-mapping-entries/updates.json",
                 HttpMethod.Post,
                 clientId,
                 authToken,
@@ -235,7 +234,7 @@ namespace YandexClasses
             }
             return new(false, err);
         }
-        public static async Task<(bool success, string error)> UpdateStock(IHttpService httpService,
+        public static async Task<(bool success, string error)> UpdateStock(IHttpService httpService, string proxyHost,
             string campaignId,
             string clientId,
             string authToken,
@@ -262,7 +261,7 @@ namespace YandexClasses
                 });
             }
             var result = await Exchange<ErrorResponse>(httpService,
-                string.Format(urlStockUpdate, campaignId),
+                $"https://{proxyHost}api.partner.market.yandex.ru/v2/campaigns/{campaignId}/offers/stocks.json",
                 HttpMethod.Put,
                 clientId,
                 authToken,

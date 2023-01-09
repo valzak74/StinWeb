@@ -1,8 +1,6 @@
+C:\Users\Валентин\source\repos\StinWeb\Tests\bin\Debug\Tests.exe.config
 C:\Users\Валентин\source\repos\StinWeb\Tests\bin\Debug\Tests.exe
 C:\Users\Валентин\source\repos\StinWeb\Tests\bin\Debug\Tests.pdb
-C:\Users\Валентин\source\repos\StinWeb\Tests\obj\Debug\Tests.csproj.CoreCompileInputs.cache
-C:\Users\Валентин\source\repos\StinWeb\Tests\obj\Debug\Tests.exe
-C:\Users\Валентин\source\repos\StinWeb\Tests\obj\Debug\Tests.pdb
 C:\Users\Валентин\source\repos\StinWeb\Tests\bin\Debug\BouncyCastle.Crypto.dll
 C:\Users\Валентин\source\repos\StinWeb\Tests\bin\Debug\ICSharpCode.SharpZipLib.dll
 C:\Users\Валентин\source\repos\StinWeb\Tests\bin\Debug\MigraDoc.DocumentObjectModel.dll
@@ -25,6 +23,8 @@ C:\Users\Валентин\source\repos\StinWeb\Tests\bin\Debug\de\MigraDoc.Rende
 C:\Users\Валентин\source\repos\StinWeb\Tests\bin\Debug\de\MigraDoc.RtfRendering.resources.dll
 C:\Users\Валентин\source\repos\StinWeb\Tests\bin\Debug\de\PdfSharp.resources.dll
 C:\Users\Валентин\source\repos\StinWeb\Tests\bin\Debug\de\PdfSharp.Charting.resources.dll
-C:\Users\Валентин\source\repos\StinWeb\Tests\bin\Debug\Tests.exe.config
 C:\Users\Валентин\source\repos\StinWeb\Tests\obj\Debug\Tests.csproj.AssemblyReference.cache
+C:\Users\Валентин\source\repos\StinWeb\Tests\obj\Debug\Tests.csproj.CoreCompileInputs.cache
 C:\Users\Валентин\source\repos\StinWeb\Tests\obj\Debug\Tests.csproj.CopyComplete
+C:\Users\Валентин\source\repos\StinWeb\Tests\obj\Debug\Tests.exe
+C:\Users\Валентин\source\repos\StinWeb\Tests\obj\Debug\Tests.pdb

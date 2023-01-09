@@ -23,7 +23,7 @@ namespace OzonClasses
             result.Add("Api-Key", authToken);
             return result;
         }
-        public static async Task<Tuple<List<FbsPosting>?,string?>> UnfulfilledOrders(IHttpService httpService, string clientId, string authToken,
+        public static async Task<Tuple<List<FbsPosting>?,string?>> UnfulfilledOrders(IHttpService httpService, string proxyHost, string clientId, string authToken,
             long limit,
             CancellationToken cancellationToken)
         {
@@ -42,7 +42,7 @@ namespace OzonClasses
             request.Offset = 0;
             var headers = GetOzonHeaders(clientId, authToken);
             var result = await httpService.Exchange<OzonUnfulfilledOrderResponse, ErrorResponse>(
-                "https://api-seller.ozon.ru/v3/posting/fbs/unfulfilled/list",
+                $"https://{proxyHost}api-seller.ozon.ru/v3/posting/fbs/unfulfilled/list",
                 HttpMethod.Post,
                 headers,
                 request,
@@ -63,7 +63,7 @@ namespace OzonClasses
             //second check
             request.Filter.Status = OrderStatus.awaiting_deliver;
             result = await httpService.Exchange<OzonUnfulfilledOrderResponse, ErrorResponse>(
-                "https://api-seller.ozon.ru/v3/posting/fbs/unfulfilled/list",
+                $"https://{proxyHost}api-seller.ozon.ru/v3/posting/fbs/unfulfilled/list",
                 HttpMethod.Post,
                 headers,
                 request,
@@ -84,7 +84,7 @@ namespace OzonClasses
             }
             return new(data.Count > 0 ? data : null, string.IsNullOrEmpty(err) ? null : err);
         }
-        public static async Task<Tuple<List<FbsPosting>?,bool?, string?>> DetailOrders(IHttpService httpService, string clientId, string authToken,
+        public static async Task<Tuple<List<FbsPosting>?,bool?, string?>> DetailOrders(IHttpService httpService, string proxyHost, string clientId, string authToken,
             OrderStatus? status,
             int checkDays,
             long limit,
@@ -102,7 +102,7 @@ namespace OzonClasses
             request.Limit = limit;
             request.Offset = offset;
             var result = await httpService.Exchange<DetailOrderResponse, ErrorResponse>(
-                "https://api-seller.ozon.ru/v3/posting/fbs/list",
+                $"https://{proxyHost}api-seller.ozon.ru/v3/posting/fbs/list",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
@@ -118,7 +118,7 @@ namespace OzonClasses
             }
             return new(null,null, null);
         }
-        public static async Task<Tuple<OrderStatus?,string?>> OrderDetails(IHttpService httpService, string clientId, string authToken,
+        public static async Task<Tuple<OrderStatus?,string?>> OrderDetails(IHttpService httpService, string proxyHost, string clientId, string authToken,
             string postingNumber,
             CancellationToken cancellationToken)
         {
@@ -126,7 +126,7 @@ namespace OzonClasses
             request.Posting_number = postingNumber;
             request.With = new RequestWithParams { Analytics_data = false, Barcodes = false, Financial_data = false, Translit = false };
             var result = await httpService.Exchange<GetOrderByPostingNumberResponse, ErrorResponse>(
-                "https://api-seller.ozon.ru/v3/posting/fbs/get",
+                $"https://{proxyHost}api-seller.ozon.ru/v3/posting/fbs/get",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
@@ -141,7 +141,7 @@ namespace OzonClasses
             }
             return new(null, null);
         }
-        public static async Task<string> CancelOrder(IHttpService httpService, string clientId, string authToken,
+        public static async Task<string> CancelOrder(IHttpService httpService, string proxyHost, string clientId, string authToken,
             string postingNumber,
             long reasonId,
             string reasonMessage,
@@ -154,7 +154,7 @@ namespace OzonClasses
             request.Posting_number = postingNumber;
             request.Items = cancelItems;
             var response = await httpService.Exchange<CancelOrderResponse, ErrorResponse>(
-                "https://api-seller.ozon.ru/v2/posting/fbs/cancel",
+                $"https://{proxyHost}api-seller.ozon.ru/v2/posting/fbs/cancel",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
@@ -194,13 +194,13 @@ namespace OzonClasses
                 return new(result.Item1.Result, null);
             return new(null,null);
         }
-        public static async Task<Tuple<string?,string?>> GetCountryCode(IHttpService httpService, string clientId, string authToken,
+        public static async Task<Tuple<string?,string?>> GetCountryCode(IHttpService httpService, string proxyHost, string clientId, string authToken,
             string countryName,
             CancellationToken cancellationToken)
         {
             var request = new CountryCodeRequest { Name_search = countryName };
             var result = await httpService.Exchange<CountryCodeResponse, ErrorResponse>(
-                "https://api-seller.ozon.ru/v2/posting/fbs/product/country/list",
+                $"https://{proxyHost}api-seller.ozon.ru/v2/posting/fbs/product/country/list",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
@@ -216,7 +216,7 @@ namespace OzonClasses
             }
             return new(null,err);
         }
-        public static async Task<Tuple<bool?,string>> SetCountryCode(IHttpService httpService, string clientId, string authToken,
+        public static async Task<Tuple<bool?,string>> SetCountryCode(IHttpService httpService, string proxyHost, string clientId, string authToken,
             string postingNumber,
             long productId,
             string countryCode,
@@ -227,7 +227,7 @@ namespace OzonClasses
             request.Product_id = productId;
             request.Country_iso_code = countryCode;
             var result = await httpService.Exchange<SetCountryResponse, ErrorResponse>(
-                "https://api-seller.ozon.ru/v2/posting/fbs/product/country/set",
+                $"https://{proxyHost}api-seller.ozon.ru/v2/posting/fbs/product/country/set",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
@@ -243,7 +243,7 @@ namespace OzonClasses
             }
             return new(null,err);
         }
-        public static async Task<Tuple<List<PostingAdditionalData>?,string>> SetOrderPosting(IHttpService httpService, string clientId, string authToken,
+        public static async Task<Tuple<List<PostingAdditionalData>?,string>> SetOrderPosting(IHttpService httpService, string proxyHost, string clientId, string authToken,
             string postingNumber,
             List<PostingPackage> packages,
             CancellationToken cancellationToken)
@@ -253,7 +253,7 @@ namespace OzonClasses
             request.With = new PostingWith { additional_data = true };
             request.Packages = packages;
             var result = await httpService.Exchange<PostingOrderResponse, ErrorResponse>(
-                "https://api-seller.ozon.ru/v3/posting/fbs/ship",
+                $"https://{proxyHost}api-seller.ozon.ru/v3/posting/fbs/ship",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
@@ -277,7 +277,7 @@ namespace OzonClasses
             }
             return new(null,err);
         }
-        public static async Task<Tuple<ProductListResult?,string>> ParseCatalog(IHttpService httpService, string clientId, string authToken,
+        public static async Task<Tuple<ProductListResult?,string>> ParseCatalog(IHttpService httpService, string proxyHost, string clientId, string authToken,
             string? nextPageToken,
             long limit,
             CancellationToken cancellationToken)
@@ -286,7 +286,7 @@ namespace OzonClasses
                 //Filter = new ProductFilter { Offer_id = new List<string> { "443030303533313935" }, Visibility = RequestFilterVisibility.ALL },
                 Last_id = string.IsNullOrEmpty(nextPageToken) ? "" : nextPageToken, Limit = limit };
             var result = await httpService.Exchange<ProductListResponse, ErrorResponse>(
-                "https://api-seller.ozon.ru/v2/product/list",
+                $"https://{proxyHost}api-seller.ozon.ru/v2/product/list",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
@@ -300,14 +300,14 @@ namespace OzonClasses
             }
             return new(((result.Item1 != null) && (result.Item1.Result != null)) ? result.Item1.Result : null, err);
         }
-        public static async Task<Tuple<List<string>?, string>> UpdatePrice(IHttpService httpService, string clientId, string authToken,
+        public static async Task<Tuple<List<string>?, string>> UpdatePrice(IHttpService httpService, string proxyHost, string clientId, string authToken,
             List<PriceRequest> priceData,
             CancellationToken cancellationToken)
         {
             var request = new OzonPriceRequest();
             request.Prices = priceData;
             var result = await httpService.Exchange<OzonPriceResponse, ErrorResponse>(
-                "https://api-seller.ozon.ru/v1/product/import/prices",
+                $"https://{proxyHost}api-seller.ozon.ru/v1/product/import/prices",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
@@ -346,14 +346,14 @@ namespace OzonClasses
             }
 
         }
-        public static async Task<(List<string> updatedOfferIds, List<string> tooManyRequests, List<string> errorOfferIds, string errorMessage)> UpdateStock(IHttpService httpService, string clientId, string authToken,
+        public static async Task<(List<string> updatedOfferIds, List<string> tooManyRequests, List<string> errorOfferIds, string errorMessage)> UpdateStock(IHttpService httpService, string proxyHost, string clientId, string authToken,
             List<StockRequest> stockData,
             CancellationToken cancellationToken)
         {
             var request = new OzonStockRequest();
             request.Stocks = stockData;
             var result = await httpService.Exchange<OzonStockResponse, ErrorResponse>(
-                "https://api-seller.ozon.ru/v2/products/stocks", //"https://api-seller.ozon.ru/v1/product/import/stocks",
+                $"https://{proxyHost}api-seller.ozon.ru/v2/products/stocks", 
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
@@ -415,14 +415,15 @@ namespace OzonClasses
                 return new(null, ParseOzonError(result.Item2));
             return new(result.Item1, null);
         }
-        public static async Task<(double ComPercent, double ComAmount, double VolumeWeight, string Price, string? Error)> ProductComission(IHttpService httpService, string clientId, string authToken,
+        public static async Task<(double ComPercent, double ComAmount, double VolumeWeight, string Price, string? Error)> ProductComission(IHttpService httpService, 
+            string proxyHost, string clientId, string authToken,
             string offerId,
             string searchTag,
             CancellationToken cancellationToken)
         {
             var request = new ProductInfoRequest { Offer_id = offerId };
             var result = await httpService.Exchange<ProductInfoResponse, ErrorResponse>(
-                "https://api-seller.ozon.ru/v2/product/info",
+                $"https://{proxyHost}api-seller.ozon.ru/v2/product/info",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
