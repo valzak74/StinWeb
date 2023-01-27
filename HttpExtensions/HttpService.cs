@@ -4,6 +4,8 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Net;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace HttpExtensions
 {
@@ -107,7 +109,10 @@ namespace HttpExtensions
                     .ToDictionary(k => k.Key.Substring(queryKey.Length), v => v.Value);
                 HttpRequestMessage request;
                 if (queryParams?.Count > 0)
-                    request = new HttpRequestMessage(method, url) { Content = new FormUrlEncodedContent(queryParams) };
+                {
+                    var uri = QueryHelpers.AddQueryString(url, queryParams);
+                    request = new HttpRequestMessage(method, uri); //{ Content = new FormUrlEncodedContent(queryParams) };
+                }
                 else
                     request = new HttpRequestMessage(method, url);
                 request.Headers.Add("User-Agent", "HttpClientFactory-StinClient");
@@ -122,7 +127,20 @@ namespace HttpExtensions
                         request.Content = new StringContent(contentString, Encoding.UTF8, "application/json");
                     }
                 }
-                var response = await _httpClient.SendAsync(request);
+                var response = await _httpClient.SendAsync(request, stoppingToken);
+                //var proxy = new WebProxy
+                //{
+                //    Address = new Uri($"http://127.0.0.1:8888"),
+                //    BypassProxyOnLocal = false,
+                //    UseDefaultCredentials = false,
+                //};
+                //var httpClientHandler = new HttpClientHandler
+                //{
+                //    Proxy = proxy,
+                //};
+                //httpClientHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+                //var client = new HttpClient(handler: httpClientHandler, disposeHandler: true);
+                //var response = await client.SendAsync(request, stoppingToken);
                 if (response.IsSuccessStatusCode)
                 {
                     if (typeof(T) == typeof(bool))
@@ -172,7 +190,10 @@ namespace HttpExtensions
                     .ToDictionary(k => k.Key.Substring(queryKey.Length), v => v.Value);
                 HttpRequestMessage request;
                 if (queryParams?.Count > 0)
-                    request = new HttpRequestMessage(method, url) { Content = new FormUrlEncodedContent(queryParams) };
+                {
+                    var uri = QueryHelpers.AddQueryString(url, queryParams);
+                    request = new HttpRequestMessage(method, uri); //{ Content = new FormUrlEncodedContent(queryParams) };
+                }
                 else
                     request = new HttpRequestMessage(method, url);
                 request.Headers.Add("User-Agent", "HttpClientFactory-StinClient");
@@ -187,7 +208,20 @@ namespace HttpExtensions
                         request.Content = new StringContent(contentString, Encoding.UTF8, "application/json");
                     }
                 }
-                var response = await _httpClient.SendAsync(request);
+                var response = await _httpClient.SendAsync(request, stoppingToken);
+                //var proxy = new WebProxy
+                //{
+                //    Address = new Uri($"http://127.0.0.1:8888"),
+                //    BypassProxyOnLocal = false,
+                //    UseDefaultCredentials = false,
+                //};
+                //var httpClientHandler = new HttpClientHandler
+                //{
+                //    Proxy = proxy,
+                //};
+                //httpClientHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+                //var client = new HttpClient(handler: httpClientHandler, disposeHandler: true);
+                //var response = await client.SendAsync(request, stoppingToken);
                 if (response.IsSuccessStatusCode)
                 {
                     if (typeof(T) == typeof(bool))

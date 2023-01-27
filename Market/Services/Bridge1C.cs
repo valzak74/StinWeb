@@ -1039,7 +1039,7 @@ namespace Market.Services
                         }
                         else if (order.Тип == "SBER")
                         {
-                            var sberResult = await SberClasses.Functions.OrderReject(_httpService, order.AuthToken, order.MarketplaceId, SberClasses.SberReason.OUT_OF_STOCK,
+                            var sberResult = await SberClasses.Functions.OrderReject(_httpService, "", order.AuthToken, order.MarketplaceId, SberClasses.SberReason.OUT_OF_STOCK,
                                 order.Items.Select(x => new KeyValuePair<string,string> (x.Id,x.Sku)).ToList(), stoppingToken);
                             if (!string.IsNullOrEmpty(sberResult.error))
                                 result += sberResult.error;
@@ -1053,7 +1053,7 @@ namespace Market.Services
                         }
                         else if (order.Тип == "OZON")
                         {
-                            result += await OzonClasses.OzonOperators.CancelOrder(_httpService, order.ClientId, order.AuthToken,
+                            result += await OzonClasses.OzonOperators.CancelOrder(_httpService, "", order.ClientId, order.AuthToken,
                                 order.MarketplaceId, 400, "Fall off", null, stoppingToken);
                             if (!string.IsNullOrEmpty(result))
                             {
@@ -1065,7 +1065,7 @@ namespace Market.Services
                         }
                         else if (order.Тип == "WILDBERRIES")
                         {
-                            var cancelResult = await WbClasses.Functions.CancelOrder(_httpService, order.AuthToken,
+                            var cancelResult = await WbClasses.Functions.CancelOrder(_httpService, "", order.AuthToken,
                                 order.MarketplaceId, stoppingToken);
                             if (!string.IsNullOrEmpty(cancelResult.error))
                             {
@@ -1167,7 +1167,7 @@ namespace Market.Services
                                 }
                             }
 
-                            var sberResult = await SberClasses.Functions.OrderReject(_httpService, order.AuthToken, order.MarketplaceId, SberClasses.SberReason.OUT_OF_STOCK,
+                            var sberResult = await SberClasses.Functions.OrderReject(_httpService, "", order.AuthToken, order.MarketplaceId, SberClasses.SberReason.OUT_OF_STOCK,
                                 cancelData, stoppingToken);
                             if (!string.IsNullOrEmpty(sberResult.error))
                                 result += sberResult.error;
@@ -1226,7 +1226,7 @@ namespace Market.Services
                                     });
                                 }
                             }
-                            result += await OzonClasses.OzonOperators.CancelOrder(_httpService, order.ClientId, order.AuthToken,
+                            result += await OzonClasses.OzonOperators.CancelOrder(_httpService, "", order.ClientId, order.AuthToken,
                                 order.MarketplaceId, 400, "Fall off", cancelData, stoppingToken);
                             if (!string.IsNullOrEmpty(result))
                             {
@@ -1464,6 +1464,20 @@ namespace Market.Services
         public async Task<Dictionary<string, decimal>> ПолучитьDeltaStock(string marketId, List<string> списокКодовНоменклатуры, CancellationToken cancellationToken)
         {
             return await _marketplace.GetDeltaStockInfo(marketId, списокКодовНоменклатуры, cancellationToken);
+        }
+        public async Task SetElectronicAcceptanceCertificateCode(string authorizationApi, long Id, string code, CancellationToken cancellationToken)
+        {
+            var defFirma = _configuration["Settings:Firma"];
+            string _defFirmaId = _configuration["Settings:" + defFirma + ":FirmaId"];
+            var market = await _marketplace.ПолучитьMarketplaceByFirma(authorizationApi, _defFirmaId);
+            if (market == null)
+            {
+                _logger.LogError("Не обнаружен маркетплейс для фирмы " + _defFirmaId + " и authApi " + authorizationApi);
+                return;
+            }
+            var order = await _order.ПолучитьOrderByMarketplaceId(market.Id, Id.ToString());
+            if ((order != null) && (order.DeliveryServiceName != code))
+                await _order.RefreshOrderDeliveryServiceId(order.Id, long.Parse(order.DeliveryServiceId), code, cancellationToken);
         }
     }
 }

@@ -165,17 +165,17 @@ namespace StinClasses.Документы
                               ВидДокумента10 = j.Iddocdef,
                               НомерДок = j.Docno,
                               ДатаДок = j.DateTimeIddoc.ToDateTime(),
-                          }).FirstOrDefaultAsync();
+                          }).SingleOrDefaultAsync();
         }
         public async Task<ВидДокумента> ПолучитьВидДокумента(string idDoc)
         {
-            return await _context._1sjourns.Where(x => x.Iddoc == idDoc).Select(x => (ВидДокумента)x.Iddocdef).FirstOrDefaultAsync();
+            return await _context._1sjourns.Where(x => x.Iddoc == idDoc).Select(x => (ВидДокумента)x.Iddocdef).SingleOrDefaultAsync();
         }
         public async Task<ДокОснование> ДокОснованиеAsync(string IdDoc)
         {
             if (IdDoc == Common.ПустоеЗначение)
                 return null;
-            var j = await _context._1sjourns.FirstOrDefaultAsync(x => x.Iddoc == IdDoc);
+            var j = await _context._1sjourns.SingleOrDefaultAsync(x => x.Iddoc == IdDoc);
             return new ДокОснование
             {
                 IdDoc = j.Iddoc,
@@ -198,7 +198,7 @@ namespace StinClasses.Документы
             var ФирмаПрефикс = await (from sc131 in _context.Sc131s
                                       join sc4014 in _context.Sc4014s on sc131.Id equals sc4014.Sp4011
                                       where sc4014.Id == FirmaId
-                                      select sc131.Sp145.Trim()).FirstOrDefaultAsync();
+                                      select sc131.Sp145.Trim()).SingleOrDefaultAsync();
             string prefix = _context.ПрефиксИБ(userId) + ФирмаПрефикс;
 
             string dnPrefixJ = ИдентификаторДокDds.ToString().PadLeft(10) + DateTime.Now.ToString("yyyy").PadRight(8);
@@ -242,7 +242,7 @@ namespace StinClasses.Документы
             if (string.IsNullOrEmpty(Год))
                 Год = DateTime.Now.ToString("yyyy");
             string dnPrefix = ИдентификаторДокDds.ToString().PadLeft(10) + Год.PadRight(18);
-            var row = await _context._1sdnlocks.FirstOrDefaultAsync(x => x.Dnprefix == dnPrefix && x.Docno == DocNo);
+            var row = await _context._1sdnlocks.SingleOrDefaultAsync(x => x.Dnprefix == dnPrefix && x.Docno == DocNo);
             if (row != null)
             {
                 _context._1sdnlocks.Remove(row);
@@ -358,16 +358,6 @@ namespace StinClasses.Документы
         {
             return _context._1sjourns.Any(x => x.Iddoc == idDoc);
         }
-        //public async Task РегистрацияИзмененийРаспределеннойИБAsync(int ВидДокИД_dds, string IdDoc)
-        //{
-        //    string prefix = _context.ПрефиксИБ();
-        //    var signs = (from dbset in _context._1sdbsets
-        //                 where dbset.Dbsign.Trim() != prefix
-        //                 select dbset.Dbsign).ToList();
-        //    foreach (var sign in signs)
-        //        await _context.Database.ExecuteSqlRawAsync("exec _1sp_RegisterUpdate @sign,@doc_dds,@num36,' '", new SqlParameter("@sign", sign), new SqlParameter("@doc_dds", ВидДокИД_dds), new SqlParameter("@num36", IdDoc));
-        //    await _context.SaveChangesAsync();
-        //}
         public async Task ОбновитьПодчиненныеДокументы(string ДокОснованиеId13, string DateTimeIddoc, string Iddoc)
         {
             SqlParameter paramParentVal = new SqlParameter("@parentVal", "O1" + ДокОснованиеId13);
@@ -389,7 +379,7 @@ namespace StinClasses.Документы
         {
             DateTime docDate = DateTime.ParseExact(DateTimeIddoc.Substring(0, 8), "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture);
             int docTime = (int)(DateTimeIddoc.Substring(8, 6).Decode36());
-            var dbValues = (from s in _context._1ssystems select new { d = s.Curdate, t = s.Curtime }).FirstOrDefault();
+            var dbValues = (from s in _context._1ssystems select new { d = s.Curdate, t = s.Curtime }).SingleOrDefault();
             bool NeedToUpdate = false;
             if (dbValues.d < docDate)
                 NeedToUpdate = true;
@@ -409,14 +399,14 @@ namespace StinClasses.Документы
         {
             _1sstream Последовательность = (from p in _context._1sstreams
                                             where p.Id == 1946
-                                            select p).FirstOrDefault();
+                                            select p).SingleOrDefault();
             Последовательность.DateTimeDocid = DateTimeIddoc;
             _context.Update(Последовательность);
             await _context.SaveChangesAsync();
         }
         public async Task ОбновитьСетевуюАктивность()
         {
-            int СчетчикАктивности = await _context._1susers.Select(x => x.Netchgcn).FirstOrDefaultAsync();
+            int СчетчикАктивности = await _context._1susers.Select(x => x.Netchgcn).SingleOrDefaultAsync();
             СчетчикАктивности++;
             await _context.Database.ExecuteSqlRawAsync("Update _1SUSERS set NETCHGCN=@P1",
                 new SqlParameter("@P1", СчетчикАктивности));
@@ -437,6 +427,7 @@ namespace StinClasses.Документы
             {
                 var s = await (from crDoc in _context._1scrdocs
                                where crDoc.Childid == curIdDoc
+                               orderby crDoc.RowId
                                select new
                                {
                                    ВидДок = crDoc.Parentval.Substring(2, 4),
@@ -462,21 +453,21 @@ namespace StinClasses.Документы
         }
         public async Task<Договор> ПолучитьДоговорНабора(string idDoc)
         {
-            var договорId = await _context.Dh11948s.Where(x => x.Iddoc == idDoc).Select(x => x.Sp11932).FirstOrDefaultAsync();
+            var договорId = await _context.Dh11948s.Where(x => x.Iddoc == idDoc).Select(x => x.Sp11932).SingleOrDefaultAsync();
             if (!string.IsNullOrEmpty(договорId))
                 return await _контрагент.GetДоговорAsync(договорId);
             return null;
         }
         public async Task<Склад> ПолучитьСкладНабора(string idDoc)
         {
-            var складId = await _context.Dh11948s.Where(x => x.Iddoc == idDoc).Select(x => x.Sp11929).FirstOrDefaultAsync();
+            var складId = await _context.Dh11948s.Where(x => x.Iddoc == idDoc).Select(x => x.Sp11929).SingleOrDefaultAsync();
             if (!string.IsNullOrEmpty(складId))
                 return await _склад.GetEntityByIdAsync(складId);
             return null;
         }
         public async Task<Order> ПолучитьOrderНабора(string idDoc)
         {
-            var orderId = await _context.Dh11948s.Where(x => x.Iddoc == idDoc).Select(x => x.Sp14003).FirstOrDefaultAsync();
+            var orderId = await _context.Dh11948s.Where(x => x.Iddoc == idDoc).Select(x => x.Sp14003).SingleOrDefaultAsync();
             if (!string.IsNullOrEmpty(orderId))
                 return await _order.ПолучитьOrderWithItems(orderId);
             return null;
@@ -490,7 +481,7 @@ namespace StinClasses.Документы
                            {
                                dh,
                                j
-                           }).FirstOrDefaultAsync();
+                           }).SingleOrDefaultAsync();
             var doc = new ФормаОплатаЧерезЮКасса
             {
                 Общие = new ОбщиеРеквизиты
@@ -533,7 +524,7 @@ namespace StinClasses.Документы
                            {
                                dh,
                                j
-                           }).FirstOrDefaultAsync();
+                           }).SingleOrDefaultAsync();
             var doc = new ФормаЗаявкаПокупателя
             {
                 Общие = new ОбщиеРеквизиты
@@ -595,7 +586,7 @@ namespace StinClasses.Документы
                            {
                                dh,
                                j
-                           }).FirstOrDefaultAsync();
+                           }).SingleOrDefaultAsync();
             var докОснование = !(string.IsNullOrWhiteSpace(d.dh.Sp1587) || d.dh.Sp1587 == StinClasses.Common.ПустоеЗначениеИд13) ? await ДокОснованиеAsync(d.dh.Sp1587.Substring(4)) : null;
 
             var doc = new ФормаРеализация

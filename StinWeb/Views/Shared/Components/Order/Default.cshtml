@@ -138,6 +138,12 @@
                         .UsingFooter("~/Views/Shared/Components/Order/_Footer.cshtml")
                     )
                 }
+                @if (Model.Order != null && !string.IsNullOrWhiteSpace(Model.SecretCode))
+                {
+                    <div class="info-area w-100" style="margin-bottom: 0.5em; line-height: 1em;padding: 5px;padding-inline-start: 20px;font-size:small">
+                        @Html.LabelWithValue("Код подтверждения: ",Model.SecretCode)
+                    </div>
+                }
                 @if (Model.Order != null && (Model.Order.InternalStatus != 5) && Model.Order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP && Model.Order.PaymentType == StinPaymentType.POSTPAID)
                 {
 

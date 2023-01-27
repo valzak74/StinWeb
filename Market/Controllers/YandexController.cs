@@ -232,6 +232,8 @@ namespace Market.Controllers
             using IBridge1C bridge = _serviceScopeFactory.CreateScope()
                 .ServiceProvider.GetService<IBridge1C>();
             await bridge.ChangeStatus(null, headers.Authorization, requestedOrder.Order.Id, requestedOrder.Order.Status, requestedOrder.Order.SubStatus);
+            if (!string.IsNullOrEmpty(requestedOrder.Order.ElectronicAcceptanceCertificateCode))
+                await bridge.SetElectronicAcceptanceCertificateCode(headers.Authorization, requestedOrder.Order.Id, requestedOrder.Order.ElectronicAcceptanceCertificateCode, cancellationToken);
             return Ok();
         }
         [HttpPost("order/int_items")]

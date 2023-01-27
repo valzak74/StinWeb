@@ -50,6 +50,7 @@ namespace StinClasses.Справочники
         Task<Dictionary<string, decimal>> GetQuantumInfo(string marketId, List<string> nomenkCodes, CancellationToken cancellationToken);
         Task<Dictionary<string, decimal>> GetDeltaStockInfo(string marketId, List<string> nomenkCodes, CancellationToken cancellationToken);
         Task<Dictionary<string, decimal>> GetDeltaPriceInfo(string marketId, List<string> nomenkCodes, CancellationToken cancellationToken);
+        (string id, string productId, decimal deltaPrice, decimal fixPrice, decimal coeff) GetMarketUsingParams(string marketplaceId, string nomId);
     }
     public class MarketplaceEntity : IMarketplace
     {
@@ -264,6 +265,22 @@ namespace StinClasses.Справочники
                 .GroupBy(x => x.Id)
                 .Select(gr => gr.OrderBy(o => o.IsMark).FirstOrDefault())
                 .ToDictionaryAsync(k => k.Id, v => v.DeltaPrice, cancellationToken);
+        }
+        public (string id, string productId, decimal deltaPrice, decimal fixPrice, decimal coeff) GetMarketUsingParams(string marketplaceId, string nomId)
+        {
+            return _context.Sc14152s
+                .Where(x => !x.Ismark && (x.Parentext == nomId) && (x.Sp14147 == marketplaceId))
+                .Select(x => new
+                {
+                    id = x.Id,
+                    productId = x.Sp14190.Trim(),
+                    deltaPrice = x.Sp14213,
+                    fixPrice = x.Sp14148,
+                    coeff = x.Sp14149
+                })
+                .AsEnumerable()
+                .Select(c => (c.id, c.productId, c.deltaPrice, c.fixPrice, c.coeff))
+                .FirstOrDefault();
         }
     }
 }

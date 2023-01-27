@@ -4,19 +4,8 @@ using PdfSharpCore.Pdf.IO;
 using PdfSharpCore.Fonts;
 using System.Diagnostics;
 using MigraDocCore.DocumentObjectModel;
-//using MigraDocCore.Rendering;
-//using MigraDocCore.DocumentObjectModel.Tables;
-using System.Text.RegularExpressions;
-//using PdfSharpCore.Utils;
-//using MigraDocCore.DocumentObjectModel.Shapes;
-using PdfSharpCore.Drawing.BarCodes;
-using PdfSharpCore.Utils;
 using MigraDocCore.Rendering;
-using MigraDocCore.DocumentObjectModel.Shapes;
 using BarcodeLib;
-using System.Drawing;
-using System.Xml.Linq;
-using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 
 namespace PdfHelper
 {
@@ -43,7 +32,7 @@ namespace PdfHelper
         public byte[] GetPdfFromImage(byte[] file, double marginHeight = 4, double marginWidth = 4)
         {
             using var outputStream = new MemoryStream();
-            using PdfDocument document = new PdfDocument(outputStream);
+            using PdfDocument document = new PdfDocument();
             PdfPage page = document.AddPage();
             using Stream stream = new MemoryStream(file);
             stream.Position = 0;
@@ -58,7 +47,7 @@ namespace PdfHelper
         public byte[] GetPdfFromImage(List<byte[]> files, double marginHeight = 4, double marginWidth = 4)
         {
             using var outputStream = new MemoryStream();
-            using PdfDocument document = new PdfDocument(outputStream);
+            using PdfDocument document = new PdfDocument();
             foreach (var f in files)
             {
                 PdfPage page = document.AddPage();

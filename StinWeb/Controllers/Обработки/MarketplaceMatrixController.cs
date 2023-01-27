@@ -65,7 +65,7 @@ namespace StinWeb.Controllers.Обработки
             return Json(lookup.GetData());
         }
         [HttpPost]
-        public async Task<IActionResult> ExportDataAsync(string firmaId, string marketId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken)
+        public async Task<IActionResult> ExportDataAsync(string firmaId, string marketId, DateTime startDate, DateTime endDate, bool showDeleted, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(marketId))
                 return StatusCode(502, "Недопустимое значение campaignId");
@@ -246,7 +246,7 @@ namespace StinWeb.Controllers.Обработки
                              from sc8840 in _sc8840.DefaultIfEmpty()
                              join vzTovar in _context.VzTovars on nom.Id equals vzTovar.Id into _vzTovar
                              from vzTovar in _vzTovar.DefaultIfEmpty()
-                             where market.Id == marketId
+                             where (market.Id == marketId) && (showDeleted ? true : !marketUsing.Ismark)
                              select new
                              {
                                  Id = marketUsing.Id,

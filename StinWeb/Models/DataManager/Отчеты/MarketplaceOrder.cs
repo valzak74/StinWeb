@@ -18,6 +18,7 @@ namespace StinWeb.Models.DataManager.Отчеты
         public string StatusDescription { get; set; }
         public string МаршрутНаименование { get; set; }
         public bool isFBS { get; set; }
+        public bool isExpress { get; set; }
         public string ТипДоставки { get; set; }
         public bool NeedToGetPayment { get; set; }
         public decimal Сумма { get; set; }

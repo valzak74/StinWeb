@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing.Drawing2D;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Runtime.Intrinsics.Arm;
+using System.Drawing.Imaging;
 
 namespace StinClasses
 {
@@ -73,11 +77,11 @@ namespace StinClasses
         };
         public static string GetКодОперацииId(string name)
         {
-            return КодОперации.Where(x => x.Value == name).Select(x => x.Key).FirstOrDefault();
+            return КодОперации.Where(x => x.Value == name).Select(x => x.Key).SingleOrDefault();
         }
         public static string GetКодОперацииName(string id)
         {
-            return КодОперации.Where(x => x.Key == id).Select(x => x.Value).FirstOrDefault();
+            return КодОперации.Where(x => x.Key == id).Select(x => x.Value).SingleOrDefault();
         }
         public static readonly Dictionary<int, string> ВидыДокументов = new Dictionary<int, string>()
         {
@@ -140,11 +144,11 @@ namespace StinClasses
         };
         public static string GetСтатусПартииId(string name)
         {
-            return СтатусПартии.Where(x => x.Value == name).Select(x => x.Key).FirstOrDefault();
+            return СтатусПартии.Where(x => x.Value == name).Select(x => x.Key).SingleOrDefault();
         }
         public static string GetСтатусПартииName(string id)
         {
-            return СтатусПартии.Where(x => x.Key == id).Select(x => x.Value).FirstOrDefault();
+            return СтатусПартии.Where(x => x.Key == id).Select(x => x.Value).SingleOrDefault();
         }
         public static readonly Dictionary<string, string> СпособыОтгрузки = new Dictionary<string, string>()
         {
@@ -434,6 +438,44 @@ namespace StinClasses
                 }
             }
             return "";
+        }
+        public static byte[] ResizeImage(this byte[] img, float width, float height)
+        {
+            float milimetresPerInch = 25.4f;
+            using var ms = new System.IO.MemoryStream(img);
+            Image original = Image.FromStream(ms);
+            //Get the image current width  
+            float sourceWidth = original.Width / original.HorizontalResolution * milimetresPerInch;
+            //Get the image current height  
+            float sourceHeight = original.Height / original.VerticalResolution * milimetresPerInch;
+            if ((width == sourceWidth) && (height == sourceHeight))
+                return img;
+            float nPercent = 0;
+            float nPercentW = 0;
+            float nPercentH = 0;
+            //Calulate  width with new desired size  
+            nPercentW = width / sourceWidth;
+            //Calculate height with new desired size  
+            nPercentH = height / sourceHeight;
+            if (nPercentH < nPercentW)
+                nPercent = nPercentH;
+            else
+                nPercent = nPercentW;
+            //New Width  
+            float destWidth = sourceWidth * nPercent;
+            int destinationWidth = (int)(destWidth / milimetresPerInch * original.HorizontalResolution);
+            //New Height  
+            float destHeight = sourceHeight * nPercent;
+            int destinationHeight = (int)(destHeight / milimetresPerInch * original.VerticalResolution);
+            Bitmap b = new Bitmap(destinationWidth, destinationHeight);
+            Graphics g = Graphics.FromImage((Image)b);
+            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            // Draw image with new width and height  
+            g.DrawImage(original, 0, 0, destinationWidth, destinationHeight);
+            g.Dispose();
+            using var destMs = new System.IO.MemoryStream();
+            ((Image)b).Save(destMs, original.RawFormat);
+            return destMs.ToArray();
         }
     }
 }

@@ -222,7 +222,7 @@ namespace StinClasses.Справочники
                                    AuthToken = m.Sp14054.Trim(),
                                    AuthorizationApi = m.Sp14077.Trim(),
                                    Encode = (EncodeVersion)m.Sp14153
-                               }).FirstOrDefaultAsync();
+                               }).SingleOrDefaultAsync();
 
             return await UpdateOrderStatusFromRegistry(order);
         }
@@ -281,7 +281,7 @@ namespace StinClasses.Справочники
                                    AuthToken = m.Sp14054.Trim(),
                                    AuthorizationApi = m.Sp14077.Trim(),
                                    Encode = (EncodeVersion)m.Sp14153
-                               }).FirstOrDefaultAsync();
+                               }).SingleOrDefaultAsync();
 
             return await UpdateOrderStatusFromRegistry(order);
         }
@@ -343,7 +343,7 @@ namespace StinClasses.Справочники
         }
         public async Task ОбновитьOrderNo(string Id, string OrderNo)
         {
-            var entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Id == Id);
+            var entity = await _context.Sc13994s.SingleOrDefaultAsync(x => x.Id == Id);
             if (entity != null)
             {
                 entity.Sp13981 = OrderNo;
@@ -353,7 +353,7 @@ namespace StinClasses.Справочники
         }
         public async Task ОбновитьOrderShipmentDate(string Id, DateTime ShipmentDate)
         {
-            var entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Id == Id);
+            var entity = await _context.Sc13994s.SingleOrDefaultAsync(x => x.Id == Id);
             if (entity != null)
             {
                 entity.Sp13990 = ShipmentDate;
@@ -363,7 +363,7 @@ namespace StinClasses.Справочники
         }
         public async Task RefreshOrderDeliveryServiceId(string Id, long DeliveryServiceId, string DeliveryServiceName, CancellationToken cancellationToken)
         {
-            var entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Id == Id);
+            var entity = await _context.Sc13994s.SingleOrDefaultAsync(x => x.Id == Id);
             if (entity != null)
             {
                 entity.Sp13986 = DeliveryServiceId;
@@ -375,7 +375,7 @@ namespace StinClasses.Справочники
         }
         public async Task ОбновитьOrderStatus(string Id, int NewStatus, string errMessage = "")
         {
-            var entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Id == Id);
+            var entity = await _context.Sc13994s.SingleOrDefaultAsync(x => x.Id == Id);
             if (entity != null)
             {
                 entity.Sp13982 = NewStatus;
@@ -388,7 +388,7 @@ namespace StinClasses.Справочники
         }
         public async Task ОбновитьOrderNoAndStatus(string Id, string OrderNo, int NewStatus)
         {
-            var entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Id == Id);
+            var entity = await _context.Sc13994s.SingleOrDefaultAsync(x => x.Id == Id);
             if (entity != null)
             {
                 entity.Sp13981 = OrderNo;
@@ -402,7 +402,7 @@ namespace StinClasses.Справочники
             string PostCode, string Country, string City, string Subway, string Street, string House, string Block, string Entrance, string Entryphone, string Floor, string Apartment,
             string CustomerNotes)
         {
-            var entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Id == orderId);
+            var entity = await _context.Sc13994s.SingleOrDefaultAsync(x => x.Id == orderId);
             if (entity != null)
             {
                 if (entity.Sp14116.Trim().ValueChanged(LastName))
@@ -477,7 +477,10 @@ namespace StinClasses.Справочники
                     CustomerComment = string.IsNullOrWhiteSpace(notes) ? "" : notes
                 };
                 order.Items = items;
-                var MarketplaceEntity = await _context.Sc14042s.Where(x => !x.Ismark && x.Parentext == firmaId && x.Sp14077.Trim() == authApi).FirstOrDefaultAsync();
+                var MarketplaceEntity = await _context.Sc14042s
+                    .Where(x => !x.Ismark && x.Parentext == firmaId && x.Sp14077.Trim() == authApi)
+                    .OrderBy(x => x.Id)
+                    .FirstOrDefaultAsync();
                 if (MarketplaceEntity == null)
                 {
                     MarketplaceEntity = new Sc14042
@@ -510,8 +513,11 @@ namespace StinClasses.Справочники
                     _context.РегистрацияИзмененийРаспределеннойИБ(14042, MarketplaceEntity.Id);
                 }
                 order.Тип = MarketplaceEntity.Sp14155.ToUpper().Trim();
+                order.Модель = MarketplaceEntity.Sp14164.ToUpper().Trim();
                 if ((order.Тип == "OZON") && (order.DeliveryServiceId != MarketplaceEntity.Code.Trim()))
                     order.Marketplace = MarketplaceEntity.Sp14155.Trim() + " realFBS";
+                else if ((order.Тип == "ЯНДЕКС") && (order.Модель == "EXPRESS"))
+                    order.Marketplace = "Yandex " + order.Модель;
                 Sc13994 entity = new Sc13994
                 {
                     Id = order.Id,

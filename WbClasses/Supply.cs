@@ -16,12 +16,15 @@ namespace WbClasses
     {
         public string? Id { get; set; }
         public bool Done { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
-        public DateTime CreatedAt { get; set; }
+        public DateTime? CreatedAt { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
-        public DateTime ClosedAt { get; set; }
+        public DateTime? ClosedAt { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
-        public DateTime ScanDt { get; set; }
+        public DateTime? ScanDt { get; set; }
         public string? Name { get; set; }
         public bool? IsLargeCargo { get; set; }
     }

@@ -23,6 +23,7 @@ namespace YandexClasses
         public Buyer Buyer { get; set; }
         public OrderDelivery Delivery { get; set; }
         public List<RequestedItem> Items { get; set; }
+        public string ElectronicAcceptanceCertificateCode { get; set; }
         public string Notes { get; set; }
         public OrderRequestEntry()
         {

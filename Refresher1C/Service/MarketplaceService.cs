@@ -30,6 +30,7 @@ namespace Refresher1C.Service
         private readonly Dictionary<string, string> _firmProxy;
 
         private IOrder _order;
+        private IMarketplace _marketplace;
         private IФирма _фирма;
         private IНоменклатура _номенклатура;
         private IСклад _склад;
@@ -46,6 +47,7 @@ namespace Refresher1C.Service
                 if (disposing)
                 {
                     _order.Dispose();
+                    _marketplace.Dispose();
                     _фирма.Dispose();
                     _номенклатура.Dispose();
                     _склад.Dispose();
@@ -70,6 +72,7 @@ namespace Refresher1C.Service
             _httpService = httpService;
             _context = context;
             _configuration = configuration;
+            _marketplace = new MarketplaceEntity(context);
             _order = new OrderEntity(context);
             _фирма = new ФирмаEntity(context);
             _номенклатура = new НоменклатураEntity(context);
@@ -345,7 +348,8 @@ namespace Refresher1C.Service
                                   join market in _context.Sc14042s on order.Sp14038 equals market.Id
                                   join binary in _context.VzOrderBinaries.Where(x => x.Extension.Trim().ToUpper() == "LABELS") on order.Id equals binary.Id into _binary
                                   from binary in _binary.DefaultIfEmpty()
-                                  where (regular ? ((order.Sp13982 == 1) || (order.Sp13982 == 3)) : (order.Sp13982 == -2)) && //order статус = 1 (грузовые места сформированы)
+                                  where //order.Code.Trim() == "2301258054266676" &&
+                                        (regular ? ((order.Sp13982 == 1) || (order.Sp13982 == 3)) : (order.Sp13982 == -2)) && //order статус = 1 (грузовые места сформированы)
                                         (((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.YANDEX_MARKET) ||
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.SBER_MEGA_MARKET) ||
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.ALIEXPRESS_LOGISTIC) ||
@@ -460,6 +464,8 @@ namespace Refresher1C.Service
                                         }
                                     }
                                 }
+                                else
+                                    status = entity.Sp13982;
                             }
                             else if (order.Тип == "WILDBERRIES")
                             {
@@ -467,7 +473,7 @@ namespace Refresher1C.Service
                                     new List<long> { Convert.ToInt64(order.MarketplaceId) },
                                     stoppingToken);
                                 if (result.png != null)
-                                    label = PdfHelper.PdfFunctions.Instance.GetPdfFromImage(result.png);
+                                    label = PdfHelper.PdfFunctions.Instance.GetPdfFromImage(result.png.ResizeImage(58,40), 0, 0);
                             }
                             if (!string.IsNullOrEmpty(err))
                                 entity.Sp14055 = err;
@@ -1015,32 +1021,6 @@ namespace Refresher1C.Service
                     {
                         var Код = d.NomCode.Encode(marketplace.Encoding);
                         var Цена = GetPriceMarketplace(d.ЦенаРозн, d.ЦенаСп, d.ЦенаЗакуп, checkCoeff, d.ЦенаФикс, d.Коэф, marketplace.Multiplayer, d.DeltaPrice);
-                        //    d.ЦенаСп > 0 ? Math.Min(d.ЦенаСп, d.ЦенаРозн) : d.ЦенаРозн;
-                        //if (d.ЦенаФикс > 0)
-                        //{
-                        //    if (d.ЦенаФикс >= Цена)
-                        //        Цена = d.ЦенаФикс;
-                        //    else
-                        //    {
-                        //        var Порог = d.ЦенаЗакуп * (d.Коэф > 0 ? d.Коэф : (marketplace.Multiplayer > 0 ? marketplace.Multiplayer : checkCoeff));
-                        //        if (Порог > d.ЦенаФикс)
-                        //        {
-                        //            //удалить ЦенаФикс из markUsing ???
-                        //            //entry.Sp14148 = 0;
-                        //        }
-                        //        else
-                        //        {
-                        //            Цена = d.ЦенаФикс;
-                        //        }
-                        //    }
-                        //}
-                        //else if (d.DeltaPrice != 0)
-                        //{
-                        //    var Порог = d.ЦенаЗакуп * (d.Коэф > 0 ? d.Коэф : (marketplace.Multiplayer > 0 ? marketplace.Multiplayer : checkCoeff));
-                        //    var calcPrice = Цена * (100 + d.DeltaPrice) / 100;
-                        //    if (calcPrice >= Порог)
-                        //        Цена = calcPrice;
-                        //}
                         if (long.TryParse(marketplace.FeedId, out long feedId))
                             feedId = 0;
                         if (Цена > 0)
@@ -1139,7 +1119,8 @@ namespace Refresher1C.Service
                         {
                             if (_context.Database.CurrentTransaction != null)
                                 _context.Database.CurrentTransaction.Rollback();
-                            _logger.LogError(result.Item2);
+                            if (!string.IsNullOrEmpty(result.Item2))
+                                _logger.LogError(result.Item2);
                             uploadIds.Clear();
                         }
                     }
@@ -1162,7 +1143,8 @@ namespace Refresher1C.Service
                         {
                             if (_context.Database.CurrentTransaction != null)
                                 _context.Database.CurrentTransaction.Rollback();
-                            _logger.LogError(result.Item2);
+                            if (!string.IsNullOrEmpty(result.error))
+                                _logger.LogError(result.error);
                             uploadIds.Clear();
                         }
                     }
@@ -1232,7 +1214,8 @@ namespace Refresher1C.Service
                         {
                             if (_context.Database.CurrentTransaction != null)
                                 _context.Database.CurrentTransaction.Rollback();
-                            _logger.LogError(result.ErrorMessage);
+                            if (!string.IsNullOrEmpty(result.ErrorMessage))
+                                _logger.LogError(result.ErrorMessage);
                             uploadIds.Clear();
                         }
                     }
@@ -1259,7 +1242,8 @@ namespace Refresher1C.Service
                         {
                             if (_context.Database.CurrentTransaction != null)
                                 _context.Database.CurrentTransaction.Rollback();
-                            _logger.LogError(result.Item2);
+                            if (!string.IsNullOrEmpty(result.Item2))
+                                _logger.LogError(result.Item2);
                             uploadIds.Clear();
                         }
                     }
@@ -1290,9 +1274,9 @@ namespace Refresher1C.Service
                             {
                                 if (_context.Database.CurrentTransaction != null)
                                     _context.Database.CurrentTransaction.Rollback();
-                                _logger.LogError(db_ex.InnerException.ToString());
                                 if (--tryCount == 0)
                                 {
+                                    _logger.LogError(db_ex.InnerException.ToString());
                                     break;
                                 }
                                 await Task.Delay(sleepPeriod);
@@ -1301,9 +1285,9 @@ namespace Refresher1C.Service
                             {
                                 if (_context.Database.CurrentTransaction != null)
                                     _context.Database.CurrentTransaction.Rollback();
-                                _logger.LogError(ex.Message);
                                 if (--tryCount == 0)
                                 {
+                                    _logger.LogError(ex.Message);
                                     break;
                                 }
                                 await Task.Delay(sleepPeriod);
@@ -1924,14 +1908,6 @@ namespace Refresher1C.Service
         public async Task UpdateStock(bool regular, CancellationToken stoppingToken)
         {
             var defFirmaId = _configuration["Stocker:" + _configuration["Stocker:Firma"] + ":FirmaId"];
-            if (int.TryParse(_configuration["Stocker:maxPerRequestAliexpress"], out int maxPerRequestAli))
-                maxPerRequestAli = Math.Max(maxPerRequestAli, 1);
-            else
-                maxPerRequestAli = 20;
-            if (int.TryParse(_configuration["Stocker:maxPerRequestOzon"], out int maxPerRequestOzon))
-                maxPerRequestOzon = Math.Max(maxPerRequestOzon, 1);
-            else
-                maxPerRequestOzon = 100;
             try
             {
                 var marketplaceIds = await (from market in _context.Sc14042s
@@ -1941,6 +1917,7 @@ namespace Refresher1C.Service
                                                 //&& (market.Code == "43956")
                                                 //&& (market.Code == "45715133")
                                                 //&& (market.Sp14155.Trim() == "Wildberries")
+                                                //&& (market.Sp14155.Trim() == "AliExpress")
                                             select new
                                             {
                                                 Id = market.Id,
@@ -1958,372 +1935,23 @@ namespace Refresher1C.Service
                                             })
                                             .ToListAsync(stoppingToken);
                 foreach (var marketplace in marketplaceIds)
-                {
-                    if (marketplace.Тип == "OZON")
-                    {
-                        await UpdateOzonStock(
-                            marketplace.ClientId, marketplace.AuthToken, regular, maxPerRequestOzon,
-                            marketplace.Id, marketplace.FirmaId, marketplace.Encoding, marketplace.СкладId, marketplace.StockOriginal, marketplace.Code, stoppingToken);
-                    }
-                    else if (marketplace.Тип == "SBER")
-                    {
-                        await UpdateSberStock(marketplace.AuthToken, regular, marketplace.Id, marketplace.FirmaId,
-                            marketplace.Encoding, marketplace.СкладId, marketplace.StockOriginal, stoppingToken);
-                    }
-                    else if (marketplace.Тип == "ALIEXPRESS")
-                    {
-                        await UpdateAliExpressStock(marketplace.ClientId, 
-                            marketplace.AuthSecret, marketplace.Authorization, marketplace.AuthToken, regular, maxPerRequestAli,
-                            marketplace.Id, marketplace.FirmaId, marketplace.Encoding, marketplace.СкладId, marketplace.StockOriginal, stoppingToken);
-                    }
-                    else if (marketplace.Тип == "ЯНДЕКС")
-                    {
-                        await UpdateYandexStock(marketplace.Id, marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.AuthSecret,
-                            regular, marketplace.FirmaId, marketplace.Encoding,
-                            marketplace.СкладId, marketplace.StockOriginal, stoppingToken);
-                    }
-                    else if (marketplace.Тип == "WILDBERRIES")
-                    {
-                        await UpdateWbStock(marketplace.AuthToken, marketplace.Code, regular, marketplace.Id, marketplace.FirmaId,
-                            marketplace.СкладId, marketplace.StockOriginal, stoppingToken);
-                    }
-                }
+                    await UpdateStockMarketplace(regular, marketplace.Тип, 100, marketplace.Id, marketplace.ClientId, marketplace.AuthToken, marketplace.AuthSecret,
+                        marketplace.FirmaId, marketplace.Encoding, marketplace.СкладId, marketplace.StockOriginal, marketplace.Code, stoppingToken);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
             }
         }
-        public async Task UpdateYandexStock(string marketplaceId, string campaignId, string clientId, string authToken, string warehouseId, 
-            bool regular, string firmaId, EncodeVersion encoding,
-            string складId, bool stockOriginal, CancellationToken stoppingToken)
-        {
-            var data = await (from markUse in _context.Sc14152s
-                              join nom in _context.Sc84s on markUse.Parentext equals nom.Id
-                              join updStock in _context.VzUpdatingStocks on markUse.Id equals updStock.MuId
-                              where (markUse.Sp14147 == marketplaceId) &&
-                                (markUse.Sp14158 == 1) && //Есть в каталоге 
-                                (((regular ? updStock.Flag : updStock.IsError) &&
-                                  (updStock.Updated < DateTime.Now.AddMinutes(-2))) ||
-                                 (updStock.Updated.Date != DateTime.Today))
-                              select new
-                              {
-                                  Id = markUse.Id,
-                                  Locked = markUse.Ismark,
-                                  NomId = markUse.Parentext,
-                                  OfferId = nom.Code.Encode(encoding),
-                                  Квант = nom.Sp14188,
-                                  DeltaStock = stockOriginal ? 0 : nom.Sp14215, //markUse.Sp14214,
-                                  //WarehouseId = string.IsNullOrWhiteSpace(markUse.Sp14190) ? skladCode : markUse.Sp14190,
-                                  UpdatedAt = updStock.Updated,
-                                  UpdatedFlag = updStock.Flag
-                              })
-                .OrderByDescending(x => x.UpdatedFlag)
-                .ThenBy(x => x.UpdatedAt)
-                .Take(1000)
-                .ToListAsync(stoppingToken);
-            if (data?.Count > 0)
-            {
-                var listIds = data.Select(x => x.Id).ToList();
-                int tryCount = 5;
-                TimeSpan sleepPeriod = TimeSpan.FromSeconds(1);
-                bool success = false;
-                while (true)
-                {
-                    using var tran = await _context.Database.BeginTransactionAsync();
-                    try
-                    {
-                        _context.VzUpdatingStocks
-                            .Where(x => listIds.Contains(x.MuId))
-                            .ToList()
-                            .ForEach(x =>
-                            {
-                                x.Flag = false;
-                                x.Taken = true;
-                                x.IsError = false;
-                            });
-                        await _context.SaveChangesAsync(stoppingToken);
-                        if (_context.Database.CurrentTransaction != null)
-                            tran.Commit();
-                        success = true;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        if (_context.Database.CurrentTransaction != null)
-                            _context.Database.CurrentTransaction.Rollback();
-                        _logger.LogError(ex.Message);
-                        if (--tryCount == 0)
-                        {
-                            break;
-                        }
-                        await Task.Delay(sleepPeriod);
-                    }
-                }
-                if (success)
-                {
-                    var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(firmaId);
-                    List<string> списокСкладов = null;
-                    if (string.IsNullOrEmpty(складId))
-                        списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
-                    else
-                        списокСкладов = new List<string> { складId };
-
-                    var списокНоменклатуры = await _номенклатура.ПолучитьСвободныеОстатки(разрешенныеФирмы, списокСкладов, data.Select(x => x.NomId).ToList(), false);
-                    var stockData = new Dictionary<string, string>();
-                    foreach (var item in data)
-                    {
-                        var номенклатура = списокНоменклатуры.Where(x => x.Id == item.NomId).FirstOrDefault();
-                        if (номенклатура != null)
-                        {
-                            long остаток = 0;
-                            if (item.Квант > 1)
-                            {
-                                остаток = (long)(((номенклатура.Остатки
-                                    .Where(x => x.СкладId == Common.SkladEkran)
-                                    .Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - item.DeltaStock) / item.Квант);
-                                остаток = остаток * (int)item.Квант;
-                            }
-                            else
-                                остаток = (long)((номенклатура.Остатки.Sum(x => x.СвободныйОстаток) - item.DeltaStock) / номенклатура.Единица.Коэффициент);
-                            остаток = Math.Max(остаток, 0);
-                            stockData.Add(номенклатура.Code.Encode(encoding), item.Locked ? "0" : остаток.ToString());
-                        }
-                    }
-                    if (stockData.Count > 0)
-                    {
-                        var result = await YandexClasses.YandexOperators.UpdateStock(_httpService, _firmProxy[firmaId], campaignId, clientId, authToken, warehouseId,
-                            stockData,
-                            stoppingToken);
-                        if (!string.IsNullOrEmpty(result.error))
-                        {
-                            _logger.LogError(result.error);
-                        }
-                        if (result.success)
-                        {
-                            tryCount = 5;
-                            while (true)
-                            {
-                                using var tran = await _context.Database.BeginTransactionAsync();
-                                try
-                                {
-                                    _context.VzUpdatingStocks
-                                        .Where(x => listIds.Contains(x.MuId) && x.Taken)
-                                        .ToList()
-                                        .ForEach(x =>
-                                        {
-                                            x.Flag = false;
-                                            x.Taken = false;
-                                            x.IsError = false;
-                                            x.Updated = DateTime.Now;
-                                        });
-                                    await _context.SaveChangesAsync(stoppingToken);
-                                    if (_context.Database.CurrentTransaction != null)
-                                        tran.Commit();
-                                    break;
-                                }
-                                catch (Exception ex)
-                                {
-                                    if (_context.Database.CurrentTransaction != null)
-                                        _context.Database.CurrentTransaction.Rollback();
-                                    _logger.LogError(ex.Message);
-                                    if (--tryCount == 0)
-                                    {
-                                        break;
-                                    }
-                                    await Task.Delay(sleepPeriod);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        public async Task UpdateWbStock(string authToken, string stockId, bool regular, string marketplaceId, string firmaId, 
-            string складId, bool stockOriginal, CancellationToken stoppingToken)
-        {
-            int.TryParse(stockId, out int warehouseId);
-            var data = await ((from markUse in _context.Sc14152s
-                               join nom in _context.Sc84s on markUse.Parentext equals nom.Id
-                               join updStock in _context.VzUpdatingStocks on markUse.Id equals updStock.MuId
-                               where (markUse.Sp14147 == marketplaceId) &&
-                                 (markUse.Sp14158 == 1) && //Есть в каталоге 
-                                 (((regular ? updStock.Flag : updStock.IsError) &&
-                                   (updStock.Updated < DateTime.Now.AddMinutes(-2))) ||
-                                  (updStock.Updated.Date != DateTime.Today))
-                               //(nom.Code == "D00040383")
-                               select new
-                               {
-                                   Id = markUse.Id,
-                                   Locked = markUse.Ismark,
-                                   NomId = markUse.Parentext,
-                                   //OfferId = nom.Code.Encode(encoding),
-                                   Квант = nom.Sp14188,
-                                   DeltaStock = stockOriginal ? 0 : nom.Sp14215, //markUse.Sp14214,
-                                   UpdatedAt = updStock.Updated,
-                                   UpdatedFlag = updStock.Flag
-                               })
-                .OrderByDescending(x => x.UpdatedFlag)
-                .ThenBy(x => x.UpdatedAt)
-                .Take(1000))
-                .ToListAsync(stoppingToken);
-            if (data?.Count > 0)
-            {
-                var listIds = data.Select(x => x.Id).ToList();
-                int tryCount = 5;
-                TimeSpan sleepPeriod = TimeSpan.FromSeconds(1);
-                bool success = false;
-                while (true)
-                {
-                    using var tran = await _context.Database.BeginTransactionAsync();
-                    try
-                    {
-                        _context.VzUpdatingStocks
-                            .Where(x => listIds.Contains(x.MuId))
-                            .ToList()
-                            .ForEach(x =>
-                            {
-                                x.Flag = false;
-                                x.Taken = true;
-                                x.IsError = false;
-                            });
-                        await _context.SaveChangesAsync(stoppingToken);
-                        if (_context.Database.CurrentTransaction != null)
-                            tran.Commit();
-                        success = true;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        if (_context.Database.CurrentTransaction != null)
-                            _context.Database.CurrentTransaction.Rollback();
-                        _logger.LogError(ex.Message);
-                        if (--tryCount == 0)
-                        {
-                            break;
-                        }
-                        await Task.Delay(sleepPeriod);
-                    }
-                }
-                if (success)
-                {
-                    var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(firmaId);
-                    List<string> списокСкладов = null;
-                    if (string.IsNullOrEmpty(складId))
-                        списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
-                    else
-                        списокСкладов = new List<string> { складId };
-
-                    var списокНоменклатуры = await _номенклатура.ПолучитьСвободныеОстатки(разрешенныеФирмы, списокСкладов, data.Select(x => x.NomId).ToList(), false);
-                    var stockData = new Dictionary<string, int>();
-                    foreach (var item in data)
-                    {
-                        var номенклатура = списокНоменклатуры.Where(x => x.Id == item.NomId).FirstOrDefault();
-                        if (номенклатура != null)
-                        {
-                            long остаток = 0;
-                            if (item.Квант > 1)
-                            {
-                                остаток = (int)(((номенклатура.Остатки
-                                    .Where(x => x.СкладId == Common.SkladEkran)
-                                    .Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - item.DeltaStock) / item.Квант);
-                            }
-                            else
-                                остаток = (long)((номенклатура.Остатки.Sum(x => x.СвободныйОстаток) - item.DeltaStock) / номенклатура.Единица.Коэффициент);
-                            остаток = Math.Max(остаток, 0);
-                            stockData.Add(номенклатура.Единица.Barcode, item.Locked ? 0 : (int)остаток);
-                        }
-                    }
-                    if (stockData.Count > 0)
-                    {
-                        var result = await WbClasses.Functions.UpdateStock(_httpService, _firmProxy[firmaId], authToken, warehouseId,
-                            stockData,
-                            stoppingToken);
-                        List<string> uploadIds = new List<string>();
-                        List<string> errorIds = new List<string>();
-                        var commonErrorTags = new List<string> { "common", "errorText", "additionalError" };
-                        if (result.errors?.Count > 0)
-                        {
-                            foreach (var item in result.errors)
-                                _logger.LogError(item.Key + ": " + item.Value);
-                            var errorOffers = result.errors.Where(x => !commonErrorTags.Contains(x.Key)).Select(x => x.Key);
-                            var nomIds = списокНоменклатуры
-                                .Where(x => errorOffers.Contains(x.Единица.Barcode))
-                                .Select(x => x.Id);
-                            errorIds = data.Where(x => nomIds.Contains(x.NomId)).Select(x => x.Id).ToList();
-                            nomIds = списокНоменклатуры
-                                .Where(x => !errorOffers.Contains(x.Единица.Barcode))
-                                .Select(x => x.Id);
-                            uploadIds = data.Where(x => nomIds.Contains(x.NomId)).Select(x => x.Id).ToList();
-                        }
-                        else
-                        {
-                            var nomIds = списокНоменклатуры
-                                .Where(x => stockData.Select(y => y.Key).Contains(x.Единица.Barcode))
-                                .Select(x => x.Id);
-                            uploadIds = data.Where(x => nomIds.Contains(x.NomId)).Select(x => x.Id).ToList();
-                        }
-                        if ((uploadIds.Count > 0) || (errorIds.Count > 0))
-                        {
-                            tryCount = 5;
-                            while (true)
-                            {
-                                using var tran = await _context.Database.BeginTransactionAsync();
-                                try
-                                {
-                                    if (uploadIds.Count > 0)
-                                    {
-                                        _context.VzUpdatingStocks
-                                            .Where(x => uploadIds.Contains(x.MuId) && x.Taken)
-                                            .ToList()
-                                            .ForEach(x =>
-                                            {
-                                                x.Flag = false;
-                                                x.Taken = false;
-                                                x.IsError = false;
-                                                x.Updated = DateTime.Now;
-                                            });
-                                    }
-                                    if (errorIds.Count > 0)
-                                    {
-                                        _context.VzUpdatingStocks
-                                            .Where(x => errorIds.Contains(x.MuId) && x.Taken)
-                                            .ToList()
-                                            .ForEach(x =>
-                                            {
-                                                x.Flag = false;
-                                                x.Taken = false;
-                                                x.IsError = true;
-                                                x.Updated = DateTime.Now;
-                                            });
-                                    }
-                                    await _context.SaveChangesAsync(stoppingToken);
-                                    if (_context.Database.CurrentTransaction != null)
-                                        tran.Commit();
-                                    break;
-                                }
-                                catch (Exception ex)
-                                {
-                                    if (_context.Database.CurrentTransaction != null)
-                                        _context.Database.CurrentTransaction.Rollback();
-                                    _logger.LogError(ex.Message);
-                                    if (--tryCount == 0)
-                                    {
-                                        break;
-                                    }
-                                    await Task.Delay(sleepPeriod);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        public async Task UpdateSberStock(string authToken, bool regular, string marketplaceId, string firmaId, EncodeVersion encoding, 
-            string складId, bool stockOriginal, CancellationToken stoppingToken)
+        private async Task UpdateStockMarketplace(bool regular, string marketType, int limit, string marketplaceId,
+            string clientId, string authToken, string authSecret,
+            string firmaId, EncodeVersion encoding, string складId, bool stockOriginal,
+            string marketplaceCode,
+            CancellationToken cancellationToken)
         {
             var data = await ((from markUse in _context.Sc14152s
                                join nom in _context.Sc84s on markUse.Parentext equals nom.Id
+                               join sc75 in _context.Sc75s on nom.Sp94 equals sc75.Id
                                join updStock in _context.VzUpdatingStocks on markUse.Id equals updStock.MuId
                                where (markUse.Sp14147 == marketplaceId) &&
                                  (markUse.Sp14158 == 1) && //Есть в каталоге 
@@ -2336,223 +1964,32 @@ namespace Refresher1C.Service
                                    Locked = markUse.Ismark,
                                    NomId = markUse.Parentext,
                                    OfferId = nom.Code.Encode(encoding),
+                                   ProductId = markUse.Sp14190.Trim(),
+                                   Barcode = sc75.Sp80.Trim(),
                                    Квант = nom.Sp14188,
                                    DeltaStock = stockOriginal ? 0 : nom.Sp14215, //markUse.Sp14214,
-                                   //WarehouseId = string.IsNullOrWhiteSpace(markUse.Sp14190) ? skladCode : markUse.Sp14190,
                                    UpdatedAt = updStock.Updated,
                                    UpdatedFlag = updStock.Flag
                                })
-                .OrderByDescending(x => x.UpdatedFlag)
-                .ThenBy(x => x.UpdatedAt)
-                .Take(100))
-                .ToListAsync(stoppingToken);
+            .OrderByDescending(x => x.UpdatedFlag)
+            .ThenBy(x => x.UpdatedAt)
+            .Take(limit))
+            .ToListAsync(cancellationToken);
             if (data?.Count > 0)
             {
-                var listIds = data.Select(x => x.Id).ToList();
-                int tryCount = 5;
-                TimeSpan sleepPeriod = TimeSpan.FromSeconds(1);
-                bool success = false;
-                while (true)
-                {
-                    using var tran = await _context.Database.BeginTransactionAsync();
-                    try
-                    {
-                        _context.VzUpdatingStocks
-                            .Where(x => listIds.Contains(x.MuId))
-                            .ToList()
-                            .ForEach(x =>
-                            {
-                                x.Flag = false;
-                                x.Taken = true;
-                                x.IsError = false;
-                            });
-                        await _context.SaveChangesAsync(stoppingToken);
-                        if (_context.Database.CurrentTransaction != null)
-                            tran.Commit();
-                        success = true;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        if (_context.Database.CurrentTransaction != null)
-                            _context.Database.CurrentTransaction.Rollback();
-                        _logger.LogError(ex.Message);
-                        if (--tryCount == 0)
-                        {
-                            break;
-                        }
-                        await Task.Delay(sleepPeriod);
-                    }
-                }
-                if (success)
-                {
-                    var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(firmaId);
-                    List<string> списокСкладов = null;
-                    if (string.IsNullOrEmpty(складId))
-                        списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
-                    else
-                        списокСкладов = new List<string> { складId };
-
-                    var списокНоменклатуры = await _номенклатура.ПолучитьСвободныеОстатки(разрешенныеФирмы, списокСкладов, data.Select(x => x.NomId).ToList(), false);
-                    var stockData = new Dictionary<string, int>();
-                    foreach (var item in data)
-                    {
-                        var номенклатура = списокНоменклатуры.Where(x => x.Id == item.NomId).FirstOrDefault();
-                        if (номенклатура != null)
-                        {
-                            long остаток = 0;
-                            if (item.Квант > 1)
-                            {
-                                остаток = (int)(((номенклатура.Остатки
-                                    .Where(x => x.СкладId == Common.SkladEkran)
-                                    .Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - item.DeltaStock) / item.Квант);
-                            }
-                            else
-                                остаток = (long)((номенклатура.Остатки.Sum(x => x.СвободныйОстаток) - item.DeltaStock) / номенклатура.Единица.Коэффициент);
-                            остаток = Math.Max(остаток, 0);
-                            stockData.Add(номенклатура.Code.Encode(encoding), item.Locked ? 0 : (int)остаток);
-                        }
-                    }
-                    if (stockData.Count > 0)
-                    {
-                        var result = await SberClasses.Functions.UpdateStock(_httpService, _firmProxy[firmaId], authToken,
-                            stockData,
-                            stoppingToken);
-                        if (!string.IsNullOrEmpty(result.error))
-                        {
-                            _logger.LogError(result.error);
-                        }
-                        if (result.success)
-                        {
-                            tryCount = 5;
-                            while (true)
-                            {
-                                using var tran = await _context.Database.BeginTransactionAsync();
-                                try
-                                {
-                                    _context.VzUpdatingStocks
-                                        .Where(x => listIds.Contains(x.MuId) && x.Taken)
-                                        .ToList()
-                                        .ForEach(x =>
-                                        {
-                                            x.Flag = false;
-                                            x.Taken = false;
-                                            x.IsError = false;
-                                            x.Updated = DateTime.Now;
-                                        });
-                                    await _context.SaveChangesAsync(stoppingToken);
-                                    if (_context.Database.CurrentTransaction != null)
-                                        tran.Commit();
-                                    break;
-                                }
-                                catch (Exception ex)
-                                {
-                                    if (_context.Database.CurrentTransaction != null)
-                                        _context.Database.CurrentTransaction.Rollback();
-                                    _logger.LogError(ex.Message);
-                                    if (--tryCount == 0)
-                                    {
-                                        break;
-                                    }
-                                    await Task.Delay(sleepPeriod);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        public async Task UpdateOzonStock(string clientId, string authToken, bool regular, int limit,
-            string marketplaceId, string firmaId, EncodeVersion encoding, string складId, bool stockOriginal, string skladCode, CancellationToken stoppingToken)
-        {
-            var data = await ((from markUse in _context.Sc14152s
-                              join nom in _context.Sc84s on markUse.Parentext equals nom.Id
-                              join updStock in _context.VzUpdatingStocks on markUse.Id equals updStock.MuId
-                              where (markUse.Sp14147 == marketplaceId) &&
-                                (markUse.Sp14158 == 1) && //Есть в каталоге 
-                                //(markUse.Sp14179 == -3) && (markUse.Sp14178 < DateTime.Now.AddSeconds(-100))
-                                (((regular ? updStock.Flag : updStock.IsError) && 
-                                  (updStock.Updated < DateTime.Now.AddMinutes(-2))) || 
-                                 (updStock.Updated.Date != DateTime.Today))
-                              select new
-                              {
-                                  Id = markUse.Id,
-                                  Locked = markUse.Ismark,
-                                  NomId = markUse.Parentext,
-                                  OfferId = nom.Code.Encode(encoding),
-                                  Квант = nom.Sp14188,
-                                  DeltaStock = stockOriginal ? 0 : nom.Sp14215, //markUse.Sp14214,
-                                  WarehouseId = string.IsNullOrWhiteSpace(markUse.Sp14190) ? skladCode : markUse.Sp14190,
-                                  UpdatedAt = updStock.Updated,
-                                  UpdatedFlag = updStock.Flag
-                              })
-                .OrderByDescending(x => x.UpdatedFlag)
-                .ThenBy(x => x.UpdatedAt)
-                .Take(limit))
-                .ToListAsync(stoppingToken);
-                              
-            if ((data != null) && (data.Count > 0))
-            {
+                bool fullLock = false;
                 var notReadyIds = new List<string>();
-                var checkResult = await OzonClasses.OzonOperators.ProductNotReady(_httpService, clientId, authToken,
-                    data.Select(x => x.OfferId).ToList(),
-                    stoppingToken);
-                if (checkResult.Item2 != null && !string.IsNullOrEmpty(checkResult.Item2))
+                if (marketType == "OZON")
                 {
-                    _logger.LogError(checkResult.Item2);
+                    var offersDictionary = data.ToDictionary(k => k.OfferId, v => v.Id);
+                    notReadyIds = await GetOzonNotReadyProducts(clientId, authToken, offersDictionary, cancellationToken);
                 }
-
-                if ((checkResult.Item1 != null) && (checkResult.Item1.Count > 0))
+                else if (marketType == "WILDBERRIES")
                 {
-                    notReadyIds = data.Where(x => checkResult.Item1.Contains(x.OfferId)).Select(x => x.Id).ToList();
+                    fullLock = await _склад.ЭтоРабочийДень(Common.SkladEkran, 1) != 1;
                 }
                 var listIds = data.Where(x => !notReadyIds.Contains(x.Id)).Select(x => x.Id).ToList();
-                int tryCount = 5;
-                TimeSpan sleepPeriod = TimeSpan.FromSeconds(1);
-                bool success = false;
-                while (true)
-                {
-                    using var tran = await _context.Database.BeginTransactionAsync();
-                    try
-                    {
-                        _context.VzUpdatingStocks
-                            .Where(x => listIds.Contains(x.MuId))
-                            .ToList()
-                            .ForEach(x => 
-                            {
-                                x.Flag = false;
-                                x.Taken = true;
-                                x.IsError = false;
-                            });
-                        _context.VzUpdatingStocks
-                            .Where(x => notReadyIds.Contains(x.MuId))
-                            .ToList()
-                            .ForEach(x => 
-                            {
-                                x.Flag = false;
-                                x.Taken = false;
-                                x.IsError = true;
-                                x.Updated = DateTime.Now; 
-                            });
-                        await _context.SaveChangesAsync(stoppingToken);
-                        if (_context.Database.CurrentTransaction != null)
-                            tran.Commit();
-                        success = true;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        if (_context.Database.CurrentTransaction != null)
-                            _context.Database.CurrentTransaction.Rollback();
-                        _logger.LogError(ex.Message);
-                        if (--tryCount == 0)
-                        {
-                            break;
-                        }
-                        await Task.Delay(sleepPeriod);
-                    }
-                }
-                if (success && (listIds.Count > 0))
+                if (MarkVzUpdateStock(listIds, notReadyIds, null, null, null) && (listIds.Count > 0))
                 {
                     var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(firmaId);
                     List<string> списокСкладов = null;
@@ -2562,174 +1999,153 @@ namespace Refresher1C.Service
                         списокСкладов = new List<string> { складId };
 
                     var списокНоменклатуры = await _номенклатура.ПолучитьСвободныеОстатки(разрешенныеФирмы, списокСкладов, data.Where(x => !notReadyIds.Contains(x.Id)).Select(x => x.NomId).ToList(), false);
-                    var stockData = new List<OzonClasses.StockRequest>();
+                    var stockData = new List<(string productId, string offerId, string barcode, int stock)>();
                     foreach (var item in data.Where(x => !notReadyIds.Contains(x.Id)))
                     {
-                        var номенклатура = списокНоменклатуры.Where(x => x.Id == item.NomId).FirstOrDefault();
-                        if (номенклатура != null)
+                        long остаток = 0;
+                        if (!fullLock)
                         {
-                            long остаток = 0;
-                            if (item.Квант > 1)
+                            var номенклатура = списокНоменклатуры.Where(x => x.Id == item.NomId).FirstOrDefault();
+                            if (номенклатура != null)
                             {
-                                остаток = (int)(((номенклатура.Остатки
-                                    .Where(x => x.СкладId == Common.SkladEkran)
-                                    .Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - item.DeltaStock) / item.Квант);
+                                if (item.Квант > 1)
+                                {
+                                    остаток = (int)(((номенклатура.Остатки
+                                        .Where(x => x.СкладId == Common.SkladEkran)
+                                        .Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - item.DeltaStock) / item.Квант);
+                                    if (marketType == "ЯНДЕКС")
+                                        остаток = остаток * (int)item.Квант;
+                                }
+                                else
+                                    остаток = (long)((номенклатура.Остатки.Sum(x => x.СвободныйОстаток) - item.DeltaStock) / номенклатура.Единица.Коэффициент);
+                                остаток = Math.Max(остаток, 0);
                             }
-                            else
-                                остаток = (long)((номенклатура.Остатки.Sum(x => x.СвободныйОстаток) - item.DeltaStock) / номенклатура.Единица.Коэффициент);
-                            остаток = Math.Max(остаток, 0);
-                            if (!long.TryParse(item.WarehouseId, out long WarehouseId))
-                                WarehouseId = 0;
-                            stockData.Add(new OzonClasses.StockRequest
-                            {
-                                Offer_id = номенклатура.Code.Encode(encoding),
-                                Stock = item.Locked ? 0 : остаток,
-                                Warehouse_id = WarehouseId
-                            });
                         }
+                        stockData.Add((productId: item.ProductId, offerId: item.OfferId, barcode: item.Barcode, stock: (item.Locked ? 0 : (int)остаток)));
                     }
                     if (stockData.Count > 0)
                     {
-                        var result = await OzonClasses.OzonOperators.UpdateStock(_httpService, _firmProxy[firmaId], clientId, authToken,
-                            stockData,
-                            stoppingToken);
-                        if (result.errorMessage != null && !string.IsNullOrEmpty(result.errorMessage))
-                        {
-                            _logger.LogError(result.errorMessage);
-                        }
                         List<string> uploadIds = new List<string>();
                         List<string> tooManyIds = new List<string>();
                         List<string> errorIds = new List<string>();
-                        if (result.updatedOfferIds?.Count > 0)
+                        switch (marketType)
                         {
-                            var nomIds = списокНоменклатуры
-                                .Where(x => result.updatedOfferIds.Contains(x.Code.Encode(encoding)))
-                                .Select(x => x.Id);
-                            uploadIds = data.Where(x => nomIds.Contains(x.NomId)).Select(x => x.Id).ToList();
-                        }
-                        if (result.tooManyRequests?.Count > 0)
-                        {
-                            var nomIds = списокНоменклатуры
-                                .Where(x => result.tooManyRequests.Contains(x.Code.Encode(encoding)))
-                                .Select(x => x.Id);
-                            tooManyIds = data.Where(x => nomIds.Contains(x.NomId)).Select(x => x.Id).ToList();
-                        }
-                        if (result.errorOfferIds?.Count > 0)
-                        {
-                            var nomIds = списокНоменклатуры
-                                .Where(x => result.errorOfferIds.Contains(x.Code.Encode(encoding)))
-                                .Select(x => x.Id);
-                            errorIds = data.Where(x => nomIds.Contains(x.NomId)).Select(x => x.Id).ToList();
+                            case "OZON":
+                                var resultOzon = await OzonClasses.OzonOperators.UpdateStock(_httpService, _firmProxy[firmaId], clientId, authToken,
+                                    stockData.Select(x =>
+                                    {
+                                        if (!long.TryParse(string.IsNullOrWhiteSpace(x.productId) ? marketplaceCode : x.productId, out long WarehouseId))
+                                            WarehouseId = 0;
+                                        return new OzonClasses.StockRequest
+                                        {
+                                            Offer_id = x.offerId,
+                                            Stock = x.stock,
+                                            Warehouse_id = WarehouseId
+                                        };
+                                    }).ToList(),
+                                    cancellationToken);
+                                if (resultOzon.errorMessage != null && !string.IsNullOrEmpty(resultOzon.errorMessage))
+                                    _logger.LogError(resultOzon.errorMessage);
+                                if (resultOzon.updatedOfferIds?.Count > 0)
+                                    uploadIds = data.Where(x => resultOzon.updatedOfferIds.Contains(x.OfferId)).Select(x => x.Id).ToList();
+                                if (resultOzon.tooManyRequests?.Count > 0)
+                                    tooManyIds = data.Where(x => resultOzon.tooManyRequests.Contains(x.OfferId)).Select(x => x.Id).ToList();
+                                if (resultOzon.errorOfferIds?.Count > 0)
+                                    errorIds = data.Where(x => resultOzon.errorOfferIds.Contains(x.OfferId)).Select(x => x.Id).ToList();
+                                break;
+                            case "SBER":
+                                var resultSber = await SberClasses.Functions.UpdateStock(_httpService, _firmProxy[firmaId], authToken,
+                                    stockData.ToDictionary(k => k.offerId, v => v.stock),
+                                    cancellationToken);
+                                if (!string.IsNullOrEmpty(resultSber.error))
+                                    _logger.LogError(resultSber.error);
+                                if (resultSber.success)
+                                    uploadIds = listIds;
+                                break;
+                            case "ALIEXPRESS":
+                                var resultAli = await AliExpressClasses.Functions.UpdateStock(_httpService, _firmProxy[firmaId], authToken,
+                                    stockData.Select(x => new AliExpressClasses.Product
+                                    {
+                                        Product_id = x.productId,
+                                        Skus = new List<AliExpressClasses.StockSku>
+                                        {
+                                            new AliExpressClasses.StockSku
+                                            {
+                                                Sku_code = x.offerId,
+                                                Inventory = x.stock.ToString()
+                                            }
+                                        }
+                                    }).ToList(),
+                                    cancellationToken);
+                                if (resultAli.ErrorMessage != null && !string.IsNullOrEmpty(resultAli.ErrorMessage))
+                                    _logger.LogError(resultAli.ErrorMessage);
+                                if (resultAli.UpdatedIds?.Count > 0)
+                                    uploadIds.AddRange(data
+                                        .Where(x => resultAli.UpdatedIds.Contains(x.ProductId))
+                                        .Select(x => x.Id));
+                                if (resultAli.ErrorIds?.Count > 0)
+                                    errorIds = data
+                                        .Where(x => resultAli.ErrorIds.Contains(x.ProductId))
+                                        .Select(x => x.Id)
+                                        .ToList();
+                                break;
+                            case "WILDBERRIES":
+                                int.TryParse(marketplaceCode, out int warehouseId);
+                                var resultWb = await WbClasses.Functions.UpdateStock(_httpService, _firmProxy[firmaId], authToken, warehouseId,
+                                    stockData.ToDictionary(k => k.barcode, v => v.stock),
+                                    cancellationToken);
+                                var commonErrorTags = new List<string> { "common", "errorText", "additionalError" };
+                                if (resultWb.errors?.Count > 0)
+                                {
+                                    foreach (var item in resultWb.errors)
+                                        _logger.LogError(item.Key + ": " + item.Value);
+                                    var errorOffers = resultWb.errors.Where(x => !commonErrorTags.Contains(x.Key)).Select(x => x.Key);
+                                    errorIds = data.Where(x => errorOffers.Contains(x.Barcode)).Select(x => x.Id).ToList();
+                                    uploadIds = data.Where(x => !errorOffers.Contains(x.Barcode)).Select(x => x.Id).ToList();
+                                }
+                                else
+                                    uploadIds = data.Where(x => stockData.Select(y => y.barcode).Contains(x.Barcode)).Select(x => x.Id).ToList();
+                                break;
+                            case "ЯНДЕКС":
+                                var resultYandex = await YandexClasses.YandexOperators.UpdateStock(_httpService, _firmProxy[firmaId], marketplaceCode, clientId, authToken, authSecret,
+                                    stockData.ToDictionary(k => k.offerId, v => v.stock.ToString()),
+                                    cancellationToken);
+                                if (!string.IsNullOrEmpty(resultYandex.error))
+                                    _logger.LogError(resultYandex.error);
+                                if (resultYandex.success)
+                                    uploadIds = listIds;
+                                break;
                         }
                         if ((uploadIds.Count > 0) || (tooManyIds.Count > 0) || (errorIds.Count > 0))
-                        {
-                            tryCount = 5;
-                            while (true)
-                            {
-                                using var tran = await _context.Database.BeginTransactionAsync();
-                                try
-                                {
-                                    if (uploadIds.Count > 0)
-                                    {
-                                        _context.VzUpdatingStocks
-                                            .Where(x => uploadIds.Contains(x.MuId) && x.Taken)
-                                            .ToList()
-                                            .ForEach(x =>
-                                            {
-                                                x.Flag = false;
-                                                x.Taken = false;
-                                                x.IsError = false;
-                                                x.Updated = DateTime.Now;
-                                            });
-                                    }
-                                    if (tooManyIds.Count > 0)
-                                    {
-                                        _context.VzUpdatingStocks
-                                            .Where(x => tooManyIds.Contains(x.MuId) && x.Taken)
-                                            .ToList()
-                                            .ForEach(x =>
-                                            {
-                                                x.Flag = true;
-                                                x.Taken = false;
-                                                x.IsError = false;
-                                                x.Updated = DateTime.Now;
-                                            });
-                                    }
-                                    if (errorIds.Count > 0)
-                                    {
-                                        _context.VzUpdatingStocks
-                                            .Where(x => errorIds.Contains(x.MuId) && x.Taken)
-                                            .ToList()
-                                            .ForEach(x =>
-                                            {
-                                                x.Flag = false;
-                                                x.Taken = false;
-                                                x.IsError = true;
-                                                x.Updated = DateTime.Now;
-                                            });
-                                    }
-                                    await _context.SaveChangesAsync(stoppingToken);
-                                    if (_context.Database.CurrentTransaction != null)
-                                        tran.Commit();
-                                    break;
-                                }
-                                catch (Exception ex)
-                                {
-                                    if (_context.Database.CurrentTransaction != null)
-                                        _context.Database.CurrentTransaction.Rollback();
-                                    _logger.LogError(ex.Message);
-                                    if (--tryCount == 0)
-                                    {
-                                        break;
-                                    }
-                                    await Task.Delay(sleepPeriod);
-                                }
-                            }
-                        }
+                            MarkVzUpdateStock(null,null, uploadIds, tooManyIds, errorIds);
                     }
                 }
             }
         }
-        public async Task UpdateAliExpressStock(string appKey, string appSecret, string authorization, string authToken, bool regular, int limit,
-            string marketplaceId, string firmaId, EncodeVersion encoding, string складId, bool stockOriginal, CancellationToken stoppingToken)
+        private async Task<List<string>> GetOzonNotReadyProducts(string clientId, string authToken, Dictionary<string,string> offersDictionary, CancellationToken cancellationToken)
         {
-            var data = await ((from markUse in _context.Sc14152s
-                               join nom in _context.Sc84s on markUse.Parentext equals nom.Id
-                               join updStock in _context.VzUpdatingStocks on markUse.Id equals updStock.MuId
-                               where (markUse.Sp14147 == marketplaceId) &&
-                                 (markUse.Sp14158 == 1) && //Есть в каталоге 
-                                 (((regular ? updStock.Flag : updStock.IsError) &&
-                                 (updStock.Updated < DateTime.Now.AddMinutes(-2))) || 
-                                 (updStock.Updated.Date != DateTime.Today))
-                               select new
-                               {
-                                   Id = markUse.Id,
-                                   Locked = markUse.Ismark,
-                                   NomId = markUse.Parentext,
-                                   ProductId = markUse.Sp14190.Trim(),
-                                   Sku = nom.Code.Encode(encoding),
-                                   Квант = nom.Sp14188,
-                                   DeltaStock = stockOriginal ? 0 : nom.Sp14215, //markUse.Sp14214,
-                                   UpdatedAt = updStock.Updated,
-                                   UpdatedFlag = updStock.Flag
-                               })
-                .OrderByDescending(x => x.UpdatedFlag)
-                .ThenBy(x => x.UpdatedAt)
-                .Take(limit))
-                .ToListAsync(stoppingToken);
+            var checkResult = await OzonClasses.OzonOperators.ProductNotReady(_httpService, clientId, authToken,
+                offersDictionary.Select(x => x.Key).ToList(),
+                cancellationToken);
+            if (checkResult.Item2 != null && !string.IsNullOrEmpty(checkResult.Item2))
+                _logger.LogError(checkResult.Item2);
 
-            if ((data != null) && (data.Count > 0))
+            if ((checkResult.Item1 != null) && (checkResult.Item1.Count > 0))
+                return offersDictionary.Where(x => checkResult.Item1.Contains(x.Key)).Select(x => x.Value).ToList();
+            return new List<string>();
+        }
+        private bool MarkVzUpdateStock(List<string> markIds, List<string> notReadyIds, List<string> uploadIds, List<string> tooManyIds, List<string> errorIds)
+        {
+            int tryCount = 5;
+            TimeSpan sleepPeriod = TimeSpan.FromSeconds(1);
+            while (true)
             {
-                int tryCount = 5;
-                TimeSpan sleepPeriod = TimeSpan.FromSeconds(1);
-                bool success = false;
-                while (true)
+                using var tran = _context.Database.BeginTransaction();
+                try
                 {
-                    using var tran = await _context.Database.BeginTransactionAsync();
-                    try
-                    {
+                    if (markIds?.Count> 0) 
                         _context.VzUpdatingStocks
-                            .Where(x => data.Select(d => d.Id).Contains(x.MuId))
+                            .Where(x => markIds.Contains(x.MuId))
                             .ToList()
                             .ForEach(x =>
                             {
@@ -2737,161 +2153,67 @@ namespace Refresher1C.Service
                                 x.Taken = true;
                                 x.IsError = false;
                             });
-                        await _context.SaveChangesAsync(stoppingToken);
-                        if (_context.Database.CurrentTransaction != null)
-                            tran.Commit();
-                        success = true;
+                    if (notReadyIds?.Count > 0)
+                        _context.VzUpdatingStocks
+                            .Where(x => notReadyIds.Contains(x.MuId))
+                            .ToList()
+                            .ForEach(x =>
+                            {
+                                x.Flag = false;
+                                x.Taken = false;
+                                x.IsError = true;
+                                x.Updated = DateTime.Now;
+                            });
+                    if (uploadIds?.Count > 0)
+                        _context.VzUpdatingStocks
+                            .Where(x => uploadIds.Contains(x.MuId) && x.Taken)
+                            .ToList()
+                            .ForEach(x =>
+                            {
+                                x.Flag = false;
+                                x.Taken = false;
+                                x.IsError = false;
+                                x.Updated = DateTime.Now;
+                            });
+                    if (tooManyIds?.Count > 0)
+                        _context.VzUpdatingStocks
+                            .Where(x => tooManyIds.Contains(x.MuId) && x.Taken)
+                            .ToList()
+                            .ForEach(x =>
+                            {
+                                x.Flag = true;
+                                x.Taken = false;
+                                x.IsError = false;
+                                x.Updated = DateTime.Now;
+                            });
+                    if (errorIds?.Count > 0)
+                        _context.VzUpdatingStocks
+                            .Where(x => errorIds.Contains(x.MuId) && x.Taken)
+                            .ToList()
+                            .ForEach(x =>
+                            {
+                                x.Flag = false;
+                                x.Taken = false;
+                                x.IsError = true;
+                                x.Updated = DateTime.Now;
+                            });
+                    _context.SaveChanges();
+                    tran.Commit();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    if (_context.Database.CurrentTransaction != null)
+                        _context.Database.CurrentTransaction.Rollback();
+                    if (--tryCount == 0)
+                    {
+                        _logger.LogError(ex.Message);
                         break;
                     }
-                    catch (Exception ex)
-                    {
-                        if (_context.Database.CurrentTransaction != null)
-                            _context.Database.CurrentTransaction.Rollback();
-                        _logger.LogError(ex.Message);
-                        if (--tryCount == 0)
-                        {
-                            break;
-                        }
-                        await Task.Delay(sleepPeriod);
-                    }
-                }
-                if (success)
-                {
-                    var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(firmaId);
-
-                    List<string> списокСкладов = null;
-                    if (string.IsNullOrEmpty(складId))
-                        списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
-                    else
-                        списокСкладов = new List<string> { складId };
-
-                    var списокНоменклатуры = await _номенклатура.ПолучитьСвободныеОстатки(разрешенныеФирмы, списокСкладов, data.Select(x => x.NomId).ToList(), false);
-                    //var stockData = new List<AliExpressClasses.StockProductGlobal>();
-                    var stockData = new List<AliExpressClasses.Product>();
-                    foreach (var item in data)
-                    {
-                        var номенклатура = списокНоменклатуры.Where(x => x.Id == item.NomId).FirstOrDefault();
-                        if (номенклатура != null)
-                        {
-                            long остаток = 0;
-                            if (item.Квант > 1)
-                            {
-                                остаток = (int)(((номенклатура.Остатки
-                                    .Where(x => x.СкладId == Common.SkladEkran)
-                                    .Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - item.DeltaStock) / item.Квант);
-                            }
-                            else
-                                остаток = (long)((номенклатура.Остатки.Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - item.DeltaStock);
-                            остаток = Math.Max(остаток, 0);
-
-                            //global API
-                            //long.TryParse(item.ProductId, out long productId);
-                            //stockData.Add(new AliExpressClasses.StockProductGlobal
-                            //{
-                            //    Product_id = productId,
-                            //    Multiple_sku_update_list = new List<AliExpressClasses.StockSku>
-                            //    {
-                            //        new AliExpressClasses.StockSku
-                            //        {
-                            //            Sku_code = hexEncoding ? номенклатура.Code.EncodeHexString() : номенклатура.Code,
-                            //            Inventory = (item.Locked ? 0 : остаток).ToString()
-                            //        }
-                            //    }
-                            //});
-
-                            //local API
-                            stockData.Add(new AliExpressClasses.Product
-                            {
-                                Product_id = item.ProductId,
-                                Skus = new List<AliExpressClasses.StockSku>
-                                {
-                                    new AliExpressClasses.StockSku
-                                    {
-                                        Sku_code = номенклатура.Code.Encode(encoding),
-                                        Inventory = (item.Locked ? 0 : остаток).ToString()
-                                    }
-                                }
-                            });
-                        }
-                    }
-                    //var result = await AliExpressClasses.Functions.UpdateStockGlobal(_httpService,
-                    //    appKey, appSecret, authorization, stockData, stoppingToken);
-                    var result = await AliExpressClasses.Functions.UpdateStock(_httpService, _firmProxy[firmaId], authToken,
-                        stockData,
-                        stoppingToken);
-                    if (result.ErrorMessage != null && !string.IsNullOrEmpty(result.ErrorMessage))
-                    {
-                        _logger.LogError(result.ErrorMessage);
-                    }
-                    List<string> uploadIds = new List<string>();
-                    List<string> errorIds = new List<string>();
-                    if (result.UpdatedIds != null && result.UpdatedIds.Count > 0)
-                    {
-                        uploadIds.AddRange(data
-                            .Where(x => result.UpdatedIds.Contains(x.ProductId))
-                            .Select(x => x.Id));
-                    }
-                    if (result.ErrorIds?.Count > 0)
-                    {
-                        errorIds = data
-                            .Where(x => result.ErrorIds.Contains(x.ProductId))
-                            .Select(x => x.Id)
-                            .ToList();
-                    }
-                    if ((uploadIds.Count > 0) || (errorIds.Count > 0))
-                    {
-                        tryCount = 5;
-                        while (true)
-                        {
-                            using var tran = await _context.Database.BeginTransactionAsync();
-                            try
-                            {
-                                if (uploadIds.Count > 0)
-                                {
-                                    _context.VzUpdatingStocks
-                                        .Where(x => uploadIds.Contains(x.MuId) && x.Taken)
-                                        .ToList()
-                                        .ForEach(x =>
-                                        {
-                                            x.Flag = false;
-                                            x.Taken = false;
-                                            x.IsError = false;
-                                            x.Updated = DateTime.Now;
-                                        });
-                                }
-                                if (errorIds.Count > 0)
-                                {
-                                    _context.VzUpdatingStocks
-                                        .Where(x => errorIds.Contains(x.MuId) && x.Taken)
-                                        .ToList()
-                                        .ForEach(x =>
-                                        {
-                                            x.Flag = false;
-                                            x.Taken = false;
-                                            x.IsError = true;
-                                            x.Updated = DateTime.Now;
-                                        });
-                                }
-                                await _context.SaveChangesAsync(stoppingToken);
-                                if (_context.Database.CurrentTransaction != null)
-                                    tran.Commit();
-                                break;
-                            }
-                            catch (Exception ex)
-                            {
-                                if (_context.Database.CurrentTransaction != null)
-                                    _context.Database.CurrentTransaction.Rollback();
-                                _logger.LogError(ex.Message);
-                                if (--tryCount == 0)
-                                {
-                                    break;
-                                }
-                                await Task.Delay(sleepPeriod);
-                            }
-                        }
-                    }
+                    Task.Delay(sleepPeriod);
                 }
             }
+            return false;
         }
         public async Task RefreshOrders(CancellationToken stoppingToken)
         {
@@ -2959,7 +2281,7 @@ namespace Refresher1C.Service
                         await GetWbNewOrders(marketplace.AuthToken,
                             marketplace.Id, marketplace.Authorization, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
                             marketplace.Encoding, stoppingToken);
-                        await GetWbCanceledOrders(marketplace.AuthToken, marketplace.Id, marketplace.FirmaId, stoppingToken);
+                        await RefreshWbOrders(marketplace.AuthToken, marketplace.Id, marketplace.FirmaId, stoppingToken);
                     }
                 }
             }
@@ -3548,6 +2870,7 @@ namespace Refresher1C.Service
                             номенклатураIds,
                             false);
                         bool нетВНаличие = НоменклатураList.Count == 0;
+                        var marketplace = await _marketplace.ПолучитьMarketplace(id);
                         var orderItems = new List<OrderItem>();
                         foreach (var номенклатура in НоменклатураList)
                         {
@@ -3560,12 +2883,18 @@ namespace Refresher1C.Service
                                 нетВНаличие = true;
                                 break;
                             }
+                            var markUsingParams = _marketplace.GetMarketUsingParams(id, номенклатура.Id);
+                            var priceMarketplace = GetPriceMarketplace(номенклатура.Цена.Розничная, номенклатура.Цена.РозСП, номенклатура.Цена.Закупочная, 1.2m,
+                                markUsingParams.fixPrice, markUsingParams.coeff, marketplace.КоэфПроверкиЦен, markUsingParams.deltaPrice)
+                                * nomQuant;
                             orderItems.Add(new OrderItem
                             {
                                 Id = номенклатура.Единица.Barcode,
                                 НоменклатураId = номенклатура.Code,
                                 Количество = asked,
-                                Цена = wbOrder.Price
+                                Цена = priceMarketplace > 0 ? priceMarketplace : wbOrder.Price,
+                                ЦенаСоСкидкой = wbOrder.Price,
+                                Вознаграждение = (priceMarketplace > 0 ? priceMarketplace : wbOrder.Price) - (wbOrder.Price),
                             });
                         }
                         if (нетВНаличие)
@@ -3581,12 +2910,12 @@ namespace Refresher1C.Service
                                 _logger.LogError("Wb order: " + wbOrder.Id.ToString() + " can't be cancelled");
                             continue;
                         }
-                        if (!TimeSpan.TryParse("16:00", out TimeSpan limitTime))
+                        if (!TimeSpan.TryParse("09:00", out TimeSpan limitTime))
                         {
-                            limitTime = TimeSpan.MaxValue;
+                            limitTime = TimeSpan.MinValue;
                         }
-                        int departureDays = limitTime <= DateTime.Now.TimeOfDay ? 2 : 1;
-                        DateTime shipmentDate = DateTime.Today.AddDays(await _склад.ЭтоРабочийДень(Common.SkladEkran, departureDays));
+                        var leavingDate = DateTime.Now.TimeOfDay > limitTime ? 1 : 0;
+                        DateTime shipmentDate = DateTime.Today.AddDays(await _склад.ЭтоРабочийДень(Common.SkladEkran, leavingDate));
                         string deliveryServiceName = ""; //wbOrder.ScOfficesNames.FirstOrDefault() ?? string.Empty;
                         var address = new OrderRecipientAddress
                         {
@@ -3650,7 +2979,7 @@ namespace Refresher1C.Service
                     //}
                 }
         }
-        private async Task GetWbCanceledOrders(string authToken, string marketplaceId, string firmaId, CancellationToken cancellationToken)
+        private async Task RefreshWbOrders(string authToken, string marketplaceId, string firmaId, CancellationToken cancellationToken)
         {
             var activeOrders = _context.Sc13994s
                 .Where(x => (x.Sp13982 > 0) && (x.Sp13982 != 5) && (x.Sp13982 != 6) &&
@@ -3674,6 +3003,14 @@ namespace Refresher1C.Service
                         var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, wbOrderId.ToString());
                         if (order != null)
                             await _docService.OrderCancelled(order);
+                    }
+                    var deliveredOrderIds = result.orders?.Where(x => (x.Value == WbClasses.WbStatus.sorted) || (x.Value == WbClasses.WbStatus.sold))
+                        .Select(x => x.Key);
+                    foreach (var wbOrderId in deliveredOrderIds)
+                    {
+                        var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, wbOrderId.ToString());
+                        if (order != null)
+                            await _docService.OrderDeliveried(order);
                     }
                 }
             }
@@ -3709,7 +3046,7 @@ namespace Refresher1C.Service
                                 номенклатураCodes,
                                 true);
                             var nomQuantums = await _номенклатура.ПолучитьКвант(номенклатураCodes, stoppingToken);
-                            bool нетВНаличие = false;
+                            bool нетВНаличие = НоменклатураList.Count == 0;
                             foreach (var номенклатура in НоменклатураList)
                             {
                                 decimal остаток = номенклатура.Остатки

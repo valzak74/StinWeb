@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StinClasses;
 using StinClasses.Models;
@@ -273,6 +272,9 @@ namespace Refresher1C.Service
                         break;
                     case "SBER":
                         marketplaceName = "Sber FBS";
+                        break;
+                    case "WILDBERRIES":
+                        marketplaceName = "Wildberries FBS";
                         break;
                     case "YANDEX":
                         marketplaceName = "Yandex ";

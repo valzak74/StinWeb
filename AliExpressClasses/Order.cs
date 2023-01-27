@@ -347,10 +347,13 @@ namespace AliExpressClasses
     public class AliOrder
     {
         public string? Id { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-ddTHH:mm:ssffffffzzz")]
         public DateTime Created_at { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-ddTHH:mm:ssffffffzzz")]
         public DateTime Paid_at { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-ddTHH:mm:ssffffffzzz")]
         public DateTime Updated_at { get; set; }
         public OrderStatus Status { get; set; }
@@ -368,11 +371,14 @@ namespace AliExpressClasses
         public string? Seller_comment { get; set; }
         public bool Fully_prepared { get; set; }
         public string? Finish_reason { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-ddTHH:mm:sszzz")]
         public DateTime Cut_off_date { get; set; }
         public List<CutOffDateHistory>? Cut_off_date_histories { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-ddTHH:mm:sszzz")]
         public DateTime Shipping_deadline { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-ddTHH:mm:sszzz")]
         public DateTime Next_cut_off_date { get; set; }
         public List<PreSplitPosition>? Pre_split_postings { get; set; }

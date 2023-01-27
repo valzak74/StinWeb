@@ -21,7 +21,7 @@ namespace WbClasses
         public int PartA { get; set; }
         public int PartB { get; set; }
         public string? Barcode { get; set; }
-        private string? File;
+        public string? File { get; set; }
         public byte[]? Data
         {
             get 

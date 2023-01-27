@@ -204,34 +204,34 @@ namespace HelloWorld
         //}
         static async Task Main(string[] args)
         {
-            IPAddress.TryParse("192.168.229.145", out IPAddress ip);
-            if (ip != null)
-            //foreach (var ip in Dns.GetHostAddresses(Dns.GetHostName()))
-            {
-                var endPoint = new IPEndPoint(ip, 0);
-                Console.WriteLine("Request from: " + ip);
-                var request = (HttpWebRequest)HttpWebRequest.Create("https://api.onlinemarket.su/marketip/sber/products/feed_43956_001.xml");
-                WebProxy myproxy = new WebProxy("192.168.229.145");
-                myproxy.BypassProxyOnLocal = false;
-                request.Proxy = myproxy;
+            //IPAddress.TryParse("192.168.229.145", out IPAddress ip);
+            //if (ip != null)
+            ////foreach (var ip in Dns.GetHostAddresses(Dns.GetHostName()))
+            //{
+            //    var endPoint = new IPEndPoint(ip, 0);
+            //    Console.WriteLine("Request from: " + ip);
+            //    var request = (HttpWebRequest)HttpWebRequest.Create("https://api.onlinemarket.su/marketip/sber/products/feed_43956_001.xml");
+            //    WebProxy myproxy = new WebProxy("192.168.229.145");
+            //    myproxy.BypassProxyOnLocal = false;
+            //    request.Proxy = myproxy;
 
-                //request.ServicePoint.BindIPEndPointDelegate = delegate {
-                //    return endPoint;
-                //};
-                var response = (HttpWebResponse)request.GetResponse();
-                Console.WriteLine("Actual IP: " + response.GetResponseHeader("X-YourIP"));
-                response.Close();
-            }
-            Console.ReadKey();
-            var barcodeText = "%97W%2ALA9D%%";
-            var barcodeBytes = PdfHelper.PdfFunctions.Instance.GenerateBarcode128(barcodeText);
+            //    //request.ServicePoint.BindIPEndPointDelegate = delegate {
+            //    //    return endPoint;
+            //    //};
+            //    var response = (HttpWebResponse)request.GetResponse();
+            //    Console.WriteLine("Actual IP: " + response.GetResponseHeader("X-YourIP"));
+            //    response.Close();
+            //}
+            //Console.ReadKey();
+            //var barcodeText = "%97W%2ALA9D%%";
+            //var barcodeBytes = PdfHelper.PdfFunctions.Instance.GenerateBarcode128(barcodeText);
             //var co = SystemFonts.Collection;
             //var fo = SystemFonts.Families.FirstOrDefault(x => x.Name == "Code 128");
             //Font font = new Font(fo, 24, FontStyle.Regular);
             //Console.WriteLine(GetSystemFontFileName(font));
             //var sre = GetFilesForFont("Code 128");
             //Console.WriteLine(GetWindowsFamilyName("7fonts.ru_code128"));
-            File.WriteAllBytes("f://tmp/15/1/test.pdf", PdfHelper.PdfFunctions.Instance.ProductSticker("%97W%2ADCSD%%", "name", "443030303430333834"));
+            File.WriteAllBytes("f://tmp/15/1/test.pdf", PdfHelper.PdfFunctions.Instance.ProductSticker("785621511", "Полотенце 40 х 40", "артикул", "бежевый", "XL"));
             string re = "{\"code\": \"NotFound\", \"message\": \"Не найдено\"}";
             //string re = $"[\r\n  {{\r\n    \"code\": \"SubjectDBSRestriction\",\r\n    \"message\": \"Категория товара недоступна для продажи по схеме 'Везу на склад Wildberries'.\",\r\n    \"data\": [\r\n      {{\r\n        \"sku\": \"skuTest1\",\r\n        \"stock\": 0\r\n      }}\r\n    ]\r\n  }},\r\n  {{\r\n    \"code\": \"SubjectFBSRestriction\",\r\n    \"message\": \"Категория товара недоступна для продажи по схеме 'Везу самостоятельно до клиента'.\",\r\n    \"data\": [\r\n      {{\r\n        \"sku\": \"skuTest2\",\r\n        \"stock\": 1\r\n      }}\r\n    ]\r\n  }},\r\n  {{\r\n    \"code\": \"UploadDataLimit\",\r\n    \"message\": \"Превышен лимит загружаемых данных\",\r\n    \"data\": [\r\n      {{\r\n        \"sku\": \"skuTest2\",\r\n        \"stock\": 10001\r\n      }}\r\n    ]\r\n  }},\r\n  {{\r\n    \"code\": \"CargoWarehouseRestriction\",\r\n    \"message\": \"Выбранный склад не предназначен для крупногабаритных товаров. Добавьте их на соответствующий склад\",\r\n    \"data\": [\r\n      {{\r\n        \"sku\": \"skuTest3\",\r\n        \"stock\": 10\r\n      }}\r\n    ]\r\n  }},\r\n  {{\r\n    \"code\": \"NotFound\",\r\n    \"message\": \"Не найдено\",\r\n    \"data\": [\r\n      {{\r\n        \"sku\": \"skuTest4\",\r\n        \"stock\": 10\r\n      }}\r\n    ]\r\n  }}\r\n]";
             byte[] bytes = Encoding.UTF8.GetBytes(re);

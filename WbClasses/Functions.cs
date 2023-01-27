@@ -28,11 +28,22 @@ namespace WbClasses
         {
             StringBuilder sb = new StringBuilder();
             if (!string.IsNullOrEmpty(commonError))
-                sb.Append("common: " + commonError);
+            {
+                sb.Append("common: ");
+                sb.Append(commonError);
+            }
             if (!string.IsNullOrEmpty(response.Code))
-                sb.Append("code:" + response.Code);
+            {
+                if (sb.Length > 0) sb.Append(", ");
+                sb.Append("code:");
+                sb.Append(response.Code);
+            }
             if (!string.IsNullOrEmpty(response.Message))
-                sb.Append("message:" + response.Message);
+            {
+                if (sb.Length > 0) sb.Append(", ");
+                sb.Append("message:");
+                sb.Append(response.Message);
+            }
             return sb.ToString();
         }
         public static Dictionary<string, string> GetCustomHeaders(string authToken)

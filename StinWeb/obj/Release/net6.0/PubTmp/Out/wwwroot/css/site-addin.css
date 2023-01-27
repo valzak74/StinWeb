@@ -29,6 +29,12 @@
 .table-hover .серая:hover {
     background-color: #808080;
 }
+.розовая {
+    background-color: #f09595;
+}
+.table-hover .розовая:hover {
+    background-color: #eb5e5e;
+}
 .зеленая {
     background-color: #b5e7a0;
 }

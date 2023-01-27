@@ -30,6 +30,14 @@
         </div>
         @Html.InputGroup("mb-2", "Фирма :", null, "lookup", "SelectedFirma", new TemplateLookup<Campaign>("lkFirma", "Выберите фирму", "Фирма", "MarketplaceMatrix/Firma"), new { id = "selectedFirma" })
         @Html.InputGroup("mb-2", "Магазин маркетплейс :", null, "lookup", "CampaignId", new TemplateLookup<Campaign>("lkCampaign", "Выберите магазин", "Магазин маркетплейса", "MarketplaceMatrix/Campaign", new List<string> { "SelectedFirma" }), new { id = "campaignId" })
+        <div class="input-group input-group-sm mb-2">
+            <div class="input-group-prepend">
+                <div class="input-group-text">
+                    <input type="checkbox" class="form-check-input ml-0" id="chkShowDeleted">
+                        <span class="form-check-label ml-3" for="chkShowDeleted">Учитывать снятые с маркетплейс</span>
+                </div>
+            </div>
+        </div>
         @Html.Button("<span class=\"spinner-grow spinner-grow-sm d-none\" role=\"status\" aria-hidden=\"true\" id=\"busy\"></span>Сформировать", HtmlHelpers.ConditionalDisable(true, new { id = "btnExport", @type = "button", @class = "btn btn-sm btn-primary", onclick = "btnExportClick();" }))
       </div>
   </div>
@@ -136,7 +144,8 @@
                 firmaId: (lookupFirma.selected[0] != undefined ? lookupFirma.selected[0].Id : undefined),
                 marketId: (lookupCampaignId.selected[0] != undefined ? lookupCampaignId.selected[0].Id : undefined),
                 startDate: DateTimeToLocalISOString($("#reportrange").data("daterangepicker").startDate._d),
-                endDate: DateTimeToLocalISOString($("#reportrange").data("daterangepicker").endDate._d)
+                endDate: DateTimeToLocalISOString($("#reportrange").data("daterangepicker").endDate._d),
+                showDeleted: $("input#chkShowDeleted").is(':checked')
             },
             processData: true,
             //contentType: false,

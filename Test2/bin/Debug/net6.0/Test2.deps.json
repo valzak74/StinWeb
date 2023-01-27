@@ -9,7 +9,6 @@
       "Test2/1.0.0": {
         "dependencies": {
           "AliExpressClasses": "1.0.0",
-          "HttpExtensions": "1.0.0",
           "Microsoft.Extensions.DependencyInjection": "6.0.0",
           "Microsoft.Extensions.Http": "6.0.0",
           "Newtonsoft.Json": "13.0.1",

@@ -50,7 +50,7 @@
     })
     .Named("gridConsole")
     .AppendCss("table-hover")
-    .RowAttributed(model => new { id = model.Id, @class = model.StatusDescription == "Готов/Спорный" ? "зеленая" : model.StatusDescription == "Отменен" ? "серая" : model.isFBS ? ("голубая" + (model.Printed ? " printed" : "")) : model.NeedToGetPayment ? "снят_с_производства" : null })
+    .RowAttributed(model => new { id = model.Id, @class = model.StatusDescription == "Готов/Спорный" ? "зеленая" : model.StatusDescription == "Отменен" ? "серая" : model.isExpress ? ("розовая" + (model.Printed ? " printed" : "")) : model.isFBS ? ("голубая" + (model.Printed ? " printed" : "")) : model.NeedToGetPayment ? "снят_с_производства" : null })
     .Using(GridFilterMode.Header)
     .Empty("No data found")
     .Pageable(pager =>

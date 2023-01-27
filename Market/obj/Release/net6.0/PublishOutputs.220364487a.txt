@@ -52,9 +52,8 @@ C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
-C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\runtimes\win\lib\netcoreapp3.0\Microsoft.Win32.SystemEvents.dll
-C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\runtimes\unix\lib\netcoreapp3.0\System.Drawing.Common.dll
-C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\runtimes\win\lib\netcoreapp3.0\System.Drawing.Common.dll
+C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll
+C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\runtimes\win\lib\net6.0\System.Drawing.Common.dll
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\runtimes\win\lib\netstandard2.0\System.Runtime.Caching.dll
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\runtimes\win\lib\netstandard2.0\System.Security.Cryptography.ProtectedData.dll
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\runtimes\win\lib\netcoreapp3.0\System.Windows.Extensions.dll
@@ -68,10 +67,10 @@ C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\YandexClasses.dll
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\AtolOnlineClasses.pdb
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\HttpExtensions.pdb
+C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\JsonExtensions.pdb
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\OzonClasses.pdb
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\SberClasses.pdb
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\StinClasses.pdb
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\WbClasses.pdb
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\YandexClasses.pdb
-C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\JsonExtensions.pdb
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Release\net6.0\PubTmp\Out\Market.deps.json

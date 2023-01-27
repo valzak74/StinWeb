@@ -148,6 +148,7 @@ namespace StinClasses.Справочники
             decimal длинаМ, decimal ширинаМ, decimal высотаМ,
             IHttpService httpService, List<string> pictureUrls,
             CancellationToken cancellationToken);
+        Task<string> GetColorProperty(string Id);
     }
     public class НоменклатураEntity : IНоменклатура
     {
@@ -632,6 +633,15 @@ namespace StinClasses.Справочники
                     await _context.SaveChangesAsync(cancellationToken);
                 }
             }
+        }
+        public async Task<string> GetColorProperty(string Id)
+        {
+            return await (from pr in _context.Sc562s
+                          join prType in _context.Sc546s on pr.Sp563 equals prType.Id
+                          join prValue in _context.Sc556s on pr.Sp564 equals prValue.Id
+                          where (pr.Parentext == Id) && (prType.Descr.ToUpper().Trim() == "ЦВЕТ")
+                          select prValue.Descr.Trim())
+                       .FirstOrDefaultAsync();
         }
     }
 }

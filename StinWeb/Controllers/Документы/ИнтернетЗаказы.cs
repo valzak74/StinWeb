@@ -171,7 +171,7 @@ namespace StinWeb.Controllers
                                   Status = gr.Key.status,
                                   ТипДоставки = (((StinClasses.StinDeliveryPartnerType)gr.Key.типДоставкиПартнер == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinDeliveryType)gr.Key.типДоставки == StinClasses.StinDeliveryType.PICKUP)) ? "Самовывоз" : "Доставка",
                                   КолТовара = gr.Sum(x => x.item.Sp14023),
-                                  СуммаТовара = gr.Sum(x => (x.item.Sp14024 + x.item.Sp14026) * x.item.Sp14023),
+                                  СуммаТовара = gr.Sum(x => ((x.item.Sp14025 > 0 ? x.item.Sp14025 : x.item.Sp14024) + x.item.Sp14026) * x.item.Sp14023),
                                   КолГрузоМест = gr.Sum(x => x.market.Sp14155.ToUpper().Trim() == "ЯНДЕКС" ? ((x.ed.Sp14063 == 0 ? 1 : x.ed.Sp14063) * x.item.Sp14023) / (x.nom.Sp14188 == 0 ? 1 : x.nom.Sp14188) : 1),
                               }).ToListAsync(cancellationToken);
             var shop = _context.Sc14042s
@@ -316,7 +316,7 @@ namespace StinWeb.Controllers
                                    join item in _context.Sc14033s on order.Id equals item.Parentext
                                    join nom in _context.Sc84s on item.Sp14022 equals nom.Id
                                    join ed in _context.Sc75s on nom.Sp94 equals ed.Id
-                                   where !order.Ismark
+                                   where !order.Ismark && (order.Sp13982 != 5)
                                     && (market.Code.Trim() == campaignId)
                                     && (order.Sp13990 == departureDate)
                                    select new
@@ -616,7 +616,7 @@ namespace StinWeb.Controllers
                                                       join m in _context.Sc14042s on o.Sp14038 equals m.Id
                                                       where !o.Ismark && (m.Code.Trim() == campaignId) &&
                                                             (o.Sp13990.Date == departureDate)
-                                                      select o.Sp13987)
+                                                      select o.Sp13987.Trim())
                                                     .Distinct()
                                                     .ToListAsync(cancellationToken);
                     if (deliveryServiceNames.Count == 0)
@@ -624,14 +624,14 @@ namespace StinWeb.Controllers
                     if (deliveryServiceNames.Count == 1)
                     {
                         string supplyId = deliveryServiceNames.FirstOrDefault();
-                        var pngBarcodeResult = await WbClasses.Functions.GetSupplyBarcode(_httpService, data.token, supplyId, cancellationToken);
-                        if (!string.IsNullOrEmpty(pngBarcodeResult.error))
-                            return BadRequest(new ExceptionData { Code = -100, Description = pngBarcodeResult.error });
                         var supplyInfo = await WbClasses.Functions.GetSupplyInfo(_httpService, data.token, supplyId, cancellationToken);
                         if (!string.IsNullOrEmpty(supplyInfo.error))
                             return BadRequest(new ExceptionData { Code = -100, Description = supplyInfo.error });
-                        if (supplyInfo.supply?.ClosedAt == DateTime.MinValue)
+                        if ((supplyInfo.supply?.ClosedAt == null) || (supplyInfo.supply?.ClosedAt == DateTime.MinValue))
                             await WbClasses.Functions.CloseSupply(_httpService, data.token, supplyId, cancellationToken);
+                        var pngBarcodeResult = await WbClasses.Functions.GetSupplyBarcode(_httpService, data.token, supplyId, cancellationToken);
+                        if (!string.IsNullOrEmpty(pngBarcodeResult.error))
+                            return BadRequest(new ExceptionData { Code = -100, Description = pngBarcodeResult.error });
                         return File(pngBarcodeResult.png, "image/png");
                     }
                     else
@@ -639,14 +639,14 @@ namespace StinWeb.Controllers
                         var pngLibrary = new List<byte[]>();
                         foreach (var dsn in deliveryServiceNames)
                         {
-                            var pngBarcodeResult = await WbClasses.Functions.GetSupplyBarcode(_httpService, data.token, dsn, cancellationToken);
-                            if (!string.IsNullOrEmpty(pngBarcodeResult.error))
-                                return BadRequest(new ExceptionData { Code = -100, Description = pngBarcodeResult.error });
                             var supplyInfo = await WbClasses.Functions.GetSupplyInfo(_httpService, data.token, dsn, cancellationToken);
                             if (!string.IsNullOrEmpty(supplyInfo.error))
                                 return BadRequest(new ExceptionData { Code = -100, Description = supplyInfo.error });
-                            if (supplyInfo.supply?.ClosedAt == DateTime.MinValue)
+                            if ((supplyInfo.supply?.ClosedAt == null) || (supplyInfo.supply?.ClosedAt == DateTime.MinValue))
                                 await WbClasses.Functions.CloseSupply(_httpService, data.token, dsn, cancellationToken);
+                            var pngBarcodeResult = await WbClasses.Functions.GetSupplyBarcode(_httpService, data.token, dsn, cancellationToken);
+                            if (!string.IsNullOrEmpty(pngBarcodeResult.error))
+                                return BadRequest(new ExceptionData { Code = -100, Description = pngBarcodeResult.error });
                             if (pngBarcodeResult.png != null)
                                 pngLibrary.Add(pngBarcodeResult.png);
                         }
@@ -757,6 +757,7 @@ namespace StinWeb.Controllers
                            Phone = string.IsNullOrWhiteSpace(order.Sp14120) ? "" : order.Sp14120.Trim(),
                            МаршрутНаименование = r.маршрутName,
                            isFBS = (StinClasses.StinDeliveryPartnerType)order.Sp13985 != StinClasses.StinDeliveryPartnerType.SHOP,
+                           isExpress = market.Sp14164.ToUpper().Trim() == "EXPRESS",
                            ТипДоставки = (((StinClasses.StinDeliveryPartnerType)order.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinDeliveryType)order.Sp13988 == StinClasses.StinDeliveryType.PICKUP)) ? "Самовывоз" : "Доставка",
                            Сумма = превЗаявка.Sp12741,
                            СуммаКОплате = (((StinClasses.StinDeliveryPartnerType)order.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinPaymentType)order.Sp13983 == StinClasses.StinPaymentType.POSTPAID)) ? (превЗаявка.Sp12741 - order.Sp14135) : 0,
@@ -782,6 +783,7 @@ namespace StinWeb.Controllers
                 x.Recipient,
                 x.Phone,
                 x.isFBS,
+                x.isExpress,
                 x.ТипДоставки,
                 x.Сумма,
                 x.СуммаКОплате,
@@ -804,6 +806,7 @@ namespace StinWeb.Controllers
                     Recipient = gr.Key.Recipient,
                     Phone = gr.Key.Phone,
                     isFBS = gr.Key.isFBS,
+                    isExpress = gr.Key.isExpress,
                     ТипДоставки = gr.Key.ТипДоставки,
                     Сумма = gr.Key.Сумма,
                     СуммаКОплате = gr.Key.СуммаКОплате,
@@ -848,7 +851,10 @@ namespace StinWeb.Controllers
                     var stickers = new List<byte[]> { f };
                     foreach (var product in products)
                     {
-                        var sticker = PdfHelper.PdfFunctions.Instance.ProductSticker(name: product.Наименование, barcodeText: product.Единица.Barcode, vendor: StinClasses.Common.Encode(product.Code, order.Encode));
+                        string color = await _номенклатура.GetColorProperty(product.Id);
+                        if (string.IsNullOrEmpty(color))
+                            color = "белый";
+                        var sticker = PdfHelper.PdfFunctions.Instance.ProductSticker(name: product.Наименование, barcodeText: product.Единица.Barcode, vendor: StinClasses.Common.Encode(product.Code, order.Encode), color: color);
                         stickers.Add(sticker);
                     }
                     f = PdfHelper.PdfFunctions.Instance.MergePdf(stickers);
@@ -884,8 +890,10 @@ namespace StinWeb.Controllers
                         var products = await _номенклатура.GetНоменклатураByListIdAsync(order.Items?.Select(x => x.НоменклатураId).ToList());
                         foreach (var product in products)
                         {
-                            //var sticker = PdfHelper.PdfFunctions.Instance.Test();
-                            var sticker = PdfHelper.PdfFunctions.Instance.ProductSticker(name: product.Наименование, barcodeText: product.Единица.Barcode, vendor: StinClasses.Common.Encode(product.Code, order.Encode));
+                            string color = await _номенклатура.GetColorProperty(product.Id);
+                            if (string.IsNullOrEmpty(color))
+                                color = "белый";
+                            var sticker = PdfHelper.PdfFunctions.Instance.ProductSticker(name: product.Наименование, barcodeText: product.Единица.Barcode, vendor: StinClasses.Common.Encode(product.Code, order.Encode), color: color);
                             stickers.Add(sticker);
                         }
                     }

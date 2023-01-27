@@ -19,6 +19,7 @@ namespace StinWeb.Views.Shared.Components.Order
         public string ИспользуемыеСкладыId { get; set; }
         public string ИспользуемыеСкладыНаименование { get; set; }
         public string АдресСтрокой { get; set; }
+        public string SecretCode { get; set; }
         public List<ФормаПредварительнаяЗаявкаТЧ> СоставЗаказа { get; set; }
     }
     public class OrderViewComponent : ViewComponent, IDisposable
@@ -131,6 +132,8 @@ namespace StinWeb.Views.Shared.Components.Order
                     строкаАдреса = строкаАдреса.ConditionallyAppend("кв." + reportOrder.Order.Address.Apartment);
             }
             reportOrder.АдресСтрокой = строкаАдреса;
+            if ((reportOrder.Order != null) && (reportOrder.Order.Тип == "ЯНДЕКС") && (reportOrder.Order.Модель == "EXPRESS") && (reportOrder.Order.DeliveryServiceName.Length == 6))
+                reportOrder.SecretCode = reportOrder.Order.DeliveryServiceName;
             var типыОплат = new List<Tuple<int, string>>();
             типыОплат.Add(new((int)StinClasses.ReceiverPaymentType.Наличными, "Наличными"));
             типыОплат.Add(new((int)StinClasses.ReceiverPaymentType.БанковскойКартой, "Банковской картой"));
