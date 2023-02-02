@@ -290,7 +290,7 @@ namespace StinWeb.Controllers.Обработки
                             }).ToListAsync(cancellationToken);
             var nomIds = nativeData.Select(x => x.NomId).Distinct().ToList();
             using var фирма = new StinClasses.Справочники.ФирмаEntity(_context);
-            var разрешенныеФирмы = await фирма.ПолучитьСписокРазрешенныхФирмAsync();
+            var разрешенныеФирмы = await фирма.ПолучитьСписокРазрешенныхФирмAsync(firmaId);
             DateTime dateReg = StinWeb.Models.DataManager.Common.GetRegTA(_context);
             var себестоимостьData = await (from rg328 in _context.Rg328s
                                            join sc84 in _context.Sc84s on rg328.Sp331 equals sc84.Id

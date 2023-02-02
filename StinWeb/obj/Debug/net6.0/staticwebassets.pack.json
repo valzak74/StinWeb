@@ -1689,6 +1689,10 @@
       "PackagePath": "staticwebassets\\lib\\jquery\\dist\\jquery.min.map"
     },
     {
+      "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\lib\\sounds\\beep.mp3",
+      "PackagePath": "staticwebassets\\lib\\sounds\\beep.mp3"
+    },
+    {
       "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\templates\\PageSeparator.htm",
       "PackagePath": "staticwebassets\\templates\\PageSeparator.htm"
     },

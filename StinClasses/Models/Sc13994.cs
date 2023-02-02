@@ -42,6 +42,8 @@ namespace StinClasses.Models
         public string Sp14133 { get; set; }
         public decimal Sp14135 { get; set; }
         public decimal Sp14192 { get; set; }
+        public decimal Sp14254 { get; set; }
+        public string Sp14255 { get; set; }
         public string Sp14055 { get; set; }
         public string Sp14122 { get; set; }
     }

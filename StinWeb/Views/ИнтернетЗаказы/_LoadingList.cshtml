@@ -1,0 +1,30 @@
+﻿@using System.Globalization
+@model IEnumerable<StinWeb.Models.DataManager.Отчеты.LoadingListOrder>
+
+@(Html
+    .Grid(Model)
+    .Build(columns =>
+    {
+        columns.Add().RenderedAs((model, row) => row + 1).Titled("# " + Model.Count().ToString()).Css("text-center");
+        columns.Add(model => model.OrderNo).Titled("Заказ");
+        columns.Add(model => model.StatusDescription).Titled("Статус");
+        columns.Add(model => model.КолТовара.ToString("0", CultureInfo.InvariantCulture)).Titled("Кол-во (" + Model.Sum(x => x.КолТовара).ToString("0", CultureInfo.InvariantCulture) + ")");
+        columns.Add(model => model.КолГрузоМест.ToString("0", CultureInfo.InvariantCulture)).Titled("Кол-во грузомест (" + Model.Sum(x => x.КолГрузоМест).ToString("0", CultureInfo.InvariantCulture) + ")");
+        columns.Add(model => model.Склады).Titled("Склад");
+        columns.Add(model => model.МаршрутНаименование).Titled("Маршрут");
+        //columns.Add(model => model.Остаток).Titled("Остаток").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматКоличества);
+    })
+    .Named("gridLoadingList")
+    .AppendCss("table-hover")
+    .RowAttributed(model => new { @class = model.Scanned > 0 ?  "зеленая" + (model.Scanned == model.КолГрузоМест ? " printed" : "") : null })
+    .Using(GridFilterMode.Header)
+    .Empty("No data found")
+@*    .Pageable(pager =>
+    {
+        pager.RowsPerPage = 12;
+    })
+*@    
+    .UsingFooter("~/Views/ИнтернетЗаказы/_LoadingListFooter.cshtml")
+    .Filterable()
+    .Sortable()
+)

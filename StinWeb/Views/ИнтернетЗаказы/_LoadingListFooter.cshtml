@@ -1,0 +1,6 @@
+﻿@model IGrid<StinWeb.Models.DataManager.Отчеты.LoadingListOrder>
+
+<tr>
+    <td colspan="@(Model.Columns.Count - 1)" align="right"><b>Итого</b></td>
+    <td align="right"><b>@(Model.Rows.Sum(row => row.Model.СуммаТовара).ToString(StinWeb.Models.DataManager.Common.ФорматЦеныСи))</b></td>
+</tr>

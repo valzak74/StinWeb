@@ -1,0 +1,262 @@
+﻿@using StinWeb.Models.DataManager.Extensions
+@using System.Security.Claims
+
+@{
+    ViewBag.Title = "Лист отгрузки";
+}
+<audio id="soundBeep" src="/lib/sounds/beep.mp3" preload="auto"></audio>
+<div class="alert alert-danger d-none" role="alert">
+    <strong>Ошибка!</strong><span id="alertText" style="padding-left: 10px;"> Change a few things up and try submitting again.</span>
+</div>
+<div class="card border-round" style="background-color: lightgray;">
+    <div class="card-body">
+        <div class="col-6 float-left">
+            @Html.InputGroup("col-3", "Дата :","","input","ListDate","", new { id = "listDate", @class = "form-control" })
+            @Html.InputGroup("col-9", "Компания :", "<button type=\"button\" id=\"btnScan\" class=\"btn btn-sm btn-primary\" \">Начать сканирование</button>", "select", "CampaignIds", (SelectList)ViewBag.CampaignIds, new { id = "campaignIds", @class = "form-control" })
+        </div>
+        <div class="col-6 float-right">
+            <div class="col-6 float-left">
+                <div class="custom-control custom-radio">
+                    <input type="radio" id="all" name="режим" value="0" class="custom-control-input" checked>
+                    <label class="custom-control-label" for="all">Все</label>
+                </div>
+                <div class="custom-control custom-radio">
+                    <input type="radio" id="scanned" name="режим" value="1" class="custom-control-input">
+                    <label class="custom-control-label" for="scanned">Отсканированные</label>
+                </div>
+                <div class="custom-control custom-radio">
+                    <input type="radio" id="notScanned" name="режим" value="2" class="custom-control-input">
+                    <label class="custom-control-label" for="notScanned">Не отсканированные</label>
+                </div>
+            </div>
+            <div class="col-6 float-right row">
+                @Html.Button("Очистить сканирование", new { id = "btnClearScan", @class = "btn-dark" })
+                <div style="width:0;overflow:hidden;">
+                    <input id="barcodeText" />
+                </div>
+                <div id="scanning" class="d-flex justify-content-end">
+                    <strong class="text-success"> Сканирование... </strong>
+                    <div class="spinner-border text-success" role="status" aria-hidden="true"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="grid-header">
+    <div class="grid-header-buttons">
+        <span id="gridConfigure" class="fa fa-cog"></span>
+    </div>
+    <div style="flex-grow:1"></div>
+    <a id="refreshDateTime"></a>
+    <div class="grid-header-buttons">
+        <span id="gridRefresh" class="fa fa-refresh"></span>
+    </div>
+</div>
+@Html.AjaxGrid(Url.Action("CreateLoadingList", "ИнтернетЗаказы", new { campaignInfo = (ViewBag.CampaignIds as SelectList).SelectedValue.ToString() }))
+
+<script>
+    $(function() {
+          $('#listDate').daterangepicker({
+                singleDatePicker: true,
+                showDropdowns: true,
+                minYear: 2020,
+                maxYear: parseInt(moment().format('YYYY'),10),
+                locale: {
+                    "format": "DD.MM.YYYY",
+                    "separator": " - ",
+                    "applyLabel": "Выбрать",
+                    "cancelLabel": "Отмена",
+                    "fromLabel": "от",
+                    "toLabel": "до",
+                    "customRangeLabel": "Произвольный",
+                    "weekLabel": "W",
+                    "daysOfWeek": [
+                        "Вс",
+                        "Пн",
+                        "Вт",
+                        "Ср",
+                        "Чт",
+                        "Пт",
+                        "Сб"
+                    ],
+                    "monthNames": [
+                        "Январь",
+                        "Февраль",
+                        "Март",
+                        "Апрель",
+                        "Май",
+                        "Июнь",
+                        "Июль",
+                        "Август",
+                        "Сентябрь",
+                        "Октябрь",
+                        "Ноябрь",
+                        "Декабрь"
+                    ],
+                    "firstDay": 1
+                },
+          });
+    });
+    $("#listDate").on("change", function() { ReloadGrid(); });
+    //$('#listDate').on('apply.daterangepicker', function () { ReloadGrid(); });
+    $('input[type=radio][name=режим]').change(function () { ReloadGrid(); });
+    $("#campaignIds").on("change", function () { ReloadGrid(); });
+    function ReloadGrid() {
+        if (!gridReloading) {
+            DisableEnableControls(true);
+            var gridObject = document.querySelector("div[data-name='gridLoadingList']");
+            if (gridObject != null) {
+                const gridLoadingList = new MvcGrid(gridObject);
+                gridLoadingList.url.searchParams.set("campaignInfo", $("#campaignIds").val());
+                gridLoadingList.url.searchParams.set("reportDate", DateTimeToLocalISOString($('#listDate').data('daterangepicker').startDate));
+                gridLoadingList.url.searchParams.set("reportType", $("input[name='режим']:checked").val());
+                gridLoadingList.reload();
+            }
+        }
+        else
+            needToReload = true;
+    }
+    function DisableEnableControls(f) {
+        if (f) {
+            $('#listDate').attr('disabled', 'disabled');
+            $('#campaignIds').attr('disabled', 'disabled');
+            $("#btnScan").attr('disabled', 'disabled');
+            $("input[name='режим']").attr('disabled', 'disabled');
+            $("#btnClearScan").attr('disabled', 'disabled');
+        } else {
+            $('#listDate').removeAttr('disabled');
+            $('#campaignIds').removeAttr('disabled');
+            $('#btnScan').removeAttr('disabled');
+            $("input[name='режим']").removeAttr('disabled');
+            $('#btnClearScan').removeAttr('disabled');
+        }
+    }
+    document.getElementById("gridConfigure").addEventListener("click", function () {
+        new MvcGrid(document.querySelector("div[data-name='gridLoadingList']")).showConfiguration(this);
+    });
+    document.addEventListener("gridconfigure", function (e) {
+        localStorage.setItem("grid-" + e.detail.grid.name, JSON.stringify(e.detail.grid.getConfiguration()));
+    });
+    var gridReloading = true;
+    var needToReload = false;
+    document.addEventListener("reloadstart", e => {
+        gridReloading = true;
+        needToReload = false;
+    });
+    document.addEventListener("reloadend", e => {
+        gridReloading = false;
+        if (needToReload)
+            ReloadGrid();
+        else {
+            var refreshDateTime = new Date();
+            document.getElementById("refreshDateTime").textContent = "Обновлено: " + formatterDate.format(refreshDateTime) + " " + formatterTime.format(refreshDateTime);
+            DisableEnableControls(false);
+        }
+    });
+    document.addEventListener("reloadfail", e => {
+        //e.detail.reason - failed response promise reason.
+        //e.detail.grid - grid's instance.
+        gridReloading = false;
+    });
+
+    document.getElementById("gridRefresh").addEventListener("click", function () {
+        new MvcGrid(document.querySelector("div[data-name='gridLoadingList']")).reload();
+    });
+    var timerScan = null;
+    pageStatus = {
+        aScanning: false,
+        aListener: function (val) { },
+        set scanning(val) {
+            this.aScanning = val;
+            this.aListener(val);
+        },
+        get scanning() {
+            return this.aScanning;
+        },
+        registerListener: function (listener) {
+            this.aListener = listener;
+        }
+    }
+    pageStatus.registerListener(function (val) {
+        if (val) {
+            $("#btnScan").removeClass("btn-primary");
+            $("#btnScan").addClass("btn-warning");
+            $("#btnScan").text('Закончить сканирование');
+            $('#scanning').css("visibility", "visible");
+            $("#barcodeText").focus();
+            $('#barcodeText').on('blur', function () {
+                _this = this;
+                timerScan = setTimeout(function () {
+                    _this.focus();
+                }, 0);
+            });
+            $("#btnClearScan").hide();
+        } else {
+            $("#btnScan").removeClass("btn-warning");
+            $("#btnScan").addClass("btn-primary");
+            $("#btnScan").text('Начать сканирование');
+            $("#barcodeText").off("blur");
+            clearTimeout(timerScan);
+            $('#scanning').css("visibility", "hidden");
+            $("#btnClearScan").show();
+        }
+    }); 
+    pageStatus.scanning = false;
+
+    $("#btnScan").on('click', function () {
+        pageStatus.scanning = !pageStatus.scanning;
+    });
+
+    $("#barcodeText").on("change", function () {
+        //EnableBusyScreen();
+        $.ajax({
+            url: "LoadingListOrderScan",
+            type: "post",
+            datatype: "xml",
+            data: {
+                campaignInfo: $("#campaignIds").val(),
+                shipDate: DateTimeToLocalISOString($('#listDate').data('daterangepicker').startDate),
+                barcodeText: this.value
+            },
+            async: true,
+            cache: false,
+            success: function (obj) {
+                //DisableBusyScreen();
+                if (obj) {  // check if data is defined
+                    $("#alertText").text(obj);
+                    $('.alert').removeClass('d-none');
+                    document.getElementById('soundBeep').play();
+                    setTimeout(() => { $('.alert').addClass('d-none'); $("#alertText").text(""); }, 3000);
+                } else {
+                    ReloadGrid();
+                }
+            },
+            error: function (e, v, f) {
+                alert("ошибка выполнения!");
+            }
+        });
+        this.value = "";
+    });
+    $("#btnClearScan").on('click', function () {
+        if (confirm("Вы уверены, что хотите очистить всю отсканированную информацию по данному маркету?")) {
+            DisableEnableControls(true);
+            $.ajax({
+                url: "LoadingListClearScanned",
+                type: "post",
+                datatype: "xml",
+                data: {
+                    campaignInfo: $("#campaignIds").val(),
+                    shipDate: DateTimeToLocalISOString($('#listDate').data('daterangepicker').startDate)
+                },
+                async: true,
+                cache: false,
+                success: function () {
+                    ReloadGrid();
+                },
+                error: function (e, v, f) {
+                    alert("ошибка выполнения!");
+                }
+            });
+        }
+    });
+</script>

@@ -28,6 +28,7 @@ namespace Refresher1C.Service
         private IDocCreateOrUpdate _docService;
 
         private readonly Dictionary<string, string> _firmProxy;
+        private readonly List<SleepPeriod> _sleepPeriods;
 
         private IOrder _order;
         private IMarketplace _marketplace;
@@ -88,6 +89,15 @@ namespace Refresher1C.Service
                 var firmaId = configData.FirstOrDefault(x => x.Key.EndsWith("FirmaId")).Value;
                 var proxy = configData.FirstOrDefault(x => x.Key.EndsWith("Proxy")).Value;
                 _firmProxy.Add(firmaId, proxy);
+            }
+            var sleepPeriods = _configuration["Orderer:sleepPeriods"].Split(';').Select(x => x.Split('-'));
+            _sleepPeriods = new List<SleepPeriod>();
+            foreach (var period in sleepPeriods)
+            {
+                if ((period.Length == 2) &&
+                    TimeSpan.TryParseExact(period[0], @"hh\:mm", null, out TimeSpan startTimeSpan) &&
+                    TimeSpan.TryParseExact(period[1], @"hh\:mm", null, out TimeSpan endTimeSpan))
+                    _sleepPeriods.Add(new SleepPeriod(startTimeSpan, endTimeSpan));
             }
         }
         public async Task CheckNaborNeeded(CancellationToken stoppingToken)
@@ -425,6 +435,18 @@ namespace Refresher1C.Service
                                     if (result.Item1 != null)
                                     {
                                         label = result.Item1;
+                                        var resultDetails = await OzonClasses.OzonOperators.OrderDetails(_httpService, _firmProxy[order.FirmaId], order.ClientId, order.AuthToken,
+                                            order.MarketplaceId,
+                                            stoppingToken);
+                                        if (resultDetails.Item2 != null)
+                                            _logger.LogError(resultDetails.Item2);
+                                        if (resultDetails.Item3 != null)
+                                        {
+                                            if (!string.IsNullOrEmpty(resultDetails.Item3.Upper_barcode))
+                                                entity.Sp13987 = resultDetails.Item3.Upper_barcode;
+                                            if (!string.IsNullOrEmpty(resultDetails.Item3.Lower_barcode))
+                                                entity.Sp13992 = resultDetails.Item3.Lower_barcode;
+                                        }
                                         break;
                                     }
                                     if (result.Item2 != null && !string.IsNullOrEmpty(result.Item2) && (--tryCount == 0))
@@ -1958,6 +1980,7 @@ namespace Refresher1C.Service
                                  (((regular ? updStock.Flag : updStock.IsError) &&
                                    (updStock.Updated < DateTime.Now.AddMinutes(-2))) ||
                                   (updStock.Updated.Date != DateTime.Today))
+                                  //&& nom.Id == "  1H8LF  "
                                select new
                                {
                                    Id = markUse.Id,
@@ -2250,9 +2273,9 @@ namespace Refresher1C.Service
                             marketplace.Encoding, stoppingToken);
                         await GetOzonCancelOrders(marketplace.FirmaId, marketplace.ClientId, marketplace.AuthToken,
                             marketplace.Id, stoppingToken);
-                        //moved to Slow
-                        await GetOzonDeliveringOrders(marketplace.Id, marketplace.FirmaId, marketplace.ClientId, marketplace.AuthToken,
-                            marketplace.Id, stoppingToken);
+                        if (!_sleepPeriods.Any(x => x.IsSleeping()))
+                            await GetOzonDeliveringOrders(marketplace.Id, marketplace.FirmaId, marketplace.ClientId, marketplace.AuthToken,
+                                marketplace.Id, stoppingToken);
                     }
                     else if (marketplace.Тип == "ЯНДЕКС")
                     {
@@ -2634,7 +2657,7 @@ namespace Refresher1C.Service
                                  (aliOrder.Finish_reason == "AutoConfirm") ||
                                  (aliOrder.Finish_reason == "ConfirmedByLogistic"))) || 
                                 ((aliOrder.Logistic_orders?.Count > 0) && (aliOrder.Logistic_orders?.All(x => logisticsDelivering.Contains(x.Status)) ?? false))) &&
-                                (order.InternalStatus != 6))
+                                (order.InternalStatus != 6) && !_sleepPeriods.Any(x => x.IsSleeping()))
                             {
                                 await _docService.OrderDeliveried(order);
                             }
@@ -3004,13 +3027,16 @@ namespace Refresher1C.Service
                         if (order != null)
                             await _docService.OrderCancelled(order);
                     }
-                    var deliveredOrderIds = result.orders?.Where(x => (x.Value == WbClasses.WbStatus.sorted) || (x.Value == WbClasses.WbStatus.sold))
-                        .Select(x => x.Key);
-                    foreach (var wbOrderId in deliveredOrderIds)
+                    if (!_sleepPeriods.Any(x => x.IsSleeping()))
                     {
-                        var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, wbOrderId.ToString());
-                        if (order != null)
-                            await _docService.OrderDeliveried(order);
+                        var deliveredOrderIds = result.orders?.Where(x => (x.Value == WbClasses.WbStatus.sorted) || (x.Value == WbClasses.WbStatus.sold))
+                            .Select(x => x.Key);
+                        foreach (var wbOrderId in deliveredOrderIds)
+                        {
+                            var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, wbOrderId.ToString());
+                            if (order != null)
+                                await _docService.OrderDeliveried(order);
+                        }
                     }
                 }
             }

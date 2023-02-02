@@ -55,9 +55,6 @@ C:\Users\Валентин\source\repos\StinWeb\Market\bin\Debug\net6.0\runtimes\
 C:\Users\Валентин\source\repos\StinWeb\Market\bin\Debug\net6.0\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\Валентин\source\repos\StinWeb\Market\bin\Debug\net6.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\Валентин\source\repos\StinWeb\Market\bin\Debug\net6.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
-C:\Users\Валентин\source\repos\StinWeb\Market\bin\Debug\net6.0\runtimes\win\lib\netcoreapp3.0\Microsoft.Win32.SystemEvents.dll
-C:\Users\Валентин\source\repos\StinWeb\Market\bin\Debug\net6.0\runtimes\unix\lib\netcoreapp3.0\System.Drawing.Common.dll
-C:\Users\Валентин\source\repos\StinWeb\Market\bin\Debug\net6.0\runtimes\win\lib\netcoreapp3.0\System.Drawing.Common.dll
 C:\Users\Валентин\source\repos\StinWeb\Market\bin\Debug\net6.0\runtimes\win\lib\netstandard2.0\System.Runtime.Caching.dll
 C:\Users\Валентин\source\repos\StinWeb\Market\bin\Debug\net6.0\runtimes\win\lib\netstandard2.0\System.Security.Cryptography.ProtectedData.dll
 C:\Users\Валентин\source\repos\StinWeb\Market\bin\Debug\net6.0\runtimes\win\lib\netcoreapp3.0\System.Windows.Extensions.dll
@@ -98,3 +95,5 @@ C:\Users\Валентин\source\repos\StinWeb\Market\obj\Debug\net6.0\refint\Ma
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Debug\net6.0\Market.pdb
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Debug\net6.0\Market.genruntimeconfig.cache
 C:\Users\Валентин\source\repos\StinWeb\Market\obj\Debug\net6.0\ref\Market.dll
+C:\Users\Валентин\source\repos\StinWeb\Market\bin\Debug\net6.0\runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll
+C:\Users\Валентин\source\repos\StinWeb\Market\bin\Debug\net6.0\runtimes\win\lib\net6.0\System.Drawing.Common.dll

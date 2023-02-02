@@ -509,7 +509,6 @@ namespace StinClasses.Models
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-
             modelBuilder.HasDbFunction(() => fn_GetTreeById(default, default));
             modelBuilder.Entity<Dh10054>(entity =>
             {
@@ -6048,7 +6047,7 @@ namespace StinClasses.Models
 
                 entity.Property(e => e.Sp4400)
                     .IsRequired()
-                    .HasMaxLength(10)
+                    .HasMaxLength(160)
                     .IsUnicode(false)
                     .HasColumnName("SP4400")
                     .IsFixedLength();
@@ -28005,6 +28004,17 @@ namespace StinClasses.Models
                 entity.Property(e => e.Sp14192)
                     .HasColumnType("numeric(1, 0)")
                     .HasColumnName("SP14192");
+
+                entity.Property(e => e.Sp14254)
+                    .HasColumnType("numeric(5, 0)")
+                    .HasColumnName("SP14254");
+
+                entity.Property(e => e.Sp14255)
+                    .IsRequired()
+                    .HasMaxLength(250)
+                    .IsUnicode(false)
+                    .HasColumnName("SP14255")
+                    .IsFixedLength();
 
                 entity.Property(e => e.Verstamp).HasColumnName("VERSTAMP");
             });

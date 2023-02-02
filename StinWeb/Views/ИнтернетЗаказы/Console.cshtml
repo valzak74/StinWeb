@@ -31,7 +31,6 @@
         </div>
 *@        
         <div class="card-body">
-            @*<input id="barcodefield1" /><br />*@
             <div class="row">
                 @Html.InputGroup("col-6", "Компания :", "<button type=\"button\" id=\"btnAct\" class=\"btn btn-sm btn-outline-success\" onclick=\"btnActClick()\"><span class=\"spinner-grow spinner-grow-sm d-none\" role=\"status\" aria-hidden=\"true\"></span>Акт приема-передачи</button>", "select", "CampaignIds", (SelectList)ViewBag.CampaignIds, new { id = "campaignIds", @class = "form-control", onchange = "InfoText()" })
 
@@ -86,10 +85,6 @@
 <div id="orderContent"></div>
 
 <script>
-    //$("#barcodefield1").on("change", function () {
-    //    alert(this.value);
-    //    this.value = "";
-    //});
     var insidePopover = false;
     //$(function () {
 

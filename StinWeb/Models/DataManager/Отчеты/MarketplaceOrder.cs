@@ -32,4 +32,18 @@ namespace StinWeb.Models.DataManager.Отчеты
         public string Labels { get; set; }
         public bool Printed { get; set; }
     }
+    public class LoadingListOrder
+    {
+        public string OrderNo { get; set; }
+        public string ТипДоставки { get; set; }
+        public decimal Status { get; set; }
+        public int Scanned { get; set; }
+        public decimal КолГрузоМест { get; set; }
+        public decimal КолТовара { get; set; }
+        public decimal СуммаТовара { get; set; }
+        public int StatusCode { get; set; }
+        public string Склады { get; set; }
+        public string МаршрутНаименование { get; set; }
+        public string StatusDescription { get; set; }
+    }
 }

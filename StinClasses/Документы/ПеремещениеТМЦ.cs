@@ -171,7 +171,7 @@ namespace StinClasses.Документы
             }
             var result = new List<ФормаПеремещениеТМЦ>();
             
-            var колДнейНаПеремещение = await _склад.ЭтоРабочийДень(складId, 1 + (DateTime.Now.TimeOfDay > TimeSpan.Parse("16:00") ? 1 : 0));
+            var колДнейНаПеремещение = await _склад.ЭтоРабочийДень(складId, DateTime.Now.TimeOfDay > TimeSpan.Parse("16:00") ? 1 : 0);
             var датаПеремещения = DateTime.Today.AddDays(колДнейНаПеремещение);
             string маршрутКод = _графикМаршрутов.ПолучитьКодМаршрута(датаПеремещения, "13"); //направление 13 == Самара
             foreach (var данные in ПереченьНаличия)

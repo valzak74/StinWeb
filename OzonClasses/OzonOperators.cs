@@ -118,13 +118,13 @@ namespace OzonClasses
             }
             return new(null,null, null);
         }
-        public static async Task<Tuple<OrderStatus?,string?>> OrderDetails(IHttpService httpService, string proxyHost, string clientId, string authToken,
+        public static async Task<Tuple<OrderStatus?,string?, PostingBarcodes?>> OrderDetails(IHttpService httpService, string proxyHost, string clientId, string authToken,
             string postingNumber,
             CancellationToken cancellationToken)
         {
             var request = new GetOrderByPostingNumberRequest();
             request.Posting_number = postingNumber;
-            request.With = new RequestWithParams { Analytics_data = false, Barcodes = false, Financial_data = false, Translit = false };
+            request.With = new RequestWithParams { Analytics_data = false, Barcodes = true, Financial_data = false, Translit = false };
             var result = await httpService.Exchange<GetOrderByPostingNumberResponse, ErrorResponse>(
                 $"https://{proxyHost}api-seller.ozon.ru/v3/posting/fbs/get",
                 HttpMethod.Post,
@@ -133,13 +133,13 @@ namespace OzonClasses
                 cancellationToken);
             if (result.Item2 != null)
             {
-                return new(null, "GetOrderByPostingNumberResponse : " + result.Item2);
+                return new(null, "GetOrderByPostingNumberResponse : " + result.Item2, null);
             }
             if ((result.Item1 != null) && (result.Item1.Result != null))
             {
-                return new(result.Item1.Result.Status, null);
+                return new(result.Item1.Result.Status, null, result.Item1.Result.Barcodes);
             }
-            return new(null, null);
+            return new(null, null, null);
         }
         public static async Task<string> CancelOrder(IHttpService httpService, string proxyHost, string clientId, string authToken,
             string postingNumber,

@@ -22,6 +22,8 @@ using StinClasses.Models;
 using JsonExtensions;
 using HttpExtensions;
 using System.Threading;
+using YandexClasses;
+using NPOI.SS.Formula.Functions;
 
 namespace StinWeb.Controllers
 {
@@ -125,6 +127,47 @@ namespace StinWeb.Controllers
             ViewBag.DefaultEmail = Startup.sConfiguration["Settings:DefaultEmailforCashReceipt"];
             return View("Console");
         }
+        [Authorize]
+        public async Task<IActionResult> LoadingList(CancellationToken cancellationToken)
+        {
+            var Пользователь = await _userRepository.GetUserByRowIdAsync(Int32.Parse(User.FindFirstValue("UserRowId")));
+            var CampaignIds = _context.Sc14042s
+                .Where(x => !x.Ismark && (x.Sp14164.Trim().ToUpper() == "FBS"))
+                .Select(x => new { CampaignId = x.Id.Replace(" ","_"), Description = x.Sp14155.Trim() + " " + x.Descr.Trim() })
+                .Concat(
+                _context.Sc14042s
+                .Where(x => !x.Ismark && (x.Sp14155.Trim().ToUpper() == "OZON") && (x.Sp14164.Trim().ToUpper() == "FBS") && !string.IsNullOrWhiteSpace(x.Sp14154))
+                .Select(x => new { CampaignId = x.Id.Replace(" ", "_") + "/" + x.Sp14154.Trim(), Description = x.Sp14155.Trim() + " " + x.Sp14195.Trim() })
+                )
+                .OrderBy(x => x.Description);
+            ViewBag.CampaignIds = new SelectList(CampaignIds, "CampaignId", "Description", CampaignIds.Select(x => x.CampaignId).FirstOrDefault());
+            return View("LoadingList");
+        }
+        [HttpGet]
+        public async Task<PartialViewResult> CreateLoadingList(string campaignInfo, DateTime reportDate, int reportType, CancellationToken cancellationToken)
+        {
+            var campaignData = campaignInfo.Split('/');
+            var campaignId = campaignData[0].Replace('_',' ');
+            var warehouseId = (campaignData.Length > 1) ? campaignData[1] : string.Empty;
+            if (reportDate == DateTime.MinValue)
+                reportDate = DateTime.Today;
+            return PartialView("~/Views/ИнтернетЗаказы/_LoadingList.cshtml", await GetLoadingListData(reportDate, reportType, campaignId, null, warehouseId, cancellationToken));
+        }
+        [HttpPost]
+        public async Task<IActionResult> LoadingListOrderScan(string campaignInfo, DateTime shipDate, string barcodeText, CancellationToken cancellationToken)
+        {
+            var result = await _order.SetOrderScanned(shipDate, campaignInfo, barcodeText, 1, cancellationToken);
+            return Ok(result);
+        }
+        [HttpPost]
+        public async Task<IActionResult> LoadingListClearScanned(string campaignInfo, DateTime shipDate, CancellationToken cancellationToken)
+        {
+            var campaignData = campaignInfo.Split('/');
+            var campaignId = campaignData[0].Replace('_', ' ');
+            var warehouseId = (campaignData.Length > 1) ? campaignData[1] : string.Empty;
+            await _order.ClearOrderScanned(shipDate, campaignId, warehouseId, cancellationToken);
+            return Ok();
+        }
         [HttpPost]
         public async Task<IActionResult> GetLoadingAct(string campaignInfo, CancellationToken cancellationToken)
         {
@@ -141,8 +184,37 @@ namespace StinWeb.Controllers
                 _ => reportDate
             };
             var campaignData = campaignInfo.Split('/');
-            var campaignId = campaignData[0];
+            var campaignCode = campaignData[0];
             var warehouseId = (campaignData.Length > 1) ? campaignData[1] : string.Empty;
+            var shop = _context.Sc14042s
+                .Where(x => (x.Code.Trim() == campaignCode) && (string.IsNullOrEmpty(warehouseId) ? true : x.Sp14154 == warehouseId))
+                .Select(market => market.Sp14155.ToUpper().Trim() + " " + (string.IsNullOrEmpty(warehouseId) ? market.Descr.Trim() : market.Sp14195.Trim())).FirstOrDefault();
+            var dataE = await GetLoadingListData(reportDate, 0, null, campaignCode, warehouseId, cancellationToken);
+
+            var printData = Enumerable.Repeat(new
+            {
+                ДатаЛистаСборки = reportDate.ToString("dd.MM.yyyy"),
+                МагазинМаркетплейс = shop,
+                Итого = dataE.Sum(x => x.КолТовара).ToString("0", CultureInfo.InvariantCulture),
+                ИтогоГрузомест = dataE.Sum(x => x.КолГрузоМест).ToString("0", CultureInfo.InvariantCulture),
+                ИтогоСумма = dataE.Sum(x => x.СуммаТовара).ToString("N2", CultureInfo.InvariantCulture),
+                ТаблЧасть = dataE.Select((x, y) => new
+                {
+                    ном = (y + 1).ToString("0", CultureInfo.InvariantCulture),
+                    OrderNo = x.OrderNo,
+                    Status = x.Status,
+                    КолГрузоМест = x.КолГрузоМест.ToString("0", CultureInfo.InvariantCulture),
+                    КолТовара = x.КолТовара.ToString("0", CultureInfo.InvariantCulture),
+                    StatusCode = x.StatusCode,
+                    StatusDescription = x.StatusDescription,
+                    Склады = x.Склады,
+                    МаршрутНаименование = x.МаршрутНаименование
+                }).ToList()
+            }, 1).ToList();
+            return Ok("".CreateOrUpdateHtmlPrintPage("ЛистСборки", printData[0]));
+        }
+        async Task<IEnumerable<LoadingListOrder>> GetLoadingListData(DateTime reportDate, int reportType, string campaignId, string campaignCode, string warehouseId, CancellationToken cancellationToken)
+        {
             var data = await (from order in _context.Sc13994s
                               join market in _context.Sc14042s on order.Sp14038 equals market.Id
                               join item in _context.Sc14033s on order.Id equals item.Parentext
@@ -151,7 +223,7 @@ namespace StinWeb.Controllers
                               join markUse in _context.Sc14152s on new { nomId = nom.Id, marketId = market.Id } equals new { nomId = markUse.Parentext, marketId = markUse.Sp14147 } into _markUse
                               from markUse in _markUse.DefaultIfEmpty()
                               where !order.Ismark && (order.Sp13982 != 5) &&
-                                    (market.Code.Trim() == campaignId) &&
+                                    (!string.IsNullOrEmpty(campaignId) ? market.Id == campaignId : (market.Code.Trim() == campaignCode)) &&
                                     (order.Sp13990.Date == reportDate) &&
                                     (!string.IsNullOrEmpty(warehouseId) ? markUse.Sp14190.Trim() == warehouseId :
                                         (!string.IsNullOrWhiteSpace(market.Sp14154) ? markUse.Sp14190.Trim() != market.Sp14154.Trim() :
@@ -163,6 +235,7 @@ namespace StinWeb.Controllers
                                   status = order.Sp13982,
                                   типДоставкиПартнер = order.Sp13985,
                                   типДоставки = order.Sp13988,
+                                  scanned = order.Sp14254
                               } into gr
                               select new
                               {
@@ -170,28 +243,19 @@ namespace StinWeb.Controllers
                                   OrderNo = gr.Key.orderNo.Trim(),
                                   Status = gr.Key.status,
                                   ТипДоставки = (((StinClasses.StinDeliveryPartnerType)gr.Key.типДоставкиПартнер == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinDeliveryType)gr.Key.типДоставки == StinClasses.StinDeliveryType.PICKUP)) ? "Самовывоз" : "Доставка",
+                                  Scanned = gr.Key.scanned,
                                   КолТовара = gr.Sum(x => x.item.Sp14023),
                                   СуммаТовара = gr.Sum(x => ((x.item.Sp14025 > 0 ? x.item.Sp14025 : x.item.Sp14024) + x.item.Sp14026) * x.item.Sp14023),
-                                  КолГрузоМест = gr.Sum(x => x.market.Sp14155.ToUpper().Trim() == "ЯНДЕКС" ? ((x.ed.Sp14063 == 0 ? 1 : x.ed.Sp14063) * x.item.Sp14023) / (x.nom.Sp14188 == 0 ? 1 : x.nom.Sp14188) : 1),
+                                  КолГрузоМест = gr.Sum(x => x.market.Sp14155.ToUpper().Trim() == "ЯНДЕКС" ? ((x.ed.Sp14063 == 0 ? 1 : x.ed.Sp14063) * x.item.Sp14023) / (x.nom.Sp14188 == 0 ? 1 : x.nom.Sp14188) :
+                                    x.market.Sp14155.ToUpper().Trim() == "SBER" ? ((x.ed.Sp14063 == 0 ? 1 : x.ed.Sp14063) * x.item.Sp14023) : 1),
                               }).ToListAsync(cancellationToken);
-            var shop = _context.Sc14042s
-                .Where(x => (x.Code.Trim() == campaignId) && (string.IsNullOrEmpty(warehouseId) ? true : x.Sp14154 == warehouseId))
-                .Select(market => market.Sp14155.ToUpper().Trim() + " " + (string.IsNullOrEmpty(warehouseId) ? market.Descr.Trim() : market.Sp14195.Trim())).FirstOrDefault();
+            if (reportType == 1)
+                data = data.Where(x => x.Scanned == x.КолГрузоМест).ToList();
+            else if (reportType == 2)
+                data = data.Where(x => x.Scanned < x.КолГрузоМест).ToList();
             var orderIds = data.Select(x => x.OrderId);
             DateTime dateRegTA = _context.GetRegTA();
             var ВидРеализация = Common.Encode36((long)StinClasses.Документы.ВидДокумента.Реализация).PadLeft(4);
-            var регКнигаПродажData = from r in _context.Rg4343s //КнигаПродаж
-                                     join doc in _context.Dh1611s on r.Sp4336 equals (ВидРеализация + doc.Iddoc)
-                                     join sklad in _context.Sc55s on doc.Sp1593 equals sklad.Id
-                                     where r.Period == dateRegTA
-                                     group new { r, doc, sklad } by new { doc.Sp1587, doc.Sp11569, sklad.Descr } into gr
-                                     where gr.Sum(x => x.r.Sp4339) != 0
-                                     select new
-                                     {
-                                         ДокОснование = gr.Key.Sp1587.Substring(4, 9),
-                                         МаршрутName = gr.Key.Sp11569.Trim(),
-                                         СкладName = gr.Key.Descr.Trim()
-                                     };
             var dataReg = await (
                         (from r in _context.Rg4667s //ЗаказыЗаявки
                          join doc in _context.Dh2457s on r.Sp4664 equals doc.Iddoc
@@ -220,75 +284,57 @@ namespace StinWeb.Controllers
                          where gr.Sum(x => x.r.Sp11972) != 0
                          select new { orderId = gr.Key.orderId, маршрутName = gr.Key.маршрутName.Trim(), складName = gr.Key.складName.Trim(), statusOrder = gr.Key.status == 1 ? 4 : 3 })
                         .Concat
-                        (from t in регКнигаПродажData //КнигаПродаж КомплексПродажа
-                         join docComplex in _context.Dh12542s on t.ДокОснование equals docComplex.Iddoc
+                        (from docComplex in _context.Dh12542s
+                         join sklad in _context.Sc55s on docComplex.Sp12518 equals sklad.Id
                          where orderIds.Contains(docComplex.Sp14005)
-                         select new { orderId = docComplex.Sp14005, маршрутName = t.МаршрутName, складName = t.СкладName, statusOrder = 6 })
+                         select new { orderId = docComplex.Sp14005, маршрутName = docComplex.Sp12524.Trim(), складName = sklad.Descr.Trim(), statusOrder = 6 })
                         .Concat
-                        (from t in регКнигаПродажData //КнигаПродаж Продажа
-                         join docProdaga in _context.Dh9109s on t.ДокОснование equals docProdaga.Iddoc
+                        (from docProdaga in _context.Dh9109s
+                         join sklad in _context.Sc55s on docProdaga.Sp9077 equals sklad.Id
                          where orderIds.Contains(docProdaga.Sp13999)
-                         select new { orderId = docProdaga.Sp13999, маршрутName = t.МаршрутName, складName = t.СкладName, statusOrder = 6 })).ToListAsync(cancellationToken);
-            var dataE = from d in data
-                        join reg in dataReg on d.OrderId equals reg.orderId into _reg
-                        from reg in _reg.DefaultIfEmpty()
-                        group new { d, reg } by new
-                        {
-                            d.OrderNo,
-                            d.Status,
-                            d.ТипДоставки,
-                            d.КолГрузоМест,
-                            d.КолТовара,
-                            d.СуммаТовара
-                        } into gr
-                        orderby gr.Key.OrderNo.Contains("-") ? gr.Key.OrderNo : gr.Key.OrderNo.Substring(gr.Key.OrderNo.Length - 3)
-                        select new
-                        {
-                            OrderNo = gr.Key.OrderNo,
-                            ТипДоставки = gr.Key.ТипДоставки,
-                            Status = gr.Key.Status,
-                            КолГрузоМест = gr.Key.КолГрузоМест,
-                            КолТовара = gr.Key.КолТовара,
-                            СуммаТовара = gr.Key.СуммаТовара,
-                            StatusCode = gr.Min(o => o.reg.statusOrder),
-                            Склады = string.Join(", ", gr.Select(y => y.reg.складName).Distinct()),
-                            МаршрутНаименование = string.Join(", ", gr.Select(y => y.reg.маршрутName).Distinct()),
-                        };
-
-            var printData = Enumerable.Repeat(new
-            {
-                ДатаЛистаСборки = reportDate.ToString("dd.MM.yyyy"),
-                МагазинМаркетплейс = shop,
-                Итого = dataE.Sum(x => x.КолТовара).ToString("0", CultureInfo.InvariantCulture),
-                ИтогоГрузомест = dataE.Sum(x => x.КолГрузоМест).ToString("0", CultureInfo.InvariantCulture),
-                ИтогоСумма = dataE.Sum(x => x.СуммаТовара).ToString("N2", CultureInfo.InvariantCulture),
-                ТаблЧасть = dataE.Select((x, y) => new
-                {
-                    ном = (y + 1).ToString("0", CultureInfo.InvariantCulture),
-                    OrderNo = x.OrderNo,
-                    Status = x.Status,
-                    КолГрузоМест = x.КолГрузоМест.ToString("0", CultureInfo.InvariantCulture),
-                    КолТовара = x.КолТовара.ToString("0", CultureInfo.InvariantCulture),
-                    StatusCode = x.StatusCode,
-                    StatusDescription = x.StatusCode == 1 ? "Заказ(одобрен)" :
-                                    x.StatusCode == 2 ? "Резерв" :
-                                    x.StatusCode == 3 ? "Набор" :
-                                    x.StatusCode == 5 ? "Отменен" :
-                                    x.StatusCode == 4 ? "Готов" +
-                                        (x.Status == 1 ? "/Груз сформирован" :
-                                        (x.Status == 2 ? "/Этикетки получены" :
-                                        (x.Status == 3 ? "/Готов к отгрузке" :
-                                        (x.Status == 9 ? "/" + x.ТипДоставки :
-                                        (x.Status == 7 ? "/Поступил запрос на отмену" :
-                                        (x.Status == 13 ? "/Спорный" :
-                                        (x.Status < 0 ? "/" + x.Status.ToString() : ""))))))) :
-                                x.StatusCode == 6 ? "Реализация" :
-                                "Состояние " + x.StatusCode.ToString(),
-                    Склады = x.Склады,
-                    МаршрутНаименование = x.МаршрутНаименование
-                }).ToList()
-            }, 1).ToList();
-            return Ok("".CreateOrUpdateHtmlPrintPage("ЛистСборки", printData[0]));
+                         select new { orderId = docProdaga.Sp13999, маршрутName = docProdaga.Sp11575.Trim(), складName = sklad.Descr.Trim(), statusOrder = 6 })
+                        ).ToListAsync(cancellationToken);
+            return from d in data
+                   join reg in dataReg on d.OrderId equals reg.orderId into _reg
+                   from reg in _reg.DefaultIfEmpty()
+                   group new { d, reg } by new
+                   {
+                       d.OrderNo,
+                       d.Status,
+                       d.ТипДоставки,
+                       d.Scanned,
+                       d.КолГрузоМест,
+                       d.КолТовара,
+                       d.СуммаТовара
+                   } into gr
+                   orderby gr.Key.OrderNo.Contains("-") ? gr.Key.OrderNo : gr.Key.OrderNo.Substring(gr.Key.OrderNo.Length - 3)
+                   select new LoadingListOrder
+                   {
+                       OrderNo = gr.Key.OrderNo,
+                       ТипДоставки = gr.Key.ТипДоставки,
+                       Status = gr.Key.Status,
+                       Scanned = (int)gr.Key.Scanned,
+                       КолГрузоМест = gr.Key.КолГрузоМест,
+                       КолТовара = gr.Key.КолТовара,
+                       СуммаТовара = gr.Key.СуммаТовара,
+                       StatusCode = gr.Min(o => o.reg.statusOrder),
+                       Склады = string.Join(", ", gr.Select(y => y.reg.складName).Distinct()),
+                       МаршрутНаименование = string.Join(", ", gr.Select(y => y.reg.маршрутName).Distinct()),
+                       StatusDescription = gr.Min(o => o.reg.statusOrder) == 1 ? "Заказ(одобрен)" :
+                        gr.Min(o => o.reg.statusOrder) == 2 ? "Резерв" :
+                        gr.Min(o => o.reg.statusOrder) == 3 ? "Набор" :
+                        gr.Min(o => o.reg.statusOrder) == 5 ? "Отменен" :
+                        gr.Min(o => o.reg.statusOrder) == 4 ? "Готов" +
+                            (gr.Key.Status == 1 ? "/Груз сформирован" :
+                            (gr.Key.Status == 2 ? "/Этикетки получены" :
+                            (gr.Key.Status == 3 ? "/Готов к отгрузке" :
+                            (gr.Key.Status == 9 ? "/" + gr.Key.ТипДоставки :
+                            (gr.Key.Status == 7 ? "/Поступил запрос на отмену" :
+                            (gr.Key.Status == 13 ? "/Спорный" :
+                            (gr.Key.Status < 0 ? "/" + gr.Key.Status.ToString() : ""))))))) :
+                            gr.Min(o => o.reg.statusOrder) == 6 ? "Реализация" :
+                            "Состояние " + gr.Min(o => o.reg.statusOrder).ToString(),
+                   };
         }
         async Task<string> GetSberReestr(string campaignId, TimeSpan limitTime, CancellationToken cancellationToken)
         {
