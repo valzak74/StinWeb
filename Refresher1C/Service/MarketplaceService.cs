@@ -496,6 +496,8 @@ namespace Refresher1C.Service
                                     stoppingToken);
                                 if (result.png != null)
                                     label = PdfHelper.PdfFunctions.Instance.GetPdfFromImage(result.png.ResizeImage(58,40), 0, 0);
+                                if (!string.IsNullOrEmpty(result.barcode))
+                                    entity.Sp13992 = result.barcode;
                             }
                             if (!string.IsNullOrEmpty(err))
                                 entity.Sp14055 = err;
@@ -2005,7 +2007,7 @@ namespace Refresher1C.Service
                 if (marketType == "OZON")
                 {
                     var offersDictionary = data.ToDictionary(k => k.OfferId, v => v.Id);
-                    notReadyIds = await GetOzonNotReadyProducts(clientId, authToken, offersDictionary, cancellationToken);
+                    notReadyIds = await GetOzonNotReadyProducts(firmaId, clientId, authToken, offersDictionary, cancellationToken);
                 }
                 else if (marketType == "WILDBERRIES")
                 {
@@ -2145,9 +2147,9 @@ namespace Refresher1C.Service
                 }
             }
         }
-        private async Task<List<string>> GetOzonNotReadyProducts(string clientId, string authToken, Dictionary<string,string> offersDictionary, CancellationToken cancellationToken)
+        private async Task<List<string>> GetOzonNotReadyProducts(string firmaId, string clientId, string authToken, Dictionary<string,string> offersDictionary, CancellationToken cancellationToken)
         {
-            var checkResult = await OzonClasses.OzonOperators.ProductNotReady(_httpService, clientId, authToken,
+            var checkResult = await OzonClasses.OzonOperators.ProductNotReady(_httpService, _firmProxy[firmaId], clientId, authToken,
                 offersDictionary.Select(x => x.Key).ToList(),
                 cancellationToken);
             if (checkResult.Item2 != null && !string.IsNullOrEmpty(checkResult.Item2))
@@ -2242,28 +2244,29 @@ namespace Refresher1C.Service
         {
             try
             {
+                bool periodOpened = !_заявкаПокупателя.NeedToOpenPeriod();
                 var marketplaceIds = await (from market in _context.Sc14042s
-                                            where !market.Ismark
-                                                //&& (market.Sp14177 == 1)
-                                                //&& (market.Sp14155.Trim() == "Яндекс")
-                                                //&& (market.Sp14155.Trim() == "AliExpress")
-                                                //&& (market.Sp14155.Trim() == "Sber")
-                                                //&& (market.Sp14155.Trim() == "Wildberries")
-                                            select new
-                                            {
-                                                Id = market.Id,
-                                                Code = market.Code.Trim(),
-                                                Тип = market.Sp14155.ToUpper().Trim(),
-                                                FirmaId = market.Parentext,
-                                                CustomerId = market.Sp14175,
-                                                DogovorId = market.Sp14176,
-                                                ClientId = market.Sp14053.Trim(),
-                                                AuthToken = market.Sp14054.Trim(),
-                                                AuthSecret = market.Sp14195.Trim(),
-                                                Authorization = market.Sp14077.Trim(),
-                                                Encoding = (EncodeVersion)market.Sp14153
-                                            })
-                                            .ToListAsync();
+                                        where !market.Ismark
+                                            //&& (market.Sp14177 == 1)
+                                            //&& (market.Sp14155.Trim() == "Яндекс")
+                                            //&& (market.Sp14155.Trim() == "AliExpress")
+                                            //&& (market.Sp14155.Trim() == "Sber")
+                                            //&& (market.Sp14155.Trim() == "Wildberries")
+                                        select new
+                                        {
+                                            Id = market.Id,
+                                            Code = market.Code.Trim(),
+                                            Тип = market.Sp14155.ToUpper().Trim(),
+                                            FirmaId = market.Parentext,
+                                            CustomerId = market.Sp14175,
+                                            DogovorId = market.Sp14176,
+                                            ClientId = market.Sp14053.Trim(),
+                                            AuthToken = market.Sp14054.Trim(),
+                                            AuthSecret = market.Sp14195.Trim(),
+                                            Authorization = market.Sp14077.Trim(),
+                                            Encoding = (EncodeVersion)market.Sp14153
+                                        })
+                                        .ToListAsync();
                 foreach (var marketplace in marketplaceIds)
                 {
                     if (marketplace.Тип == "OZON")
@@ -2273,7 +2276,7 @@ namespace Refresher1C.Service
                             marketplace.Encoding, stoppingToken);
                         await GetOzonCancelOrders(marketplace.FirmaId, marketplace.ClientId, marketplace.AuthToken,
                             marketplace.Id, stoppingToken);
-                        if (!_sleepPeriods.Any(x => x.IsSleeping()))
+                        if (periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                             await GetOzonDeliveringOrders(marketplace.Id, marketplace.FirmaId, marketplace.ClientId, marketplace.AuthToken,
                                 marketplace.Id, stoppingToken);
                     }
@@ -2528,6 +2531,7 @@ namespace Refresher1C.Service
             string firmaId, string customerId, string dogovorId, EncodeVersion encoding,
             CancellationToken cancellationToken)
         {
+            bool periodOpened = !_заявкаПокупателя.NeedToOpenPeriod();
             int limit = 20;
             int pageNumber = 0;
             bool nextPage = true;
@@ -2657,7 +2661,7 @@ namespace Refresher1C.Service
                                  (aliOrder.Finish_reason == "AutoConfirm") ||
                                  (aliOrder.Finish_reason == "ConfirmedByLogistic"))) || 
                                 ((aliOrder.Logistic_orders?.Count > 0) && (aliOrder.Logistic_orders?.All(x => logisticsDelivering.Contains(x.Status)) ?? false))) &&
-                                (order.InternalStatus != 6) && !_sleepPeriods.Any(x => x.IsSleeping()))
+                                (order.InternalStatus != 6) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                             {
                                 await _docService.OrderDeliveried(order);
                             }
@@ -3004,6 +3008,7 @@ namespace Refresher1C.Service
         }
         private async Task RefreshWbOrders(string authToken, string marketplaceId, string firmaId, CancellationToken cancellationToken)
         {
+            bool periodOpened = !_заявкаПокупателя.NeedToOpenPeriod();
             var activeOrders = _context.Sc13994s
                 .Where(x => (x.Sp13982 > 0) && (x.Sp13982 != 5) && (x.Sp13982 != 6) &&
                     ((StinDeliveryPartnerType)x.Sp13985 == StinDeliveryPartnerType.WILDBERRIES) &&
@@ -3027,7 +3032,7 @@ namespace Refresher1C.Service
                         if (order != null)
                             await _docService.OrderCancelled(order);
                     }
-                    if (!_sleepPeriods.Any(x => x.IsSleeping()))
+                    if (periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                     {
                         var deliveredOrderIds = result.orders?.Where(x => (x.Value == WbClasses.WbStatus.sorted) || (x.Value == WbClasses.WbStatus.sold))
                             .Select(x => x.Key);

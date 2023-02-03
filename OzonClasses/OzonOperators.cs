@@ -441,13 +441,13 @@ namespace OzonClasses
             }
             return (ComPercent: 0, ComAmount: 0, VolumeWeight: 0, Price: "", Error: null);
         }
-        public static async Task<Tuple<List<string>?,string?>> ProductNotReady(IHttpService httpService, string clientId, string authToken,
+        public static async Task<Tuple<List<string>?,string?>> ProductNotReady(IHttpService httpService, string proxyHost, string clientId, string authToken,
             List<string> offers,
             CancellationToken cancellationToken)
         {
             var request = new ProductInfoListRequest { Offer_id = offers };
             var result = await httpService.Exchange<ProductInfoListResponse, ErrorResponse>(
-                "https://api-seller.ozon.ru/v2/product/info/list",
+                $"https://{proxyHost}api-seller.ozon.ru/v2/product/info/list",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,

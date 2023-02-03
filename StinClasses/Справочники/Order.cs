@@ -625,13 +625,13 @@ namespace StinClasses.Справочники
             switch (marketData.type)
             {
                 case "OZON":
-                    entity = await _context.Sc13994s.FirstOrDefaultAsync(x => (x.Sp13987.Trim() == barcode) || (x.Sp13992.Trim() == barcode), cancellationToken);
+                    entity = await _context.Sc13994s.FirstOrDefaultAsync(x => (x.Sp13987.Trim() == barcode) || (x.Sp13992.Trim() == barcode), cancellationToken); //ServiceName or RegionName
                     break;
                 case "SBER":
                     barcodeData = barcode.Split('*');
                     if ((barcodeData.Length != 3) && !int.TryParse(barcodeData[2], out logNumber))
                         return "Формат штрихкода не распознан";
-                    entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Sp13981.Trim() == barcodeData[1], cancellationToken);
+                    entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Sp13981.Trim() == barcodeData[1], cancellationToken); //Id (DW0001235-2023)
                     break;
                 case "ЯНДЕКС":
                     barcodeData = barcode.Split('-');
@@ -645,10 +645,16 @@ namespace StinClasses.Справочники
                             int.TryParse(barcodeData[1], out logNumber);
                         }
                         else
-                            entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Sp13981.Trim() == barcode, cancellationToken);
+                            entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Sp13981.Trim() == barcode, cancellationToken); //Id (DW0001235-2023)
                     }
                     else
                         return "Формат штрихкода не распознан";
+                    break;
+                case "ALIEXPRESS":
+                    entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Sp13987.Trim() == barcode); //ServiceName
+                    break;
+                case "WILDBERRIES":
+                    entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Sp13992.Trim() == barcode); //RegionName
                     break;
                 default:
                     entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Code.Trim() == barcode);

@@ -165,7 +165,7 @@ namespace WbClasses
             return (success: result.Item1, error: string.IsNullOrEmpty(err) ? "" : "WbCancelOrder: " + err);
 
         }
-        public static async Task<(byte[]? png, string error)> GetLabel(IHttpService httpService, string proxyHost, string authToken, List<long> orders, CancellationToken cancellationToken)
+        public static async Task<(byte[]? png, string? barcode, string error)> GetLabel(IHttpService httpService, string proxyHost, string authToken, List<long> orders, CancellationToken cancellationToken)
         {
             var headers = GetCustomHeaders(authToken);
             headers.Add(queryKey + "type", Enum.GetName(WbSupplyBarcodeType.png) ?? "");
@@ -182,7 +182,8 @@ namespace WbClasses
                 err = result.Item2.LogWbErrors("");
             if (result.Item1 != null)
                 err += result.Item1.LogWbErrors("");
-            return (png: result.Item1?.Stickers?.Select(x => x.Data).FirstOrDefault(), error: string.IsNullOrEmpty(err) ? "" : "WbGetLabel: " + err);
+            var responseData = result.Item1?.Stickers?.Select(x => new { x.Data, x.Barcode }).FirstOrDefault();
+            return (png: responseData?.Data, barcode: responseData?.Barcode, error: string.IsNullOrEmpty(err) ? "" : "WbGetLabel: " + err);
         }
         public static async Task<(byte[]? png, string error)> GetSupplyBarcode(IHttpService httpService, string authToken, string supplyId, CancellationToken cancellationToken)
         {

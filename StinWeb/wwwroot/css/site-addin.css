@@ -35,6 +35,13 @@
 .table-hover .розовая:hover {
     background-color: #eb5e5e;
 }
+.желтая {
+    background-color: #fff633;
+}
+
+.table-hover .желтая:hover {
+    background-color: #e8e36b
+}
 .зеленая {
     background-color: #b5e7a0;
 }
