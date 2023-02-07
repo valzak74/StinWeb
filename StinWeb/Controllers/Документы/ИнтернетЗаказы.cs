@@ -320,20 +320,6 @@ namespace StinWeb.Controllers
                        StatusCode = gr.Min(o => o.reg.statusOrder),
                        Склады = string.Join(", ", gr.Select(y => y.reg.складName).Distinct()),
                        МаршрутНаименование = string.Join(", ", gr.Select(y => y.reg.маршрутName).Distinct()),
-                       StatusDescription = gr.Min(o => o.reg.statusOrder) == 1 ? "Заказ(одобрен)" :
-                        gr.Min(o => o.reg.statusOrder) == 2 ? "Резерв" :
-                        gr.Min(o => o.reg.statusOrder) == 3 ? "Набор" :
-                        gr.Min(o => o.reg.statusOrder) == 5 ? "Отменен" :
-                        gr.Min(o => o.reg.statusOrder) == 4 ? "Готов" +
-                            (gr.Key.Status == 1 ? "/Груз сформирован" :
-                            (gr.Key.Status == 2 ? "/Этикетки получены" :
-                            (gr.Key.Status == 3 ? "/Готов к отгрузке" :
-                            (gr.Key.Status == 9 ? "/" + gr.Key.ТипДоставки :
-                            (gr.Key.Status == 7 ? "/Поступил запрос на отмену" :
-                            (gr.Key.Status == 13 ? "/Спорный" :
-                            (gr.Key.Status < 0 ? "/" + gr.Key.Status.ToString() : ""))))))) :
-                            gr.Min(o => o.reg.statusOrder) == 6 ? "Реализация" :
-                            "Состояние " + gr.Min(o => o.reg.statusOrder).ToString(),
                    };
         }
         async Task<string> GetSberReestr(string campaignId, TimeSpan limitTime, CancellationToken cancellationToken)
@@ -768,11 +754,8 @@ namespace StinWeb.Controllers
                        from sklad in _sklad.DefaultIfEmpty()
                        join order in _context.Sc13994s on r.orderId equals order.Id
                        join market in _context.Sc14042s on order.Sp14038 equals market.Id
-                       //join item in _context.Sc14033s on r.orderId equals item.Parentext
-                       //join nom in _context.Sc84s on item.Sp14022 equals nom.Id
-                       //join markUse in _context.Sc14152s on new { nomId = nom.Id, marketId = market.Id } equals new { nomId = markUse.Parentext, marketId = markUse.Sp14147 } into _markUse
-                       //from markUse in _markUse.DefaultIfEmpty()
                        join превЗаявка in _context.Dh12747s on order.Id equals превЗаявка.Sp14007
+                       join j in _context._1sjourns on превЗаявка.Iddoc equals j.Iddoc
                        join binary in _context.VzOrderBinaries.Where(x => x.Extension.Trim().ToUpper() == "LABELS") on order.Id equals binary.Id into _binary
                        from binary in _binary.DefaultIfEmpty()
                        select new
@@ -784,60 +767,72 @@ namespace StinWeb.Controllers
                            ShipmentDate = order.Sp13990,
                            ПредварительнаяЗаявкаНомер = order.Sp13981.Trim(),
                            CustomerNotes = order.Sp14122,
-                           Address = ((!string.IsNullOrWhiteSpace(order.Sp14125) ? order.Sp14125.Trim() + ", " : "") +
-                                    (!string.IsNullOrWhiteSpace(order.Sp14127) ? "ул." + order.Sp14127.Trim() + ", " : "") +
-                                    (!string.IsNullOrWhiteSpace(order.Sp14128) ? "д." + order.Sp14128.Trim() + ", " : "") +
-                                    (!string.IsNullOrWhiteSpace(order.Sp14129) ? "корп." + order.Sp14129.Trim() + ", " : "") +
-                                    (!string.IsNullOrWhiteSpace(order.Sp14130) ? "п." + order.Sp14130.Trim() + ", " : "") +
-                                    (!string.IsNullOrWhiteSpace(order.Sp14131) ? "домофон " + order.Sp14131.Trim() + ", " : "") +
-                                    (!string.IsNullOrWhiteSpace(order.Sp14132) ? "эт." + order.Sp14132.Trim() + ", " : "") +
-                                    (!string.IsNullOrWhiteSpace(order.Sp14133) ? "кв." + order.Sp14133.Trim() + ", " : "")).Trim(),
+                           Town = order.Sp14125.Trim(),
+                           Street = order.Sp14127.Trim(),
+                           House = order.Sp14128.Trim(),
+                           Block = order.Sp14129.Trim(),
+                           Entrance = order.Sp14130.Trim(),
+                           Intercom = order.Sp14131.Trim(),
+                           Floor = order.Sp14132.Trim(),
+                           Flat = order.Sp14133.Trim(),
                            СкладId = (sklad != null ? sklad.Id : ""),
                            Склад = (sklad != null ? sklad.Descr.Trim() : ""),
                            Статус = (int)order.Sp13982,
                            состояние = r.statusOrder,
-                           Recipient = !string.IsNullOrWhiteSpace(order.Sp14119) ? order.Sp14119.Trim() : (
-                                    (!string.IsNullOrWhiteSpace(order.Sp14116) ? order.Sp14116.Trim() + " " : "") +
-                                    (!string.IsNullOrWhiteSpace(order.Sp14117) ? order.Sp14117.Trim() + " " : "") +
-                                    (!string.IsNullOrWhiteSpace(order.Sp14118) ? order.Sp14118.Trim() : "")).Trim(),
-                           Phone = string.IsNullOrWhiteSpace(order.Sp14120) ? "" : order.Sp14120.Trim(),
+                           Recipient = order.Sp14119.Trim(),
+                           Family = order.Sp14116.Trim(),
+                           Name = order.Sp14117.Trim(),
+                           SerName = order.Sp14118.Trim(),
+                           Phone = order.Sp14120.Trim(),
                            МаршрутНаименование = r.маршрутName,
                            isFBS = (StinClasses.StinDeliveryPartnerType)order.Sp13985 != StinClasses.StinDeliveryPartnerType.SHOP,
                            isExpress = market.Sp14164.ToUpper().Trim() == "EXPRESS",
                            ТипДоставки = (((StinClasses.StinDeliveryPartnerType)order.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinDeliveryType)order.Sp13988 == StinClasses.StinDeliveryType.PICKUP)) ? "Самовывоз" : "Доставка",
                            Сумма = превЗаявка.Sp12741,
+                           DateTimeDoc = j.DateTimeIddoc,
                            СуммаКОплате = (((StinClasses.StinDeliveryPartnerType)order.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinPaymentType)order.Sp13983 == StinClasses.StinPaymentType.POSTPAID)) ? (превЗаявка.Sp12741 - order.Sp14135) : 0,
                            NeedToGetPayment = ((StinClasses.StinDeliveryPartnerType)order.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinPaymentType)order.Sp13983 == StinClasses.StinPaymentType.POSTPAID),
                            ИнформацияAPI = order.Sp14055,
                            Printed = order.Sp14192 == 1,
                            Labels = binary != null ? binary.Id : null
                        };
-            var dataE = data.AsEnumerable();
 
-            var dataResult = dataE
-            .GroupBy(x => new
-            {
-                x.Id,
-                x.Тип,
-                x.MarketplaceId,
-                x.MarketplaceType,
-                x.ShipmentDate,
-                x.ПредварительнаяЗаявкаНомер,
-                x.CustomerNotes,
-                x.Address,
-                x.Статус,
-                x.Recipient,
-                x.Phone,
-                x.isFBS,
-                x.isExpress,
-                x.ТипДоставки,
-                x.Сумма,
-                x.СуммаКОплате,
-                x.NeedToGetPayment,
-                x.ИнформацияAPI,
-                x.Printed,
-                x.Labels
-            })
+            var dataResult = data.AsEnumerable()
+                .GroupBy(x => new
+                {
+                    x.Id,
+                    x.Тип,
+                    x.MarketplaceId,
+                    x.MarketplaceType,
+                    x.ShipmentDate,
+                    x.ПредварительнаяЗаявкаНомер,
+                    x.CustomerNotes,
+                    x.Town,
+                    x.Street,
+                    x.House,
+                    x.Block,
+                    x.Entrance,
+                    x.Intercom,
+                    x.Floor,
+                    x.Flat,
+                    x.Статус,
+                    x.Recipient,
+                    x.Family,
+                    x.Name,
+                    x.SerName,
+                    x.Phone,
+                    x.isFBS,
+                    x.isExpress,
+                    x.ТипДоставки,
+                    x.Сумма,
+                    x.DateTimeDoc,
+                    x.СуммаКОплате,
+                    x.NeedToGetPayment,
+                    x.ИнформацияAPI,
+                    x.Printed,
+                    x.Labels
+                })
+                .OrderBy(x => x.Key.DateTimeDoc)
                 .Select(gr => new MarketplaceOrder
                 {
                     Id = gr.Key.Id,
@@ -847,9 +842,20 @@ namespace StinWeb.Controllers
                     ShipmentDate = gr.Key.ShipmentDate,
                     ПредварительнаяЗаявкаНомер = gr.Key.ПредварительнаяЗаявкаНомер,
                     CustomerNotes = gr.Key.CustomerNotes,
-                    Address = gr.Key.Address,
-                    Статус = gr.Key.Статус,
-                    Recipient = gr.Key.Recipient,
+                    Town = gr.Key.Town,
+                    Street = gr.Key.Street,
+                    House = gr.Key.House,
+                    Block = gr.Key.Block,
+                    Entrance = gr.Key.Entrance,
+                    Intercom = gr.Key.Intercom,
+                    Floor = gr.Key.Floor,
+                    Flat = gr.Key.Flat,
+                    Status = gr.Key.Статус,
+                    StatusCode = gr.Min(o => o.состояние),
+                    RecipientName = gr.Key.Recipient,
+                    Family = gr.Key.Family,
+                    Name = gr.Key.Name,
+                    SerName = gr.Key.SerName,
                     Phone = gr.Key.Phone,
                     isFBS = gr.Key.isFBS,
                     isExpress = gr.Key.isExpress,
@@ -862,19 +868,6 @@ namespace StinWeb.Controllers
                     СкладIds = string.Join(", ", gr.Select(y => y.СкладId).Distinct()),
                     Склады = string.Join(", ", gr.Select(y => y.Склад).Distinct()),
                     МаршрутНаименование = string.Join(", ", gr.Select(y => y.МаршрутНаименование).Distinct()),
-                    StatusDescription = gr.Min(o => o.состояние) == 1 ? "Заказ(одобрен)" :
-                             gr.Min(o => o.состояние) == 2 ? "Резерв" :
-                             gr.Min(o => o.состояние) == 3 ? "Набор" :
-                             gr.Min(o => o.состояние) == 5 ? "Отменен" :
-                             gr.Min(o => o.состояние) == 4 ? "Готов" +
-                                 (gr.Key.Статус == 1 ? "/Груз сформирован" :
-                                 (gr.Key.Статус == 2 ? "/Этикетки получены" :
-                                 (gr.Key.Статус == 3 ? "/Готов к отгрузке" :
-                                 (gr.Key.Статус == 9 ? "/" + gr.Key.ТипДоставки :
-                                 (gr.Key.Статус == 7 ? "/Поступил запрос на отмену" :
-                                 (gr.Key.Статус == 13 ? "/Спорный" :
-                                 (gr.Key.Статус < 0 ? "/" + gr.Key.Статус.ToString() : ""))))))) :
-                                 "Состояние " + gr.Min(o => o.состояние).ToString(),
                     Printed = gr.Key.Printed,
                 });
 

@@ -1807,9 +1807,9 @@ namespace Refresher1C.Service
                         CategoryId = r.CategoryId,
                         Vat = SberClasses.Functions.NDS(needNDS ? _номенклатура.GetСтавкаНДС(r.НДС_Id).Процент : -1),
                         Brend = r.Brend,
-                        Vendor = r.Vendor,
+                        Vendor = r.Vendor + (r.Квант > 1 ? "-" + r.Квант.ToString() : ""),
                         Description = r.Description + (r.Квант > 1 ? " - " + r.Квант.ToString() + " шт." : ""),
-                        Barcode = r.Barcode,
+                        Barcode = r.Квант > 1 ? "" : r.Barcode,
                         Weight = r.Weight.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture),
                         Width = r.Width.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture),
                         Height = r.Height.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture),
@@ -1928,6 +1928,7 @@ namespace Refresher1C.Service
             {
                 _logger.LogError(ex.Message);
             }
+            //_logger.LogError("Done");
         }
         public async Task UpdateStock(bool regular, CancellationToken stoppingToken)
         {
@@ -1939,7 +1940,8 @@ namespace Refresher1C.Service
                                                 && (market.Sp14177 == 1)
                                                 && (string.IsNullOrEmpty(defFirmaId) ? true : market.Parentext == defFirmaId)
                                                 //&& (market.Code == "43956")
-                                                //&& (market.Code == "45715133")
+                                                //&& (market.Code == "45715133
+                                                //&& (market.Code == "23005267")
                                                 //&& (market.Sp14155.Trim() == "Wildberries")
                                                 //&& (market.Sp14155.Trim() == "AliExpress")
                                             select new

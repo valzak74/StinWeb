@@ -1,12 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "8ImqU99Dv8Al0WVvhM0Gd6KMZ5ayOG/5sE9H54EA2/eb1sMCq19d2e2rVioHm+oTT6bqGNOUhspaCjhsOeyR6A==",
+  "dgSpecHash": "K8jxMcKR7zxafA4VEf1to6UuXFiCNpjIcFAPczPXkkqFH5TOTCMOkEhvlegCptHhTPrPGXljGt7nnKQacty3sg==",
   "success": true,
   "projectFilePath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\Test2\\Test2.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Валентин\\.nuget\\packages\\barcodelib\\2.4.0\\barcodelib.2.4.0.nupkg.sha512",
-    "C:\\Users\\Валентин\\.nuget\\packages\\microsoft.aspnetcore.http.abstractions\\2.1.1\\microsoft.aspnetcore.http.abstractions.2.1.1.nupkg.sha512",
-    "C:\\Users\\Валентин\\.nuget\\packages\\microsoft.aspnetcore.http.features\\2.1.1\\microsoft.aspnetcore.http.features.2.1.1.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\microsoft.aspnetcore.webutilities\\2.2.0\\microsoft.aspnetcore.webutilities.2.2.0.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\microsoft.csharp\\4.5.0\\microsoft.csharp.4.5.0.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\microsoft.data.sqlclient\\2.1.4\\microsoft.data.sqlclient.2.1.4.nupkg.sha512",

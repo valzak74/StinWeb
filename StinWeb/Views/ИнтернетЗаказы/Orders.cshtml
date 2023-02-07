@@ -1,4 +1,5 @@
-﻿@model IQueryable<StinWeb.Models.DataManager.Отчеты.MarketplaceOrder>
+﻿@using StinWeb.Models.DataManager.Extensions
+@model IQueryable<StinWeb.Models.DataManager.Отчеты.MarketplaceOrder>
 
 @(Html
     .Grid(Model)
@@ -52,7 +53,7 @@
     .AppendCss("table-hover")
     .RowAttributed(model => new { id = model.Id, @class = model.StatusDescription == "Готов/Спорный" ? "зеленая" : model.StatusDescription == "Отменен" ? "серая" : model.isExpress ? ("розовая" + (model.Printed ? " printed" : "")) : model.isFBS ? ("голубая" + (model.Printed ? " printed" : "")) : model.NeedToGetPayment ? "снят_с_производства" : null })
     .Using(GridFilterMode.Header)
-    .Empty("No data found")
+    .Empty("Данные не обнаружены", 1)
     .Pageable(pager =>
     {
         pager.RowsPerPage = 25;

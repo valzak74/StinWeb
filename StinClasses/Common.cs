@@ -289,6 +289,13 @@ namespace StinClasses
                 return Value + separator + AddString;
             return AddString;
         }
+        public static void ConditionallyAppend(this StringBuilder sb, string add, string separator = ", ")
+        {
+            if (sb == null) sb = new StringBuilder();
+            if (string.IsNullOrEmpty(add)) return;
+            if (sb.Length > 0) sb.Append(separator);
+            sb.Append(add);
+        }
         public static string StringLimit(this string value, int limit)
         {
             if (value == null)

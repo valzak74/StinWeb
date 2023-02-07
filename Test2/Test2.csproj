@@ -21,7 +21,6 @@
     <ProjectReference Include="..\StinClasses\StinClasses.csproj" />
     <ProjectReference Include="..\WbClasses\WbClasses.csproj" />
     <ProjectReference Include="..\YandexClasses\YandexClasses.csproj" />
-    <ProjectReference Include="F:\tmp\aliexpress_net_core\topsdk-net-core.csproj" />
   </ItemGroup>
 
 </Project>

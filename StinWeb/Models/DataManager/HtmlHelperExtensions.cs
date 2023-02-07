@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Globalization;
 using System.Reflection;
 using System.Text;
+using NonFactors.Mvc.Grid;
 
 namespace StinWeb.Models.DataManager.Extensions
 {
@@ -716,6 +717,11 @@ namespace StinWeb.Models.DataManager.Extensions
             mainDiv.WriteTo(writer, HtmlEncoder.Default);
 
             return new HtmlString(writer.ToString());
+        }
+        public static IHtmlGrid<T> Empty<T>(this IHtmlGrid<T> html, string text, int v)
+        {
+            html.Grid.EmptyText = text;
+            return html;
         }
     }
 }

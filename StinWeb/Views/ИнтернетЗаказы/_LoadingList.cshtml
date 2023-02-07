@@ -1,4 +1,5 @@
 ﻿@using System.Globalization
+@using StinWeb.Models.DataManager.Extensions
 @model IEnumerable<StinWeb.Models.DataManager.Отчеты.LoadingListOrder>
 
 @(Html
@@ -18,7 +19,7 @@
     .AppendCss("table-hover")
     .RowAttributed(model => new { @class = model.Scanned > 0 ? (model.Scanned == model.КолГрузоМест ? "зеленая" : "желтая") : null })
     .Using(GridFilterMode.Header)
-    .Empty("No data found")
+    .Empty("Данные не обнаружены",1)
 @*    .Pageable(pager =>
     {
         pager.RowsPerPage = 12;
