@@ -17,8 +17,7 @@
           "StinClasses": "1.0.0",
           "System.Drawing.Primitives": "4.3.0",
           "WbClasses": "1.0.0",
-          "YandexClasses": "1.0.0",
-          "topsdk-net-core": "1.0.0"
+          "YandexClasses": "1.0.0"
         },
         "runtime": {
           "Test2.dll": {}
@@ -33,29 +32,6 @@
           "lib/netstandard2.0/BarcodeStandard.dll": {
             "assemblyVersion": "2.4.0.0",
             "fileVersion": "2.4.0.0"
-          }
-        }
-      },
-      "Microsoft.AspNetCore.Http.Abstractions/2.1.1": {
-        "dependencies": {
-          "Microsoft.AspNetCore.Http.Features": "2.1.1",
-          "System.Text.Encodings.Web": "4.5.0"
-        },
-        "runtime": {
-          "lib/netstandard2.0/Microsoft.AspNetCore.Http.Abstractions.dll": {
-            "assemblyVersion": "2.1.1.0",
-            "fileVersion": "2.1.1.18157"
-          }
-        }
-      },
-      "Microsoft.AspNetCore.Http.Features/2.1.1": {
-        "dependencies": {
-          "Microsoft.Extensions.Primitives": "6.0.0"
-        },
-        "runtime": {
-          "lib/netstandard2.0/Microsoft.AspNetCore.Http.Features.dll": {
-            "assemblyVersion": "2.1.1.0",
-            "fileVersion": "2.1.1.18157"
           }
         }
       },
@@ -779,15 +755,6 @@
           "StinClasses.dll": {}
         }
       },
-      "topsdk-net-core/1.0.0": {
-        "dependencies": {
-          "Microsoft.AspNetCore.Http.Abstractions": "2.1.1",
-          "System.Configuration.ConfigurationManager": "4.7.0"
-        },
-        "runtime": {
-          "topsdk-net-core.dll": {}
-        }
-      },
       "WbClasses/1.0.0": {
         "dependencies": {
           "HttpExtensions": "1.0.0",
@@ -822,20 +789,6 @@
       "sha512": "sha512-SXMILkQm3jpngFmSa6AafsaJNid8UWCZh1v4w2oWxBzXnuVaL/S7H+nMxslWbPOPz1AVaLenRbFgy3OtX9J4dQ==",
       "path": "barcodelib/2.4.0",
       "hashPath": "barcodelib.2.4.0.nupkg.sha512"
-    },
-    "Microsoft.AspNetCore.Http.Abstractions/2.1.1": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-kQUEVOU4loc8CPSb2WoHFTESqwIa8Ik7ysCBfTwzHAd0moWovc9JQLmhDIHlYLjHbyexqZAlkq/FPRUZqokebw==",
-      "path": "microsoft.aspnetcore.http.abstractions/2.1.1",
-      "hashPath": "microsoft.aspnetcore.http.abstractions.2.1.1.nupkg.sha512"
-    },
-    "Microsoft.AspNetCore.Http.Features/2.1.1": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-VklZ7hWgSvHBcDtwYYkdMdI/adlf7ebxTZ9kdzAhX+gUs5jSHE9mZlTamdgf9miSsxc1QjNazHXTDJdVPZKKTw==",
-      "path": "microsoft.aspnetcore.http.features/2.1.1",
-      "hashPath": "microsoft.aspnetcore.http.features.2.1.1.nupkg.sha512"
     },
     "Microsoft.AspNetCore.WebUtilities/2.2.0": {
       "type": "package",
@@ -1348,11 +1301,6 @@
       "sha512": ""
     },
     "StinClasses/1.0.0": {
-      "type": "project",
-      "serviceable": false,
-      "sha512": ""
-    },
-    "topsdk-net-core/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

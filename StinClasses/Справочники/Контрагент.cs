@@ -101,6 +101,7 @@ namespace StinClasses.Справочники
         Task<СкидКарта> GetСкидКартаAsync(string Id);
         Task<bool> ПроверкаНаДилераAsync(string контрагентId, string ВидСвойства, string ЗначениеСвойства);
         Task<Контрагент> ПолучитьПоИННAsync(string инн, bool строгоеСоответствие = false);
+        bool ПроверкаНаОфКомиссию(string контрагентId);
     }
     public class КонтрагентEntity : IКонтрагент
     {
@@ -303,6 +304,10 @@ namespace StinClasses.Справочники
                               видыСвойств.Descr.Trim() == ВидСвойства &&
                               значенияСвойств.Descr.Trim() == ЗначениеСвойства
                           select свойстваКонтрагентов).FirstOrDefaultAsync() != null;
+        }
+        public bool ПроверкаНаОфКомиссию(string контрагентId)
+        {
+            return _context.Sc11421s.Any(x => !x.Ismark && (x.Sp11419 == контрагентId));
         }
     }
 }

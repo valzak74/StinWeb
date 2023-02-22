@@ -5686,6 +5686,10 @@ namespace StinClasses.Models
                     .HasColumnName("IDDOC")
                     .IsFixedLength();
 
+                entity.Property(e => e.Sp14256)
+                    .HasColumnType("numeric(1, 0)")
+                    .HasColumnName("SP14256");
+
                 entity.Property(e => e.Sp1751)
                     .IsRequired()
                     .HasMaxLength(9)

@@ -44,7 +44,7 @@ namespace StinClasses.Документы
     }
     public interface IНабор : IДокумент
     {
-        Task<ФормаНабор> GetФормаНаборById(string idDoc);
+        //Task<ФормаНабор> GetФормаНаборById(string idDoc);
         Task<List<ФормаНабор>> ВводНаОснованииAsync(ФормаЗаявкаПокупателя докОснование, DateTime docDateTime);
         Task<ExceptionData> ЗаписатьAsync(ФормаНабор doc);
         Task<ExceptionData> ПровестиAsync(ФормаНабор doc);
@@ -82,68 +82,68 @@ namespace StinClasses.Документы
             }
             base.Dispose(disposing);
         }
-        public async Task<ФормаНабор> GetФормаНаборById(string idDoc)
-        {
-            var d = await (from dh in _context.Dh11948s
-                           join j in _context._1sjourns on dh.Iddoc equals j.Iddoc
-                           where dh.Iddoc == idDoc
-                           select new
-                           {
-                               dh,
-                               j
-                           }).FirstOrDefaultAsync();
-            var контрагент = await _контрагент.GetКонтрагентAsync(d.dh.Sp11931);
-            var склад = await _склад.GetEntityByIdAsync(d.dh.Sp11929);
-            var подСклад = await _склад.GetПодСкладByIdAsync(d.dh.Sp11933);
+        //public async Task<ФормаНабор> GetФормаНаборById(string idDoc)
+        //{
+        //    var d = await (from dh in _context.Dh11948s
+        //                   join j in _context._1sjourns on dh.Iddoc equals j.Iddoc
+        //                   where dh.Iddoc == idDoc
+        //                   select new
+        //                   {
+        //                       dh,
+        //                       j
+        //                   }).FirstOrDefaultAsync();
+        //    var контрагент = await _контрагент.GetКонтрагентAsync(d.dh.Sp11931);
+        //    var склад = await _склад.GetEntityByIdAsync(d.dh.Sp11929);
+        //    var подСклад = await _склад.GetПодСкладByIdAsync(d.dh.Sp11933);
 
-            var doc = new ФормаНабор
-            {
-                Общие = new ОбщиеРеквизиты
-                {
-                    IdDoc = d.dh.Iddoc,
-                    ДокОснование = !(string.IsNullOrWhiteSpace(d.dh.Sp11930) || d.dh.Sp11930 == Common.ПустоеЗначениеИд13) ? await ДокОснованиеAsync(d.dh.Sp11930.Substring(4)) : null,
-                    Фирма = await _фирма.GetEntityByIdAsync(d.j.Sp4056),
-                    Автор = await _пользователь.GetUserByIdAsync(d.j.Sp74),
-                    ВидДокумента10 = d.j.Iddocdef,
-                    ВидДокумента36 = Common.Encode36(d.j.Iddocdef),
-                    НазваниеВЖурнале = (d.dh.Sp11938 == 1 ? "Готов" : "Набор") + " " + контрагент.Наименование + " " + склад.Наименование + "/" + подСклад.Наименование,
-                    НомерДок = d.j.Docno,
-                    ДатаДок = d.j.DateTimeIddoc.ToDateTime(),
-                    Проведен = d.j.Closed == 1,
-                    Комментарий = d.dh.Sp660,
-                    Удален = d.j.Ismark
-                },
-                Склад = склад,
-                ПодСклад = подСклад,
-                Контрагент = контрагент,
-                Договор = await _контрагент.GetДоговорAsync(d.dh.Sp11932),
-                Маршрут = await _маршрут.GetМаршрутByCodeAsync(d.dh.Sp11934),
-                Завершен = d.dh.Sp11938 == 1,
-                СниматьРезерв = d.dh.Sp11939 == 1,
-                ДатаОплаты = d.dh.Sp12012,
-                СпособОтгрузки = Common.СпособыОтгрузки.FirstOrDefault(x => x.Key == d.dh.Sp12327).Value,
-                СкидКарта = await _контрагент.GetСкидКартаAsync(d.dh.Sp12996),
-                Кладовщик = await _кладовщик.GetКладовщикByIdAsync(d.dh.Sp12559),
-                Order = await _order.ПолучитьOrderWithItems(d.dh.Sp14003)
-            };
-            var ТаблЧасть = await _context.Dt11948s
-                .Where(x => x.Iddoc == idDoc)
-                .ToListAsync();
-            foreach (var row in ТаблЧасть)
-            {
-                doc.ТабличнаяЧасть.Add(new ФормаНаборТЧ
-                {
-                    ФирмаНоменклатуры = await _фирма.GetEntityByIdAsync(row.Sp11940),
-                    Номенклатура = await _номенклатура.GetНоменклатураByIdAsync(row.Sp11941),
-                    Количество = row.Sp11942,
-                    Единица = await _номенклатура.GetЕдиницаByIdAsync(row.Sp11943),
-                    Цена = row.Sp11945,
-                    Сумма = row.Sp11946,
-                    Ячейки = row.Sp12606
-                });
-            }
-            return doc;
-        }
+        //    var doc = new ФормаНабор
+        //    {
+        //        Общие = new ОбщиеРеквизиты
+        //        {
+        //            IdDoc = d.dh.Iddoc,
+        //            ДокОснование = !(string.IsNullOrWhiteSpace(d.dh.Sp11930) || d.dh.Sp11930 == Common.ПустоеЗначениеИд13) ? await ДокОснованиеAsync(d.dh.Sp11930.Substring(4)) : null,
+        //            Фирма = await _фирма.GetEntityByIdAsync(d.j.Sp4056),
+        //            Автор = await _пользователь.GetUserByIdAsync(d.j.Sp74),
+        //            ВидДокумента10 = d.j.Iddocdef,
+        //            ВидДокумента36 = Common.Encode36(d.j.Iddocdef),
+        //            НазваниеВЖурнале = (d.dh.Sp11938 == 1 ? "Готов" : "Набор") + " " + контрагент.Наименование + " " + склад.Наименование + "/" + подСклад.Наименование,
+        //            НомерДок = d.j.Docno,
+        //            ДатаДок = d.j.DateTimeIddoc.ToDateTime(),
+        //            Проведен = d.j.Closed == 1,
+        //            Комментарий = d.dh.Sp660,
+        //            Удален = d.j.Ismark
+        //        },
+        //        Склад = склад,
+        //        ПодСклад = подСклад,
+        //        Контрагент = контрагент,
+        //        Договор = await _контрагент.GetДоговорAsync(d.dh.Sp11932),
+        //        Маршрут = await _маршрут.GetМаршрутByCodeAsync(d.dh.Sp11934),
+        //        Завершен = d.dh.Sp11938 == 1,
+        //        СниматьРезерв = d.dh.Sp11939 == 1,
+        //        ДатаОплаты = d.dh.Sp12012,
+        //        СпособОтгрузки = Common.СпособыОтгрузки.FirstOrDefault(x => x.Key == d.dh.Sp12327).Value,
+        //        СкидКарта = await _контрагент.GetСкидКартаAsync(d.dh.Sp12996),
+        //        Кладовщик = await _кладовщик.GetКладовщикByIdAsync(d.dh.Sp12559),
+        //        Order = await _order.ПолучитьOrderWithItems(d.dh.Sp14003)
+        //    };
+        //    var ТаблЧасть = await _context.Dt11948s
+        //        .Where(x => x.Iddoc == idDoc)
+        //        .ToListAsync();
+        //    foreach (var row in ТаблЧасть)
+        //    {
+        //        doc.ТабличнаяЧасть.Add(new ФормаНаборТЧ
+        //        {
+        //            ФирмаНоменклатуры = await _фирма.GetEntityByIdAsync(row.Sp11940),
+        //            Номенклатура = await _номенклатура.GetНоменклатураByIdAsync(row.Sp11941),
+        //            Количество = row.Sp11942,
+        //            Единица = await _номенклатура.GetЕдиницаByIdAsync(row.Sp11943),
+        //            Цена = row.Sp11945,
+        //            Сумма = row.Sp11946,
+        //            Ячейки = row.Sp12606
+        //        });
+        //    }
+        //    return doc;
+        //}
         public async Task<List<ФормаНабор>> ВводНаОснованииAsync(ФормаЗаявкаПокупателя докОснование, DateTime docDateTime)
         {
             List<string> СписокФирм = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(докОснование.Общие.Фирма.Id);

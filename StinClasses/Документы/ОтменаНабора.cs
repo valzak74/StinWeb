@@ -114,7 +114,7 @@ namespace StinClasses.Документы
             {
                 var текНоменклатура = doc.НоменклатураОснования.FirstOrDefault(x => x.Id == r.Key);
                 var колВозврата = r.Sum(x => x.Количество) / текНоменклатура.Единица.Коэффициент;
-                var ЦенаОриг = doc.Order.Items.Where(x => x.НоменклатураId == r.Key).Select(x => (x.ЦенаСоСкидкой + x.Вознаграждение)).FirstOrDefault();
+                var ЦенаОриг = doc.Order.Items.Where(x => x.НоменклатураId == r.Key).Select(x => x.Цена).FirstOrDefault();
                 result.Add(new ФормаНаборТЧ
                 {
                     Номенклатура = текНоменклатура,

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AliExpressClasses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using StinClasses;
@@ -38,6 +39,7 @@ namespace Refresher1C.Service
         private IКомплекснаяПродажа _комплекснаяПродажа;
         private IРеализация _реализация;
         private IСчетФактура _счетФактура;
+        private IОтчетКомиссионера _отчетКомиссионера;
 
         private protected bool disposed = false;
         protected virtual void Dispose(bool disposing)
@@ -66,6 +68,7 @@ namespace Refresher1C.Service
                     _комплекснаяПродажа.Dispose();
                     _реализация.Dispose();
                     _счетФактура.Dispose();
+                    _отчетКомиссионера.Dispose();
                     _context.Dispose();
                 }
             }
@@ -100,6 +103,7 @@ namespace Refresher1C.Service
             _комплекснаяПродажа = new КомплекснаяПродажа(context);
             _реализация = new Реализация(context);
             _счетФактура = new СчетФактура(context);
+            _отчетКомиссионера = new ОтчетКомиссионера(context);
         }
         public async Task CompleteSuccessPaymentAsync(string idDoc, string status, CancellationToken stoppingToken)
         {
@@ -434,7 +438,64 @@ namespace Refresher1C.Service
                 _logger.LogError(ex.Message);
             }
         }
-        public async Task OrderDeliveried(Order order)
+        public async Task OrderFromTransferDeliveried(Order order)
+        {
+            DateTime dateTimeTA = _context.GetDateTimeTA();
+            bool needToCalcDateTime = dateTimeTA.Month != DateTime.Now.Month;
+            var списокКомплексПродаж = await _комплекснаяПродажа.GetФормаКомплекснаяПродажаByOrderId(order.Id);
+            if (списокКомплексПродаж?.Count > 0)
+            {
+                var реквизитыПроведенныхДокументов = new List<ОбщиеРеквизиты>();
+                using var tran = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    ExceptionData result = null;
+                    foreach (var формаКомплекснаяПродажа in списокКомплексПродаж)
+                    {
+                        var формаОтчетКомиссионера = await _отчетКомиссионера.ЗаполнитьНаОснованииAsync(формаКомплекснаяПродажа, needToCalcDateTime ? dateTimeTA.AddMilliseconds(1) : DateTime.Now);
+                        if (формаОтчетКомиссионера != null)
+                        {
+                            result = await _отчетКомиссионера.ЗаписатьПровестиAsync(формаОтчетКомиссионера);
+                            if (result == null)
+                            {
+                                реквизитыПроведенныхДокументов.Add(формаОтчетКомиссионера.Общие);
+                                if (!формаОтчетКомиссионера.Общие.Фирма.НетСчетФактуры)
+                                {
+                                    var формаСчетФактура = await _счетФактура.ВводНаОснованииAsync(формаОтчетКомиссионера, needToCalcDateTime ? dateTimeTA.AddMilliseconds(2) : DateTime.Now);
+                                    result = await _счетФактура.ЗаписатьПровестиAsync(формаСчетФактура);
+                                    реквизитыПроведенныхДокументов.Add(формаСчетФактура.Общие);
+                                }
+                            }
+                        }
+                        if (result != null)
+                        {
+                            if (_context.Database.CurrentTransaction != null)
+                                tran.Rollback();
+                            _logger.LogError(result.Description);
+                            break;
+                        }
+                    }
+
+                    if (_context.Database.CurrentTransaction != null)
+                    {
+                        await _order.ОбновитьOrderStatus(order.Id, 6);
+                        if (реквизитыПроведенныхДокументов.Count > 0)
+                            await _предварительнаяЗаявка.ОбновитьАктивность(реквизитыПроведенныхДокументов);
+                        else
+                            await _предварительнаяЗаявка.ОбновитьСетевуюАктивность();
+                    }
+                    if (_context.Database.CurrentTransaction != null)
+                        tran.Commit();
+                }
+                catch (Exception ex)
+                {
+                    if (_context.Database.CurrentTransaction != null)
+                        _context.Database.CurrentTransaction.Rollback();
+                    _logger.LogError(ex.Message);
+                }
+            }
+        }
+        public async Task OrderDeliveried(Order order, bool transferred = false)
         {
             DateTime dateTimeTA = _context.GetDateTimeTA();
             bool needToCalcDateTime = dateTimeTA.Month != DateTime.Now.Month;
@@ -446,7 +507,7 @@ namespace Refresher1C.Service
                 if (активныеНаборы != null && активныеНаборы.Count > 0)
                 {
                     var формаПредварительнаяЗаявка = await _предварительнаяЗаявка.GetФормаПредварительнаяЗаявкаByOrderId(order.Id);
-                    var списокКомплеснаяПродажа = await _комплекснаяПродажа.ЗаполнитьНаОснованииAsync(Common.UserRobot, формаПредварительнаяЗаявка, needToCalcDateTime ? dateTimeTA.AddMilliseconds(1) : DateTime.Now, активныеНаборы);
+                    var списокКомплеснаяПродажа = await _комплекснаяПродажа.ЗаполнитьНаОснованииAsync(Common.UserRobot, формаПредварительнаяЗаявка, needToCalcDateTime ? dateTimeTA.AddMilliseconds(1) : DateTime.Now, активныеНаборы, transferred);
                     foreach (var формаКомплеснаяПродажа in списокКомплеснаяПродажа)
                     {
                         var result = await _комплекснаяПродажа.ЗаписатьПровестиAsync(формаКомплеснаяПродажа);
@@ -462,7 +523,7 @@ namespace Refresher1C.Service
                                 списокУслуг.Clear();
                                 result = await _реализация.ЗаписатьПровестиAsync(формаРеализация);
                                 реквизитыПроведенныхДокументов.Add(формаРеализация.Общие);
-                                if ((result == null) && (!формаРеализация.Общие.Фирма.НетСчетФактуры))
+                                if ((result == null) && (!формаРеализация.Общие.Фирма.НетСчетФактуры) && (формаРеализация.КодОперации.Key == "   16S   "))
                                 {
                                     var формаСчетФактура = await _счетФактура.ВводНаОснованииAsync(формаРеализация, needToCalcDateTime ? dateTimeTA.AddMilliseconds(3) : DateTime.Now);
                                     result = await _счетФактура.ЗаписатьПровестиAsync(формаСчетФактура);
@@ -480,10 +541,10 @@ namespace Refresher1C.Service
                             break;
                         }
                     }
-                    await _order.ОбновитьOrderStatus(order.Id, 6);
+                    await _order.ОбновитьOrderStatus(order.Id, transferred ? 14 : 6);
                 }
                 else
-                    await _order.ОбновитьOrderStatus(order.Id, -6);
+                    await _order.ОбновитьOrderStatus(order.Id, transferred ? -14 : -6);
                 if (_context.Database.CurrentTransaction != null)
                 {
                     if (реквизитыПроведенныхДокументов.Count > 0)

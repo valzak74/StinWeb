@@ -536,5 +536,28 @@ namespace OzonClasses
             }
             return new(null, null);
         }
+        public static async Task<(List<ReturnItem>? returns, long count, string? error)> ReturnOrders(IHttpService httpService, string proxyHost, string clientId, string authToken,
+            long limit,
+            long offset,
+            CancellationToken cancellationToken)
+        {
+            ReturnsRequest request;
+            if (limit == 0)
+                request = new ReturnsRequest();
+            else
+                request = new ReturnsRequest(limit);
+            request.Offset = offset;
+            var result = await httpService.Exchange<ReturnsResponse, ErrorResponse>(
+                $"https://{proxyHost}api-seller.ozon.ru/v2/returns/company/fbs",
+                HttpMethod.Post,
+                GetOzonHeaders(clientId, authToken),
+                request,
+                cancellationToken);
+            if (result.Item2 != null)
+                return (returns: null, count: 0, error: "ReturnsResponse : " + result.Item2);
+            if (result.Item1?.Result != null)
+                return (returns: result.Item1.Result.Returns, count: result.Item1.Result.Count, error: null);
+            return (returns: null, count: 0, error: null);
+        }
     }
 }

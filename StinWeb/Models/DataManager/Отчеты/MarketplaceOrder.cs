@@ -47,6 +47,18 @@ namespace StinWeb.Models.DataManager.Отчеты
                     case 6:
                         sb.Append("Реализация");
                         break;
+                    case 7:
+                        sb.Append(Status switch
+                        {
+                            14 => "Доставляется",
+                            15 => "Возврат",
+                            16 => "Невыкуп",
+                            17 => "Возврат получен",
+                            18 => "Возврат компенсирован",
+                            < 0 => Status.ToString(),
+                            _ => ""
+                        });
+                        break;
                     default:
                         sb.Append("Состояние ");
                         sb.Append(StatusCode.ToString());

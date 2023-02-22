@@ -1014,9 +1014,13 @@ namespace Market.Services
                         списокВозврата.Add(new OrderItem { НоменклатураId = row.Номенклатура.Id, Количество = row.Количество });
                     }
                 }
+                if (списокВозврата.Count == 0)
+                    return "Возвращаемые позиции не обнаружены";
                 if (order != null)
                 {
-                    СуммаЗаявки = order.Items.Sum(x => ((x.ЦенаСоСкидкой + x.Вознаграждение) * x.Количество));
+                    СуммаЗаявки = order.Items.Sum(x => x.Цена * x.Количество);
+                    if (СуммаЗаявки == 0)
+                        return "Нулевая сумма исходной заявки";
                     if (((order.Status == (int)StinOrderStatus.PROCESSING) && (order.SubStatus == (int)StinOrderSubStatus.READY_TO_SHIP)) ||
                         (СуммаВозврата/СуммаЗаявки >= 0.99m))
                     {

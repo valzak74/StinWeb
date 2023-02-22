@@ -1,0 +1,510 @@
+2023-02-15 13:17:03.939 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/index.html - -
+2023-02-15 13:17:04.628 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/index.html - - - 200 - text/html;charset=utf-8 693.9967ms
+2023-02-15 13:17:04.686 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_vs/browserLink - -
+2023-02-15 13:17:04.688 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - -
+2023-02-15 13:17:04.704 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - - - 200 11982 application/javascript;+charset=utf-8 15.3984ms
+2023-02-15 13:17:04.895 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 209.3271ms
+2023-02-15 13:17:05.072 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - -
+2023-02-15 13:17:05.802 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 730.0675ms
+2023-02-15 13:18:39.795 +04:00 [INF] Request starting HTTP/2 POST https://localhost:44373/yandex/order/int_items application/json-patch+json 21
+2023-02-15 13:18:40.038 +04:00 [INF] Header: {
+  "Accept": [
+    "text/plain"
+  ],
+  "Accept-Encoding": [
+    "gzip, deflate, br"
+  ],
+  "Accept-Language": [
+    "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7"
+  ],
+  "Authorization": [
+    "41000001667F97FE"
+  ],
+  "Connection": [
+    "close"
+  ],
+  "Content-Length": [
+    "21"
+  ],
+  "Content-Type": [
+    "application/json-patch+json"
+  ],
+  "Cookie": [
+    "_ym_uid=1672385242152631823; _ym_d=1672385242; _ga=GA1.1.1657882715.1672385242; _ga_RB3N5EXRF2=GS1.1.1672385241.1.1.1672385524.0.0.0; .AspNetCore.Antiforgery.aEaUtM8N_I8=CfDJ8MNi2LDnRqZLolJQEG2Fw4ZHpfTV0PBiE3WHD1RumPm2XN_uxELLZVS-kgBj9ow53Z129Zy3dH0k2AtWIYD8xnUFbkDzIocij2157SrXgjlxWqMal7QP6S6svCQ7baF4q9ZXc2LV2UEWDWWxCvr3MRM; .AspNetCore.Session=CfDJ8MNi2LDnRqZLolJQEG2Fw4ZbZ%2F2VkRowUuRr45MCq2M9E%2B7isPMdd63Hm8QK%2FvqEFgYTv7JPJBM8MeBmxns%2FvLuhvrDvk2BPHuSDGg2mBETdxr9RLSCtcn41MAvSIri%2FU95%2FsrMGm9FEyRLclBBZ105uO6Kw5r4G%2BSuck2ebc0X3; .AspNetCore.Cookies=CfDJ8MNi2LDnRqZLolJQEG2Fw4YcptG0zqqJDoUS2fSXPOjUQY5DzF2TG3NJ-i9bGIwhsiQ2XvKWw6JPSs7ESO7TPRWe-eViS5hEYl9eMjOV8eMiSAKISgC6jCjAUKuSjnpDsiT1IWsDkhimS2H5JjmR6cXR06BxXEyX0FsZOvRlNDwVQ0dlQfuG0vx45saPqYOh1RxFCjJtqTIlCZcXr79pQnQZ6SLJ_KXITT2ucUZ3EyKQ1giUWgPjUBq7CK9nuGzGtAzYzRvun3h0XoE1zDiOEsXd5ZmdDisxF1U-3Bupb5LDbhx0U9dhHyLGcV2jIYig__pTJ-VykodFRz4JkhXq0hAb8CW7uGBZpXV4nbmHysvvFoXL90Bp5HLaxI0FRJOJLIuh-bC0dBRXIu2zIOGH9mhQkyteXtrORFkdqRctfMIlYiRoH5xXL73IXJSBZhFU89Ros9d1s37V2iIu03L13pI_b4TGtfdXnvKYQkB1doPddtCDcvtKOSzr3w9s7kVzmqYvuNdJBzx0iiEScs30H2o3Z8HWPlP3S9L2fHscx8OjFOy9KvzrtpvKVfCts2xSZFZpZroF5dnEwHiL1XaZ-litD0yx23niyFZwmhERUg1y"
+  ],
+  "Host": [
+    "localhost:44373"
+  ],
+  "Referer": [
+    "https://localhost:44373/swagger/index.html"
+  ],
+  "User-Agent": [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
+  ],
+  "sec-ch-ua": [
+    "\"Not_A Brand\";v=\"99\", \"Google Chrome\";v=\"109\", \"Chromium\";v=\"109\""
+  ],
+  "sec-ch-ua-mobile": [
+    "?0"
+  ],
+  "sec-ch-ua-platform": [
+    "\"Windows\""
+  ],
+  "origin": [
+    "https://localhost:44373"
+  ],
+  "sec-fetch-site": [
+    "same-origin"
+  ],
+  "sec-fetch-mode": [
+    "cors"
+  ],
+  "sec-fetch-dest": [
+    "empty"
+  ]
+}
+2023-02-15 13:18:40.048 +04:00 [INF] Body: {"docId":" 2DGTTD  "}
+2023-02-15 13:18:40.051 +04:00 [INF] Host: localhost
+2023-02-15 13:18:40.055 +04:00 [INF] Client IP: ::1
+2023-02-15 13:18:40.068 +04:00 [INF] Executing endpoint 'Market.Controllers.YandexController.OrderIntReduceItems (Market)'
+2023-02-15 13:18:40.098 +04:00 [INF] Route matched with {action = "OrderIntReduceItems", controller = "Yandex"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[System.String]] OrderIntReduceItems(StinClasses.RequestedDocId, System.Threading.CancellationToken) on controller Market.Controllers.YandexController (Market).
+2023-02-15 13:20:03.254 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/index.html - -
+2023-02-15 13:20:03.746 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/index.html - - - 200 - text/html;charset=utf-8 496.8496ms
+2023-02-15 13:20:03.930 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_vs/browserLink - -
+2023-02-15 13:20:03.930 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - -
+2023-02-15 13:20:03.956 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - - - 200 11982 application/javascript;+charset=utf-8 24.9085ms
+2023-02-15 13:20:04.080 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 150.4425ms
+2023-02-15 13:20:04.181 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - -
+2023-02-15 13:20:04.577 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 395.5476ms
+2023-02-15 13:20:40.071 +04:00 [INF] Request starting HTTP/2 POST https://localhost:44373/yandex/order/int_items application/json-patch+json 21
+2023-02-15 13:20:40.295 +04:00 [INF] Header: {
+  "Accept": [
+    "text/plain"
+  ],
+  "Accept-Encoding": [
+    "gzip, deflate, br"
+  ],
+  "Accept-Language": [
+    "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7"
+  ],
+  "Authorization": [
+    "41000001667F97FE"
+  ],
+  "Connection": [
+    "close"
+  ],
+  "Content-Length": [
+    "21"
+  ],
+  "Content-Type": [
+    "application/json-patch+json"
+  ],
+  "Cookie": [
+    "_ym_uid=1672385242152631823; _ym_d=1672385242; _ga=GA1.1.1657882715.1672385242; _ga_RB3N5EXRF2=GS1.1.1672385241.1.1.1672385524.0.0.0; .AspNetCore.Antiforgery.aEaUtM8N_I8=CfDJ8MNi2LDnRqZLolJQEG2Fw4ZHpfTV0PBiE3WHD1RumPm2XN_uxELLZVS-kgBj9ow53Z129Zy3dH0k2AtWIYD8xnUFbkDzIocij2157SrXgjlxWqMal7QP6S6svCQ7baF4q9ZXc2LV2UEWDWWxCvr3MRM; .AspNetCore.Session=CfDJ8MNi2LDnRqZLolJQEG2Fw4ZbZ%2F2VkRowUuRr45MCq2M9E%2B7isPMdd63Hm8QK%2FvqEFgYTv7JPJBM8MeBmxns%2FvLuhvrDvk2BPHuSDGg2mBETdxr9RLSCtcn41MAvSIri%2FU95%2FsrMGm9FEyRLclBBZ105uO6Kw5r4G%2BSuck2ebc0X3; .AspNetCore.Cookies=CfDJ8MNi2LDnRqZLolJQEG2Fw4YcptG0zqqJDoUS2fSXPOjUQY5DzF2TG3NJ-i9bGIwhsiQ2XvKWw6JPSs7ESO7TPRWe-eViS5hEYl9eMjOV8eMiSAKISgC6jCjAUKuSjnpDsiT1IWsDkhimS2H5JjmR6cXR06BxXEyX0FsZOvRlNDwVQ0dlQfuG0vx45saPqYOh1RxFCjJtqTIlCZcXr79pQnQZ6SLJ_KXITT2ucUZ3EyKQ1giUWgPjUBq7CK9nuGzGtAzYzRvun3h0XoE1zDiOEsXd5ZmdDisxF1U-3Bupb5LDbhx0U9dhHyLGcV2jIYig__pTJ-VykodFRz4JkhXq0hAb8CW7uGBZpXV4nbmHysvvFoXL90Bp5HLaxI0FRJOJLIuh-bC0dBRXIu2zIOGH9mhQkyteXtrORFkdqRctfMIlYiRoH5xXL73IXJSBZhFU89Ros9d1s37V2iIu03L13pI_b4TGtfdXnvKYQkB1doPddtCDcvtKOSzr3w9s7kVzmqYvuNdJBzx0iiEScs30H2o3Z8HWPlP3S9L2fHscx8OjFOy9KvzrtpvKVfCts2xSZFZpZroF5dnEwHiL1XaZ-litD0yx23niyFZwmhERUg1y"
+  ],
+  "Host": [
+    "localhost:44373"
+  ],
+  "Referer": [
+    "https://localhost:44373/swagger/index.html"
+  ],
+  "User-Agent": [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
+  ],
+  "sec-ch-ua": [
+    "\"Not_A Brand\";v=\"99\", \"Google Chrome\";v=\"109\", \"Chromium\";v=\"109\""
+  ],
+  "sec-ch-ua-mobile": [
+    "?0"
+  ],
+  "sec-ch-ua-platform": [
+    "\"Windows\""
+  ],
+  "origin": [
+    "https://localhost:44373"
+  ],
+  "sec-fetch-site": [
+    "same-origin"
+  ],
+  "sec-fetch-mode": [
+    "cors"
+  ],
+  "sec-fetch-dest": [
+    "empty"
+  ]
+}
+2023-02-15 13:20:40.305 +04:00 [INF] Body: {"docId":" 2DGTTD  "}
+2023-02-15 13:20:40.307 +04:00 [INF] Host: localhost
+2023-02-15 13:20:40.312 +04:00 [INF] Client IP: ::1
+2023-02-15 13:20:40.329 +04:00 [INF] Executing endpoint 'Market.Controllers.YandexController.OrderIntReduceItems (Market)'
+2023-02-15 13:20:40.368 +04:00 [INF] Route matched with {action = "OrderIntReduceItems", controller = "Yandex"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[System.String]] OrderIntReduceItems(StinClasses.RequestedDocId, System.Threading.CancellationToken) on controller Market.Controllers.YandexController (Market).
+2023-02-15 13:21:39.951 +04:00 [ERR] Attempted to divide by zero.
+2023-02-15 13:21:39.978 +04:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2023-02-15 13:21:39.988 +04:00 [INF] Executed action Market.Controllers.YandexController.OrderIntReduceItems (Market) in 59612.5238ms
+2023-02-15 13:21:39.996 +04:00 [INF] Executed endpoint 'Market.Controllers.YandexController.OrderIntReduceItems (Market)'
+2023-02-15 13:21:40.001 +04:00 [INF] 200: Attempted to divide by zero.
+2023-02-15 13:21:40.004 +04:00 [INF] Request finished HTTP/2 POST https://localhost:44373/yandex/order/int_items application/json-patch+json 21 - 200 - text/plain;+charset=utf-8 59933.9786ms
+2023-02-15 13:24:11.055 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/index.html - -
+2023-02-15 13:24:11.589 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/index.html - - - 200 - text/html;charset=utf-8 541.3594ms
+2023-02-15 13:24:11.634 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_vs/browserLink - -
+2023-02-15 13:24:11.634 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - -
+2023-02-15 13:24:11.663 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - - - 200 11982 application/javascript;+charset=utf-8 24.2296ms
+2023-02-15 13:24:11.763 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 128.2602ms
+2023-02-15 13:24:11.865 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - -
+2023-02-15 13:24:12.317 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 452.4795ms
+2023-02-15 13:24:38.954 +04:00 [INF] Request starting HTTP/2 POST https://localhost:44373/yandex/order/int_items application/json-patch+json 21
+2023-02-15 13:24:39.175 +04:00 [INF] Header: {
+  "Accept": [
+    "text/plain"
+  ],
+  "Accept-Encoding": [
+    "gzip, deflate, br"
+  ],
+  "Accept-Language": [
+    "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7"
+  ],
+  "Authorization": [
+    "41000001667F97FE"
+  ],
+  "Connection": [
+    "close"
+  ],
+  "Content-Length": [
+    "21"
+  ],
+  "Content-Type": [
+    "application/json-patch+json"
+  ],
+  "Cookie": [
+    "_ym_uid=1672385242152631823; _ym_d=1672385242; _ga=GA1.1.1657882715.1672385242; _ga_RB3N5EXRF2=GS1.1.1672385241.1.1.1672385524.0.0.0; .AspNetCore.Antiforgery.aEaUtM8N_I8=CfDJ8MNi2LDnRqZLolJQEG2Fw4ZHpfTV0PBiE3WHD1RumPm2XN_uxELLZVS-kgBj9ow53Z129Zy3dH0k2AtWIYD8xnUFbkDzIocij2157SrXgjlxWqMal7QP6S6svCQ7baF4q9ZXc2LV2UEWDWWxCvr3MRM; .AspNetCore.Session=CfDJ8MNi2LDnRqZLolJQEG2Fw4ZbZ%2F2VkRowUuRr45MCq2M9E%2B7isPMdd63Hm8QK%2FvqEFgYTv7JPJBM8MeBmxns%2FvLuhvrDvk2BPHuSDGg2mBETdxr9RLSCtcn41MAvSIri%2FU95%2FsrMGm9FEyRLclBBZ105uO6Kw5r4G%2BSuck2ebc0X3; .AspNetCore.Cookies=CfDJ8MNi2LDnRqZLolJQEG2Fw4YcptG0zqqJDoUS2fSXPOjUQY5DzF2TG3NJ-i9bGIwhsiQ2XvKWw6JPSs7ESO7TPRWe-eViS5hEYl9eMjOV8eMiSAKISgC6jCjAUKuSjnpDsiT1IWsDkhimS2H5JjmR6cXR06BxXEyX0FsZOvRlNDwVQ0dlQfuG0vx45saPqYOh1RxFCjJtqTIlCZcXr79pQnQZ6SLJ_KXITT2ucUZ3EyKQ1giUWgPjUBq7CK9nuGzGtAzYzRvun3h0XoE1zDiOEsXd5ZmdDisxF1U-3Bupb5LDbhx0U9dhHyLGcV2jIYig__pTJ-VykodFRz4JkhXq0hAb8CW7uGBZpXV4nbmHysvvFoXL90Bp5HLaxI0FRJOJLIuh-bC0dBRXIu2zIOGH9mhQkyteXtrORFkdqRctfMIlYiRoH5xXL73IXJSBZhFU89Ros9d1s37V2iIu03L13pI_b4TGtfdXnvKYQkB1doPddtCDcvtKOSzr3w9s7kVzmqYvuNdJBzx0iiEScs30H2o3Z8HWPlP3S9L2fHscx8OjFOy9KvzrtpvKVfCts2xSZFZpZroF5dnEwHiL1XaZ-litD0yx23niyFZwmhERUg1y"
+  ],
+  "Host": [
+    "localhost:44373"
+  ],
+  "Referer": [
+    "https://localhost:44373/swagger/index.html"
+  ],
+  "User-Agent": [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
+  ],
+  "sec-ch-ua": [
+    "\"Not_A Brand\";v=\"99\", \"Google Chrome\";v=\"109\", \"Chromium\";v=\"109\""
+  ],
+  "sec-ch-ua-mobile": [
+    "?0"
+  ],
+  "sec-ch-ua-platform": [
+    "\"Windows\""
+  ],
+  "origin": [
+    "https://localhost:44373"
+  ],
+  "sec-fetch-site": [
+    "same-origin"
+  ],
+  "sec-fetch-mode": [
+    "cors"
+  ],
+  "sec-fetch-dest": [
+    "empty"
+  ]
+}
+2023-02-15 13:24:39.182 +04:00 [INF] Body: {"docId":" 2DGTTD  "}
+2023-02-15 13:24:39.185 +04:00 [INF] Host: localhost
+2023-02-15 13:24:39.189 +04:00 [INF] Client IP: ::1
+2023-02-15 13:24:39.200 +04:00 [INF] Executing endpoint 'Market.Controllers.YandexController.OrderIntReduceItems (Market)'
+2023-02-15 13:24:39.230 +04:00 [INF] Route matched with {action = "OrderIntReduceItems", controller = "Yandex"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[System.String]] OrderIntReduceItems(StinClasses.RequestedDocId, System.Threading.CancellationToken) on controller Market.Controllers.YandexController (Market).
+2023-02-15 13:29:38.157 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/index.html - -
+2023-02-15 13:29:38.685 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/index.html - - - 200 - text/html;charset=utf-8 536.1636ms
+2023-02-15 13:29:38.747 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - -
+2023-02-15 13:29:38.747 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_vs/browserLink - -
+2023-02-15 13:29:38.771 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - - - 200 11982 application/javascript;+charset=utf-8 23.4286ms
+2023-02-15 13:29:38.876 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 128.8010ms
+2023-02-15 13:29:38.987 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - -
+2023-02-15 13:29:39.452 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 465.6537ms
+2023-02-15 13:30:02.947 +04:00 [INF] Request starting HTTP/2 POST https://localhost:44373/yandex/order/int_items application/json-patch+json 21
+2023-02-15 13:30:03.179 +04:00 [INF] Header: {
+  "Accept": [
+    "text/plain"
+  ],
+  "Accept-Encoding": [
+    "gzip, deflate, br"
+  ],
+  "Accept-Language": [
+    "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7"
+  ],
+  "Authorization": [
+    "41000001667F97FE"
+  ],
+  "Connection": [
+    "close"
+  ],
+  "Content-Length": [
+    "21"
+  ],
+  "Content-Type": [
+    "application/json-patch+json"
+  ],
+  "Cookie": [
+    "_ym_uid=1672385242152631823; _ym_d=1672385242; _ga=GA1.1.1657882715.1672385242; _ga_RB3N5EXRF2=GS1.1.1672385241.1.1.1672385524.0.0.0; .AspNetCore.Antiforgery.aEaUtM8N_I8=CfDJ8MNi2LDnRqZLolJQEG2Fw4ZHpfTV0PBiE3WHD1RumPm2XN_uxELLZVS-kgBj9ow53Z129Zy3dH0k2AtWIYD8xnUFbkDzIocij2157SrXgjlxWqMal7QP6S6svCQ7baF4q9ZXc2LV2UEWDWWxCvr3MRM; .AspNetCore.Session=CfDJ8MNi2LDnRqZLolJQEG2Fw4ZbZ%2F2VkRowUuRr45MCq2M9E%2B7isPMdd63Hm8QK%2FvqEFgYTv7JPJBM8MeBmxns%2FvLuhvrDvk2BPHuSDGg2mBETdxr9RLSCtcn41MAvSIri%2FU95%2FsrMGm9FEyRLclBBZ105uO6Kw5r4G%2BSuck2ebc0X3; .AspNetCore.Cookies=CfDJ8MNi2LDnRqZLolJQEG2Fw4YcptG0zqqJDoUS2fSXPOjUQY5DzF2TG3NJ-i9bGIwhsiQ2XvKWw6JPSs7ESO7TPRWe-eViS5hEYl9eMjOV8eMiSAKISgC6jCjAUKuSjnpDsiT1IWsDkhimS2H5JjmR6cXR06BxXEyX0FsZOvRlNDwVQ0dlQfuG0vx45saPqYOh1RxFCjJtqTIlCZcXr79pQnQZ6SLJ_KXITT2ucUZ3EyKQ1giUWgPjUBq7CK9nuGzGtAzYzRvun3h0XoE1zDiOEsXd5ZmdDisxF1U-3Bupb5LDbhx0U9dhHyLGcV2jIYig__pTJ-VykodFRz4JkhXq0hAb8CW7uGBZpXV4nbmHysvvFoXL90Bp5HLaxI0FRJOJLIuh-bC0dBRXIu2zIOGH9mhQkyteXtrORFkdqRctfMIlYiRoH5xXL73IXJSBZhFU89Ros9d1s37V2iIu03L13pI_b4TGtfdXnvKYQkB1doPddtCDcvtKOSzr3w9s7kVzmqYvuNdJBzx0iiEScs30H2o3Z8HWPlP3S9L2fHscx8OjFOy9KvzrtpvKVfCts2xSZFZpZroF5dnEwHiL1XaZ-litD0yx23niyFZwmhERUg1y"
+  ],
+  "Host": [
+    "localhost:44373"
+  ],
+  "Referer": [
+    "https://localhost:44373/swagger/index.html"
+  ],
+  "User-Agent": [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
+  ],
+  "sec-ch-ua": [
+    "\"Not_A Brand\";v=\"99\", \"Google Chrome\";v=\"109\", \"Chromium\";v=\"109\""
+  ],
+  "sec-ch-ua-mobile": [
+    "?0"
+  ],
+  "sec-ch-ua-platform": [
+    "\"Windows\""
+  ],
+  "origin": [
+    "https://localhost:44373"
+  ],
+  "sec-fetch-site": [
+    "same-origin"
+  ],
+  "sec-fetch-mode": [
+    "cors"
+  ],
+  "sec-fetch-dest": [
+    "empty"
+  ]
+}
+2023-02-15 13:30:03.188 +04:00 [INF] Body: {"docId":" 2DGTTD  "}
+2023-02-15 13:30:03.190 +04:00 [INF] Host: localhost
+2023-02-15 13:30:03.194 +04:00 [INF] Client IP: ::1
+2023-02-15 13:30:03.206 +04:00 [INF] Executing endpoint 'Market.Controllers.YandexController.OrderIntReduceItems (Market)'
+2023-02-15 13:30:03.235 +04:00 [INF] Route matched with {action = "OrderIntReduceItems", controller = "Yandex"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[System.String]] OrderIntReduceItems(StinClasses.RequestedDocId, System.Threading.CancellationToken) on controller Market.Controllers.YandexController (Market).
+2023-02-15 13:30:13.159 +04:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2023-02-15 13:30:13.170 +04:00 [INF] Executed action Market.Controllers.YandexController.OrderIntReduceItems (Market) in 9926.3174ms
+2023-02-15 13:30:13.182 +04:00 [INF] Executed endpoint 'Market.Controllers.YandexController.OrderIntReduceItems (Market)'
+2023-02-15 13:30:13.186 +04:00 [INF] 200: Возвращаемые позиции не обнаружены
+2023-02-15 13:30:13.190 +04:00 [INF] Request finished HTTP/2 POST https://localhost:44373/yandex/order/int_items application/json-patch+json 21 - 200 - text/plain;+charset=utf-8 10244.3972ms
+2023-02-15 13:33:56.672 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/index.html - -
+2023-02-15 13:33:57.270 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/index.html - - - 200 - text/html;charset=utf-8 600.8203ms
+2023-02-15 13:33:57.329 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - -
+2023-02-15 13:33:57.329 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_vs/browserLink - -
+2023-02-15 13:33:57.351 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - - - 200 11982 application/javascript;+charset=utf-8 21.5936ms
+2023-02-15 13:33:57.439 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 111.0750ms
+2023-02-15 13:33:57.541 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - -
+2023-02-15 13:33:57.983 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 441.6991ms
+2023-02-15 13:35:02.665 +04:00 [INF] Request starting HTTP/2 POST https://localhost:44373/yandex/order/int_items application/json-patch+json 21
+2023-02-15 13:35:02.919 +04:00 [INF] Header: {
+  "Accept": [
+    "text/plain"
+  ],
+  "Accept-Encoding": [
+    "gzip, deflate, br"
+  ],
+  "Accept-Language": [
+    "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7"
+  ],
+  "Authorization": [
+    "41000001667F97FE"
+  ],
+  "Connection": [
+    "close"
+  ],
+  "Content-Length": [
+    "21"
+  ],
+  "Content-Type": [
+    "application/json-patch+json"
+  ],
+  "Cookie": [
+    "_ym_uid=1672385242152631823; _ym_d=1672385242; _ga=GA1.1.1657882715.1672385242; _ga_RB3N5EXRF2=GS1.1.1672385241.1.1.1672385524.0.0.0; .AspNetCore.Antiforgery.aEaUtM8N_I8=CfDJ8MNi2LDnRqZLolJQEG2Fw4ZHpfTV0PBiE3WHD1RumPm2XN_uxELLZVS-kgBj9ow53Z129Zy3dH0k2AtWIYD8xnUFbkDzIocij2157SrXgjlxWqMal7QP6S6svCQ7baF4q9ZXc2LV2UEWDWWxCvr3MRM; .AspNetCore.Session=CfDJ8MNi2LDnRqZLolJQEG2Fw4ZbZ%2F2VkRowUuRr45MCq2M9E%2B7isPMdd63Hm8QK%2FvqEFgYTv7JPJBM8MeBmxns%2FvLuhvrDvk2BPHuSDGg2mBETdxr9RLSCtcn41MAvSIri%2FU95%2FsrMGm9FEyRLclBBZ105uO6Kw5r4G%2BSuck2ebc0X3; .AspNetCore.Cookies=CfDJ8MNi2LDnRqZLolJQEG2Fw4YcptG0zqqJDoUS2fSXPOjUQY5DzF2TG3NJ-i9bGIwhsiQ2XvKWw6JPSs7ESO7TPRWe-eViS5hEYl9eMjOV8eMiSAKISgC6jCjAUKuSjnpDsiT1IWsDkhimS2H5JjmR6cXR06BxXEyX0FsZOvRlNDwVQ0dlQfuG0vx45saPqYOh1RxFCjJtqTIlCZcXr79pQnQZ6SLJ_KXITT2ucUZ3EyKQ1giUWgPjUBq7CK9nuGzGtAzYzRvun3h0XoE1zDiOEsXd5ZmdDisxF1U-3Bupb5LDbhx0U9dhHyLGcV2jIYig__pTJ-VykodFRz4JkhXq0hAb8CW7uGBZpXV4nbmHysvvFoXL90Bp5HLaxI0FRJOJLIuh-bC0dBRXIu2zIOGH9mhQkyteXtrORFkdqRctfMIlYiRoH5xXL73IXJSBZhFU89Ros9d1s37V2iIu03L13pI_b4TGtfdXnvKYQkB1doPddtCDcvtKOSzr3w9s7kVzmqYvuNdJBzx0iiEScs30H2o3Z8HWPlP3S9L2fHscx8OjFOy9KvzrtpvKVfCts2xSZFZpZroF5dnEwHiL1XaZ-litD0yx23niyFZwmhERUg1y"
+  ],
+  "Host": [
+    "localhost:44373"
+  ],
+  "Referer": [
+    "https://localhost:44373/swagger/index.html"
+  ],
+  "User-Agent": [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
+  ],
+  "sec-ch-ua": [
+    "\"Not_A Brand\";v=\"99\", \"Google Chrome\";v=\"109\", \"Chromium\";v=\"109\""
+  ],
+  "sec-ch-ua-mobile": [
+    "?0"
+  ],
+  "sec-ch-ua-platform": [
+    "\"Windows\""
+  ],
+  "origin": [
+    "https://localhost:44373"
+  ],
+  "sec-fetch-site": [
+    "same-origin"
+  ],
+  "sec-fetch-mode": [
+    "cors"
+  ],
+  "sec-fetch-dest": [
+    "empty"
+  ]
+}
+2023-02-15 13:35:02.928 +04:00 [INF] Body: {"docId":" 2DGX8D  "}
+2023-02-15 13:35:02.930 +04:00 [INF] Host: localhost
+2023-02-15 13:35:02.934 +04:00 [INF] Client IP: ::1
+2023-02-15 13:35:02.948 +04:00 [INF] Executing endpoint 'Market.Controllers.YandexController.OrderIntReduceItems (Market)'
+2023-02-15 13:35:02.981 +04:00 [INF] Route matched with {action = "OrderIntReduceItems", controller = "Yandex"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[System.String]] OrderIntReduceItems(StinClasses.RequestedDocId, System.Threading.CancellationToken) on controller Market.Controllers.YandexController (Market).
+2023-02-15 13:35:49.606 +04:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2023-02-15 13:35:49.615 +04:00 [INF] Executed action Market.Controllers.YandexController.OrderIntReduceItems (Market) in 46626.5403ms
+2023-02-15 13:35:49.623 +04:00 [INF] Executed endpoint 'Market.Controllers.YandexController.OrderIntReduceItems (Market)'
+2023-02-15 13:35:49.628 +04:00 [INF] 200: Нулевая сумма исходной заявки
+2023-02-15 13:35:49.632 +04:00 [INF] Request finished HTTP/2 POST https://localhost:44373/yandex/order/int_items application/json-patch+json 21 - 200 - text/plain;+charset=utf-8 46966.8747ms
+2023-02-15 13:35:52.837 +04:00 [INF] Request starting HTTP/2 POST https://localhost:44373/yandex/order/int_items application/json-patch+json 21
+2023-02-15 13:35:52.843 +04:00 [INF] Header: {
+  "Accept": [
+    "text/plain"
+  ],
+  "Accept-Encoding": [
+    "gzip, deflate, br"
+  ],
+  "Accept-Language": [
+    "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7"
+  ],
+  "Authorization": [
+    "41000001667F97FE"
+  ],
+  "Connection": [
+    "close"
+  ],
+  "Content-Length": [
+    "21"
+  ],
+  "Content-Type": [
+    "application/json-patch+json"
+  ],
+  "Cookie": [
+    "_ym_uid=1672385242152631823; _ym_d=1672385242; _ga=GA1.1.1657882715.1672385242; _ga_RB3N5EXRF2=GS1.1.1672385241.1.1.1672385524.0.0.0; .AspNetCore.Antiforgery.aEaUtM8N_I8=CfDJ8MNi2LDnRqZLolJQEG2Fw4ZHpfTV0PBiE3WHD1RumPm2XN_uxELLZVS-kgBj9ow53Z129Zy3dH0k2AtWIYD8xnUFbkDzIocij2157SrXgjlxWqMal7QP6S6svCQ7baF4q9ZXc2LV2UEWDWWxCvr3MRM; .AspNetCore.Session=CfDJ8MNi2LDnRqZLolJQEG2Fw4ZbZ%2F2VkRowUuRr45MCq2M9E%2B7isPMdd63Hm8QK%2FvqEFgYTv7JPJBM8MeBmxns%2FvLuhvrDvk2BPHuSDGg2mBETdxr9RLSCtcn41MAvSIri%2FU95%2FsrMGm9FEyRLclBBZ105uO6Kw5r4G%2BSuck2ebc0X3; .AspNetCore.Cookies=CfDJ8MNi2LDnRqZLolJQEG2Fw4YcptG0zqqJDoUS2fSXPOjUQY5DzF2TG3NJ-i9bGIwhsiQ2XvKWw6JPSs7ESO7TPRWe-eViS5hEYl9eMjOV8eMiSAKISgC6jCjAUKuSjnpDsiT1IWsDkhimS2H5JjmR6cXR06BxXEyX0FsZOvRlNDwVQ0dlQfuG0vx45saPqYOh1RxFCjJtqTIlCZcXr79pQnQZ6SLJ_KXITT2ucUZ3EyKQ1giUWgPjUBq7CK9nuGzGtAzYzRvun3h0XoE1zDiOEsXd5ZmdDisxF1U-3Bupb5LDbhx0U9dhHyLGcV2jIYig__pTJ-VykodFRz4JkhXq0hAb8CW7uGBZpXV4nbmHysvvFoXL90Bp5HLaxI0FRJOJLIuh-bC0dBRXIu2zIOGH9mhQkyteXtrORFkdqRctfMIlYiRoH5xXL73IXJSBZhFU89Ros9d1s37V2iIu03L13pI_b4TGtfdXnvKYQkB1doPddtCDcvtKOSzr3w9s7kVzmqYvuNdJBzx0iiEScs30H2o3Z8HWPlP3S9L2fHscx8OjFOy9KvzrtpvKVfCts2xSZFZpZroF5dnEwHiL1XaZ-litD0yx23niyFZwmhERUg1y"
+  ],
+  "Host": [
+    "localhost:44373"
+  ],
+  "Referer": [
+    "https://localhost:44373/swagger/index.html"
+  ],
+  "User-Agent": [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
+  ],
+  "sec-ch-ua": [
+    "\"Not_A Brand\";v=\"99\", \"Google Chrome\";v=\"109\", \"Chromium\";v=\"109\""
+  ],
+  "sec-ch-ua-mobile": [
+    "?0"
+  ],
+  "sec-ch-ua-platform": [
+    "\"Windows\""
+  ],
+  "origin": [
+    "https://localhost:44373"
+  ],
+  "sec-fetch-site": [
+    "same-origin"
+  ],
+  "sec-fetch-mode": [
+    "cors"
+  ],
+  "sec-fetch-dest": [
+    "empty"
+  ]
+}
+2023-02-15 13:35:52.852 +04:00 [INF] Body: {"docId":" 2DGX8D  "}
+2023-02-15 13:35:52.856 +04:00 [INF] Host: localhost
+2023-02-15 13:35:52.859 +04:00 [INF] Client IP: ::1
+2023-02-15 13:35:52.862 +04:00 [INF] Executing endpoint 'Market.Controllers.YandexController.OrderIntReduceItems (Market)'
+2023-02-15 13:35:52.865 +04:00 [INF] Route matched with {action = "OrderIntReduceItems", controller = "Yandex"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[System.String]] OrderIntReduceItems(StinClasses.RequestedDocId, System.Threading.CancellationToken) on controller Market.Controllers.YandexController (Market).
+2023-02-15 13:39:09.270 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/index.html - -
+2023-02-15 13:39:09.938 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/index.html - - - 200 - text/html;charset=utf-8 678.5544ms
+2023-02-15 13:39:09.991 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - -
+2023-02-15 13:39:09.993 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_vs/browserLink - -
+2023-02-15 13:39:10.020 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - - - 200 11982 application/javascript;+charset=utf-8 22.4006ms
+2023-02-15 13:39:10.111 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 120.0715ms
+2023-02-15 13:39:10.211 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - -
+2023-02-15 13:39:10.711 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 500.0428ms
+2023-02-15 13:40:03.512 +04:00 [INF] Request starting HTTP/2 POST https://localhost:44373/yandex/order/int_items application/json-patch+json 21
+2023-02-15 13:40:03.773 +04:00 [INF] Header: {
+  "Accept": [
+    "text/plain"
+  ],
+  "Accept-Encoding": [
+    "gzip, deflate, br"
+  ],
+  "Accept-Language": [
+    "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7"
+  ],
+  "Authorization": [
+    "41000001667F97FE"
+  ],
+  "Connection": [
+    "close"
+  ],
+  "Content-Length": [
+    "21"
+  ],
+  "Content-Type": [
+    "application/json-patch+json"
+  ],
+  "Cookie": [
+    "_ym_uid=1672385242152631823; _ym_d=1672385242; _ga=GA1.1.1657882715.1672385242; _ga_RB3N5EXRF2=GS1.1.1672385241.1.1.1672385524.0.0.0; .AspNetCore.Antiforgery.aEaUtM8N_I8=CfDJ8MNi2LDnRqZLolJQEG2Fw4ZHpfTV0PBiE3WHD1RumPm2XN_uxELLZVS-kgBj9ow53Z129Zy3dH0k2AtWIYD8xnUFbkDzIocij2157SrXgjlxWqMal7QP6S6svCQ7baF4q9ZXc2LV2UEWDWWxCvr3MRM; .AspNetCore.Session=CfDJ8MNi2LDnRqZLolJQEG2Fw4ZbZ%2F2VkRowUuRr45MCq2M9E%2B7isPMdd63Hm8QK%2FvqEFgYTv7JPJBM8MeBmxns%2FvLuhvrDvk2BPHuSDGg2mBETdxr9RLSCtcn41MAvSIri%2FU95%2FsrMGm9FEyRLclBBZ105uO6Kw5r4G%2BSuck2ebc0X3; .AspNetCore.Cookies=CfDJ8MNi2LDnRqZLolJQEG2Fw4YcptG0zqqJDoUS2fSXPOjUQY5DzF2TG3NJ-i9bGIwhsiQ2XvKWw6JPSs7ESO7TPRWe-eViS5hEYl9eMjOV8eMiSAKISgC6jCjAUKuSjnpDsiT1IWsDkhimS2H5JjmR6cXR06BxXEyX0FsZOvRlNDwVQ0dlQfuG0vx45saPqYOh1RxFCjJtqTIlCZcXr79pQnQZ6SLJ_KXITT2ucUZ3EyKQ1giUWgPjUBq7CK9nuGzGtAzYzRvun3h0XoE1zDiOEsXd5ZmdDisxF1U-3Bupb5LDbhx0U9dhHyLGcV2jIYig__pTJ-VykodFRz4JkhXq0hAb8CW7uGBZpXV4nbmHysvvFoXL90Bp5HLaxI0FRJOJLIuh-bC0dBRXIu2zIOGH9mhQkyteXtrORFkdqRctfMIlYiRoH5xXL73IXJSBZhFU89Ros9d1s37V2iIu03L13pI_b4TGtfdXnvKYQkB1doPddtCDcvtKOSzr3w9s7kVzmqYvuNdJBzx0iiEScs30H2o3Z8HWPlP3S9L2fHscx8OjFOy9KvzrtpvKVfCts2xSZFZpZroF5dnEwHiL1XaZ-litD0yx23niyFZwmhERUg1y"
+  ],
+  "Host": [
+    "localhost:44373"
+  ],
+  "Referer": [
+    "https://localhost:44373/swagger/index.html"
+  ],
+  "User-Agent": [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
+  ],
+  "sec-ch-ua": [
+    "\"Not_A Brand\";v=\"99\", \"Google Chrome\";v=\"109\", \"Chromium\";v=\"109\""
+  ],
+  "sec-ch-ua-mobile": [
+    "?0"
+  ],
+  "sec-ch-ua-platform": [
+    "\"Windows\""
+  ],
+  "origin": [
+    "https://localhost:44373"
+  ],
+  "sec-fetch-site": [
+    "same-origin"
+  ],
+  "sec-fetch-mode": [
+    "cors"
+  ],
+  "sec-fetch-dest": [
+    "empty"
+  ]
+}
+2023-02-15 13:40:03.782 +04:00 [INF] Body: {"docId":" 2DGX8D  "}
+2023-02-15 13:40:03.785 +04:00 [INF] Host: localhost
+2023-02-15 13:40:03.791 +04:00 [INF] Client IP: ::1
+2023-02-15 13:40:03.806 +04:00 [INF] Executing endpoint 'Market.Controllers.YandexController.OrderIntReduceItems (Market)'
+2023-02-15 13:40:03.843 +04:00 [INF] Route matched with {action = "OrderIntReduceItems", controller = "Yandex"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[System.String]] OrderIntReduceItems(StinClasses.RequestedDocId, System.Threading.CancellationToken) on controller Market.Controllers.YandexController (Market).
+2023-02-15 13:40:55.173 +04:00 [INF] Start processing HTTP request POST "https://api-seller.ozon.ru/v2/posting/fbs/cancel"
+2023-02-15 13:40:55.200 +04:00 [INF] Sending HTTP request POST "https://api-seller.ozon.ru/v2/posting/fbs/cancel"
+2023-02-15 13:40:55.574 +04:00 [INF] Received HTTP response headers after 367.671ms - 400
+2023-02-15 13:40:55.585 +04:00 [INF] End processing HTTP request after 417.7964ms - 400
+2023-02-15 16:10:04.907 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/index.html - -
+2023-02-15 16:10:06.119 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/index.html - - - 200 - text/html;charset=utf-8 1217.5011ms
+2023-02-15 16:10:06.139 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - -
+2023-02-15 16:10:06.219 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_framework/aspnetcore-browser-refresh.js - - - 200 11982 application/javascript;+charset=utf-8 79.6823ms
+2023-02-15 16:10:06.393 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/_vs/browserLink - -
+2023-02-15 16:10:06.755 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/_vs/browserLink - - - 200 - text/javascript;+charset=UTF-8 361.3313ms
+2023-02-15 16:10:07.014 +04:00 [INF] Request starting HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - -
+2023-02-15 16:10:07.593 +04:00 [INF] Request finished HTTP/2 GET https://localhost:44373/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 578.8905ms

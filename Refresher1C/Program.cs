@@ -56,6 +56,8 @@ namespace Refresher1C
                     services.AddHostedService<WorkerMarketplacePricer>();
                 if (configuration.GetSection("Catalog:enable").Get<bool>())
                     services.AddHostedService<WorkerMarketplaceCatalog>();
+                if (configuration.GetSection("Returns:enable").Get<bool>())
+                    services.AddHostedService<WorkerReturns>();
                 if (configuration.GetSection("OncePerDay:enable").Get<bool>())
                     services.AddHostedService<WorkerOncePerDay>();
             });

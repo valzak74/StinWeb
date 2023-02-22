@@ -21,5 +21,6 @@ namespace Refresher1C.Service
         Task RefreshOrders(CancellationToken stoppingToken);
         Task RefreshSlowOrders(CancellationToken stoppingToken);
         Task UpdateTariffs(CancellationToken cancellationToken);
+        Task CheckReturns(CancellationToken cancellationToken);
     }
 }

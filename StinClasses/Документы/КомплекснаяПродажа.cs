@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace StinClasses.Документы
@@ -43,11 +44,12 @@ namespace StinClasses.Документы
     }
     public interface IКомплекснаяПродажа : IДокумент
     {
-        Task<List<ФормаКомплекснаяПродажа>> ЗаполнитьНаОснованииAsync(string userId, ФормаПредварительнаяЗаявка предварительнаяЗаявка, DateTime docDateTime, List<ФормаНабор> активныеНаборы);
+        Task<List<ФормаКомплекснаяПродажа>> ЗаполнитьНаОснованииAsync(string userId, ФормаПредварительнаяЗаявка предварительнаяЗаявка, DateTime docDateTime, List<ФормаНабор> активныеНаборы, bool transferred = false);
         Task<ExceptionData> ЗаписатьAsync(ФормаКомплекснаяПродажа doc);
         Task<ExceptionData> ПровестиAsync(ФормаКомплекснаяПродажа doc);
         Task<ExceptionData> ЗаписатьПровестиAsync(ФормаКомплекснаяПродажа doc);
         Task<Dictionary<string, List<ФормаПродажаТЧ>>> РаспределитьТоварПоНаличиюAsync(ФормаКомплекснаяПродажа doc);
+        Task<List<ФормаКомплекснаяПродажа>> GetФормаКомплекснаяПродажаByOrderId(string orderId);
     }
     public class КомплекснаяПродажа : Документ, IКомплекснаяПродажа
     {
@@ -73,11 +75,13 @@ namespace StinClasses.Документы
             }
             base.Dispose(disposing);
         }
-        public async Task<List<ФормаКомплекснаяПродажа>> ЗаполнитьНаОснованииAsync(string userId, ФормаПредварительнаяЗаявка предварительнаяЗаявка, DateTime docDateTime, List<ФормаНабор> активныеНаборы)
+        public async Task<List<ФормаКомплекснаяПродажа>> ЗаполнитьНаОснованииAsync(string userId, ФормаПредварительнаяЗаявка предварительнаяЗаявка, DateTime docDateTime, List<ФормаНабор> активныеНаборы, bool transferred = false)
         {
             var списокАктивныхФирм = активныеНаборы.Select(x => x.Общие.Фирма).DistinctBy(x => x.Id).ToList();
             var списокАктивныхСкладов = активныеНаборы.Select(x => x.Склад).DistinctBy(x => x.Id).ToList();
-
+            var кодОперации = Common.КодОперации.FirstOrDefault(x => x.Key == "   16S   "); //Продажа
+            if (transferred)
+                кодОперации = Common.КодОперации.FirstOrDefault(x => x.Key == "   15P   "); //Реализация (комиссия)
             List<ФормаКомплекснаяПродажа> result = new List<ФормаКомплекснаяПродажа>();
             int docCount = 0;
             foreach (var фирма in списокАктивныхФирм)
@@ -96,7 +100,7 @@ namespace StinClasses.Документы
 
                     doc.Общие.Комментарий = string.IsNullOrEmpty(предварительнаяЗаявка.Общие.Комментарий) ? "" : предварительнаяЗаявка.Общие.Комментарий.Trim();
 
-                    doc.КодОперации = Common.КодОперации.FirstOrDefault(x => x.Key == "   16S   "); //Продажа
+                    doc.КодОперации = кодОперации;
                     doc.Склад = склад;
                     doc.Контрагент = предварительнаяЗаявка.Контрагент;
                     doc.Договор = предварительнаяЗаявка.Договор;
@@ -440,6 +444,86 @@ namespace StinClasses.Документы
                 }
             }
             return ПереченьНаличия;
+        }
+        public async Task<List<ФормаКомплекснаяПродажа>> GetФормаКомплекснаяПродажаByOrderId(string orderId)
+        {
+            var docs = await (from dh in _context.Dh12542s
+                           join j in _context._1sjourns on dh.Iddoc equals j.Iddoc
+                           where (j.Closed == 1) && (dh.Sp14005 == orderId)
+                           select new
+                           {
+                               dh,
+                               j
+                           }).ToListAsync();
+            string iddoc = "";
+            var dt = _context.Dt12542s.Where(x => x.Iddoc == iddoc);
+            var result = new List<ФормаКомплекснаяПродажа>();
+            var ставкаНдсБезНдс = _номенклатура.GetСтавкаНДС(Common.СтавкиНДС.FirstOrDefault(x => x.Value == "Без НДС").Key);
+            foreach (var d in docs)
+            {
+                var doc = new ФормаКомплекснаяПродажа
+                {
+                    Общие = new ОбщиеРеквизиты
+                    {
+                        IdDoc = d.dh.Iddoc,
+                        ДокОснование = !(string.IsNullOrWhiteSpace(d.dh.Sp12516) || d.dh.Sp12516 == Common.ПустоеЗначениеИд13) ? await ДокОснованиеAsync(d.dh.Sp12516.Substring(4)) : null,
+                        Фирма = await _фирма.GetEntityByIdAsync(d.j.Sp4056),
+                        Автор = await _пользователь.GetUserByIdAsync(d.j.Sp74),
+                        ВидДокумента10 = d.j.Iddocdef,
+                        ВидДокумента36 = Common.Encode36(d.j.Iddocdef),
+                        НазваниеВЖурнале = "Комплекс-продажа",
+                        НомерДок = d.j.Docno,
+                        ДатаДок = d.j.DateTimeIddoc.ToDateTime(),
+                        Проведен = d.j.Closed == 1,
+                        Комментарий = d.dh.Sp660,
+                        Удален = d.j.Ismark
+                    },
+                    КодОперации = Common.КодОперации.FirstOrDefault(x => x.Key == d.dh.Sp12517),
+                    Склад = await _склад.GetEntityByIdAsync(d.dh.Sp12518),
+                    Контрагент = await _контрагент.GetКонтрагентAsync(d.dh.Sp12519),
+                    Договор = await _контрагент.GetДоговорAsync(d.dh.Sp12520),
+                    ДатаОплаты = d.dh.Sp12525,
+                    СпособОтгрузки = Common.СпособыОтгрузки.Where(x => x.Key == d.dh.Sp12526).Select(x => x.Value).FirstOrDefault(),
+                    Скидка = await _контрагент.GetСкидкаAsync(d.dh.Sp12534),
+                    СкидКарта = await _контрагент.GetСкидКартаAsync(d.dh.Sp12535),
+                    ТипЦен = await _контрагент.GetТипЦенAsync(d.dh.Sp12533),
+                    Order = await _order.ПолучитьOrderWithItems(d.dh.Sp14005),
+                    УчитыватьНДС = d.dh.Sp12528 == 1,
+                    СуммаВклНДС = d.dh.Sp12529 == 1,
+                    Маршрут = await _маршрут.GetМаршрутByCodeAsync(d.dh.Sp12523),
+                };
+                iddoc = doc.Общие.IdDoc;
+                foreach (var t in await dt.ToListAsync())
+                {
+                    var row = new ФормаКомплекснаяПродажаТЧ
+                    {
+                        Набор = t.Sp12539 != Common.ПустоеЗначение ? await GetФормаНаборById(t.Sp12539) : null,
+                        Сумма = t.Sp12540
+                    };
+                    if (row.Набор != null)
+                    {
+                        foreach (var nabRow in row.Набор.ТабличнаяЧасть)
+                        {
+                            var ставкаНДС = doc.УчитыватьНДС ? await _номенклатура.GetСтавкаНДСAsync(nabRow.Номенклатура.Id) : ставкаНдсБезНдс;
+                            doc.ТабличнаяЧастьРазвернутая.Add(new ФормаПродажаТЧ
+                            {
+                                Номенклатура = nabRow.Номенклатура,
+                                Единица = nabRow.Единица,
+                                Количество = nabRow.Количество,
+                                Сумма = nabRow.Сумма,
+                                Цена = nabRow.Цена,
+                                СтавкаНДС = ставкаНДС,
+                                СуммаНДС = nabRow.Сумма * (ставкаНДС.Процент / (100 + ставкаНДС.Процент)),
+                                Себестоимость = 0
+                            });
+                        }
+                    }
+
+                    doc.ТабличнаяЧасть.Add(row);
+                }
+                result.Add(doc);
+            }
+            return result;
         }
     }
 }

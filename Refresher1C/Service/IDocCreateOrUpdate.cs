@@ -22,6 +22,7 @@ namespace Refresher1C.Service
             string regionId, string regionName, OrderRecipientAddress address,
             string shipmentId, string postingNumber, DateTime shipmentDate, List<OrderItem> items, CancellationToken cancellationToken);
         Task OrderCancelled(Order order);
-        Task OrderDeliveried(Order order);
+        Task OrderDeliveried(Order order, bool transferred = false);
+        Task OrderFromTransferDeliveried(Order order);
     }
 }

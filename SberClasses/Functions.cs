@@ -290,7 +290,7 @@ namespace SberClasses
             }
             return (false, err);
         }
-        public static async Task<(List<SberDetailOrder>? orders, string error)> GetOrders(IHttpService httpService, string proxyHost, string token,
+        public static async Task<(List<SberDetailOrder>? orders, string error)> SearchOrders(IHttpService httpService, string proxyHost, string token,
             CancellationToken cancellationToken)
         {
             var request = new OrderListRequest(token);
@@ -314,26 +314,33 @@ namespace SberClasses
                 if (result.Item1.Data?.Warnings?.Count > 0)
                     err = err.ParseError("", JsonConvert.SerializeObject(result.Item1.Data?.Warnings));
                 if (result.Item1.Data?.Shipments?.Count > 0)
-                {
-                    request.Data.Shipments = result.Item1.Data?.Shipments;
-                    var resultDetails = await httpService.Exchange<OrderListDetailResponse, string>(
-                        $"https://{proxyHost}partner.sbermegamarket.ru/api/market/v1/orderService/order/get",
-                        HttpMethod.Post,
-                        new Dictionary<string, string>(),
-                        request,
-                        cancellationToken);
-                    if (!string.IsNullOrEmpty(resultDetails.Item2))
-                        err = err.ParseError("", resultDetails.Item2);
-                    if (resultDetails.Item1 != null)
-                    {
-                        if (resultDetails.Item1.Error != null)
-                            err = err.ParseError("", JsonConvert.SerializeObject(resultDetails.Item1.Error));
-                        if (resultDetails.Item1.Data?.Warnings?.Count > 0)
-                            err = err.ParseError("", JsonConvert.SerializeObject(resultDetails.Item1.Data?.Warnings));
-                        return (resultDetails.Item1.Data?.Shipments, string.IsNullOrEmpty(err) ? string.Empty : "SberGetOrders: " + err);
-                    }
-                }
-                return (null, string.IsNullOrEmpty(err) ? string.Empty : "SberGetOrders: " + err);
+                    return await GetOrders(httpService, proxyHost, token, result.Item1.Data.Shipments, cancellationToken);
+                return (null, string.IsNullOrEmpty(err) ? string.Empty : "SberSearchOrders: " + err);
+            }
+            return (null, string.IsNullOrEmpty(err) ? string.Empty : "SberSearchOrders: " + err);
+        }
+        public static async Task<(List<SberDetailOrder>? orders, string error)> GetOrders(IHttpService httpService, string proxyHost, string token, 
+            List<string> shipments,
+            CancellationToken cancellationToken)
+        {
+            var request = new OrderListRequest(token, shipments);
+
+            var result = await httpService.Exchange<OrderListDetailResponse, string>(
+                $"https://{proxyHost}partner.sbermegamarket.ru/api/market/v1/orderService/order/get",
+                HttpMethod.Post,
+                new Dictionary<string, string>(),
+                request,
+                cancellationToken);
+            string err = "";
+            if (!string.IsNullOrEmpty(result.Item2))
+                err = err.ParseError("", result.Item2);
+            if (result.Item1 != null)
+            {
+                if (result.Item1.Error != null)
+                    err = err.ParseError("", JsonConvert.SerializeObject(result.Item1.Error));
+                if (result.Item1.Data?.Warnings?.Count > 0)
+                    err = err.ParseError("", JsonConvert.SerializeObject(result.Item1.Data?.Warnings));
+                return (result.Item1.Data?.Shipments, string.IsNullOrEmpty(err) ? string.Empty : "SberGetOrders: " + err);
             }
             return (null, string.IsNullOrEmpty(err) ? string.Empty : "SberGetOrders: " + err);
         }

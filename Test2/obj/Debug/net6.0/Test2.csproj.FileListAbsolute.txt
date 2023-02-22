@@ -4,8 +4,6 @@ C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\Test2.runt
 C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\Test2.dll
 C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\Test2.pdb
 C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\BarcodeStandard.dll
-C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\Microsoft.AspNetCore.Http.Abstractions.dll
-C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\Microsoft.AspNetCore.Http.Features.dll
 C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\Microsoft.Data.SqlClient.dll
 C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\Microsoft.EntityFrameworkCore.dll
 C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\Microsoft.EntityFrameworkCore.Abstractions.dll
@@ -58,7 +56,6 @@ C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\HttpExtens
 C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\JsonExtensions.dll
 C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\PdfHelper.dll
 C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\StinClasses.dll
-C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\topsdk-net-core.dll
 C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\WbClasses.dll
 C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\YandexClasses.dll
 C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\AliExpressClasses.pdb
@@ -68,7 +65,6 @@ C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\PdfHelper.
 C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\StinClasses.pdb
 C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\WbClasses.pdb
 C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\YandexClasses.pdb
-C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\topsdk-net-core.pdb
 C:\Users\Валентин\source\repos\StinWeb\Test2\obj\Debug\net6.0\Test2.csproj.AssemblyReference.cache
 C:\Users\Валентин\source\repos\StinWeb\Test2\obj\Debug\net6.0\Test2.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\Валентин\source\repos\StinWeb\Test2\obj\Debug\net6.0\Test2.AssemblyInfoInputs.cache

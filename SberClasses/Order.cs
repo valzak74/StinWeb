@@ -192,7 +192,13 @@ namespace SberClasses
         }
         public OrderListRequest(string token): this()
         {
-            Data = new OrderListData { Token = token };
+            if (Data != null)
+                Data.Token = token;
+        }
+        public OrderListRequest(string token, List<string> shipments) : this(token)
+        {
+            if (Data != null)
+                Data.Shipments = shipments;
         }
     }
     public class OrderListData

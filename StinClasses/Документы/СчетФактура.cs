@@ -22,6 +22,7 @@ namespace StinClasses.Документы
     public interface IСчетФактура : IДокумент
     {
         Task<ФормаСчетФактура> ВводНаОснованииAsync(ФормаРеализация докОснование, DateTime docDateTime);
+        Task<ФормаСчетФактура> ВводНаОснованииAsync(ФормаОтчетКомиссионера докОснование, DateTime docDateTime);
         Task<ExceptionData> ЗаписатьAsync(ФормаСчетФактура doc);
         Task<ExceptionData> ПровестиAsync(ФормаСчетФактура doc);
         Task<ExceptionData> ЗаписатьПровестиAsync(ФормаСчетФактура doc);
@@ -43,6 +44,27 @@ namespace StinClasses.Документы
             base.Dispose(disposing);
         }
         public async Task<ФормаСчетФактура> ВводНаОснованииAsync(ФормаРеализация докОснование, DateTime docDateTime)
+        {
+            ФормаСчетФактура doc = new ФормаСчетФактура();
+
+            doc.Общие.ДокОснование = await ДокОснованиеAsync(докОснование.Общие.IdDoc);
+            doc.Общие.Автор = докОснование.Общие.Автор;
+            doc.Общие.ВидДокумента10 = (int)StinClasses.Документы.ВидДокумента.СчетФактура; //2051
+            doc.Общие.ВидДокумента36 = Common.Encode36(doc.Общие.ВидДокумента10);
+            doc.Общие.Фирма = doc.Общие.ДокОснование.Фирма;
+
+            doc.Общие.ДатаДок = docDateTime <= Common.min1cDate ? DateTime.Now : docDateTime;
+
+            doc.Общие.Комментарий = string.IsNullOrEmpty(докОснование.Общие.Комментарий) ? "" : докОснование.Общие.Комментарий.Trim();
+
+            doc.Контрагент = докОснование.Контрагент;
+            doc.Договор = докОснование.Договор;
+            doc.УчитыватьНДС = докОснование.УчитыватьНДС;
+            doc.СуммаВклНДС = докОснование.СуммаВклНДС;
+
+            return doc;
+        }
+        public async Task<ФормаСчетФактура> ВводНаОснованииAsync(ФормаОтчетКомиссионера докОснование, DateTime docDateTime)
         {
             ФормаСчетФактура doc = new ФормаСчетФактура();
 

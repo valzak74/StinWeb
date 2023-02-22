@@ -32,9 +32,9 @@
 *@        
         <div class="card-body">
             <div class="row">
-                @Html.InputGroup("col-6", "Компания :", "<button type=\"button\" id=\"btnAct\" class=\"btn btn-sm btn-outline-success\" onclick=\"btnActClick()\"><span class=\"spinner-grow spinner-grow-sm d-none\" role=\"status\" aria-hidden=\"true\"></span>Акт приема-передачи</button>", "select", "CampaignIds", (SelectList)ViewBag.CampaignIds, new { id = "campaignIds", @class = "form-control", onchange = "InfoText()" })
+                @Html.InputGroup("col-6", "Компания :", "<button type=\"button\" id=\"btnAct\" class=\"btn btn-sm btn-outline-success\" onclick=\"btnActClick()\"><span class=\"spinner-grow spinner-grow-sm d-none\" role=\"status\" aria-hidden=\"true\"></span>Акт приема-передачи</button>", "select", "CampaignIds", (SelectList)ViewBag.CampaignIds, new { id = "campaignIds", @class = "form-control" })
 
-                <div class="dropdown">
+                <div class="dropdown col-2">
                   <button class="btn btn-sm btn-outline-success dropdown-toggle" type="button" id="dropdownMultiLink" data-toggle="dropdown" aria-expanded="false">
                     Групповая обработка
                   </button>
@@ -45,22 +45,15 @@
                     <a class="dropdown-item" id="itemPrintLoadingAct" href="#">Печать листа сборки</a>
                   </div>
                 </div>
-@*
-                <div class="dropdown">
-                  <a class="btn btn-sm btn-outline-success dropdown-toggle" href="#" role="button" id="dropdownMultiLink" data-bs-toggle="dropdown" aria-expanded="false">
-                    Групповая обработка
-                  </a>
-
-                  <ul class="dropdown-menu" aria-labelledby="dropdownMultiLink">
-                    <li><a class="dropdown-item" href="#">Печать этикеток</a></li>
-                    <li><a class="dropdown-item" href="#">Сформировать документы</a></li>
-                  </ul>
+                <div class="input-group input-group-sm justify-content-end col-4">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="form-check-input ml-0" id="chkTransferred">
+                            <span class="form-check-label ml-3" for="chkTransferred">Заказы, переданные маркетплейс</span>
+                        </div>
+                    </div>
                 </div>
-                @Html.Button("<span class=\"spinner-grow spinner-grow-sm d-none\" role=\"status\" aria-hidden=\"true\"></span>Печать этикеток", new { @type = "button", id = "btnMultiPrint", @class = "btn btn-sm btn-outline-success", onclick = "btnMultiOrdersClick(0)" })
-                @Html.Button("<span class=\"spinner-grow spinner-grow-sm d-none\" role=\"status\" aria-hidden=\"true\"></span>Сформировать документы", new { @type = "button", id = "btnMultiCreate", @class = "btn btn-sm btn-outline-success", onclick = "btnMultiOrdersClick(1)" })
-                *@
             </div>
-            <div id="infoFBS"></div>
         </div>
     </div>
 }
@@ -210,7 +203,8 @@
                 isAjax: true,
                 url: "OrdersConsole",
                 query: "isDriver=" + $("#этоВодитель").val()
-                    + "&driverId=" + $("#role").val(),
+                    + "&driverId=" + $("#role").val()
+                    + "&transferred=" + $("#chkTransferred").is(':checked'),
                 loadingDelay: 300
             });
             gridConsole.reload();
@@ -496,14 +490,8 @@
             ПросмотрЗаказа();
         }
     });
-    function InfoText() {
-        var info = "<p align='left'>";
-        if ($("#campaignIds").val() != undefined) {
-            info += $("#campaignIds option:selected").text();
-        }
-        info += "</p>";
-        $("#infoFBS").html(info);
-    }
-    var selCampaign = document.getElementById("campaignIds");
-    selCampaign.onchange();
+    $("input#chkTransferred").on("change", function () { ReloadGrid(); });
+
+    //var selCampaign = document.getElementById("campaignIds");
+    //selCampaign.onchange();
 </script>

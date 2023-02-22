@@ -24,6 +24,7 @@ using HttpExtensions;
 using System.Threading;
 using YandexClasses;
 using NPOI.SS.Formula.Functions;
+using Microsoft.AspNetCore.Hosting.Server;
 
 namespace StinWeb.Controllers
 {
@@ -255,7 +256,6 @@ namespace StinWeb.Controllers
                 data = data.Where(x => x.Scanned < x.КолГрузоМест).ToList();
             var orderIds = data.Select(x => x.OrderId);
             DateTime dateRegTA = _context.GetRegTA();
-            var ВидРеализация = Common.Encode36((long)StinClasses.Документы.ВидДокумента.Реализация).PadLeft(4);
             var dataReg = await (
                         (from r in _context.Rg4667s //ЗаказыЗаявки
                          join doc in _context.Dh2457s on r.Sp4664 equals doc.Iddoc
@@ -696,7 +696,13 @@ namespace StinWeb.Controllers
                 return BadRequest(new ExceptionData { Code = -100, Description = "No data for " + campaignId });
         }
         [HttpGet]
-        public IActionResult OrdersConsole(bool isDriver, string driverId)
+        public IActionResult OrdersConsole(bool isDriver, string driverId, bool transferred)
+        {
+            if (transferred)
+                return OrdersConsoleLastMile();
+            return OrdersConsoleFirstMile(isDriver, driverId);
+        }
+        private IActionResult OrdersConsoleFirstMile(bool isDriver, string driverId)
         {
             if (!string.IsNullOrWhiteSpace(driverId))
             {
@@ -706,98 +712,223 @@ namespace StinWeb.Controllers
             DateTime limitDate = DateTime.Today.AddDays(-3);
             DateTime limitSelfDate = DateTime.Today.AddDays(-6);
             DateTime dateRegTA = _context.GetRegTA();
-            var dataReg = (
-                        (from r in _context.Rg4667s //ЗаказыЗаявки
-                         join doc in _context.Dh2457s on r.Sp4664 equals doc.Iddoc
-                         join m in _context.Sc11555s on doc.Sp11556 equals m.Code into _m
-                         from m in _m.DefaultIfEmpty()
-                         where r.Period == dateRegTA &&
-                             doc.Sp13995 != Common.ПустоеЗначение &&
-                             (isDriver ? ((m != null) && (m.Sp11669 == driverId)) : true)
-                         group new { r, doc } by new { orderId = doc.Sp13995, маршрутName = doc.Sp11557, складId = doc.Sp4437 } into gr
-                         where gr.Sum(x => x.r.Sp4666) != 0
-                         select new { orderId = gr.Key.orderId, маршрутName = Convert.ToString(gr.Key.маршрутName.Trim()), складId = Convert.ToString(gr.Key.складId), statusOrder = 1 })
-                        .Concat
-                        (from r in _context.Rg4674s //Заявки
-                         join doc in _context.Dh2457s on r.Sp4671 equals doc.Iddoc
-                         join m in _context.Sc11555s on doc.Sp11556 equals m.Code into _m
-                         from m in _m.DefaultIfEmpty()
-                         where r.Period == dateRegTA &&
-                             doc.Sp13995 != Common.ПустоеЗначение &&
-                             (isDriver ? ((m != null) && (m.Sp11669 == driverId)) : true)
-                         group new { r, doc } by new { orderId = doc.Sp13995, маршрутName = doc.Sp11557, складId = doc.Sp4437 } into gr
-                         where gr.Sum(x => x.r.Sp4672) != 0
-                         select new { orderId = gr.Key.orderId, маршрутName = Convert.ToString(gr.Key.маршрутName.Trim()), складId = Convert.ToString(gr.Key.складId), statusOrder = 2 })
-                        .Concat
-                        (from r in _context.Rg11973s //НаборНаСкладе
-                         join doc in _context.Dh11948s on r.Sp11970 equals doc.Iddoc
-                         join m in _context.Sc11555s on doc.Sp11934 equals m.Code into _m
-                         from m in _m.DefaultIfEmpty()
-                         where r.Period == dateRegTA &&
-                              doc.Sp14003 != Common.ПустоеЗначение &&
-                              (isDriver ? ((m != null) && (m.Sp11669 == driverId)) : true)
-                         group new { r, doc } by new { orderId = doc.Sp14003, маршрутName = doc.Sp11935, status = doc.Sp11938, складId = r.Sp11967 } into gr
-                         where gr.Sum(x => x.r.Sp11972) != 0
-                         select new { orderId = gr.Key.orderId, маршрутName = Convert.ToString(gr.Key.маршрутName.Trim()), складId = Convert.ToString(gr.Key.складId), statusOrder = gr.Key.status == 1 ? 4 : 3 }));
-            if (!isDriver)
-            {
-                dataReg = dataReg.Concat(from o in _context.Sc13994s
-                                         where !o.Ismark && (o.Sp13982 == 5) &&
-                                            (((o.Sp13988 == (decimal)StinClasses.StinDeliveryType.PICKUP) &&
-                                            (o.Sp13990 >= limitSelfDate) &&
-                                            ((StinClasses.StinDeliveryPartnerType)o.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP)) ||
-                                            (o.Sp13990 >= limitDate))
-                                         select new { orderId = o.Id, маршрутName = string.Empty, складId = string.Empty, statusOrder = 5 });
-            }
-            var data = from r in dataReg
-                       join sklad in _context.Sc55s on r.складId equals sklad.Id into _sklad
-                       from sklad in _sklad.DefaultIfEmpty()
-                       join order in _context.Sc13994s on r.orderId equals order.Id
-                       join market in _context.Sc14042s on order.Sp14038 equals market.Id
-                       join превЗаявка in _context.Dh12747s on order.Id equals превЗаявка.Sp14007
-                       join j in _context._1sjourns on превЗаявка.Iddoc equals j.Iddoc
-                       join binary in _context.VzOrderBinaries.Where(x => x.Extension.Trim().ToUpper() == "LABELS") on order.Id equals binary.Id into _binary
-                       from binary in _binary.DefaultIfEmpty()
-                       select new
-                       {
-                           Id = order.Id,
-                           Тип = market.Sp14155.ToUpper().Trim(),
-                           MarketplaceId = order.Code.Trim(),
-                           MarketplaceType = order.Descr.Trim(), // (markUse != null && !string.IsNullOrWhiteSpace(market.Sp14154) && (markUse.Sp14190.Trim() == market.Sp14154.Trim())) ? market.Sp14155.Trim() + " realFBS" : order.Descr.Trim(),
-                           ShipmentDate = order.Sp13990,
-                           ПредварительнаяЗаявкаНомер = order.Sp13981.Trim(),
-                           CustomerNotes = order.Sp14122,
-                           Town = order.Sp14125.Trim(),
-                           Street = order.Sp14127.Trim(),
-                           House = order.Sp14128.Trim(),
-                           Block = order.Sp14129.Trim(),
-                           Entrance = order.Sp14130.Trim(),
-                           Intercom = order.Sp14131.Trim(),
-                           Floor = order.Sp14132.Trim(),
-                           Flat = order.Sp14133.Trim(),
-                           СкладId = (sklad != null ? sklad.Id : ""),
-                           Склад = (sklad != null ? sklad.Descr.Trim() : ""),
-                           Статус = (int)order.Sp13982,
-                           состояние = r.statusOrder,
-                           Recipient = order.Sp14119.Trim(),
-                           Family = order.Sp14116.Trim(),
-                           Name = order.Sp14117.Trim(),
-                           SerName = order.Sp14118.Trim(),
-                           Phone = order.Sp14120.Trim(),
-                           МаршрутНаименование = r.маршрутName,
-                           isFBS = (StinClasses.StinDeliveryPartnerType)order.Sp13985 != StinClasses.StinDeliveryPartnerType.SHOP,
-                           isExpress = market.Sp14164.ToUpper().Trim() == "EXPRESS",
-                           ТипДоставки = (((StinClasses.StinDeliveryPartnerType)order.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinDeliveryType)order.Sp13988 == StinClasses.StinDeliveryType.PICKUP)) ? "Самовывоз" : "Доставка",
-                           Сумма = превЗаявка.Sp12741,
-                           DateTimeDoc = j.DateTimeIddoc,
-                           СуммаКОплате = (((StinClasses.StinDeliveryPartnerType)order.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinPaymentType)order.Sp13983 == StinClasses.StinPaymentType.POSTPAID)) ? (превЗаявка.Sp12741 - order.Sp14135) : 0,
-                           NeedToGetPayment = ((StinClasses.StinDeliveryPartnerType)order.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinPaymentType)order.Sp13983 == StinClasses.StinPaymentType.POSTPAID),
-                           ИнформацияAPI = order.Sp14055,
-                           Printed = order.Sp14192 == 1,
-                           Labels = binary != null ? binary.Id : null
-                       };
+            var dataRegistry = from r in _context.Rg4667s //ЗаказыЗаявки
+                               join doc in _context.Dh2457s on r.Sp4664 equals doc.Iddoc
+                               join m in _context.Sc11555s on doc.Sp11556 equals m.Code into _m
+                               from m in _m.DefaultIfEmpty()
+                               where (r.Period == dateRegTA) && (r.Sp4666 != 0) &&
+                                   (doc.Sp13995 != Common.ПустоеЗначение) &&
+                                   (isDriver ? ((m != null) && (m.Sp11669 == driverId)) : true)
+                               select new
+                               {
+                                   orderId = doc.Sp13995,
+                                   маршрутName = Convert.ToString(doc.Sp11557.Trim()),
+                                   складId = Convert.ToString(doc.Sp4437),
+                                   statusOrder = 1,
+                                   SumZZ = (int)r.Sp4666,
+                                   SumZ = 0,
+                                   SumN = 0,
+                                   SumD = 0
+                               };
 
-            var dataResult = data.AsEnumerable()
+            dataRegistry = dataRegistry.Concat(from r in _context.Rg4674s //Заявки
+                                               join doc in _context.Dh2457s on r.Sp4671 equals doc.Iddoc
+                                               join m in _context.Sc11555s on doc.Sp11556 equals m.Code into _m
+                                               from m in _m.DefaultIfEmpty()
+                                               where (r.Period == dateRegTA) && (r.Sp4672 != 0) &&
+                                                   (doc.Sp13995 != Common.ПустоеЗначение) &&
+                                                   (isDriver ? ((m != null) && (m.Sp11669 == driverId)) : true)
+                                               select new
+                                               {
+                                                   orderId = doc.Sp13995,
+                                                   маршрутName = Convert.ToString(doc.Sp11557.Trim()),
+                                                   складId = Convert.ToString(doc.Sp4437),
+                                                   statusOrder = 2,
+                                                   SumZZ = 0, 
+                                                   SumZ = (int)(r.Sp4672 * 100000),
+                                                   SumN = 0,
+                                                   SumD = 0
+                                               });
+            dataRegistry = dataRegistry.Concat(from r in _context.Rg11973s //НаборНаСкладе
+                                               join doc in _context.Dh11948s on r.Sp11970 equals doc.Iddoc
+                                               join m in _context.Sc11555s on doc.Sp11934 equals m.Code into _m
+                                               from m in _m.DefaultIfEmpty()
+                                               where (r.Period == dateRegTA) && (r.Sp11972 != 0) &&
+                                                    (doc.Sp14003 != Common.ПустоеЗначение) &&
+                                                    (isDriver ? ((m != null) && (m.Sp11669 == driverId)) : true)
+                                               select new
+                                               {
+                                                   orderId = doc.Sp14003,
+                                                   маршрутName = Convert.ToString(doc.Sp11935.Trim()),
+                                                   складId = Convert.ToString(r.Sp11967),
+                                                   statusOrder = 3 + (int)doc.Sp11938,
+                                                   SumZZ = 0,
+                                                   SumZ = 0,
+                                                   SumN = (int)(r.Sp11972 * 100000),
+                                                   SumD = 0
+                                               });
+            if (!isDriver)
+                dataRegistry = dataRegistry.Concat(from o in _context.Sc13994s
+                                                   where !o.Ismark && (o.Sp13982 == 5) &&
+                                                      (((o.Sp13988 == (decimal)StinClasses.StinDeliveryType.PICKUP) &&
+                                                      (o.Sp13990 >= limitSelfDate) &&
+                                                      ((StinClasses.StinDeliveryPartnerType)o.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP)) ||
+                                                      (o.Sp13990 >= limitDate))
+                                                   select new
+                                                   {
+                                                       orderId = o.Id,
+                                                       маршрутName = string.Empty,
+                                                       складId = string.Empty,
+                                                       statusOrder = 5,
+                                                       SumZZ = 0,
+                                                       SumZ = 0,
+                                                       SumN = 0,
+                                                       SumD = 1
+                                                   });
+            var dataDB = from r in dataRegistry
+                           join sklad in _context.Sc55s on r.складId equals sklad.Id into _sklad
+                           from sklad in _sklad.DefaultIfEmpty()
+                           join order in _context.Sc13994s on r.orderId equals order.Id
+                           join market in _context.Sc14042s on order.Sp14038 equals market.Id
+                           join превЗаявка in _context.Dh12747s on order.Id equals превЗаявка.Sp14007
+                           join j in _context._1sjourns on превЗаявка.Iddoc equals j.Iddoc
+                           join binary in _context.VzOrderBinaries.Where(x => x.Extension.Trim().ToUpper() == "LABELS") on order.Id equals binary.Id into _binary
+                           from binary in _binary.DefaultIfEmpty()
+                           select new
+                           {
+                               Id = order.Id,
+                               Тип = market.Sp14155.ToUpper().Trim(),
+                               MarketplaceId = order.Code.Trim(),
+                               MarketplaceType = order.Descr.Trim(), 
+                               ShipmentDate = order.Sp13990,
+                               ПредварительнаяЗаявкаНомер = order.Sp13981.Trim(),
+                               CustomerNotes = order.Sp14122,
+                               Town = order.Sp14125.Trim(),
+                               Street = order.Sp14127.Trim(),
+                               House = order.Sp14128.Trim(),
+                               Block = order.Sp14129.Trim(),
+                               Entrance = order.Sp14130.Trim(),
+                               Intercom = order.Sp14131.Trim(),
+                               Floor = order.Sp14132.Trim(),
+                               Flat = order.Sp14133.Trim(),
+                               СкладId = (sklad != null ? sklad.Id : ""),
+                               Склад = (sklad != null ? sklad.Descr.Trim() : ""),
+                               Статус = (int)order.Sp13982,
+                               состояние = r.statusOrder,
+                               Recipient = order.Sp14119.Trim(),
+                               Family = order.Sp14116.Trim(),
+                               Name = order.Sp14117.Trim(),
+                               SerName = order.Sp14118.Trim(),
+                               Phone = order.Sp14120.Trim(),
+                               МаршрутНаименование = r.маршрутName,
+                               isFBS = (StinClasses.StinDeliveryPartnerType)order.Sp13985 != StinClasses.StinDeliveryPartnerType.SHOP,
+                               isExpress = market.Sp14164.ToUpper().Trim() == "EXPRESS",
+                               ТипДоставки = (((StinClasses.StinDeliveryPartnerType)order.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinDeliveryType)order.Sp13988 == StinClasses.StinDeliveryType.PICKUP)) ? "Самовывоз" : "Доставка",
+                               Сумма = превЗаявка.Sp12741,
+                               DateTimeDoc = j.DateTimeIddoc,
+                               СуммаКОплате = (((StinClasses.StinDeliveryPartnerType)order.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinPaymentType)order.Sp13983 == StinClasses.StinPaymentType.POSTPAID)) ? (превЗаявка.Sp12741 - order.Sp14135) : 0,
+                               NeedToGetPayment = ((StinClasses.StinDeliveryPartnerType)order.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinPaymentType)order.Sp13983 == StinClasses.StinPaymentType.POSTPAID),
+                               ИнформацияAPI = order.Sp14055,
+                               Printed = order.Sp14192 == 1,
+                               Labels = binary != null ? binary.Id : null,
+                               r.SumZZ,
+                               r.SumZ,
+                               r.SumN,
+                               r.SumD
+                           };
+
+            //var dataReg = (
+            //            (from r in _context.Rg4667s //ЗаказыЗаявки
+            //             join doc in _context.Dh2457s on r.Sp4664 equals doc.Iddoc
+            //             join m in _context.Sc11555s on doc.Sp11556 equals m.Code into _m
+            //             from m in _m.DefaultIfEmpty()
+            //             where r.Period == dateRegTA &&
+            //                 doc.Sp13995 != Common.ПустоеЗначение &&
+            //                 (isDriver ? ((m != null) && (m.Sp11669 == driverId)) : true)
+            //             group new { r, doc } by new { orderId = doc.Sp13995, маршрутName = doc.Sp11557, складId = doc.Sp4437 } into gr
+            //             where gr.Sum(x => x.r.Sp4666) != 0
+            //             select new { orderId = gr.Key.orderId, маршрутName = Convert.ToString(gr.Key.маршрутName.Trim()), складId = Convert.ToString(gr.Key.складId), statusOrder = 1 })
+            //            .Concat
+            //            (from r in _context.Rg4674s //Заявки
+            //             join doc in _context.Dh2457s on r.Sp4671 equals doc.Iddoc
+            //             join m in _context.Sc11555s on doc.Sp11556 equals m.Code into _m
+            //             from m in _m.DefaultIfEmpty()
+            //             where r.Period == dateRegTA &&
+            //                 doc.Sp13995 != Common.ПустоеЗначение &&
+            //                 (isDriver ? ((m != null) && (m.Sp11669 == driverId)) : true)
+            //             group new { r, doc } by new { orderId = doc.Sp13995, маршрутName = doc.Sp11557, складId = doc.Sp4437 } into gr
+            //             where gr.Sum(x => x.r.Sp4672) != 0
+            //             select new { orderId = gr.Key.orderId, маршрутName = Convert.ToString(gr.Key.маршрутName.Trim()), складId = Convert.ToString(gr.Key.складId), statusOrder = 2 })
+            //            .Concat
+            //            (from r in _context.Rg11973s //НаборНаСкладе
+            //             join doc in _context.Dh11948s on r.Sp11970 equals doc.Iddoc
+            //             join m in _context.Sc11555s on doc.Sp11934 equals m.Code into _m
+            //             from m in _m.DefaultIfEmpty()
+            //             where r.Period == dateRegTA &&
+            //                  doc.Sp14003 != Common.ПустоеЗначение &&
+            //                  (isDriver ? ((m != null) && (m.Sp11669 == driverId)) : true)
+            //             group new { r, doc } by new { orderId = doc.Sp14003, маршрутName = doc.Sp11935, status = doc.Sp11938, складId = r.Sp11967 } into gr
+            //             where gr.Sum(x => x.r.Sp11972) != 0
+            //             select new { orderId = gr.Key.orderId, маршрутName = Convert.ToString(gr.Key.маршрутName.Trim()), складId = Convert.ToString(gr.Key.складId), statusOrder = gr.Key.status == 1 ? 4 : 3 }));
+            //if (!isDriver)
+            //{
+            //    dataReg = dataReg.Concat(from o in _context.Sc13994s
+            //                             where !o.Ismark && (o.Sp13982 == 5) &&
+            //                                (((o.Sp13988 == (decimal)StinClasses.StinDeliveryType.PICKUP) &&
+            //                                (o.Sp13990 >= limitSelfDate) &&
+            //                                ((StinClasses.StinDeliveryPartnerType)o.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP)) ||
+            //                                (o.Sp13990 >= limitDate))
+            //                             select new { orderId = o.Id, маршрутName = string.Empty, складId = string.Empty, statusOrder = 5 });
+            //}
+            //var data = from r in dataReg
+            //           join sklad in _context.Sc55s on r.складId equals sklad.Id into _sklad
+            //           from sklad in _sklad.DefaultIfEmpty()
+            //           join order in _context.Sc13994s on r.orderId equals order.Id
+            //           join market in _context.Sc14042s on order.Sp14038 equals market.Id
+            //           join превЗаявка in _context.Dh12747s on order.Id equals превЗаявка.Sp14007
+            //           join j in _context._1sjourns on превЗаявка.Iddoc equals j.Iddoc
+            //           join binary in _context.VzOrderBinaries.Where(x => x.Extension.Trim().ToUpper() == "LABELS") on order.Id equals binary.Id into _binary
+            //           from binary in _binary.DefaultIfEmpty()
+            //           select new
+            //           {
+            //               Id = order.Id,
+            //               Тип = market.Sp14155.ToUpper().Trim(),
+            //               MarketplaceId = order.Code.Trim(),
+            //               MarketplaceType = order.Descr.Trim(), // (markUse != null && !string.IsNullOrWhiteSpace(market.Sp14154) && (markUse.Sp14190.Trim() == market.Sp14154.Trim())) ? market.Sp14155.Trim() + " realFBS" : order.Descr.Trim(),
+            //               ShipmentDate = order.Sp13990,
+            //               ПредварительнаяЗаявкаНомер = order.Sp13981.Trim(),
+            //               CustomerNotes = order.Sp14122,
+            //               Town = order.Sp14125.Trim(),
+            //               Street = order.Sp14127.Trim(),
+            //               House = order.Sp14128.Trim(),
+            //               Block = order.Sp14129.Trim(),
+            //               Entrance = order.Sp14130.Trim(),
+            //               Intercom = order.Sp14131.Trim(),
+            //               Floor = order.Sp14132.Trim(),
+            //               Flat = order.Sp14133.Trim(),
+            //               СкладId = (sklad != null ? sklad.Id : ""),
+            //               Склад = (sklad != null ? sklad.Descr.Trim() : ""),
+            //               Статус = (int)order.Sp13982,
+            //               состояние = r.statusOrder,
+            //               Recipient = order.Sp14119.Trim(),
+            //               Family = order.Sp14116.Trim(),
+            //               Name = order.Sp14117.Trim(),
+            //               SerName = order.Sp14118.Trim(),
+            //               Phone = order.Sp14120.Trim(),
+            //               МаршрутНаименование = r.маршрутName,
+            //               isFBS = (StinClasses.StinDeliveryPartnerType)order.Sp13985 != StinClasses.StinDeliveryPartnerType.SHOP,
+            //               isExpress = market.Sp14164.ToUpper().Trim() == "EXPRESS",
+            //               ТипДоставки = (((StinClasses.StinDeliveryPartnerType)order.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinDeliveryType)order.Sp13988 == StinClasses.StinDeliveryType.PICKUP)) ? "Самовывоз" : "Доставка",
+            //               Сумма = превЗаявка.Sp12741,
+            //               DateTimeDoc = j.DateTimeIddoc,
+            //               СуммаКОплате = (((StinClasses.StinDeliveryPartnerType)order.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinPaymentType)order.Sp13983 == StinClasses.StinPaymentType.POSTPAID)) ? (превЗаявка.Sp12741 - order.Sp14135) : 0,
+            //               NeedToGetPayment = ((StinClasses.StinDeliveryPartnerType)order.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinPaymentType)order.Sp13983 == StinClasses.StinPaymentType.POSTPAID),
+            //               ИнформацияAPI = order.Sp14055,
+            //               Printed = order.Sp14192 == 1,
+            //               Labels = binary != null ? binary.Id : null
+            //           };
+
+            var dataResult = dataDB.AsEnumerable()
                 .GroupBy(x => new
                 {
                     x.Id,
@@ -832,6 +963,7 @@ namespace StinWeb.Controllers
                     x.Printed,
                     x.Labels
                 })
+                .Where(x => x.Sum(y => y.SumZZ + y.SumZ + y.SumN + y.SumD) != 0)
                 .OrderBy(x => x.Key.DateTimeDoc)
                 .Select(gr => new MarketplaceOrder
                 {
@@ -871,7 +1003,65 @@ namespace StinWeb.Controllers
                     Printed = gr.Key.Printed,
                 });
 
-            return PartialView("~/Views/ИнтернетЗаказы/Orders.cshtml", dataResult.AsQueryable());
+            return PartialView("~/Views/ИнтернетЗаказы/Orders.cshtml", dataResult);
+        }
+        private IActionResult OrdersConsoleLastMile()
+        {
+            //DateTime dateRegTA = _context.GetRegTA();
+            //var docComplexType = Common.Encode36((long)StinClasses.Документы.ВидДокумента.КомплекснаяПродажа).PadLeft(4);
+
+            //var dataReg = from r in _context.Rg351s
+            //              join doc in _context.Dh12542s on r.Sp364 equals docComplexType + doc.Iddoc
+            //              where (r.Period == dateRegTA) && (doc.Sp14005 != Common.ПустоеЗначение) && (r.Sp357 != 0)
+            //              group new { r, doc } by doc.Sp14005 into gr
+            //              where gr.Sum(x => x.r.Sp357) != 0
+            //              select new 
+            //              {
+            //                  orderId = gr.Key,
+            //              };
+            var data = from order in _context.Sc13994s 
+                       join market in _context.Sc14042s on order.Sp14038 equals market.Id
+                       join превЗаявка in _context.Dh12747s on order.Id equals превЗаявка.Sp14007
+                       where !order.Ismark && 
+                            ((order.Sp13982 == 14) || (order.Sp13982 == 15) || (order.Sp13982 == 16))
+                       select new MarketplaceOrder
+                       {
+                           Id = order.Id,
+                           Тип = market.Sp14155.ToUpper().Trim(),
+                           MarketplaceId = order.Code.Trim(),
+                           MarketplaceType = order.Descr.Trim(),
+                           ShipmentDate = order.Sp13990,
+                           ПредварительнаяЗаявкаНомер = order.Sp13981.Trim(),
+                           CustomerNotes = order.Sp14122,
+                           Town = order.Sp14125.Trim(),
+                           Street = order.Sp14127.Trim(),
+                           House = order.Sp14128.Trim(),
+                           Block = order.Sp14129.Trim(),
+                           Entrance = order.Sp14130.Trim(),
+                           Intercom = order.Sp14131.Trim(),
+                           Floor = order.Sp14132.Trim(),
+                           Flat = order.Sp14133.Trim(),
+                           Status = (int)order.Sp13982,
+                           StatusCode = 7,
+                           RecipientName = order.Sp14119.Trim(),
+                           Family = order.Sp14116.Trim(),
+                           Name = order.Sp14117.Trim(),
+                           SerName = order.Sp14118.Trim(),
+                           Phone = order.Sp14120.Trim(),
+                           isFBS = (StinClasses.StinDeliveryPartnerType)order.Sp13985 != StinClasses.StinDeliveryPartnerType.SHOP,
+                           isExpress = market.Sp14164.ToUpper().Trim() == "EXPRESS",
+                           ТипДоставки = (((StinClasses.StinDeliveryPartnerType)order.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinDeliveryType)order.Sp13988 == StinClasses.StinDeliveryType.PICKUP)) ? "Самовывоз" : "Доставка",
+                           Сумма = превЗаявка.Sp12741,
+                           СуммаКОплате = (((StinClasses.StinDeliveryPartnerType)order.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinPaymentType)order.Sp13983 == StinClasses.StinPaymentType.POSTPAID)) ? (превЗаявка.Sp12741 - order.Sp14135) : 0,
+                           NeedToGetPayment = ((StinClasses.StinDeliveryPartnerType)order.Sp13985 == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinPaymentType)order.Sp13983 == StinClasses.StinPaymentType.POSTPAID),
+                           ИнформацияAPI = order.Sp14055,
+                           Labels = "",
+                           СкладIds = "",
+                           Склады = "",
+                           МаршрутНаименование = "",
+                           Printed = false,
+                       };
+            return PartialView("~/Views/ИнтернетЗаказы/Orders.cshtml", data);
         }
         [HttpGet]
         public async Task<IActionResult> GetLabelsPdf(string id)

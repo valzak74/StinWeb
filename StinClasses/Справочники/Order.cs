@@ -21,6 +21,11 @@ namespace StinClasses.Справочники
     //8 - получен статус PROCESSING - STARTED
     //9 - нами отправлен статус DELIVERY или PICKUP (в зависимости от OrderItems.DeliveryType)
     //13 - спорный ордер
+    //14 => "Доставляется",
+    //15 => "Возврат",
+    //16 - Невыкуп
+    //17 - Возврат получен
+    //18 - Возврат компенсирован
 
     //статусы в регистре
     //10 - отправлен в набор
@@ -609,81 +614,88 @@ namespace StinClasses.Справочники
         }
         public async Task<string> SetOrderScanned(DateTime shipDate, string campaignInfo, string barcode, int scanMark, CancellationToken cancellationToken)
         {
-            var campaignData = campaignInfo.Split('/');
-            var campaignId = campaignData[0].Replace('_', ' ');
-            var marketData = await _context.Sc14042s
-                .Where(x => x.Id == campaignId)
-                .Select(x => new 
-                { 
-                    code = x.Code.Trim(),
-                    type = x.Sp14155.Trim().ToUpper() + (campaignData.Length > 1 ? "_REAL" : ""),
-                })
-                .SingleOrDefaultAsync(cancellationToken);
-            int logNumber = 1;
-            string[] barcodeData;
-            Sc13994 entity = null;
-            switch (marketData.type)
+            try
             {
-                case "OZON":
-                    entity = await _context.Sc13994s.FirstOrDefaultAsync(x => (x.Sp13987.Trim() == barcode) || (x.Sp13992.Trim() == barcode), cancellationToken); //ServiceName or RegionName
-                    break;
-                case "SBER":
-                    barcodeData = barcode.Split('*');
-                    if ((barcodeData.Length != 3) && !int.TryParse(barcodeData[2], out logNumber))
-                        return "Формат штрихкода не распознан";
-                    entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Sp13981.Trim() == barcodeData[1], cancellationToken); //Id (DW0001235-2023)
-                    break;
-                case "ЯНДЕКС":
-                    barcodeData = barcode.Split('-');
-                    if (barcodeData.Length == 1)
-                        entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Code.Trim() == barcode);
-                    else if (barcodeData.Length == 2)
+                var campaignData = campaignInfo.Split('/');
+                var campaignId = campaignData[0].Replace('_', ' ');
+                var marketData = await _context.Sc14042s
+                    .Where(x => x.Id == campaignId)
+                    .Select(x => new
                     {
-                        if (barcodeData[0].All(x => char.IsDigit(x)))
+                        code = x.Code.Trim(),
+                        type = x.Sp14155.Trim().ToUpper() + (campaignData.Length > 1 ? "_REAL" : ""),
+                    })
+                    .SingleOrDefaultAsync(cancellationToken);
+                int logNumber = 1;
+                string[] barcodeData;
+                Sc13994 entity = null;
+                switch (marketData.type)
+                {
+                    case "OZON":
+                        entity = await _context.Sc13994s.FirstOrDefaultAsync(x => (x.Sp13987.Trim() == barcode) || (x.Sp13992.Trim() == barcode), cancellationToken); //ServiceName or RegionName
+                        break;
+                    case "SBER":
+                        barcodeData = barcode.Split('*');
+                        if ((barcodeData.Length != 3) && !int.TryParse(barcodeData[2], out logNumber))
+                            return "Формат штрихкода не распознан";
+                        entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Sp13981.Trim() == barcodeData[1], cancellationToken); //Id (DW0001235-2023)
+                        break;
+                    case "ЯНДЕКС":
+                        barcodeData = barcode.Split('-');
+                        if (barcodeData.Length == 1)
+                            entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Code.Trim() == barcode);
+                        else if (barcodeData.Length == 2)
                         {
-                            entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Code.Trim() == barcodeData[0], cancellationToken);
-                            int.TryParse(barcodeData[1], out logNumber);
+                            if (barcodeData[0].All(x => char.IsDigit(x)))
+                            {
+                                entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Code.Trim() == barcodeData[0], cancellationToken);
+                                int.TryParse(barcodeData[1], out logNumber);
+                            }
+                            else
+                                entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Sp13981.Trim() == barcode, cancellationToken); //Id (DW0001235-2023)
                         }
                         else
-                            entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Sp13981.Trim() == barcode, cancellationToken); //Id (DW0001235-2023)
-                    }
-                    else
-                        return "Формат штрихкода не распознан";
-                    break;
-                case "ALIEXPRESS":
-                    entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Sp13987.Trim() == barcode); //ServiceName
-                    break;
-                case "WILDBERRIES":
-                    entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Sp13992.Trim() == barcode); //RegionName
-                    break;
-                default:
-                    entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Code.Trim() == barcode);
-                    break;
-            }
+                            return "Формат штрихкода не распознан";
+                        break;
+                    case "ALIEXPRESS":
+                        entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Sp13987.Trim() == barcode); //ServiceName
+                        break;
+                    case "WILDBERRIES":
+                        entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Sp13992.Trim() == barcode); //RegionName
+                        break;
+                    default:
+                        entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Code.Trim() == barcode);
+                        break;
+                }
 
-            if (entity == null)
-                return "Штрихкод не обнаружен";
-            if (entity.Sp14038 != campaignId)
-                return "Штрихкод от другого маркетплейс";
-            if (entity.Sp13990.Date != shipDate.Date)
-                return "Неверная дата доставки";
-            if (entity.Sp13982 == 5)
-                return "Заказ отменен";
-            if (entity.Ismark)
-                return "Установлена пометка удаления";
-            var logInfo = entity.Sp14255.Trim();
-            string logNumberStr = logNumber.ToString();
-            if (logInfo.Split(';').Any(x => x == logNumberStr))
-                return "Повторное сканирование";
-            entity.Sp14254 += scanMark;
-            if (!string.IsNullOrEmpty(logInfo))
-                logInfo += ";";
-            logInfo += logNumberStr;
-            entity.Sp14255 = logInfo;
-            _context.Update(entity);
-            _context.РегистрацияИзмененийРаспределеннойИБ(13994, entity.Id);
-            await _context.SaveChangesAsync(cancellationToken);
-            return "";
+                if (entity == null)
+                    return "Штрихкод не обнаружен";
+                if (entity.Sp14038 != campaignId)
+                    return "Штрихкод от другого маркетплейс";
+                if (entity.Sp13990.Date != shipDate.Date)
+                    return "Неверная дата доставки";
+                if (entity.Sp13982 == 5)
+                    return "Заказ отменен";
+                if (entity.Ismark)
+                    return "Установлена пометка удаления";
+                var logInfo = entity.Sp14255.Trim();
+                string logNumberStr = logNumber.ToString();
+                if (logInfo.Split(';').Any(x => x == logNumberStr))
+                    return "Повторное сканирование";
+                entity.Sp14254 += scanMark;
+                if (!string.IsNullOrEmpty(logInfo))
+                    logInfo += ";";
+                logInfo += logNumberStr;
+                entity.Sp14255 = logInfo;
+                _context.Update(entity);
+                _context.РегистрацияИзмененийРаспределеннойИБ(13994, entity.Id);
+                await _context.SaveChangesAsync(cancellationToken);
+                return "";
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
         }
         public async Task ClearOrderScanned(DateTime shipDate, string campaignId, string warehouseId, CancellationToken cancellationToken)
         {
