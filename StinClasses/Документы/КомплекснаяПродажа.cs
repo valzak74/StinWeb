@@ -222,13 +222,12 @@ namespace StinClasses.Документы
         {
             try
             {
-                _1sjourn j = GetEntityJourn(0, 0, 4588, doc.Общие.ВидДокумента10, null, "КомплекснаяПродажа",
+                _1sjourn j = GetEntityJourn(_context, 4588, doc.Общие.ВидДокумента10, null, "КомплекснаяПродажа",
                     null, doc.Общие.ДатаДок,
                     doc.Общие.Фирма.Id,
                     doc.Общие.Автор.Id,
                     doc.Склад.Наименование,
                     doc.Контрагент.Наименование);
-                await _context._1sjourns.AddAsync(j);
 
                 doc.Общие.IdDoc = j.Iddoc;
                 doc.Общие.DateTimeIdDoc = j.DateTimeIddoc;
@@ -331,9 +330,9 @@ namespace StinClasses.Документы
                         датаОтправки = маршрут.ДатаОтправки;
                     }
                     КоличествоДвижений++;
-                    await _context._1sconsts.AddAsync(_context.ИзменитьПериодическиеРеквизиты(набор.Маршрут.Id, 11552, j.Iddoc, doc.Общие.ДатаДок, string.Empty, КоличествоДвижений));
+                    _context.ИзменитьПериодическиеРеквизиты(набор.Маршрут.Id, 11552, j.Iddoc, doc.Общие.ДатаДок, string.Empty, КоличествоДвижений);
                     КоличествоДвижений++;
-                    await _context._1sconsts.AddAsync(_context.ИзменитьПериодическиеРеквизиты(набор.Маршрут.Id, 11553, j.Iddoc, doc.Общие.ДатаДок, string.Empty, КоличествоДвижений));
+                    _context.ИзменитьПериодическиеРеквизиты(набор.Маршрут.Id, 11553, j.Iddoc, doc.Общие.ДатаДок, string.Empty, КоличествоДвижений);
                 }
 
                 if (doc.Маршрут != null && !string.IsNullOrEmpty(doc.Маршрут.Id) && !string.IsNullOrEmpty(doc.Маршрут.Наименование))
@@ -341,9 +340,9 @@ namespace StinClasses.Документы
                     if (!string.IsNullOrEmpty(водительId) && (датаОтправки > Common.min1cDate))
                         await _маршрут.ОбновитьМаршрут(doc.Маршрут.Id, водительId, датаОтправки);
                     КоличествоДвижений++;
-                    await _context._1sconsts.AddAsync(_context.ИзменитьПериодическиеРеквизиты(doc.Маршрут.Id, 11552, j.Iddoc, doc.Общие.ДатаДок, Common.Encode36(doc.Общие.ВидДокумента10).PadLeft(4) + j.Iddoc, КоличествоДвижений));
+                    _context.ИзменитьПериодическиеРеквизиты(doc.Маршрут.Id, 11552, j.Iddoc, doc.Общие.ДатаДок, Common.Encode36(doc.Общие.ВидДокумента10).PadLeft(4) + j.Iddoc, КоличествоДвижений);
                     КоличествоДвижений++;
-                    await _context._1sconsts.AddAsync(_context.ИзменитьПериодическиеРеквизиты(doc.Маршрут.Id, 11553, j.Iddoc, doc.Общие.ДатаДок, doc.Маршрут.Наименование, КоличествоДвижений));
+                    _context.ИзменитьПериодическиеРеквизиты(doc.Маршрут.Id, 11553, j.Iddoc, doc.Общие.ДатаДок, doc.Маршрут.Наименование, КоличествоДвижений);
                 }
 
                 if (doc.Order != null)

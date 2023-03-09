@@ -115,13 +115,12 @@ namespace StinClasses.Документы
         {
             try
             {
-                _1sjourn j = GetEntityJourn(0, 0, 4588, doc.Общие.ВидДокумента10, null, "Спрос",
+                _1sjourn j = GetEntityJourn(_context, 4588, doc.Общие.ВидДокумента10, null, "Спрос",
                     null, doc.Общие.ДатаДок,
                     doc.Общие.Фирма.Id,
                     doc.Общие.Автор.Id,
                     doc.Склад.Наименование,
                     doc.Контрагент.Наименование);
-                await _context._1sjourns.AddAsync(j);
 
                 doc.Общие.IdDoc = j.Iddoc;
                 doc.Общие.DateTimeIdDoc = j.DateTimeIddoc;

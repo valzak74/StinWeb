@@ -22,9 +22,7 @@ using StinClasses.Models;
 using JsonExtensions;
 using HttpExtensions;
 using System.Threading;
-using YandexClasses;
-using NPOI.SS.Formula.Functions;
-using Microsoft.AspNetCore.Hosting.Server;
+using System.Text;
 
 namespace StinWeb.Controllers
 {
@@ -43,6 +41,7 @@ namespace StinWeb.Controllers
         private readonly IWebHostEnvironment _webHostEnvironment;
         private StinClasses.Справочники.IOrder _order;
         private StinClasses.Справочники.IНоменклатура _номенклатура;
+        private StinClasses.Справочники.IСообщения _сообщения;
         private StinClasses.Документы.IНабор _набор;
         private StinClasses.Регистры.IРегистрНаборНаСкладе _регистрНабор;
 
@@ -58,6 +57,7 @@ namespace StinWeb.Controllers
             _номенклатураRepository = new НоменклатураRepository(context);
             _order = new StinClasses.Справочники.OrderEntity(context);
             _номенклатура = new StinClasses.Справочники.НоменклатураEntity(context);
+            _сообщения = new StinClasses.Справочники.СообщенияEntity(context);
             _набор = new StinClasses.Документы.Набор(context);
             _регистрНабор = new StinClasses.Регистры.Регистр_НаборНаСкладе(context);
         }
@@ -74,6 +74,7 @@ namespace StinWeb.Controllers
                     _номенклатураRepository.Dispose();
                     _order.Dispose();
                     _номенклатура.Dispose();
+                    _сообщения.Dispose();
                     _набор.Dispose();
                     _регистрНабор.Dispose();
                     _context.Dispose();
@@ -129,16 +130,92 @@ namespace StinWeb.Controllers
             return View("Console");
         }
         [Authorize]
+        public IActionResult NaborRegistration()
+        {
+            return View("NaborRegistration");
+        }
+        [HttpPost]
+        public async Task<IActionResult> NaborRegistrationScan(string barcodeText, CancellationToken cancellationToken)
+        {
+            if (!string.IsNullOrEmpty(barcodeText) && (barcodeText.Length == 13) && (barcodeText.Substring(0,4) == "%97W"))
+            {
+                var docId = barcodeText.Substring(4).Replace('%', ' ');
+                var formNabor = await _набор.GetФормаНаборById(docId);
+                if (formNabor.Завершен)
+                    return StatusCode(502, "Набор уже готов. Ничего не требуется");
+                formNabor.Завершен = true;
+                var реквизитыПроведенныхДокументов = new List<StinClasses.Документы.ОбщиеРеквизиты>();
+                using var tran = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    var result = await _набор.ЗаписатьПровестиAsync(formNabor);
+                    if (result != null)
+                    {
+                        if (_context.Database.CurrentTransaction != null)
+                            tran.Rollback();
+                        return StatusCode(502, result.Description);
+                    }
+                    else
+                    {
+                        реквизитыПроведенныхДокументов.Add(formNabor.Общие);
+                        await _набор.ОбновитьАктивность(реквизитыПроведенныхДокументов);
+                    }
+                    if (formNabor.Общие.Автор.Id != Common.UserRobot)
+                    {
+                        var sbSubject = new StringBuilder("Набор готов (");
+                        sbSubject.Append(formNabor.Контрагент.Наименование);
+                        sbSubject.Append(" ");
+                        sbSubject.Append(formNabor.Склад.Наименование);
+                        sbSubject.Append("/");
+                        sbSubject.Append(formNabor.ПодСклад.Наименование);
+                        sbSubject.Append(")");
+                        var sbMessage = new StringBuilder("Набор ");
+                        sbMessage.Append(formNabor.Общие.НомерДок);
+                        sbMessage.Append(" от ");
+                        sbMessage.Append(formNabor.Общие.ДатаДок.ToString("dd.MM.yyyy"));
+                        sbMessage.AppendLine(" готов");
+                        sbMessage.Append("Контрагент: ");
+                        sbMessage.AppendLine(formNabor.Контрагент.Наименование);
+                        sbMessage.Append("Склад: ");
+                        sbMessage.AppendLine(formNabor.Склад.Наименование);
+                        sbMessage.Append("Место хранения: ");
+                        sbMessage.AppendLine(formNabor.ПодСклад.Наименование);
+                        sbMessage.Append("Клиент приглашается за товаром!");
+                        await _сообщения.SendMessage(sbSubject.ToString(), sbMessage.ToString(), formNabor.Общие.Автор.Id, Common.UserRobot);
+                    }
+                    if (_context.Database.CurrentTransaction != null)
+                        tran.Commit();
+                }
+                catch (Exception ex)
+                {
+                    if (_context.Database.CurrentTransaction != null)
+                        _context.Database.CurrentTransaction.Rollback();
+                    return StatusCode(502, ex.Message);
+                }
+                return await PrintFormNabor(formNabor, cancellationToken);
+            }
+            return StatusCode(502, "Недопустимое значение штрихкода");
+        }
+        [Authorize]
         public async Task<IActionResult> LoadingList(CancellationToken cancellationToken)
         {
             var Пользователь = await _userRepository.GetUserByRowIdAsync(Int32.Parse(User.FindFirstValue("UserRowId")));
             var CampaignIds = _context.Sc14042s
-                .Where(x => !x.Ismark && (x.Sp14164.Trim().ToUpper() == "FBS"))
+                .Where(x => !x.Ismark && (x.Sp14164.Trim().ToUpper() == "FBS") && (x.Sp14155.Trim().ToUpper() != "ЯНДЕКС"))
                 .Select(x => new { CampaignId = x.Id.Replace(" ","_"), Description = x.Sp14155.Trim() + " " + x.Descr.Trim() })
+                .AsEnumerable()
                 .Concat(
                 _context.Sc14042s
                 .Where(x => !x.Ismark && (x.Sp14155.Trim().ToUpper() == "OZON") && (x.Sp14164.Trim().ToUpper() == "FBS") && !string.IsNullOrWhiteSpace(x.Sp14154))
                 .Select(x => new { CampaignId = x.Id.Replace(" ", "_") + "/" + x.Sp14154.Trim(), Description = x.Sp14155.Trim() + " " + x.Sp14195.Trim() })
+                .AsEnumerable()
+                )
+                .Concat(
+                _context.Sc14042s
+                .Where(x => !x.Ismark && (x.Sp14164.Trim().ToUpper() == "FBS") && (x.Sp14155.Trim().ToUpper() == "ЯНДЕКС"))
+                .AsEnumerable()
+                .GroupBy(x => x.Sp14155.Trim().ToUpper())
+                .Select(gr => new { CampaignId = string.Join(',', gr.Select(y => y.Id.Replace(" ", "_"))), Description = "Яндекс FBS (все маркетплейс)" })
                 )
                 .OrderBy(x => x.Description);
             ViewBag.CampaignIds = new SelectList(CampaignIds, "CampaignId", "Description", CampaignIds.Select(x => x.CampaignId).FirstOrDefault());
@@ -148,11 +225,11 @@ namespace StinWeb.Controllers
         public async Task<PartialViewResult> CreateLoadingList(string campaignInfo, DateTime reportDate, int reportType, CancellationToken cancellationToken)
         {
             var campaignData = campaignInfo.Split('/');
-            var campaignId = campaignData[0].Replace('_',' ');
+            var campaignIds = campaignData[0].Split(',').Select(x => x.Replace('_', ' ')).ToList();
             var warehouseId = (campaignData.Length > 1) ? campaignData[1] : string.Empty;
             if (reportDate == DateTime.MinValue)
                 reportDate = DateTime.Today;
-            return PartialView("~/Views/ИнтернетЗаказы/_LoadingList.cshtml", await GetLoadingListData(reportDate, reportType, campaignId, null, warehouseId, cancellationToken));
+            return PartialView("~/Views/ИнтернетЗаказы/_LoadingList.cshtml", await GetLoadingListData(reportDate, reportType, campaignIds, null, warehouseId, cancellationToken));
         }
         [HttpPost]
         public async Task<IActionResult> LoadingListOrderScan(string campaignInfo, DateTime shipDate, string barcodeText, CancellationToken cancellationToken)
@@ -164,9 +241,9 @@ namespace StinWeb.Controllers
         public async Task<IActionResult> LoadingListClearScanned(string campaignInfo, DateTime shipDate, CancellationToken cancellationToken)
         {
             var campaignData = campaignInfo.Split('/');
-            var campaignId = campaignData[0].Replace('_', ' ');
+            var campaignIds = campaignData[0].Split(',').Select(x => x.Replace('_', ' ')).ToList();
             var warehouseId = (campaignData.Length > 1) ? campaignData[1] : string.Empty;
-            await _order.ClearOrderScanned(shipDate, campaignId, warehouseId, cancellationToken);
+            await _order.ClearOrderScanned(shipDate, campaignIds, warehouseId, cancellationToken);
             return Ok();
         }
         [HttpPost]
@@ -214,7 +291,7 @@ namespace StinWeb.Controllers
             }, 1).ToList();
             return Ok("".CreateOrUpdateHtmlPrintPage("ЛистСборки", printData[0]));
         }
-        async Task<IEnumerable<LoadingListOrder>> GetLoadingListData(DateTime reportDate, int reportType, string campaignId, string campaignCode, string warehouseId, CancellationToken cancellationToken)
+        async Task<IEnumerable<LoadingListOrder>> GetLoadingListData(DateTime reportDate, int reportType, List<string> campaignIds, string campaignCode, string warehouseId, CancellationToken cancellationToken)
         {
             var data = await (from order in _context.Sc13994s
                               join market in _context.Sc14042s on order.Sp14038 equals market.Id
@@ -224,7 +301,7 @@ namespace StinWeb.Controllers
                               join markUse in _context.Sc14152s on new { nomId = nom.Id, marketId = market.Id } equals new { nomId = markUse.Parentext, marketId = markUse.Sp14147 } into _markUse
                               from markUse in _markUse.DefaultIfEmpty()
                               where !order.Ismark && (order.Sp13982 != 5) &&
-                                    (!string.IsNullOrEmpty(campaignId) ? market.Id == campaignId : (market.Code.Trim() == campaignCode)) &&
+                                    (campaignIds != null ? campaignIds.Contains(market.Id) : (market.Code.Trim() == campaignCode)) &&
                                     (order.Sp13990.Date == reportDate) &&
                                     (!string.IsNullOrEmpty(warehouseId) ? markUse.Sp14190.Trim() == warehouseId :
                                         (!string.IsNullOrWhiteSpace(market.Sp14154) ? markUse.Sp14190.Trim() != market.Sp14154.Trim() :
@@ -553,10 +630,10 @@ namespace StinWeb.Controllers
                         limitTime,
                         deliveryMethodId,
                         cancellationToken);
-                    if (ozonResult.Item1 != null)
-                        return File(ozonResult.Item1, "application/pdf");
+                    if (ozonResult.data != null)
+                        return File(ozonResult.data, "application/pdf");
                     if (ozonResult.Item2 != null)
-                        return BadRequest(new ExceptionData { Code = -100, Description = ozonResult.Item2 });
+                        return BadRequest(new ExceptionData { Code = -100, Description = ozonResult.error });
                 }
                 else if (data.тип == "ALIEXPRESS")
                 {
@@ -1007,18 +1084,6 @@ namespace StinWeb.Controllers
         }
         private IActionResult OrdersConsoleLastMile()
         {
-            //DateTime dateRegTA = _context.GetRegTA();
-            //var docComplexType = Common.Encode36((long)StinClasses.Документы.ВидДокумента.КомплекснаяПродажа).PadLeft(4);
-
-            //var dataReg = from r in _context.Rg351s
-            //              join doc in _context.Dh12542s on r.Sp364 equals docComplexType + doc.Iddoc
-            //              where (r.Period == dateRegTA) && (doc.Sp14005 != Common.ПустоеЗначение) && (r.Sp357 != 0)
-            //              group new { r, doc } by doc.Sp14005 into gr
-            //              where gr.Sum(x => x.r.Sp357) != 0
-            //              select new 
-            //              {
-            //                  orderId = gr.Key,
-            //              };
             var data = from order in _context.Sc13994s 
                        join market in _context.Sc14042s on order.Sp14038 equals market.Id
                        join превЗаявка in _context.Dh12747s on order.Id equals превЗаявка.Sp14007
@@ -1064,11 +1129,25 @@ namespace StinWeb.Controllers
             return PartialView("~/Views/ИнтернетЗаказы/Orders.cshtml", data);
         }
         [HttpGet]
-        public async Task<IActionResult> GetLabelsPdf(string id)
+        public async Task<IActionResult> GetLabelsPdf(string id, bool isNaborDocId = false)
         {
             if (!string.IsNullOrEmpty(id))
+            {
+                if (id.Length > 9)
+                    id = id.Substring(id.Length - 9);
                 id = id.Replace('_', ' ');
-            var f = await (from b in _context.VzOrderBinaries
+            }
+            byte[] f = null;
+            if (isNaborDocId)
+            {
+                f = await (from b in _context.VzOrderBinaries
+                           join dh in _context.Dh11948s on b.Id equals dh.Sp14003
+                           where (dh.Iddoc == id) && (b.Extension == "LABELS")
+                           select b.Binary).FirstOrDefaultAsync();
+                id = await _context.Dh11948s.Where(x => x.Iddoc == id).Select(x => x.Sp14003).FirstOrDefaultAsync();
+            }
+            else
+                f = await (from b in _context.VzOrderBinaries
                            where b.Id == id && (b.Extension == "LABELS")
                            select b.Binary).FirstOrDefaultAsync();
             if (f?.Length > 0)
@@ -1092,6 +1171,8 @@ namespace StinWeb.Controllers
             }
             else
             {
+                if (id == Common.ПустоеЗначение)
+                    return Ok();
                 string webRootPath = _webHostEnvironment.WebRootPath;
                 string contentRootPath = _webHostEnvironment.ContentRootPath;
 
@@ -1254,13 +1335,184 @@ namespace StinWeb.Controllers
             return BadRequest(new ExceptionData { Code = -100, Description = "AddToDelivery : Unhandling exception" });
         }
         [HttpPost]
+        public async Task<IActionResult> PrintFormNabor(StinClasses.Документы.ФормаНабор form, CancellationToken cancellationToken)
+        {
+            string message = "";
+            var data = Enumerable.Repeat(new
+            {
+                Barcode = "",
+                Название = "",
+                НомерДок = "",
+                ДатаДок = "",
+                Маршрут = "",
+                КолДокументов = "",
+                OrderId = "",
+                Тип = "",
+                OrderNo = "",
+                Поставщик = "",
+                Покупатель = "",
+                Склад = "",
+                ТаблЧасть = Enumerable.Repeat(new
+                {
+                    Ном = "",
+                    Товар = "",
+                    Наименование = "",
+                    Производитель = "",
+                    Артикул = "",
+                    КолВо = 0m,
+                    Количество = "",
+                    Единица = "",
+                    Цена = "",
+                    ЦенаСоСкидкой = "",
+                    Сумма = "",
+                    СуммаСоСкидкой = ""
+                }, 0).ToList(),
+                Итого = "",
+                ИтогоСоСкидкой = "",
+                КолСтрок = "",
+                СуммаПрописью = "",
+                СуммаПрописьюСоСкидкой = "",
+                ФирмаНаименование = "",
+                ФирмаАдрес = "",
+                ФирмаИНН = "",
+                ФирмаСайт = "",
+                ФирмаEmail = "",
+                ФирмаТелефон = "",
+                КлиентНаименование = "",
+                КлиентАдрес = "",
+                КлиентТелефон = "",
+                ИтКолВо = "",
+                СуммаНДС = "",
+                СуммаНДСсоСкидкой = ""
+            }, 0).FirstOrDefault();
+            var таблЧасть = Enumerable.Repeat(new
+            {
+                Ном = "",
+                Товар = "",
+                Наименование = "",
+                Производитель = "",
+                Артикул = "",
+                КолВо = 0m,
+                Количество = "",
+                Единица = "",
+                Цена = "",
+                ЦенаСоСкидкой = "",
+                Сумма = "",
+                СуммаСоСкидкой = ""
+            }, 0).ToList();
+            var singleBoxMarket = new List<string> { "ALIEXPRESS", "OZON", "WILDBERRIES" };
+            bool withOrder = form.Order != null;
+            var nomQuantums = await _номенклатура.ПолучитьКвант(form.ТабличнаяЧасть.Select(x => x.Номенклатура.Code).ToList(), cancellationToken);
+            int номСтроки = 0; decimal итого = 0; decimal итогоСоСкидкой = 0;
+            foreach (var row in form.ТабличнаяЧасть)
+            {
+                номСтроки++;
+                decimal ценаСоСкидкой = 0;
+                decimal суммаСоСкидкой = 0;
+                if (withOrder)
+                {
+                    var orderItems = form.Order.Items.Where(x => x.НоменклатураId == row.Номенклатура.Id);
+                    var orderCount = orderItems.Sum(x => x.Количество);
+                    var orderPriceDiscount = orderItems.Sum(x => x.ЦенаСоСкидкой) / orderItems.Count();
+                    ценаСоСкидкой = row.Количество == orderCount ? orderPriceDiscount : (row.Количество * orderPriceDiscount / orderCount);
+                    суммаСоСкидкой = ценаСоСкидкой * row.Количество;
+                }
+                итого += row.Сумма;
+                итогоСоСкидкой += суммаСоСкидкой;
+                var quantum = (int)nomQuantums.Where(q => q.Key == row.Номенклатура.Id).Select(q => q.Value).FirstOrDefault();
+                var accessoriesList = await _номенклатура.GetAccessoriesList(row.Номенклатура.Id);
+                decimal boxCount = 1;
+                if (!singleBoxMarket.Contains(form.Order?.Тип))
+                {
+                    boxCount = await _номенклатура.ПолучитьКоличествоМест(row.Номенклатура.Id);
+                    if (boxCount < 1)
+                        boxCount = 1;
+                }
+                var sbBoxCount = new StringBuilder("Комплект ");
+                sbBoxCount.Append(boxCount.ToString("0", CultureInfo.InvariantCulture));
+                sbBoxCount.Append(" грузомест");
+                sbBoxCount.Append(boxCount == 1 ? "о" : "а");
+                таблЧасть.Add(new
+                {
+                    Ном = номСтроки.ToString("0", CultureInfo.InvariantCulture),
+                    Товар = accessoriesList.Count > 0 ? sbBoxCount.ToString() : row.Номенклатура.Наименование + (((quantum > 1) && (row.Количество >= quantum)) ? " (пакуй по " + quantum.ToString("0", CultureInfo.InvariantCulture) + " " + row.Единица.Наименование + ")" : ""),
+                    Наименование = accessoriesList.Count > 0 ? sbBoxCount.ToString() : row.Номенклатура.Наименование,
+                    Производитель = accessoriesList.Count > 0 ? "" : row.Номенклатура.Производитель.Наименование,
+                    Артикул = row.Номенклатура.Артикул,
+                    КолВо = accessoriesList.Count > 0 ? 0 : row.Количество,
+                    Количество = accessoriesList.Count > 0 ? "" : row.Количество.ToString("0", CultureInfo.InvariantCulture),
+                    Единица = accessoriesList.Count > 0 ? "" : row.Единица.Наименование,
+                    Цена = row.Цена.ToString("0.00", CultureInfo.InvariantCulture),
+                    ЦенаСоСкидкой = ценаСоСкидкой.ToString("0.00", CultureInfo.InvariantCulture),
+                    Сумма = row.Сумма.ToString("0.00", CultureInfo.InvariantCulture),
+                    СуммаСоСкидкой = суммаСоСкидкой.ToString("0.00", CultureInfo.InvariantCulture)
+                });
+                string pref = "&nbsp;&nbsp;&nbsp;&nbsp;";
+                foreach (var comp in accessoriesList)
+                    таблЧасть.Add(new
+                    {
+                        Ном = "",
+                        Товар = pref + comp.Key.Наименование,
+                        Наименование = pref + comp.Key.Наименование,
+                        Производитель = comp.Key.Производитель.Наименование,
+                        Артикул = comp.Key.Артикул,
+                        КолВо = comp.Value * row.Количество,
+                        Количество = (comp.Value * row.Количество).ToString("0", CultureInfo.InvariantCulture),
+                        Единица = comp.Key.Единица.Наименование,
+                        Цена = "",
+                        ЦенаСоСкидкой = "",
+                        Сумма = "",
+                        СуммаСоСкидкой = ""
+                    });
+            }
+            var суммаПрописью = итого.Прописью();
+            var barcodeText = form.Общие.ВидДокумента36.PadLeft(4, '%') + form.Общие.IdDoc.Replace(' ', '%');
+            data = new
+            {
+                Barcode = Convert.ToBase64String(PdfHelper.PdfFunctions.Instance.GenerateBarcode128(barcodeText, 45, 400, true)),
+                Название = form.Завершен ? "Готов" : "Набор",
+                НомерДок = form.Общие.НомерДок,
+                ДатаДок = form.Общие.ДатаДок.ToString("dd.MM.yyyy"),
+                Маршрут = form.Маршрут?.Наименование ?? "",
+                КолДокументов = "Док-тов = " + form.ТабличнаяЧасть.Select(x => x.ФирмаНоменклатуры.Id).Distinct().Count().ToString(),
+                OrderId = form.Order?.Id ?? "",
+                Тип = form.Order?.Тип,
+                OrderNo = form.Order?.Тип == "ALIEXPRESS" ? (form.Order?.MarketplaceId ?? "") + " / " + (form.Order?.DeliveryServiceName ?? "") : (form.Order?.MarketplaceId ?? ""),
+                Поставщик = form.Общие.Фирма.Наименование,
+                Покупатель = form.Контрагент?.Наименование ?? "",
+                Склад = (form.Склад?.Наименование ?? "") + "/" + (form.ПодСклад?.Наименование ?? ""),
+                ТаблЧасть = таблЧасть,
+                Итого = итого.ToString("0.00", CultureInfo.InvariantCulture),
+                ИтогоСоСкидкой = итогоСоСкидкой.ToString("0.00", CultureInfo.InvariantCulture),
+                КолСтрок = номСтроки.ToString("0", CultureInfo.InvariantCulture),
+                СуммаПрописью = суммаПрописью,
+                СуммаПрописьюСоСкидкой = итогоСоСкидкой.Прописью(),
+                ФирмаНаименование = form.Общие.Фирма.ЮрЛицо.Наименование,
+                ФирмаАдрес = form.Общие.Фирма.ЮрЛицо.Адрес,
+                ФирмаИНН = form.Общие.Фирма.ЮрЛицо.ИНН,
+                ФирмаСайт = "https://stinmarket.ru",
+                ФирмаEmail = "omfbs@yandex.ru",
+                ФирмаТелефон = "+7-927-768-97-89",
+                КлиентНаименование = form.Order?.Recipient?.Recipient ?? "",
+                КлиентАдрес = form.Order?.Address?.Street ?? "",
+                КлиентТелефон = form.Order?.Recipient?.Phone ?? "",
+                ИтКолВо = таблЧасть.Sum(x => x.КолВо).ToString("0", CultureInfo.InvariantCulture),
+                СуммаНДС = form.Общие.Фирма.ЮрЛицо.УчитыватьНДС == 1 ? "В том числе НДС " + (итого * 0.166666666666666666666666666667m).ToString("0.00", CultureInfo.InvariantCulture) + " руб." : "Без НДС",
+                СуммаНДСсоСкидкой = form.Общие.Фирма.ЮрЛицо.УчитыватьНДС == 1 ? "В том числе НДС " + (итогоСоСкидкой * 0.166666666666666666666666666667m).ToString("0.00", CultureInfo.InvariantCulture) + " руб." : "Без НДС"
+            };
+            message = message.CreateOrUpdateHtmlPrintPage("Набор", data);
+            return Ok(message);
+        }
+        [HttpPost]
         public async Task<IActionResult> ПечатьНабор(string[] ids, CancellationToken cancellationToken)
         {
             string message = "";
             var printedOrderIds = new List<string>();
+            var singleBoxMarket = new List<string> { "ALIEXPRESS", "OZON", "WILDBERRIES" };
             var data = Enumerable.Repeat(new
             {
                 Barcode = "",
+                Название = "",
                 НомерДок = "",
                 ДатаДок = "",
                 Маршрут = "",
@@ -1353,21 +1605,50 @@ namespace StinWeb.Controllers
                                 итого = итого + сумма;
                                 итогоСоСкидкой += суммаСоСкидкой;
                                 var quantum = (int)nomQuantums.Where(q => q.Key == row.Номенклатура.Id).Select(q => q.Value).FirstOrDefault();
+                                var accessoriesList = await _номенклатура.GetAccessoriesList(row.Номенклатура.Id);
+                                decimal boxCount = 1;
+                                if (!singleBoxMarket.Contains(формаНабор.Order?.Тип))
+                                {
+                                    boxCount = await _номенклатура.ПолучитьКоличествоМест(row.Номенклатура.Id);
+                                    if (boxCount < 1)
+                                        boxCount = 1;
+                                }
+                                var sbBoxCount = new StringBuilder("Комплект ");
+                                sbBoxCount.Append(boxCount.ToString("0", CultureInfo.InvariantCulture));
+                                sbBoxCount.Append(" грузомест");
+                                sbBoxCount.Append(boxCount == 1 ? "о" : "а");
                                 таблЧасть.Add(new
                                 {
                                     Ном = номСтроки.ToString("0", CultureInfo.InvariantCulture),
-                                    Товар = row.Номенклатура.Наименование + (((quantum > 1) && (можноОтпустить >= quantum)) ? " (пакуй по " + quantum.ToString("0", CultureInfo.InvariantCulture) + " " + row.Единица.Наименование + ")" : ""),
-                                    Наименование = row.Номенклатура.Наименование,
-                                    Производитель = row.Номенклатура.Производитель.Наименование,
+                                    Товар = accessoriesList.Count > 0 ? sbBoxCount.ToString() : row.Номенклатура.Наименование + (((quantum > 1) && (можноОтпустить >= quantum)) ? " (пакуй по " + quantum.ToString("0", CultureInfo.InvariantCulture) + " " + row.Единица.Наименование + ")" : ""),
+                                    Наименование = accessoriesList.Count > 0 ? sbBoxCount.ToString() : row.Номенклатура.Наименование,
+                                    Производитель = accessoriesList.Count > 0 ? "" : row.Номенклатура.Производитель.Наименование,
                                     Артикул = row.Номенклатура.Артикул,
-                                    КолВо = можноОтпустить,
-                                    Количество = можноОтпустить.ToString("0", CultureInfo.InvariantCulture),
-                                    Единица = row.Единица.Наименование,
+                                    КолВо = accessoriesList.Count > 0 ? 0 : можноОтпустить,
+                                    Количество = accessoriesList.Count > 0 ? "" : можноОтпустить.ToString("0", CultureInfo.InvariantCulture),
+                                    Единица = accessoriesList.Count > 0 ? "" : row.Единица.Наименование,
                                     Цена = row.Цена.ToString("0.00", CultureInfo.InvariantCulture),
                                     ЦенаСоСкидкой = ценаСоСкидкой.ToString("0.00", CultureInfo.InvariantCulture),
                                     Сумма = сумма.ToString("0.00", CultureInfo.InvariantCulture),
                                     СуммаСоСкидкой = суммаСоСкидкой.ToString("0.00", CultureInfo.InvariantCulture)
                                 });
+                                string pref = "&nbsp;&nbsp;&nbsp;&nbsp;";
+                                foreach (var comp in accessoriesList)
+                                    таблЧасть.Add(new
+                                    {
+                                        Ном = "",
+                                        Товар = pref + comp.Key.Наименование,
+                                        Наименование = pref + comp.Key.Наименование,
+                                        Производитель = comp.Key.Производитель.Наименование,
+                                        Артикул = comp.Key.Артикул,
+                                        КолВо = comp.Value * можноОтпустить,
+                                        Количество = (comp.Value * можноОтпустить).ToString("0", CultureInfo.InvariantCulture),
+                                        Единица = comp.Key.Единица.Наименование,
+                                        Цена = "",
+                                        ЦенаСоСкидкой = "",
+                                        Сумма = "",
+                                        СуммаСоСкидкой = ""
+                                    });
                                 groupedОстатки = groupedОстатки
                                     .Select(item => new
                                     {
@@ -1382,6 +1663,7 @@ namespace StinWeb.Controllers
                     data.Add(new
                     {
                         Barcode = Convert.ToBase64String(PdfHelper.PdfFunctions.Instance.GenerateBarcode128(barcodeText, 45, 400, true)),
+                        Название = формаНабор.Завершен ? "Готов" : "Набор",
                         НомерДок = формаНабор.Общие.НомерДок,
                         ДатаДок = формаНабор.Общие.ДатаДок.ToString("dd.MM.yyyy"),
                         Маршрут = формаНабор.Маршрут?.Наименование ?? "",

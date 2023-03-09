@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,7 +18,6 @@ namespace Market
         private readonly RequestDelegate _next;
         private string _yandexFbsToken;
         private string _yandexDbsToken;
-        private string _yandexExpressToken;
         private string _sberFbsToken;
         private readonly ILogger _logger;
         public AuthenticationMiddleware(RequestDelegate next, IConfiguration configuration, ILogger<AuthenticationMiddleware> logger)
@@ -26,14 +26,13 @@ namespace Market
             _next = next;
             _yandexFbsToken = configuration["Settings:" + defFirma + ":YandexFBS"];
             _yandexDbsToken = configuration["Settings:" + defFirma + ":YandexDBS"];
-            _yandexExpressToken = configuration["Settings:" + defFirma + ":YandexExpress"];
             _sberFbsToken = "Basic " + Convert.ToBase64String(ASCIIEncoding.ASCII.GetBytes(configuration["Settings:" + defFirma + ":SberFBS"]));
             _logger = logger;
         }
         public async Task Invoke(HttpContext context)
         {
-            var controller = context.GetRouteValue("controller").ToString().ToUpper();
-            var action = context.GetRouteValue("action").ToString().ToUpper();
+            var controller = context.GetRouteValue("controller")?.ToString().ToUpper();
+            var action = context.GetRouteValue("action")?.ToString().ToUpper();
 
             _logger.LogInformation($"Header: {Newtonsoft.Json.JsonConvert.SerializeObject(context.Request.Headers, Newtonsoft.Json.Formatting.Indented)}");
 
@@ -51,17 +50,15 @@ namespace Market
             if (context.Request.Headers.ContainsKey("Authorization"))
                 auth = context.Request.Headers["Authorization"];
 
-            var validTokens = new List<string> { controller switch
+            List<string> validTokens = controller switch
             {
-                "YANDEX" => _yandexFbsToken,
-                "YANDEXDBS" => _yandexDbsToken,
-                "SBER" => _sberFbsToken,
-                _ => ""
-            } };
-            if ((controller == "YANDEX") && !string.IsNullOrEmpty(_yandexExpressToken))
-                validTokens.Add(_yandexExpressToken);
+                "YANDEX" => _yandexFbsToken.Split(',').ToList(),
+                "YANDEXDBS" => _yandexDbsToken.Split(',').ToList(),
+                "SBER" => new List<string> { _sberFbsToken },
+                _ => null
+            };
 
-            if (string.IsNullOrEmpty(auth) || !validTokens.Contains(auth))
+            if (string.IsNullOrEmpty(auth) || (validTokens == null) || !validTokens.Contains(auth))
             {
                 context.Response.StatusCode = (int)HttpStatusCode.Forbidden; 
                 return;

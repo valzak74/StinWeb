@@ -156,13 +156,12 @@ namespace StinClasses.Документы
             try
             {
                 await UnLockDocNoAsync(doc.Общие.ВидДокумента10.ToString(), doc.Общие.НомерДок);
-                _1sjourn j = GetEntityJourn(0, 0, 4611, doc.Общие.ВидДокумента10, doc.Общие.ВидДокумента10.ToString(), doc.Общие.Наименование,
+                _1sjourn j = GetEntityJourn(_context, 4611, doc.Общие.ВидДокумента10, doc.Общие.ВидДокумента10.ToString(), doc.Общие.Наименование,
                     doc.Общие.НомерДок, doc.Общие.ДатаДок,
                     doc.Общие.Фирма.Id,
                     doc.Общие.Автор.Id,
                     doc.Склад != null ? doc.Склад.Наименование : "",
                     "");
-                await _context._1sjourns.AddAsync(j);
 
                 doc.Общие.IdDoc = j.Iddoc;
                 doc.Общие.DateTimeIdDoc = j.DateTimeIddoc;

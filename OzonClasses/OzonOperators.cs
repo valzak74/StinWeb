@@ -464,7 +464,7 @@ namespace OzonClasses
             }
             return new(null,null);
         }
-        public static async Task<Tuple<byte[]?,string?>> GetAct(IHttpService httpService, string clientId, string authToken,
+        public static async Task<(byte[]? data,string? error)> GetAct(IHttpService httpService, string clientId, string authToken,
             TimeSpan limitTime,
             long? deliveryMethodId,
             CancellationToken cancellationToken)
@@ -484,7 +484,7 @@ namespace OzonClasses
                 requestActCreate,
                 cancellationToken);
             if (result.Item2 != null)
-                return new(null, "ActCreateResponse : " + ParseOzonError(result.Item2));
+                return (data: null, error: "ActCreateResponse : " + ParseOzonError(result.Item2));
             long taskId = 0;
             if ((result.Item1 != null) && (result.Item1.Result != null))
                 taskId = result.Item1.Result.Id;
@@ -496,18 +496,18 @@ namespace OzonClasses
                 TimeSpan sleepPeriod = TimeSpan.FromSeconds(1);
                 while (true)
                 {
-                    var checkResult = await httpService.Exchange<ActCheckStatusResponse, ErrorResponse>(
-                    "https://api-seller.ozon.ru/v2/posting/fbs/act/check-status",
+                    var checkResult = await httpService.Exchange<ActCheckStatusResult, ErrorResponse>(
+                    "https://api-seller.ozon.ru/v2/posting/fbs/digital/act/check-status",
                     HttpMethod.Post,
                     GetOzonHeaders(clientId, authToken),
                     request,
                     cancellationToken);
                     if (checkResult.Item2 != null)
-                        return new(null, "ActCheckStatusResponse : " + ParseOzonError(checkResult.Item2));
-                    if ((checkResult.Item1 != null) && (checkResult.Item1.Result != null))
+                        return (data: null, error: "ActCheckStatusResponse : " + ParseOzonError(checkResult.Item2));
+                    if (checkResult.Item1 != null)
                     {
-                        status = checkResult.Item1.Result.Status;
-                        if ((status == ActStatus.ready) || (status == ActStatus.error))
+                        status = checkResult.Item1.Status;
+                        if ((status == ActStatus.FORMED) || (status == ActStatus.CONFIRMED) || (status == ActStatus.CONFIRMED_WITH_MISMATCH))
                         {
                             break;
                         }
@@ -519,20 +519,21 @@ namespace OzonClasses
                         }
                     }
                 }
-                if (status == ActStatus.ready)
+                if ((status == ActStatus.FORMED) || (status == ActStatus.CONFIRMED) || (status == ActStatus.CONFIRMED_WITH_MISMATCH))
                 {
+                    request.Doc_type = DocType.act_of_acceptance;
                     var getActResult = await httpService.Exchange<byte[], ErrorResponse>(
-                    "https://api-seller.ozon.ru/v2/posting/fbs/act/get-pdf",
+                    "https://api-seller.ozon.ru/v2/posting/fbs/digital/act/get-pdf",
                     HttpMethod.Post,
                     GetOzonHeaders(clientId, authToken),
                     request,
                     cancellationToken);
                     if (getActResult.Item2 != null)
-                        return new(null, "ActGetResponse : " + ParseOzonError(getActResult.Item2));
-                    return new(getActResult.Item1, null);
+                        return (data: null, error: "ActGetResponse : " + ParseOzonError(getActResult.Item2));
+                    return (data: getActResult.Item1, error: null);
                 }
                 else
-                    return new(null, "CheckActStatus : no more retries");
+                    return (data: null, error: "CheckActStatus : no more retries");
             }
             return new(null, null);
         }

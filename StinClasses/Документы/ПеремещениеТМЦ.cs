@@ -212,13 +212,12 @@ namespace StinClasses.Документы
         {
             try
             {
-                _1sjourn j = GetEntityJourn(0, 0, 1913, doc.Общие.ВидДокумента10, null, "ПеремещениеТМЦ",
+                _1sjourn j = GetEntityJourn(_context, 1913, doc.Общие.ВидДокумента10, null, "ПеремещениеТМЦ",
                     null, doc.Общие.ДатаДок,
                     doc.Общие.Фирма.Id,
                     doc.Общие.Автор.Id,
                     doc.Склад.Наименование,
                     "");
-                await _context._1sjourns.AddAsync(j);
 
                 doc.Общие.IdDoc = j.Iddoc;
                 doc.Общие.DateTimeIdDoc = j.DateTimeIddoc;
@@ -362,9 +361,9 @@ namespace StinClasses.Документы
                 if (doc.Маршрут != null && !string.IsNullOrEmpty(doc.Маршрут.Id) && !string.IsNullOrEmpty(doc.Маршрут.Наименование))
                 {
                     КоличествоДвижений++;
-                    await _context._1sconsts.AddAsync(_context.ИзменитьПериодическиеРеквизиты(doc.Маршрут.Id, 11552, j.Iddoc, doc.Общие.ДатаДок, Common.Encode36(doc.Общие.ВидДокумента10).PadLeft(4) + j.Iddoc, КоличествоДвижений));
+                   _context.ИзменитьПериодическиеРеквизиты(doc.Маршрут.Id, 11552, j.Iddoc, doc.Общие.ДатаДок, Common.Encode36(doc.Общие.ВидДокумента10).PadLeft(4) + j.Iddoc, КоличествоДвижений);
                     КоличествоДвижений++;
-                    await _context._1sconsts.AddAsync(_context.ИзменитьПериодическиеРеквизиты(doc.Маршрут.Id, 11553, j.Iddoc, doc.Общие.ДатаДок, doc.Маршрут.Наименование, КоличествоДвижений));
+                    _context.ИзменитьПериодическиеРеквизиты(doc.Маршрут.Id, 11553, j.Iddoc, doc.Общие.ДатаДок, doc.Маршрут.Наименование, КоличествоДвижений);
                 }
 
                 j.Closed = 1;

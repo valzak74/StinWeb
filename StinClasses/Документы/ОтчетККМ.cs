@@ -160,13 +160,12 @@ namespace StinClasses.Документы
             try
             {
                 await UnLockDocNoAsync(Common.НумераторПКО, doc.Общие.НомерДок);
-                _1sjourn j = GetEntityJourn(0, 0, 4588, doc.Общие.ВидДокумента10, Common.НумераторПКО, doc.Общие.Наименование,
+                _1sjourn j = GetEntityJourn(_context, 4588, doc.Общие.ВидДокумента10, Common.НумераторПКО, doc.Общие.Наименование,
                     doc.Общие.НомерДок, doc.Общие.ДатаДок,
                     doc.Общие.Фирма.Id,
                     doc.Общие.Автор.Id,
                     doc.Склад.Наименование,
                     doc.Контрагент.Наименование);
-                await _context._1sjourns.AddAsync(j);
 
                 doc.Общие.IdDoc = j.Iddoc;
                 Dh3114 docHeader = new Dh3114

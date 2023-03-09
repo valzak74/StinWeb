@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "xcbHvuJ2TYT7V9sYSFKe32TGSZtsdZ1mN4Q7RrmqHOI=",
+  "Hash": "vqdHO9wUM3Rqv3yvIE9w+OCPIT/hXLXqjLF1ky8sMFA=",
   "Source": "StinWeb",
   "BasePath": "_content/StinWeb",
   "Mode": "Default",
@@ -7206,6 +7206,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\lib\\sounds\\beep.mp3"
+    },
+    {
+      "Identity": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\lib\\sounds\\OkSound.mp3",
+      "SourceId": "StinWeb",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\",
+      "BasePath": "_content/StinWeb",
+      "RelativePath": "lib/sounds/OkSound.mp3",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\lib\\sounds\\OkSound.mp3"
     },
     {
       "Identity": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\templates\\PageSeparator.htm",

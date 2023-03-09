@@ -164,7 +164,7 @@ namespace StinClasses.Документы
             ФормаОтчетКомиссионера doc = new ФормаОтчетКомиссионера();
 
             doc.Общие.ДокОснование = await ДокОснованиеAsync(докОснование.Общие.IdDoc);
-            doc.Общие.Автор = докОснование.Общие.Автор;
+            doc.Общие.Автор = await _пользователь.GetUserByIdAsync(Common.UserRobot);
             doc.Общие.ВидДокумента10 = (int)ВидДокумента.ОтчетКомиссионера; //1774
             doc.Общие.ВидДокумента36 = Common.Encode36(doc.Общие.ВидДокумента10);
             doc.Общие.Фирма = doc.Общие.ДокОснование.Фирма;
@@ -219,13 +219,12 @@ namespace StinClasses.Документы
         {
             try
             {
-                _1sjourn j = GetEntityJourn(0, 0, 4588, doc.Общие.ВидДокумента10, Common.НумераторТОРГ12, "ОтчетКомиссионера",
+                _1sjourn j = GetEntityJourn(_context, 4588, doc.Общие.ВидДокумента10, Common.НумераторТОРГ12, "ОтчетКомиссионера",
                     null, doc.Общие.ДатаДок,
                     doc.Общие.Фирма.Id,
                     doc.Общие.Автор.Id,
                     "",
                     doc.Контрагент.Наименование);
-                await _context._1sjourns.AddAsync(j);
 
                 doc.Общие.IdDoc = j.Iddoc;
                 doc.Общие.DateTimeIdDoc = j.DateTimeIddoc;

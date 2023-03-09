@@ -82,68 +82,6 @@ namespace StinClasses.Документы
             }
             base.Dispose(disposing);
         }
-        //public async Task<ФормаНабор> GetФормаНаборById(string idDoc)
-        //{
-        //    var d = await (from dh in _context.Dh11948s
-        //                   join j in _context._1sjourns on dh.Iddoc equals j.Iddoc
-        //                   where dh.Iddoc == idDoc
-        //                   select new
-        //                   {
-        //                       dh,
-        //                       j
-        //                   }).FirstOrDefaultAsync();
-        //    var контрагент = await _контрагент.GetКонтрагентAsync(d.dh.Sp11931);
-        //    var склад = await _склад.GetEntityByIdAsync(d.dh.Sp11929);
-        //    var подСклад = await _склад.GetПодСкладByIdAsync(d.dh.Sp11933);
-
-        //    var doc = new ФормаНабор
-        //    {
-        //        Общие = new ОбщиеРеквизиты
-        //        {
-        //            IdDoc = d.dh.Iddoc,
-        //            ДокОснование = !(string.IsNullOrWhiteSpace(d.dh.Sp11930) || d.dh.Sp11930 == Common.ПустоеЗначениеИд13) ? await ДокОснованиеAsync(d.dh.Sp11930.Substring(4)) : null,
-        //            Фирма = await _фирма.GetEntityByIdAsync(d.j.Sp4056),
-        //            Автор = await _пользователь.GetUserByIdAsync(d.j.Sp74),
-        //            ВидДокумента10 = d.j.Iddocdef,
-        //            ВидДокумента36 = Common.Encode36(d.j.Iddocdef),
-        //            НазваниеВЖурнале = (d.dh.Sp11938 == 1 ? "Готов" : "Набор") + " " + контрагент.Наименование + " " + склад.Наименование + "/" + подСклад.Наименование,
-        //            НомерДок = d.j.Docno,
-        //            ДатаДок = d.j.DateTimeIddoc.ToDateTime(),
-        //            Проведен = d.j.Closed == 1,
-        //            Комментарий = d.dh.Sp660,
-        //            Удален = d.j.Ismark
-        //        },
-        //        Склад = склад,
-        //        ПодСклад = подСклад,
-        //        Контрагент = контрагент,
-        //        Договор = await _контрагент.GetДоговорAsync(d.dh.Sp11932),
-        //        Маршрут = await _маршрут.GetМаршрутByCodeAsync(d.dh.Sp11934),
-        //        Завершен = d.dh.Sp11938 == 1,
-        //        СниматьРезерв = d.dh.Sp11939 == 1,
-        //        ДатаОплаты = d.dh.Sp12012,
-        //        СпособОтгрузки = Common.СпособыОтгрузки.FirstOrDefault(x => x.Key == d.dh.Sp12327).Value,
-        //        СкидКарта = await _контрагент.GetСкидКартаAsync(d.dh.Sp12996),
-        //        Кладовщик = await _кладовщик.GetКладовщикByIdAsync(d.dh.Sp12559),
-        //        Order = await _order.ПолучитьOrderWithItems(d.dh.Sp14003)
-        //    };
-        //    var ТаблЧасть = await _context.Dt11948s
-        //        .Where(x => x.Iddoc == idDoc)
-        //        .ToListAsync();
-        //    foreach (var row in ТаблЧасть)
-        //    {
-        //        doc.ТабличнаяЧасть.Add(new ФормаНаборТЧ
-        //        {
-        //            ФирмаНоменклатуры = await _фирма.GetEntityByIdAsync(row.Sp11940),
-        //            Номенклатура = await _номенклатура.GetНоменклатураByIdAsync(row.Sp11941),
-        //            Количество = row.Sp11942,
-        //            Единица = await _номенклатура.GetЕдиницаByIdAsync(row.Sp11943),
-        //            Цена = row.Sp11945,
-        //            Сумма = row.Sp11946,
-        //            Ячейки = row.Sp12606
-        //        });
-        //    }
-        //    return doc;
-        //}
         public async Task<List<ФормаНабор>> ВводНаОснованииAsync(ФормаЗаявкаПокупателя докОснование, DateTime docDateTime)
         {
             List<string> СписокФирм = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(докОснование.Общие.Фирма.Id);
@@ -320,40 +258,46 @@ namespace StinClasses.Документы
         {
             try
             {
-                _1sjourn j = GetEntityJourn(0, 0, 1913, doc.Общие.ВидДокумента10, null, "Набор",
-                    null, doc.Общие.ДатаДок,
-                    doc.Общие.Фирма.Id,
-                    doc.Общие.Автор.Id,
-                    doc.Склад.Наименование,
-                    doc.Контрагент.Наименование);
-                await _context._1sjourns.AddAsync(j);
-
+                _1sjourn j = GetEntityJourn(_context, 1913, doc.Общие.ВидДокумента10, null, "Набор",
+                        doc.Общие.НомерДок, doc.Общие.ДатаДок,
+                        doc.Общие.Фирма.Id,
+                        doc.Общие.Автор.Id,
+                        doc.Склад.Наименование,
+                        doc.Контрагент.Наименование,
+                        doc.Общие.IdDoc);
                 doc.Общие.IdDoc = j.Iddoc;
                 doc.Общие.DateTimeIdDoc = j.DateTimeIddoc;
                 doc.Общие.НомерДок = j.Docno;
-                Dh11948 docHeader = new Dh11948
+                Dh11948 docHeader = await _context.Dh11948s.FirstOrDefaultAsync(x => x.Iddoc == j.Iddoc);
+                bool isNew = docHeader == null;
+                if (isNew)
+                    docHeader = new Dh11948 { Iddoc  = j.Iddoc };
+                docHeader.Sp11929 = doc.Склад.Id;
+                docHeader.Sp11930 = doc.Общие.ДокОснование != null ? doc.Общие.ДокОснование.Значение : Common.ПустоеЗначениеИд13;
+                docHeader.Sp11931 = doc.Контрагент.Id;
+                docHeader.Sp11932 = doc.Договор.Id;
+                docHeader.Sp11933 = doc.ПодСклад.Id;
+                docHeader.Sp11934 = doc.Маршрут != null ? doc.Маршрут.Code : ""; //ИндМаршрута
+                docHeader.Sp11935 = doc.Маршрут != null ? doc.Маршрут.Наименование : ""; //НомерМаршрута
+                docHeader.Sp11936 = Common.ВалютаРубль;
+                docHeader.Sp11937 = 1; //Курс
+                docHeader.Sp11938 = doc.Завершен ? 1 : 0;
+                docHeader.Sp11939 = doc.СниматьРезерв ? 1 : 0;
+                docHeader.Sp12012 = doc.ДатаОплаты;
+                docHeader.Sp12327 = Common.СпособыОтгрузки.FirstOrDefault(x => x.Value == doc.СпособОтгрузки).Key;
+                docHeader.Sp12559 = doc.Кладовщик != null ? doc.Кладовщик.Id : Common.ПустоеЗначение;
+                docHeader.Sp12996 = (doc.СкидКарта == null ? Common.ПустоеЗначение : doc.СкидКарта.Id);
+                docHeader.Sp14003 = doc.Order != null ? doc.Order.Id : Common.ПустоеЗначение;
+                docHeader.Sp11946 = 0; //Сумма
+                docHeader.Sp660 = string.IsNullOrEmpty(doc.Общие.Комментарий) ? "" : doc.Общие.Комментарий;
+
+                if (isNew)
+                    await _context.Dh11948s.AddAsync(docHeader);
+                else
                 {
-                    Iddoc = j.Iddoc,
-                    Sp11929 = doc.Склад.Id,
-                    Sp11930 = doc.Общие.ДокОснование != null ? doc.Общие.ДокОснование.Значение : Common.ПустоеЗначениеИд13,
-                    Sp11931 = doc.Контрагент.Id,
-                    Sp11932 = doc.Договор.Id,
-                    Sp11933 = doc.ПодСклад.Id,
-                    Sp11934 = doc.Маршрут != null ? doc.Маршрут.Code : "", //ИндМаршрута
-                    Sp11935 = doc.Маршрут != null ? doc.Маршрут.Наименование : "", //НомерМаршрута
-                    Sp11936 = Common.ВалютаРубль,
-                    Sp11937 = 1, //Курс
-                    Sp11938 = doc.Завершен ? 1 : 0,
-                    Sp11939 = doc.СниматьРезерв ? 1 : 0,
-                    Sp12012 = doc.ДатаОплаты,
-                    Sp12327 = Common.СпособыОтгрузки.FirstOrDefault(x => x.Value == doc.СпособОтгрузки).Key,
-                    Sp12559 = doc.Кладовщик != null ? doc.Кладовщик.Id : Common.ПустоеЗначение,
-                    Sp12996 = (doc.СкидКарта == null ? Common.ПустоеЗначение : doc.СкидКарта.Id),
-                    Sp14003 = doc.Order != null ? doc.Order.Id : Common.ПустоеЗначение,
-                    Sp11946 = 0, //Сумма
-                    Sp660 = string.IsNullOrEmpty(doc.Общие.Комментарий) ? "" : doc.Общие.Комментарий,
-                };
-                await _context.Dh11948s.AddAsync(docHeader);
+                    _context.Update(j);
+                    _context.Dt11948s.RemoveRange(_context.Dt11948s.Where(x => x.Iddoc == j.Iddoc));
+                }
 
                 short lineNo = 1;
                 foreach (var item in doc.ТабличнаяЧасть)
@@ -409,6 +353,7 @@ namespace StinClasses.Документы
                         _context.Database.CurrentTransaction.Rollback();
                     return new ExceptionData { Description = "Не обнаружена запись журнала." };
                 }
+                _context.ОчиститьДвиженияДокумента(j);
                 int КоличествоДвижений = j.Actcnt;
 
                 List<string> СписокФирм = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(doc.Общие.Фирма.Id);
@@ -473,7 +418,7 @@ namespace StinClasses.Документы
                                     .Where(x => x.ФирмаId == doc.Общие.Фирма.Id &&
                                         x.OrderId == doc.Order.Id &&
                                         x.НоменклатураId == row.Номенклатура.Id &&
-                                        x.Status == (decimal)doc.Order.Status * 10 + (decimal)doc.Order.SubStatus))
+                                        x.Status == 0))
                                 {
                                     var МожноОтпустить = Math.Min(Отпустить, regMarketOrders.Количество);
                                     var МожноСумма = regMarketOrders.Сумма;
@@ -485,12 +430,12 @@ namespace StinClasses.Документы
                                     }
                                     КоличествоДвижений++;
                                     j.Rf14021 = await _регистрMarketplaceOrders.ВыполнитьДвижениеAsync(doc.Общие.IdDoc, doc.Общие.ДатаДок, КоличествоДвижений, true,
-                                        doc.Общие.Фирма.Id, doc.Order.Id, (decimal)doc.Order.Status * 10 + (decimal)doc.Order.SubStatus, row.Номенклатура.Id,
+                                        doc.Общие.Фирма.Id, doc.Order.Id, 0, row.Номенклатура.Id,
                                         regMarketOrders.НоменклатураMarketplaceId, regMarketOrders.WarehouseId, regMarketOrders.PartnerWarehouseId, regMarketOrders.Delivery,
                                         МожноОтпустить, МожноСумма, МожноСуммаСоСкидкой, false);
                                     КоличествоДвижений++;
                                     j.Rf14021 = await _регистрMarketplaceOrders.ВыполнитьДвижениеAsync(doc.Общие.IdDoc, doc.Общие.ДатаДок, КоличествоДвижений, false,
-                                        doc.Общие.Фирма.Id, doc.Order.Id, (decimal)StinOrderStatus.PROCESSING * 10 + (decimal)StinOrderSubStatus.STARTED, row.Номенклатура.Id,
+                                        doc.Общие.Фирма.Id, doc.Order.Id, (decimal)StinOrderStatus.PROCESSING * 10 + (decimal)StinOrderSubStatus.STARTED + (doc.Завершен ? 1 : 0), row.Номенклатура.Id,
                                         regMarketOrders.НоменклатураMarketplaceId, regMarketOrders.WarehouseId, regMarketOrders.PartnerWarehouseId, regMarketOrders.Delivery,
                                         МожноОтпустить, МожноСумма, МожноСуммаСоСкидкой, false);
                                     Отпустить = Отпустить - МожноОтпустить;
@@ -524,9 +469,9 @@ namespace StinClasses.Документы
                 if (doc.Маршрут != null && !string.IsNullOrEmpty(doc.Маршрут.Id) && !string.IsNullOrEmpty(doc.Маршрут.Наименование))
                 {
                     КоличествоДвижений++;
-                    await _context._1sconsts.AddAsync(_context.ИзменитьПериодическиеРеквизиты(doc.Маршрут.Id, 11552, j.Iddoc, doc.Общие.ДатаДок, Common.Encode36(doc.Общие.ВидДокумента10).PadLeft(4) + j.Iddoc, КоличествоДвижений));
+                    _context.ИзменитьПериодическиеРеквизиты(doc.Маршрут.Id, 11552, j.Iddoc, doc.Общие.ДатаДок, Common.Encode36(doc.Общие.ВидДокумента10).PadLeft(4) + j.Iddoc, КоличествоДвижений);
                     КоличествоДвижений++;
-                    await _context._1sconsts.AddAsync(_context.ИзменитьПериодическиеРеквизиты(doc.Маршрут.Id, 11553, j.Iddoc, doc.Общие.ДатаДок, doc.Маршрут.Наименование, КоличествоДвижений));
+                    _context.ИзменитьПериодическиеРеквизиты(doc.Маршрут.Id, 11553, j.Iddoc, doc.Общие.ДатаДок, doc.Маршрут.Наименование, КоличествоДвижений);
                 }
 
                 j.Closed = 1;
@@ -553,12 +498,7 @@ namespace StinClasses.Документы
         }
         public async Task<ExceptionData> ЗаписатьПровестиAsync(ФормаНабор doc)
         {
-            var result = await ЗаписатьAsync(doc);
-            if (result == null)
-            {
-                result = await ПровестиAsync(doc);
-            }
-            return result;
+            return await ЗаписатьAsync(doc) ?? await ПровестиAsync(doc);
         }
         public async Task<List<ФормаНабор>> ПолучитьСписокАктивныхНаборов(string orderId, bool onlyFinished)
         {

@@ -2246,7 +2246,6 @@ namespace Refresher1C.Service
         {
             try
             {
-                bool periodOpened = !_заявкаПокупателя.NeedToOpenPeriod();
                 var marketplaceIds = await (from market in _context.Sc14042s
                                         where !market.Ismark
                                             //&& (market.Sp14177 == 1)
@@ -2256,6 +2255,7 @@ namespace Refresher1C.Service
                                             //&& (market.Sp14155.Trim() == "Wildberries")
                                             //&& (market.Code.Trim() == "22498162235000")
                                             //&& (market.Code.Trim() == "23503334320000")
+                                            //&& (market.Code.Trim() == "45715133")
                                         select new
                                         {
                                             Id = market.Id,
@@ -2278,6 +2278,63 @@ namespace Refresher1C.Service
                         await GetOzonNewOrders(marketplace.ClientId, marketplace.AuthToken,
                             marketplace.Id, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
                             marketplace.Encoding, stoppingToken);
+                    }
+                    else if (marketplace.Тип == "ЯНДЕКС")
+                    {
+                    }
+                    else if (marketplace.Тип == "ALIEXPRESS")
+                    {
+                    }
+                    else if (marketplace.Тип == "SBER")
+                    {
+                    }
+                    else if (marketplace.Тип == "WILDBERRIES")
+                    {
+                        await GetWbNewOrders(marketplace.AuthToken,
+                            marketplace.Id, marketplace.Authorization, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
+                            marketplace.Encoding, stoppingToken);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("RefreshOrders : " + ex.Message);
+            }
+        }
+        public async Task RefreshSlowOrders(CancellationToken stoppingToken)
+        {
+            try
+            {
+                bool periodOpened = !_заявкаПокупателя.NeedToOpenPeriod();
+                var marketplaceIds = await (from market in _context.Sc14042s
+                                            where !market.Ismark
+                                            //&& (market.Sp14177 == 1)
+                                            //&& (market.Sp14155.Trim() == "Яндекс")
+                                            //&& (market.Sp14155.Trim() == "AliExpress")
+                                            //&& (market.Sp14155.Trim() == "Sber")
+                                            //&& (market.Sp14155.Trim() == "Wildberries")
+                                            //&& (market.Code.Trim() == "22498162235000")
+                                            //&& (market.Code.Trim() == "23503334320000")
+                                            //&& (market.Code.Trim() == "45715133")
+                                            select new
+                                            {
+                                                Id = market.Id,
+                                                Code = market.Code.Trim(),
+                                                Тип = market.Sp14155.ToUpper().Trim(),
+                                                FirmaId = market.Parentext,
+                                                CustomerId = market.Sp14175,
+                                                DogovorId = market.Sp14176,
+                                                ClientId = market.Sp14053.Trim(),
+                                                AuthToken = market.Sp14054.Trim(),
+                                                AuthSecret = market.Sp14195.Trim(),
+                                                Authorization = market.Sp14077.Trim(),
+                                                Encoding = (EncodeVersion)market.Sp14153
+                                            })
+                                        .ToListAsync();
+                foreach (var marketplace in marketplaceIds)
+                {
+                    if (marketplace.Тип == "OZON")
+                    {
                         await GetOzonCancelOrders(marketplace.FirmaId, marketplace.ClientId, marketplace.AuthToken,
                             marketplace.Id, stoppingToken);
                         if (periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
@@ -2288,9 +2345,11 @@ namespace Refresher1C.Service
                     }
                     else if (marketplace.Тип == "ЯНДЕКС")
                     {
-                        await GetYandexNewOrders(marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Authorization, marketplace.Id,
+                        await GetYandexNewDeliveringOrders(marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Authorization, marketplace.Id,
                             marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId, marketplace.Encoding, stoppingToken);
                         await GetYandexCancelOrders(marketplace.FirmaId, marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Id, stoppingToken);
+                        if (periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                            await GetYandexDeliveredOrders(marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Id, marketplace.FirmaId, stoppingToken);
                     }
                     else if (marketplace.Тип == "ALIEXPRESS")
                     {
@@ -2310,46 +2369,7 @@ namespace Refresher1C.Service
                     }
                     else if (marketplace.Тип == "WILDBERRIES")
                     {
-                        await GetWbNewOrders(marketplace.AuthToken,
-                            marketplace.Id, marketplace.Authorization, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
-                            marketplace.Encoding, stoppingToken);
                         await RefreshWbOrders(marketplace.AuthToken, marketplace.Id, marketplace.FirmaId, stoppingToken);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("RefreshOrders : " + ex.Message);
-            }
-        }
-        public async Task RefreshSlowOrders(CancellationToken stoppingToken)
-        {
-            try
-            {
-                var marketplaceIds = await (from market in _context.Sc14042s
-                                            where !market.Ismark
-                                            //&& (market.Sp14177 == 1)
-                                            //&& (market.Sp14155.Trim() == "AliExpress")
-                                            select new
-                                            {
-                                                Id = market.Id,
-                                                Code = market.Code.Trim(),
-                                                Тип = market.Sp14155.ToUpper().Trim(),
-                                                FirmaId = market.Parentext,
-                                                CustomerId = market.Sp14175,
-                                                DogovorId = market.Sp14176,
-                                                ClientId = market.Sp14053.Trim(),
-                                                AuthToken = market.Sp14054.Trim(),
-                                                AuthSecret = market.Sp14195.Trim(),
-                                                Authorization = market.Sp14077.Trim(),
-                                                Encoding = (EncodeVersion)market.Sp14153
-                                            })
-                                            .ToListAsync();
-                foreach (var marketplace in marketplaceIds)
-                {
-                    if (marketplace.Тип == "OZON")
-                    {
-                        await GetOzonDeliveringOrders(marketplace.Id, marketplace.FirmaId, marketplace.ClientId, marketplace.AuthToken, stoppingToken);
                     }
                 }
             }
@@ -2362,10 +2382,14 @@ namespace Refresher1C.Service
             string firmaId, string customerId, string dogovorId, EncodeVersion encoding,
             CancellationToken cancellationToken)
         {
+            bool periodOpened = !_заявкаПокупателя.NeedToOpenPeriod();
             var orderListResult = await SberClasses.Functions.SearchOrders(_httpService, _firmProxy[firmaId], authToken, cancellationToken);
             if (!string.IsNullOrEmpty(orderListResult.error))
                 _logger.LogError(orderListResult.error);
             if (orderListResult.orders?.Count > 0)
+            {
+                var readyToShipOrders = await ActiveOrders(marketplaceId, cancellationToken);
+
                 foreach (var sberOrder in orderListResult.orders)
                 {
                     var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, sberOrder.ShipmentId);
@@ -2422,7 +2446,7 @@ namespace Refresher1C.Service
                                     Цена = item.Price ?? 0,
                                     ЦенаСоСкидкой = item.FinalPrice ?? 0,
                                     Вознаграждение = (item.Price ?? 0) - (item.FinalPrice ?? 0),
-                                    Доставка =  delivery,
+                                    Доставка = delivery,
                                     //ДопПараметры = x.Params,
                                     ИдентификаторПоставщика = sberOrder.CustomerFullName,
                                     ИдентификаторСклада = "",
@@ -2460,11 +2484,22 @@ namespace Refresher1C.Service
                     }
                     else
                     {
-                        if (sberOrder.Items.Any(x => (x.Status == SberClasses.SberStatus.CUSTOMER_CANCELED)) &&
-                                (order.InternalStatus != 5) && (order.InternalStatus != 6))
+                        if (sberOrder.Items.Any(x => x.Status == SberClasses.SberStatus.CUSTOMER_CANCELED) &&
+                                (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14))
                             await _docService.OrderCancelled(order);
+                        else if (readyToShipOrders.Contains(sberOrder.ShipmentId) && (sberOrder.Items?.All(x => x.Status == SberClasses.SberStatus.SHIPPED) ?? false) &&
+                            (order.InternalStatus < 14) && (order.InternalStatus != 6) && (order.InternalStatus != 5) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                        {
+                            await _docService.OrderDeliveried(order, true);
+                        }
+                        else if ((sberOrder.Items?.All(x => x.Status == SberClasses.SberStatus.DELIVERED) ?? false) &&
+                            (order.InternalStatus == 14) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                        {
+                            await _docService.OrderFromTransferDeliveried(order);
+                        }
                     }
                 }
+            }
         }
         async Task<bool> SameWorkingDay(DateTime lastDate)
         {
@@ -2656,19 +2691,28 @@ namespace Refresher1C.Service
                                 AliExpressClasses.LogisticsStatus.ProviderPostingSorting,
                                 AliExpressClasses.LogisticsStatus.ProviderPostingLeftTheSorting,
                                 AliExpressClasses.LogisticsStatus.ProviderPostingArrived,
-                                AliExpressClasses.LogisticsStatus.ProviderPostingDelivered,
+                                //AliExpressClasses.LogisticsStatus.ProviderPostingDelivered,
                                 AliExpressClasses.LogisticsStatus.ProviderPostingUnsuccessfulAttemptOfDelivery,
                                 AliExpressClasses.LogisticsStatus.ProviderPostingTemporaryStorage
+                            };
+                            var logisticsDelivered = new List<AliExpressClasses.LogisticsStatus>
+                            {
+                                AliExpressClasses.LogisticsStatus.ProviderPostingDelivered
                             };
                             if ((((aliOrder.Status == AliExpressClasses.OrderStatus.Finished) &&
                                 !string.IsNullOrEmpty(aliOrder.Finish_reason) &&
                                 ((aliOrder.Finish_reason == "ConfirmedByBuyer") ||
                                  (aliOrder.Finish_reason == "AutoConfirm") ||
                                  (aliOrder.Finish_reason == "ConfirmedByLogistic"))) || 
-                                ((aliOrder.Logistic_orders?.Count > 0) && (aliOrder.Logistic_orders?.All(x => logisticsDelivering.Contains(x.Status)) ?? false))) &&
-                                (order.InternalStatus != 6) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                                ((aliOrder.Logistic_orders?.Count > 0) && (aliOrder.Logistic_orders?.All(x => logisticsDelivered.Contains(x.Status)) ?? false))) &&
+                                (order.InternalStatus == 14) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                             {
-                                await _docService.OrderDeliveried(order);
+                                await _docService.OrderFromTransferDeliveried(order);
+                            }
+                            else if ((aliOrder.Logistic_orders?.Count > 0) && (aliOrder.Logistic_orders?.All(x => logisticsDelivering.Contains(x.Status)) ?? false) &&
+                                (order.InternalStatus < 14) && (order.InternalStatus != 6) && (order.InternalStatus != 5) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                            {
+                                await _docService.OrderDeliveried(order, true);
                             }
                             else if ((aliOrder.Order_display_status == AliExpressClasses.OrderDisplayStatus.WaitSendGoods) ||
                                  (aliOrder.Order_display_status == AliExpressClasses.OrderDisplayStatus.PartialSendGoods))
@@ -2698,7 +2742,7 @@ namespace Refresher1C.Service
                                 (aliOrder.Finish_reason == "BuyerChangeLogistic") || (aliOrder.Finish_reason == "BuyerCannotPayment") ||
                                 (aliOrder.Finish_reason == "BuyerOtherReasons") || (aliOrder.Finish_reason == "BuyerCannotContactSeller") ||
                                 (aliOrder.Finish_reason == "BuyerChangeCoupon") || (aliOrder.Finish_reason == "BuyerChangeMailAddress")) &&
-                                (order.InternalStatus != 5) && (order.InternalStatus != 6))
+                                (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus < 14))
                             {
                                 await _docService.OrderCancelled(order);
                             }
@@ -2989,33 +3033,13 @@ namespace Refresher1C.Service
                            orderItems,
                            stoppingToken);
                     }
-                    //else
-                    //{
-                        //if (((wbOrder.Status == WbClasses.WbStatus.НаДоставкеКурьером) ||
-                        //     (wbOrder.Status == WbClasses.WbStatus.КурьерДовезКлиентПринялТовар)) &&
-                        //    (order.InternalStatus != 6))
-                        //{
-                        //    await _docService.OrderDeliveried(order);
-                        //}
-                        //else if (((wbOrder.Status == WbClasses.WbStatus.НовыйЗаказ) ||
-                        //          (wbOrder.Status == WbClasses.WbStatus.ВРаботе)) &&
-                        //         (order.InternalStatus == 0))
-                        //{
-                        //    await _order.ОбновитьOrderStatus(order.Id, 8);
-                        //}
-                        //else if ((wbOrder.Status == WbClasses.WbStatus.СборочноеЗаданиеОтклонено) &&
-                        //    (order.InternalStatus != 5) && (order.InternalStatus != 6))
-                        //{
-                        //    await _docService.OrderCancelled(order);
-                        //}
-                    //}
                 }
         }
         private async Task RefreshWbOrders(string authToken, string marketplaceId, string firmaId, CancellationToken cancellationToken)
         {
             bool periodOpened = !_заявкаПокупателя.NeedToOpenPeriod();
             var activeOrders = _context.Sc13994s
-                .Where(x => (x.Sp13982 > 0) && (x.Sp13982 != 5) && (x.Sp13982 != 6) &&
+                .Where(x => (x.Sp13982 > 0) && (x.Sp13982 < 15) && (x.Sp13982 != 5) && (x.Sp13982 != 6) && 
                     ((StinDeliveryPartnerType)x.Sp13985 == StinDeliveryPartnerType.WILDBERRIES) &&
                     (x.Sp14038 == marketplaceId))
                 .Select(x => Convert.ToInt64(x.Code.Trim()))
@@ -3034,18 +3058,26 @@ namespace Refresher1C.Service
                     foreach (var wbOrderId in cancelOrderIds) 
                     {
                         var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, wbOrderId.ToString());
-                        if (order != null)
+                        if ((order != null) && (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14))
                             await _docService.OrderCancelled(order);
                     }
                     if (periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                     {
-                        var deliveredOrderIds = result.orders?.Where(x => (x.Value == WbClasses.WbStatus.sorted) || (x.Value == WbClasses.WbStatus.sold))
+                        var deliveringOrderIds = result.orders?.Where(x => x.Value == WbClasses.WbStatus.sorted)
+                            .Select(x => x.Key);
+                        foreach (var wbOrderId in deliveringOrderIds)
+                        {
+                            var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, wbOrderId.ToString());
+                            if ((order != null) && (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14))
+                                await _docService.OrderDeliveried(order, true);
+                        }
+                        var deliveredOrderIds = result.orders?.Where(x => x.Value == WbClasses.WbStatus.sold)
                             .Select(x => x.Key);
                         foreach (var wbOrderId in deliveredOrderIds)
                         {
                             var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, wbOrderId.ToString());
-                            if (order != null)
-                                await _docService.OrderDeliveried(order);
+                            if ((order != null) && (order.InternalStatus == 14))
+                                await _docService.OrderFromTransferDeliveried(order);
                         }
                     }
                 }
@@ -3303,11 +3335,44 @@ namespace Refresher1C.Service
             }
             return orderItems;
         }
-        private async Task GetYandexNewOrders(string campaignId, string clientId, string authToken, string authorization,
+        private async Task GetYandexDeliveredOrders(string campaignId, string clientId, string authToken, string marketplaceId, string firmaId, CancellationToken cancellationToken)
+        {
+            int pageNumber = 0;
+            bool nextPage = true;
+            while (nextPage)
+            {
+                pageNumber++;
+                nextPage = false;
+                var result = await YandexClasses.YandexOperators.OrdersList(_httpService,
+                    _firmProxy[firmaId],
+                    campaignId,
+                    clientId,
+                    authToken,
+                    "DELIVERED",
+                    DateTime.Today.AddDays(-30),
+                    pageNumber,
+                    cancellationToken);
+                nextPage = result.NextPage;
+                if (result.Orders?.Count > 0)
+                {
+                    foreach (var detailOrder in result.Orders)
+                    {
+                        var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, detailOrder.Id.ToString());
+                        if ((order != null) && (detailOrder.Status == YandexClasses.StatusYandex.DELIVERED) &&
+                            (order.InternalStatus == 14))
+                        {
+                            await _docService.OrderFromTransferDeliveried(order);
+                        }
+                    }
+                }
+            }
+        }
+        private async Task GetYandexNewDeliveringOrders(string campaignId, string clientId, string authToken, string authorization,
             string marketplaceId,
             string firmaId, string customerId, string dogovorId, EncodeVersion encoding, 
             CancellationToken cancellationToken)
         {
+            bool periodOpened = !_заявкаПокупателя.NeedToOpenPeriod();
             int pageNumber = 0;
             bool nextPage = true;
             while (nextPage)
@@ -3328,6 +3393,7 @@ namespace Refresher1C.Service
                 {
                     var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(firmaId);
                     var списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
+                    var readyToShipOrders = await ActiveOrders(marketplaceId, cancellationToken);
                     foreach (var detailOrder in result.Orders)
                     {
                         TimeSpan ts = DateTime.Now - detailOrder.CreationDate.AddHours(1);
@@ -3457,6 +3523,12 @@ namespace Refresher1C.Service
                             {
                                 if ((ts.TotalMinutes > 30) && (order.InternalStatus == 0))
                                     await _order.ОбновитьOrderStatus(order.Id, 8);
+                                else if (readyToShipOrders.Contains(detailOrder.Id.ToString()) && 
+                                    (detailOrder.Status == YandexClasses.StatusYandex.PROCESSING) && (detailOrder.SubStatus == YandexClasses.SubStatusYandex.SHIPPED) &&
+                                    (order.InternalStatus < 14) && (order.InternalStatus != 6) && (order.InternalStatus != 5) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                                {
+                                    await _docService.OrderDeliveried(order, true);
+                                }
                             }
                         }
                     }
@@ -3572,31 +3644,31 @@ namespace Refresher1C.Service
                 foreach (var order in orders.Where(x => activeOrders.Contains(x.MarketplaceId)))
                     await _order.ОбновитьOrderStatus(order.Id, (int)StinOrderStatus.ARBITRATION);
 
-                foreach (var postingNumber in activeOrders.Where(x => !checkedNumbers.Contains(x)))
-                {
-                    var result = await OzonClasses.OzonOperators.OrderDetails(_httpService, _firmProxy[firmaId], clientId, authToken,
-                        postingNumber,
-                        stoppingToken);
-                    if (result.Item2 != null)
-                        _logger.LogError(result.Item2);
-                    if (result.Item1 != null)
-                    {
-                        if ((result.Item1 == OzonClasses.OrderStatus.driver_pickup) ||
-                            (result.Item1 == OzonClasses.OrderStatus.delivering))
-                        {
-                            var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, postingNumber);
-                            if (order != null)
-                                await _docService.OrderDeliveried(order, true);
-                        }
-                        else if ((result.Item1 == OzonClasses.OrderStatus.arbitration) ||
-                            (result.Item1 == OzonClasses.OrderStatus.client_arbitration))
-                        {
-                            var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, postingNumber);
-                            if (order != null)
-                                await _order.ОбновитьOrderStatus(order.Id, (int)StinOrderStatus.ARBITRATION);
-                        }
-                    }    
-                }
+                //foreach (var postingNumber in activeOrders.Where(x => !checkedNumbers.Contains(x)))
+                //{
+                //    var result = await OzonClasses.OzonOperators.OrderDetails(_httpService, _firmProxy[firmaId], clientId, authToken,
+                //        postingNumber,
+                //        stoppingToken);
+                //    if (result.Item2 != null)
+                //        _logger.LogError(result.Item2);
+                //    if (result.Item1 != null)
+                //    {
+                //        if ((result.Item1 == OzonClasses.OrderStatus.driver_pickup) ||
+                //            (result.Item1 == OzonClasses.OrderStatus.delivering))
+                //        {
+                //            var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, postingNumber);
+                //            if (order != null)
+                //                await _docService.OrderDeliveried(order, true);
+                //        }
+                //        else if ((result.Item1 == OzonClasses.OrderStatus.arbitration) ||
+                //            (result.Item1 == OzonClasses.OrderStatus.client_arbitration))
+                //        {
+                //            var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, postingNumber);
+                //            if (order != null)
+                //                await _order.ОбновитьOrderStatus(order.Id, (int)StinOrderStatus.ARBITRATION);
+                //        }
+                //    }    
+                //}
             }
         }
         private async Task GetOzonDeliveredOrders(string marketplaceId, string firmaId, string clientId, string authToken, CancellationToken stoppingToken)
@@ -3613,23 +3685,23 @@ namespace Refresher1C.Service
                 var checkedNumbers = orders.Select(x => x.MarketplaceId);
                 foreach (var order in orders.Where(x => activeOrders.Contains(x.MarketplaceId)))
                     await _docService.OrderFromTransferDeliveried(order);
-                foreach (var postingNumber in activeOrders.Where(x => !checkedNumbers.Contains(x)))
-                {
-                    var result = await OzonClasses.OzonOperators.OrderDetails(_httpService, _firmProxy[firmaId], clientId, authToken,
-                        postingNumber,
-                        stoppingToken);
-                    if (result.Item2 != null)
-                        _logger.LogError(result.Item2);
-                    if (result.Item1 != null)
-                    {
-                        if (result.Item1 == OzonClasses.OrderStatus.delivered)
-                        {
-                            var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, postingNumber);
-                            if (order != null)
-                                await _docService.OrderFromTransferDeliveried(order);
-                        }
-                    }
-                }
+                //foreach (var postingNumber in activeOrders.Where(x => !checkedNumbers.Contains(x)))
+                //{
+                //    var result = await OzonClasses.OzonOperators.OrderDetails(_httpService, _firmProxy[firmaId], clientId, authToken,
+                //        postingNumber,
+                //        stoppingToken);
+                //    if (result.Item2 != null)
+                //        _logger.LogError(result.Item2);
+                //    if (result.Item1 != null)
+                //    {
+                //        if (result.Item1 == OzonClasses.OrderStatus.delivered)
+                //        {
+                //            var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, postingNumber);
+                //            if (order != null)
+                //                await _docService.OrderFromTransferDeliveried(order);
+                //        }
+                //    }
+                //}
             }
         }
         private async Task<List<string>> ActiveOrders(string marketplaceId, CancellationToken cancellationToken)

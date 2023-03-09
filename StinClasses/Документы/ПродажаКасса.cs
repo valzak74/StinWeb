@@ -309,13 +309,12 @@ namespace StinClasses.Документы
             try
             {
                 await UnLockDocNoAsync(doc.Общие.ВидДокумента10.ToString(), doc.Общие.НомерДок);
-                _1sjourn j = GetEntityJourn(0, 0, 4588, doc.Общие.ВидДокумента10, null, doc.Общие.Наименование,
+                _1sjourn j = GetEntityJourn(_context, 4588, doc.Общие.ВидДокумента10, null, doc.Общие.Наименование,
                     doc.Общие.НомерДок, doc.Общие.ДатаДок,
                     doc.Общие.Фирма.Id,
                     doc.Общие.Автор.Id,
                     doc.Склад.Наименование,
                     doc.Контрагент.Наименование);
-                await _context._1sjourns.AddAsync(j);
 
                 doc.Общие.IdDoc = j.Iddoc;
                 Dh9074 docHeader = new Dh9074
@@ -751,9 +750,9 @@ namespace StinClasses.Документы
                 if (doc.Маршрут != null && !string.IsNullOrEmpty(doc.Маршрут.Id) && !string.IsNullOrEmpty(doc.Маршрут.Наименование))
                 {
                     КоличествоДвижений++;
-                    await _context._1sconsts.AddAsync(_context.ИзменитьПериодическиеРеквизиты(doc.Маршрут.Id, 11552, j.Iddoc, doc.Общие.ДатаДок, Common.Encode36(doc.Общие.ВидДокумента10).PadLeft(4) + j.Iddoc, КоличествоДвижений));
+                    _context.ИзменитьПериодическиеРеквизиты(doc.Маршрут.Id, 11552, j.Iddoc, doc.Общие.ДатаДок, Common.Encode36(doc.Общие.ВидДокумента10).PadLeft(4) + j.Iddoc, КоличествоДвижений);
                     КоличествоДвижений++;
-                    await _context._1sconsts.AddAsync(_context.ИзменитьПериодическиеРеквизиты(doc.Маршрут.Id, 11553, j.Iddoc, doc.Общие.ДатаДок, doc.Маршрут.Наименование, КоличествоДвижений));
+                    _context.ИзменитьПериодическиеРеквизиты(doc.Маршрут.Id, 11553, j.Iddoc, doc.Общие.ДатаДок, doc.Маршрут.Наименование, КоличествоДвижений);
                 }
 
                 j.Closed = 1;

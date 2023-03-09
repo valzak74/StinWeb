@@ -55,24 +55,24 @@ var formatterTime = new Intl.DateTimeFormat("ru", {
     second: "numeric"
 });
 
-var afterPrint = function (e) {
-    $(window).off('mousemove', afterPrint);
-    $('iframe').css('pointer-events', 'auto');
-    var element = document.getElementById("printFrame");
-    document.body.removeChild(element);
-};
-
 function setPrint() {
-    this.contentWindow.focus(); // Required for IE
-    this.contentWindow.print();
-    setTimeout(function () {
-        $('iframe').css('pointer-events', 'none');
-        $(window).one('mousemove', afterPrint);
-    }, 1000);
-
+    var ua = window.navigator.userAgent;
+    var msie = ua.indexOf("MSIE ");
+    if (msie > 0) // Internet Explorer
+    {
+        this.contentWindow.focus(); // Required for IE
+    }
+    if (this.contentDocument.body.childNodes.length > 0)
+        this.contentWindow.print();
 }
 
 function printPage(sURL, isSRC) {
+
+    const previousIframe = document.getElementById('printFrame');
+    if (previousIframe) {
+        previousIframe.remove();
+    }
+
     var oHiddFrame = document.createElement("iframe");
     oHiddFrame.onload = setPrint;
     oHiddFrame.style.position = "fixed";
@@ -86,6 +86,28 @@ function printPage(sURL, isSRC) {
         oHiddFrame.src = sURL;
     else
         oHiddFrame.srcdoc = sURL;
+    document.body.appendChild(oHiddFrame);
+}
+function printPdfBytes(data) {
+
+    const previousIframe = document.getElementById('printFrame');
+    if (previousIframe) {
+        previousIframe.remove();
+    }
+
+    const newBlob = new Blob([data], { type: 'application/pdf' });
+    const fileLink = window.URL.createObjectURL(newBlob);
+
+    var oHiddFrame = document.createElement("iframe");
+    oHiddFrame.onload = setPrint;
+    oHiddFrame.style.position = "fixed";
+    oHiddFrame.style.right = "0";
+    oHiddFrame.style.bottom = "0";
+    oHiddFrame.style.width = "0";
+    oHiddFrame.style.height = "0";
+    oHiddFrame.style.border = "0";
+    oHiddFrame.id = "printFrame";
+    oHiddFrame.src = fileLink;
     document.body.appendChild(oHiddFrame);
 }
 

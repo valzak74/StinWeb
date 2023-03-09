@@ -1689,6 +1689,10 @@
       "PackagePath": "staticwebassets\\lib\\jquery\\dist\\jquery.min.map"
     },
     {
+      "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\lib\\sounds\\OkSound.mp3",
+      "PackagePath": "staticwebassets\\lib\\sounds\\OkSound.mp3"
+    },
+    {
       "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\lib\\sounds\\beep.mp3",
       "PackagePath": "staticwebassets\\lib\\sounds\\beep.mp3"
     },

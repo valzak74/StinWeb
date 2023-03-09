@@ -39,6 +39,11 @@ namespace OzonClasses
     public class ActCheckGetRequest
     {
         public long Id { get; set; }
+        public DocType Doc_type { get; set; }
+        public bool ShouldSerializeDoc_type()
+        {
+            return Doc_type != DocType.NotFound;
+        }
     }
     public class ActCheckStatusResponse
     {
@@ -46,9 +51,10 @@ namespace OzonClasses
     }
     public class ActCheckStatusResult
     {
+        public long Id { get; set; }
         public List<string>? Added_to_act { get; set; }
         public List<string>? Removed_from_act { get; set; }
-        public ActStatus Status { get; set; } 
+        public ActStatus Status { get; set; }
     }
     public class ActGetResponse
     {
@@ -64,6 +70,20 @@ namespace OzonClasses
         ready = 2,
         error = 3,
         [Display(Name = "The next postings aren't ready")]
-        postingsNotReady = 4
+        postingsNotReady = 4,
+        FORMING = 5,
+        FORMED = 6,
+        CONFIRMED = 7,
+        CONFIRMED_WITH_MISMATCH = 8,
+        NOT_FOUND = 9,
+        UNKNOWN_ERROR = 10
+    }
+    [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]
+    public enum DocType
+    {
+        NotFound = 0,
+        act_of_acceptance = 1,
+        act_of_mismatch = 2,
+        act_od_excess = 3,
     }
 }

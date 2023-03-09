@@ -75,11 +75,12 @@ namespace StinClasses.Документы
         bool NeedToOpenPeriod();
         bool IsNew(string idDoc);
         Task<ОбщиеРеквизиты> ОбщиеРеквизитыAsync(string IdDoc);
-        _1sjourn GetEntityJourn(byte Проведен, int КоличествоДвижений, int ЖурналИД_md, int ВидДокИД_dds, string Нумератор, string ВидДок, string НомерДок, DateTime dateTime,
+        _1sjourn GetEntityJourn(StinDbContext context, int ЖурналИД_md, int ВидДокИД_dds, string Нумератор, string ВидДок, string НомерДок, DateTime dateTime,
                string ФирмаИД,
                string ПользовательИД,
                string СкладНазвание,
-               string КонтрагентНазвание);
+               string КонтрагентНазвание,
+               string docId = null);
         Task<ВидДокумента> ПолучитьВидДокумента(string idDoc);
         Task<ДокОснование> ДокОснованиеAsync(string IdDoc);
         Task<string> LockDocNoAsync(string userId, string ИдентификаторДокDds, int ДлинаНомера = 10, string FirmaId = null, string Год = null);
@@ -263,13 +264,31 @@ namespace StinClasses.Документы
             }
             return num36;
         }
-        public _1sjourn GetEntityJourn(byte Проведен, int КоличествоДвижений, int ЖурналИД_md, int ВидДокИД_dds, string Нумератор, string ВидДок, string НомерДок, DateTime dateTime,
+        public _1sjourn GetEntityJourn(StinDbContext context, int ЖурналИД_md, int ВидДокИД_dds, string Нумератор, string ВидДок, string НомерДок, DateTime dateTime,
            string ФирмаИД,
            string ПользовательИД,
            string СкладНазвание,
-           string КонтрагентНазвание)
+           string КонтрагентНазвание,
+           string docId = null)
         {
-            string num36 = GenerateIdDoc();
+            _1sjourn j = null;
+            bool isNew = string.IsNullOrEmpty(docId);
+            if (!isNew)
+            {
+                j = context._1sjourns.FirstOrDefault(x => x.Iddoc == docId);
+                isNew = j == null;
+            }
+            if (isNew)
+            {
+                docId = GenerateIdDoc();
+                j = new _1sjourn 
+                {
+                    Idjournal = ЖурналИД_md, // 10528,
+                    Iddoc = docId,
+                    Iddocdef = ВидДокИД_dds, //11037; //Результат диагностики,
+                    Appcode = 1, //(1) - опер учет.
+                };
+            }
             if (dateTime == DateTime.MinValue)
                 dateTime = DateTime.Now;
             var datestr = dateTime.ToString("yyyyMMdd");
@@ -279,7 +298,7 @@ namespace StinClasses.Документы
             var ms = dateTime.Millisecond;
             var time = (h * 3600 * 10000) + (m * 60 * 10000) + (s * 10000) + (ms * 10);
             var timestr = Common.Encode36(time).PadLeft(6);
-            var dateTimeIddoc = datestr + timestr + num36;
+            var dateTimeIddoc = datestr + timestr + docId;
             if (string.IsNullOrEmpty(Нумератор))
                 Нумератор = ВидДокИД_dds.ToString();
             var dnPrefix = Нумератор.PadLeft(10) + dateTime.ToString("yyyy").PadRight(8);
@@ -330,31 +349,31 @@ namespace StinClasses.Документы
                 НомерДок = prefix + (Convert.ToInt32(НомерДок) + 1).ToString().PadLeft(10 - prefix.Length - postfix.Length, '0') + postfix;
             }
 
-            return new _1sjourn
-            {
-                Idjournal = ЖурналИД_md, // 10528,
-                Iddoc = num36,
-                Iddocdef = ВидДокИД_dds, //11037; //Результат диагностики,
-                Appcode = 1, //(1) - опер учет.
-                DateTimeIddoc = dateTimeIddoc,
-                Dnprefix = dnPrefix,
-                Docno = НомерДок, //DY00000012
-                Closed = Проведен, //проведен
-                Ismark = false, //пометка на удаление
-                Actcnt = КоличествоДвижений, //Фактически хранит информацию о количестве движений по всем регистрам + записи периодических реквизитов
-                Verstamp = 1, //Количество изменений записи таблицы. Изменением считается любое действие "Изменить (открыть)" + действия при изменении структуры
-                Sp74 = ПользовательИД, //Автор
-                Sp798 = Common.ПустоеЗначение, //Проект 
-                Sp4056 = ФирмаИД, //Фирма
-                Sp5365 = ФирмаЮрЛицо.ЮрЛицоId, //ЮрЛицо
-                Sp8662 = prefixDB,
-                Sp8663 = prefixDB + ";" + (СкладНазвание.Length > (29 - prefixDB.Length) ? СкладНазвание.Substring(0, 29 - prefixDB.Length) : СкладНазвание),
-                Sp8664 = prefixDB + ";" + (КонтрагентНазвание.Length > (29 - prefixDB.Length) ? КонтрагентНазвание.Substring(0, 29 - prefixDB.Length) : КонтрагентНазвание),
-                Sp8665 = prefixDB + ";" + ВидДок,
-                Sp8666 = prefixDB + ";" + (ФирмаЮрЛицо.Фирма.Length > (29 - prefixDB.Length) ? ФирмаЮрЛицо.Фирма.Substring(0, 29 - prefixDB.Length) : ФирмаЮрЛицо.Фирма),
-                Sp8720 = "",
-                Sp8723 = ""
-            };
+            j.DateTimeIddoc = dateTimeIddoc;
+            j.Dnprefix = dnPrefix;
+            j.Docno = НомерДок; //DY00000012
+            //j.Closed = Проведен; //проведен
+            //j.Ismark = false, //пометка на удаление
+            //j.Actcnt += КоличествоДвижений; //Фактически хранит информацию о количестве движений по всем регистрам + записи периодических реквизитов
+            j.Verstamp += 1; //Количество изменений записи таблицы. Изменением считается любое действие "Изменить (открыть)" + действия при изменении структуры
+            j.Sp74 = ПользовательИД; //Автор
+            j.Sp798 = Common.ПустоеЗначение; //Проект 
+            j.Sp4056 = ФирмаИД; //Фирма
+            j.Sp5365 = ФирмаЮрЛицо.ЮрЛицоId; //ЮрЛицо
+            j.Sp8662 = prefixDB;
+            j.Sp8663 = prefixDB + ";" + (СкладНазвание.Length > (29 - prefixDB.Length) ? СкладНазвание.Substring(0, 29 - prefixDB.Length) : СкладНазвание);
+            j.Sp8664 = prefixDB + ";" + (КонтрагентНазвание.Length > (29 - prefixDB.Length) ? КонтрагентНазвание.Substring(0, 29 - prefixDB.Length) : КонтрагентНазвание);
+            j.Sp8665 = prefixDB + ";" + ВидДок;
+            j.Sp8666 = prefixDB + ";" + (ФирмаЮрЛицо.Фирма.Length > (29 - prefixDB.Length) ? ФирмаЮрЛицо.Фирма.Substring(0, 29 - prefixDB.Length) : ФирмаЮрЛицо.Фирма);
+            j.Sp8720 = "";
+            j.Sp8723 = "";
+
+            if (isNew)
+                context._1sjourns.AddAsync(j);
+            else
+                context.Update(j);
+
+            return j;
         }
         public bool IsNew(string idDoc)
         {

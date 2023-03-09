@@ -1,8 +1,14 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
 using StinClasses.Models;
+using StinClasses.Справочники;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.PortableExecutable;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace StinClasses
@@ -87,21 +93,37 @@ namespace StinClasses
                           orderby _const.Date descending, _const.Time descending, _const.Docid descending
                           select _const.Value).FirstOrDefaultAsync();
         }
-        public static _1sconst ИзменитьПериодическиеРеквизиты(this StinDbContext context, string objId, int реквизитDds,
+        public static void ИзменитьПериодическиеРеквизиты(this StinDbContext context, string objId, int реквизитDds,
             string docId, DateTime dateTime, string value, int actNo, short lineNo = 0)
         {
-            return new _1sconst
+            var entity = context._1sconsts
+                .FirstOrDefault(x => (x.Objid == objId) && (x.Id == реквизитDds) && (x.Docid == docId));
+            if (entity != null)
             {
-                Objid = objId,//для транспортных маршрутов это Id элемента справочника ТранспортныеМаршруты
-                Id = реквизитDds,
-                Date = dateTime.Date,
-                Time = (dateTime.Hour * 3600 * 10000) + (dateTime.Minute * 60 * 10000) + (dateTime.Second * 10000),
-                Docid = docId,
-                Value = value,//маршрут "э7777" или " 1W9 1TRBVS  " для документа ЗаявкаПокупателя с docId = " 1TRBVS  "
-                Actno = actNo,//номер движения документа
-                Lineno = lineNo,//Номер строки документа (заполняется при вызове метода ПривязыватьСтроку(), если привязка не выполнена или непериодическое значение - заполняется нулем
-                Tvalue = "", //Заполняется только для неопределенных реквизитов, для типов данных 1С (когда длина ID равна 23 символам)
-            };
+                entity.Value = value;
+                entity.Date = dateTime.Date;
+                entity.Time = (dateTime.Hour * 3600 * 10000) + (dateTime.Minute * 60 * 10000) + (dateTime.Second * 10000);
+                entity.Actno = actNo;
+                entity.Lineno = lineNo;
+                context.Update(entity);
+            }
+            else
+            {
+                entity = new _1sconst
+                {
+                    Objid = objId,//для транспортных маршрутов это Id элемента справочника ТранспортныеМаршруты
+                    Id = реквизитDds,
+                    Date = dateTime.Date,
+                    Time = (dateTime.Hour * 3600 * 10000) + (dateTime.Minute * 60 * 10000) + (dateTime.Second * 10000),
+                    Docid = docId,
+                    Value = value,//маршрут "э7777" или " 1W9 1TRBVS  " для документа ЗаявкаПокупателя с docId = " 1TRBVS  "
+                    Actno = actNo,//номер движения документа
+                    Lineno = lineNo,//Номер строки документа (заполняется при вызове метода ПривязыватьСтроку(), если привязка не выполнена или непериодическое значение - заполняется нулем
+                    Tvalue = "", //Заполняется только для неопределенных реквизитов, для типов данных 1С (когда длина ID равна 23 символам)
+                };
+                context._1sconsts.Add(entity);
+            }
+            context.SaveChanges();
         }
         public static void ОбновитьПериодическиеРеквизиты(this StinDbContext context, string objId, int реквизитDds, string docId, string value)
         {
@@ -119,6 +141,45 @@ namespace StinClasses
             int СчетчикАктивности = context._1susers.Select(x => x.Netchgcn).FirstOrDefault();
             СчетчикАктивности++;
             context.Database.ExecuteSqlRaw("Update _1SUSERS set NETCHGCN=" + СчетчикАктивности.ToString());
+        }
+        public static void ОчиститьДвиженияДокумента(this StinDbContext context, _1sjourn j)
+        {
+            if (j == null) return;
+            Type t = j.GetType();
+            var props = t.GetProperties()
+                .Where(p => (p.PropertyType == typeof(bool)) && (bool)p.GetValue(j, null) && (p.Name.ToUpper().StartsWith("RF")))
+                .Select(x => x.Name.Substring(2));
+            var docdate = j.DateTimeIddoc.Substring(0, 8);
+            var curperiod = docdate.Substring(0, 6) + "01";
+            var sb = new StringBuilder();
+            var sbClearRecalc = new StringBuilder();
+            var sbUpdateJourn = new StringBuilder("update _1sjourn set actcnt = 0");
+            foreach (var prpId in props)
+            {
+                sbClearRecalc.Clear();
+                sbClearRecalc.Append("exec _1sp_RA");
+                sbClearRecalc.Append(prpId);
+                if (prpId.Length < 5)
+                    sbClearRecalc.Append("_ClearRecalcDocActs @IdDoc, @DocDate, @CurPeriod, @RepeatToTM, 0, @Direct");
+                else
+                    sbClearRecalc.Append("_ClearRecalcDocAct @IdDoc, @DocDate, @CurPeriod, @RepeatToTM, 0, @Direct");
+                context.Database.ExecuteSqlRaw(sbClearRecalc.ToString(),
+                    new SqlParameter("@IdDoc", j.Iddoc),
+                    new SqlParameter("@DocDate", docdate),
+                    new SqlParameter("@CurPeriod", curperiod),
+                    new SqlParameter("@RepeatToTM", 1),
+                    new SqlParameter("@Direct", 1));
+                sb.Append("delete from ra");
+                sb.Append(prpId);
+                sb.AppendLine(" where iddoc = @iddoc");
+                sbUpdateJourn.Append(", rf");
+                sbUpdateJourn.Append(prpId);
+                sbUpdateJourn.Append(" = 0");
+            }
+            sbUpdateJourn.Append(" where iddoc = @iddoc");
+            context.Database.ExecuteSqlRaw(sb.ToString() + sbUpdateJourn.ToString(),
+                new SqlParameter("@iddoc", j.Iddoc));
+            j.Actcnt = 0;
         }
     }
 }

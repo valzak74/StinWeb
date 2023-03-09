@@ -265,8 +265,8 @@ namespace StinClasses
             DateTime result = new DateTime();
             if (DateTimeIddoc.Length >= 14 && DateTime.TryParseExact(DateTimeIddoc.Substring(0, 8), "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out result))
             {
-                var seconds = Decode36(DateTimeIddoc.Substring(8, 6).Trim()) / 10000;
-                result = result.AddSeconds(seconds);
+                var milliseconds = Decode36(DateTimeIddoc.Substring(8, 6).Trim()) / 10;
+                result = result.AddMilliseconds(milliseconds);
             }
             return result;
         }

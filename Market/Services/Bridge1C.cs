@@ -692,222 +692,214 @@ namespace Market.Services
                 {
                     DateTime dateTimeTA = _context.GetDateTimeTA();
                     bool needToCalcDateTime = dateTimeTA.Month != DateTime.Now.Month;
-                    //if (!_предварительнаяЗаявка.NeedToOpenPeriod())
-                    //{
                     var реквизитыПроведенныхДокументов = new List<ОбщиеРеквизиты>();
-                        if (order.Status == (int)StatusYandex.RESERVED && newStatus == StatusYandex.PROCESSING)
+                    if (order.Status == (int)StatusYandex.RESERVED && newStatus == StatusYandex.PROCESSING)
+                    {
+                        await _order.ОбновитьOrderStatus(order.Id, 8);
+                    }
+                    else if (order.Status == (int)StatusYandex.PROCESSING && order.SubStatus == (int)SubStatusYandex.READY_TO_SHIP &&
+                        newStatus == StatusYandex.PROCESSING && newSubStatus == SubStatusYandex.SHIPPED)
+                    {
+                        bool isDBS = order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP;
+                        var активныеНаборы = await _набор.ПолучитьСписокАктивныхНаборов(order.Id, true);
+                        if (активныеНаборы != null && активныеНаборы.Count > 0)
                         {
-                            await _order.ОбновитьOrderStatus(order.Id, 8);
-                        }
-                        else if (order.Status == (int)StatusYandex.PROCESSING && order.SubStatus == (int)SubStatusYandex.READY_TO_SHIP &&
-                            newStatus == StatusYandex.PROCESSING && newSubStatus == SubStatusYandex.SHIPPED)
-                        {
-                            var активныеНаборы = await _набор.ПолучитьСписокАктивныхНаборов(order.Id, true);
-                            if (активныеНаборы != null && активныеНаборы.Count > 0)
+                            var формаПредварительнаяЗаявка = await _предварительнаяЗаявка.GetФормаПредварительнаяЗаявкаByOrderId(order.Id);
+                            decimal суммаКОплате = ((формаПредварительнаяЗаявка.Order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP) && (формаПредварительнаяЗаявка.Order.PaymentType == StinPaymentType.POSTPAID)) ? (формаПредварительнаяЗаявка.ТабличнаяЧасть.Sum(x => x.Сумма) - формаПредварительнаяЗаявка.Order.СуммаВозмещения) : 0m;
+                            Sno системаНалогооблажения = Sno.osn;
+                            if (!string.IsNullOrWhiteSpace(формаПредварительнаяЗаявка.Общие.Фирма.СистемаНалогооблажения))
                             {
-                                var формаПредварительнаяЗаявка = await _предварительнаяЗаявка.GetФормаПредварительнаяЗаявкаByOrderId(order.Id);
-                                decimal суммаКОплате = ((формаПредварительнаяЗаявка.Order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP) && (формаПредварительнаяЗаявка.Order.PaymentType == StinPaymentType.POSTPAID)) ? (формаПредварительнаяЗаявка.ТабличнаяЧасть.Sum(x => x.Сумма) - формаПредварительнаяЗаявка.Order.СуммаВозмещения) : 0m;
-                                Sno системаНалогооблажения = Sno.osn;
-                                if (!string.IsNullOrWhiteSpace(формаПредварительнаяЗаявка.Общие.Фирма.СистемаНалогооблажения))
+                                if (!int.TryParse(формаПредварительнаяЗаявка.Общие.Фирма.СистемаНалогооблажения, out int intSno))
+                                    intSno = 0;
+                                системаНалогооблажения = (Sno)intSno;
+                            }
+                            var списокКомплеснаяПродажа = await _комплекснаяПродажа.ЗаполнитьНаОснованииAsync(userId, формаПредварительнаяЗаявка, needToCalcDateTime ? dateTimeTA.AddMilliseconds(1) : DateTime.Now, активныеНаборы, !isDBS);
+                            foreach (var формаКомплеснаяПродажа in списокКомплеснаяПродажа)
+                            {
+                                var result = await _комплекснаяПродажа.ЗаписатьПровестиAsync(формаКомплеснаяПродажа);
+                                реквизитыПроведенныхДокументов.Add(формаКомплеснаяПродажа.Общие);
+                                if (result == null)
                                 {
-                                    if (!int.TryParse(формаПредварительнаяЗаявка.Общие.Фирма.СистемаНалогооблажения, out int intSno))
-                                        intSno = 0;
-                                    системаНалогооблажения = (Sno)intSno;
-                                }
-                                var списокКомплеснаяПродажа = await _комплекснаяПродажа.ЗаполнитьНаОснованииAsync(userId, формаПредварительнаяЗаявка, needToCalcDateTime ? dateTimeTA.AddMilliseconds(1) : DateTime.Now, активныеНаборы);
-                                foreach (var формаКомплеснаяПродажа in списокКомплеснаяПродажа)
-                                {
-                                    var result = await _комплекснаяПродажа.ЗаписатьПровестиAsync(формаКомплеснаяПродажа);
-                                    реквизитыПроведенныхДокументов.Add(формаКомплеснаяПродажа.Общие);
-                                    if (result == null)
+                                    ФормаРеализация формаРеализация = null;
+                                    var ПереченьНаличия = await _комплекснаяПродажа.РаспределитьТоварПоНаличиюAsync(формаКомплеснаяПродажа);
+                                    var списокУслуг = формаКомплеснаяПродажа.ТабличнаяЧастьРазвернутая.Where(x => x.Номенклатура.ЭтоУслуга).ToList();
+                                    foreach (var data in ПереченьНаличия)
                                     {
-                                        ФормаРеализация формаРеализация = null;
-                                        var ПереченьНаличия = await _комплекснаяПродажа.РаспределитьТоварПоНаличиюAsync(формаКомплеснаяПродажа);
-                                        var списокУслуг = формаКомплеснаяПродажа.ТабличнаяЧастьРазвернутая.Where(x => x.Номенклатура.ЭтоУслуга).ToList();
-                                        foreach (var data in ПереченьНаличия)
+                                        формаРеализация = await _реализация.ВводНаОснованииAsync(формаКомплеснаяПродажа, needToCalcDateTime ? dateTimeTA.AddMilliseconds(2) : DateTime.Now, data.Key, data.Value, списокУслуг);
+                                        списокУслуг.Clear();
+                                        result = await _реализация.ЗаписатьПровестиAsync(формаРеализация);
+                                        реквизитыПроведенныхДокументов.Add(формаРеализация.Общие);
+                                        if ((result == null) && (!формаРеализация.Общие.Фирма.НетСчетФактуры) && (формаРеализация.КодОперации.Key == "   16S   "))
                                         {
-                                            формаРеализация = await _реализация.ВводНаОснованииAsync(формаКомплеснаяПродажа, needToCalcDateTime ? dateTimeTA.AddMilliseconds(2) : DateTime.Now, data.Key, data.Value, списокУслуг);
-                                            списокУслуг.Clear();
-                                            result = await _реализация.ЗаписатьПровестиAsync(формаРеализация);
-                                            реквизитыПроведенныхДокументов.Add(формаРеализация.Общие);
-                                            if ((result == null) && (!формаРеализация.Общие.Фирма.НетСчетФактуры))
+                                            var формаСчетФактура = await _счетФактура.ВводНаОснованииAsync(формаРеализация, needToCalcDateTime ? dateTimeTA.AddMilliseconds(3) : DateTime.Now);
+                                            result = await _счетФактура.ЗаписатьПровестиAsync(формаСчетФактура);
+                                            реквизитыПроведенныхДокументов.Add(формаСчетФактура.Общие);
+                                        }
+                                        if ((result == null) && (суммаКОплате > 0))
+                                        {
+                                            decimal суммаРеализации = формаРеализация.ТабличнаяЧасть.Sum(x => x.Сумма);
+                                            decimal суммаПКО = Math.Min(суммаКОплате, суммаРеализации);
+                                            if (суммаПКО > 0)
                                             {
-                                                var формаСчетФактура = await _счетФактура.ВводНаОснованииAsync(формаРеализация, needToCalcDateTime ? dateTimeTA.AddMilliseconds(3) : DateTime.Now);
-                                                result = await _счетФактура.ЗаписатьПровестиAsync(формаСчетФактура);
-                                                реквизитыПроведенныхДокументов.Add(формаСчетФактура.Общие);
-                                            }
-                                            if ((result == null) && (суммаКОплате > 0))
-                                            {
-                                                decimal суммаРеализации = формаРеализация.ТабличнаяЧасть.Sum(x => x.Сумма);
-                                                decimal суммаПКО = Math.Min(суммаКОплате, суммаРеализации);
-                                                if (суммаПКО > 0)
+                                                суммаКОплате = суммаКОплате - суммаПКО;
+                                                var формаПКО = await _пко.ВводНаОснованииAsync(формаРеализация, needToCalcDateTime ? dateTimeTA.AddMilliseconds(3) : DateTime.Now, суммаПКО, receiverPaymentType);
+                                                result = await _пко.ЗаписатьПровестиAsync(формаПКО, null, true);
+                                                реквизитыПроведенныхДокументов.Add(формаПКО.Общие);
+                                                if ((result == null) && (receiverPaymentType != ReceiverPaymentType.NotFound) &&
+                                                    (!string.IsNullOrWhiteSpace(receiverEmail) || !string.IsNullOrWhiteSpace(receiverPhone)))
                                                 {
-                                                    суммаКОплате = суммаКОплате - суммаПКО;
-                                                    var формаПКО = await _пко.ВводНаОснованииAsync(формаРеализация, needToCalcDateTime ? dateTimeTA.AddMilliseconds(3) : DateTime.Now, суммаПКО, receiverPaymentType);
-                                                    result = await _пко.ЗаписатьПровестиAsync(формаПКО, null, true);
-                                                    реквизитыПроведенныхДокументов.Add(формаПКО.Общие);
-                                                    if ((result == null) && (receiverPaymentType != ReceiverPaymentType.NotFound) &&
-                                                        (!string.IsNullOrWhiteSpace(receiverEmail) || !string.IsNullOrWhiteSpace(receiverPhone)))
+                                                    var формаЧекКкмТЧ = new List<ФормаЧекКкмТЧ>();
+                                                    формаЧекКкмТЧ.Add(new ФормаЧекКкмТЧ
                                                     {
-                                                        var формаЧекКкмТЧ = new List<ФормаЧекКкмТЧ>();
+                                                        ТипОплаты = receiverPaymentType == ReceiverPaymentType.БанковскойКартой ? ТипыОплатыЧекаККМ.БанковскаяКарта : ТипыОплатыЧекаККМ.Наличными,
+                                                        СуммаОплаты = суммаПКО
+                                                    });
+                                                    if (суммаРеализации > суммаПКО)
+                                                    {
                                                         формаЧекКкмТЧ.Add(new ФормаЧекКкмТЧ
                                                         {
-                                                            ТипОплаты = receiverPaymentType == ReceiverPaymentType.БанковскойКартой ? ТипыОплатыЧекаККМ.БанковскаяКарта : ТипыОплатыЧекаККМ.Наличными,
-                                                            СуммаОплаты = суммаПКО
+                                                            ТипОплаты = ТипыОплатыЧекаККМ.Кредит,
+                                                            СуммаОплаты = суммаРеализации - суммаПКО
+                                                        });
+                                                    }
+                                                    var формаЧек = await _чек.ВводНаОснованииAsync(формаПКО, needToCalcDateTime ? dateTimeTA.AddMilliseconds(4) : DateTime.Now, ВидыОперацииЧекаККМ.Чек, order.MarketplaceId, receiverEmail, receiverPhone,
+                                                            !string.IsNullOrWhiteSpace(receiverEmail), !string.IsNullOrWhiteSpace(receiverPhone), true, формаЧекКкмТЧ);
+                                                    result = await _чек.ЗаписатьAsync(формаЧек);
+                                                    if (result == null)
+                                                    {
+                                                        //атол онлайн
+                                                        var sellRequest = new SellRequest();
+                                                        sellRequest.timestamp = DateTime.Now;
+                                                        sellRequest.external_id = order.MarketplaceId + "/" + order.OrderNo;
+                                                        sellRequest.receipt = new Receipt();
+                                                        sellRequest.receipt.client = new SellClient();
+                                                        if (!string.IsNullOrWhiteSpace(receiverEmail))
+                                                            sellRequest.receipt.client.email = receiverEmail;
+                                                        if (!string.IsNullOrWhiteSpace(receiverPhone))
+                                                            sellRequest.receipt.client.phone = receiverPhone;
+
+                                                        sellRequest.receipt.company = new SellCompany
+                                                        {
+                                                            inn = формаЧек.Общие.Фирма.ЮрЛицо.ТолькоИНН,
+                                                            sno = системаНалогооблажения,
+                                                            payment_address = формаЧек.Общие.Фирма.МестоОнлайнРасчетов
+                                                        };
+                                                        sellRequest.receipt.items = new List<SellItem>();
+                                                        foreach (var row in формаРеализация.ТабличнаяЧасть)
+                                                        {
+                                                            sellRequest.receipt.items.Add(new SellItem
+                                                            {
+                                                                name = row.Номенклатура.Наименование,
+                                                                price = row.Сумма / row.Количество,
+                                                                quantity = row.Количество,
+                                                                sum = row.Сумма,
+                                                                measurement_unit = row.Единица.Код,
+                                                                payment_method = суммаПКО == суммаРеализации ? SellPaymentMethod.full_payment : SellPaymentMethod.partial_payment,
+                                                                payment_object = row.Номенклатура.ЭтоУслуга ? SellPaymentObject.service : SellPaymentObject.commodity,
+                                                                vat = new SellVat { type = AtolOperations.АтолСтавкиНДС.Where(x => x.Key == row.СтавкаНДС.Наименование).Select(x => x.Value).FirstOrDefault() }
+                                                            });
+                                                        }
+                                                        sellRequest.receipt.payments = new List<SellPaymentItem>();
+                                                        sellRequest.receipt.payments.Add(new SellPaymentItem
+                                                        {
+                                                            type = receiverPaymentType == ReceiverPaymentType.БанковскойКартой ? SellPaymentType.безналичный : SellPaymentType.наличные,
+                                                            sum = суммаПКО
                                                         });
                                                         if (суммаРеализации > суммаПКО)
                                                         {
-                                                            формаЧекКкмТЧ.Add(new ФормаЧекКкмТЧ
-                                                            {
-                                                                ТипОплаты = ТипыОплатыЧекаККМ.Кредит,
-                                                                СуммаОплаты = суммаРеализации - суммаПКО
-                                                            });
-                                                        }
-                                                        var формаЧек = await _чек.ВводНаОснованииAsync(формаПКО, needToCalcDateTime ? dateTimeTA.AddMilliseconds(4) : DateTime.Now, ВидыОперацииЧекаККМ.Чек, order.MarketplaceId, receiverEmail, receiverPhone,
-                                                                !string.IsNullOrWhiteSpace(receiverEmail), !string.IsNullOrWhiteSpace(receiverPhone), true, формаЧекКкмТЧ);
-                                                        result = await _чек.ЗаписатьAsync(формаЧек);
-                                                        if (result == null)
-                                                        {
-                                                            //атол онлайн
-                                                            var sellRequest = new SellRequest();
-                                                            sellRequest.timestamp = DateTime.Now;
-                                                            sellRequest.external_id = order.MarketplaceId + "/" + order.OrderNo;
-                                                            sellRequest.receipt = new Receipt();
-                                                            sellRequest.receipt.client = new SellClient();
-                                                            if (!string.IsNullOrWhiteSpace(receiverEmail))
-                                                                sellRequest.receipt.client.email = receiverEmail;
-                                                            if (!string.IsNullOrWhiteSpace(receiverPhone))
-                                                                sellRequest.receipt.client.phone = receiverPhone;
-                                                            
-                                                            sellRequest.receipt.company = new SellCompany 
-                                                            {
-                                                                inn = формаЧек.Общие.Фирма.ЮрЛицо.ТолькоИНН, 
-                                                                sno = системаНалогооблажения, 
-                                                                payment_address = формаЧек.Общие.Фирма.МестоОнлайнРасчетов
-                                                            };
-                                                            sellRequest.receipt.items = new List<SellItem>();
-                                                            foreach (var row in формаРеализация.ТабличнаяЧасть)
-                                                            {
-                                                                sellRequest.receipt.items.Add(new SellItem
-                                                                {
-                                                                    name = row.Номенклатура.Наименование,
-                                                                    price = row.Сумма / row.Количество,
-                                                                    quantity = row.Количество,
-                                                                    sum = row.Сумма,
-                                                                    measurement_unit = row.Единица.Код,
-                                                                    payment_method = суммаПКО == суммаРеализации ? SellPaymentMethod.full_payment : SellPaymentMethod.partial_payment,
-                                                                    payment_object = row.Номенклатура.ЭтоУслуга ? SellPaymentObject.service : SellPaymentObject.commodity,
-                                                                    vat = new SellVat { type = AtolOperations.АтолСтавкиНДС.Where(x => x.Key == row.СтавкаНДС.Наименование).Select(x => x.Value).FirstOrDefault() }
-                                                                });
-                                                            }
-                                                            sellRequest.receipt.payments = new List<SellPaymentItem>();
                                                             sellRequest.receipt.payments.Add(new SellPaymentItem
-                                                            { 
-                                                                type = receiverPaymentType == ReceiverPaymentType.БанковскойКартой ? SellPaymentType.безналичный : SellPaymentType.наличные, 
-                                                                sum = суммаПКО 
+                                                            {
+                                                                type = SellPaymentType.кредит,
+                                                                sum = суммаРеализации - суммаПКО
                                                             });
-                                                            if (суммаРеализации > суммаПКО)
-                                                            {
-                                                                sellRequest.receipt.payments.Add(new SellPaymentItem
-                                                                {
-                                                                    type = SellPaymentType.кредит,
-                                                                    sum = суммаРеализации - суммаПКО
-                                                                });
-                                                            }
-                                                            sellRequest.receipt.vats = new List<SellVat>();
-                                                            foreach (var gr in формаРеализация.ТабличнаяЧасть.GroupBy(x => x.СтавкаНДС.Наименование))
-                                                            {
-                                                                sellRequest.receipt.vats.Add(new SellVat 
-                                                                {
-                                                                    type = AtolOperations.АтолСтавкиНДС.Where(x => x.Key == gr.Key).Select(x => x.Value).FirstOrDefault(),
-                                                                    sum = gr.Sum(x => x.СуммаНДС)
-                                                                });
-                                                            }
-                                                            sellRequest.receipt.total = суммаРеализации;
-
-                                                            var sellResult = await AtolOperations.СоздатьЧекПриход(
-                                                                    формаЧек.Общие.Фирма.AtolLogin,
-                                                                    формаЧек.Общие.Фирма.AtolPassword,
-                                                                    формаЧек.Общие.Фирма.AlolGroupCode,
-                                                                    sellRequest);
-                                                            if (string.IsNullOrWhiteSpace(sellResult))
-                                                                result = await _чек.ПровестиAsync(формаЧек, true);
-                                                            else
-                                                                result = new ExceptionData { Description = sellResult };
                                                         }
-                                                        реквизитыПроведенныхДокументов.Add(формаЧек.Общие);
+                                                        sellRequest.receipt.vats = new List<SellVat>();
+                                                        foreach (var gr in формаРеализация.ТабличнаяЧасть.GroupBy(x => x.СтавкаНДС.Наименование))
+                                                        {
+                                                            sellRequest.receipt.vats.Add(new SellVat
+                                                            {
+                                                                type = AtolOperations.АтолСтавкиНДС.Where(x => x.Key == gr.Key).Select(x => x.Value).FirstOrDefault(),
+                                                                sum = gr.Sum(x => x.СуммаНДС)
+                                                            });
+                                                        }
+                                                        sellRequest.receipt.total = суммаРеализации;
+
+                                                        var sellResult = await AtolOperations.СоздатьЧекПриход(
+                                                                формаЧек.Общие.Фирма.AtolLogin,
+                                                                формаЧек.Общие.Фирма.AtolPassword,
+                                                                формаЧек.Общие.Фирма.AlolGroupCode,
+                                                                sellRequest);
+                                                        if (string.IsNullOrWhiteSpace(sellResult))
+                                                            result = await _чек.ПровестиAsync(формаЧек, true);
+                                                        else
+                                                            result = new ExceptionData { Description = sellResult };
                                                     }
+                                                    реквизитыПроведенныхДокументов.Add(формаЧек.Общие);
                                                 }
                                             }
-                                            if (result != null)
-                                                break;
                                         }
+                                        if (result != null)
+                                            break;
                                     }
-                                    if (result != null)
-                                        break;
                                 }
-                                await _order.ОбновитьOrderStatus(order.Id, 6);
+                                if (result != null)
+                                    break;
                             }
-                            else
-                                await _order.ОбновитьOrderStatus(order.Id, -6);
+                            await _order.ОбновитьOrderStatus(order.Id, isDBS ? 6 : 14);
                         }
-                        else if (newStatus == StatusYandex.CANCELLED)
+                        else
+                            await _order.ОбновитьOrderStatus(order.Id, isDBS ? -6 : -14);
+                    }
+                    else if (newStatus == StatusYandex.CANCELLED)
+                    {
+                        var активныеСчета = await _заявкаПокупателя.ПолучитьСписокАктивныхСчетов(order.Id, true);
+                        var активныеПеремещения = await _перемещениеТМЦ.ПолучитьСписокАктивныхПеремещений(активныеСчета);
+                        foreach (var перемещениеТмц in активныеПеремещения)
                         {
-                            var активныеСчета = await _заявкаПокупателя.ПолучитьСписокАктивныхСчетов(order.Id, true);
-                            var активныеПеремещения = await _перемещениеТМЦ.ПолучитьСписокАктивныхПеремещений(активныеСчета);
-                            foreach (var перемещениеТмц in активныеПеремещения)
+                            var возвратИзДоставки = await _возвратИзДоставки.ВводНаОснованииAsync(перемещениеТмц, needToCalcDateTime ? dateTimeTA.AddMilliseconds(1) : DateTime.Now);
+                            var result = await _возвратИзДоставки.ЗаписатьПровестиAsync(возвратИзДоставки);
+                            реквизитыПроведенныхДокументов.Add(возвратИзДоставки.Общие);
+                            if (result != null)
                             {
-                                var возвратИзДоставки = await _возвратИзДоставки.ВводНаОснованииAsync(перемещениеТмц, needToCalcDateTime ? dateTimeTA.AddMilliseconds(1) : DateTime.Now);
-                                var result = await _возвратИзДоставки.ЗаписатьПровестиAsync(возвратИзДоставки);
-                                реквизитыПроведенныхДокументов.Add(возвратИзДоставки.Общие);
-                                if (result != null)
-                                {
-                                    if (_context.Database.CurrentTransaction != null)
-                                        tran.Rollback();
-                                    _logger.LogError(result.Description);
-                                    break;
-                                }
+                                if (_context.Database.CurrentTransaction != null)
+                                    tran.Rollback();
+                                _logger.LogError(result.Description);
+                                break;
                             }
-                            var отменыЗаявок = await _отменаЗаявок.ВводНаОснованииAsync(активныеСчета, needToCalcDateTime ? dateTimeTA.AddMilliseconds(2) : DateTime.Now);
-                            foreach (var формаОтменаЗаявок in отменыЗаявок)
-                            {
-                                var result = await _отменаЗаявок.ЗаписатьПровестиAsync(формаОтменаЗаявок);
-                                реквизитыПроведенныхДокументов.Add(формаОтменаЗаявок.Общие);
-                                if (result != null)
-                                {
-                                    if (_context.Database.CurrentTransaction != null)
-                                        tran.Rollback();
-                                    _logger.LogError(result.Description);
-                                    break;
-                                }
-                            }
-                            var активныеНаборы = await _набор.ПолучитьСписокАктивныхНаборов(order.Id, false);
-                            foreach (var формаНабор in активныеНаборы)
-                            {
-                                var формаОтменаНабора = await _отменаНабора.ВводНаОснованииAsync(формаНабор, needToCalcDateTime ? dateTimeTA.AddMilliseconds(3) : DateTime.Now);
-                                var result = await _отменаНабора.ЗаписатьПровестиAsync(формаОтменаНабора);
-                                реквизитыПроведенныхДокументов.Add(формаОтменаНабора.Общие);
-                                if (result != null)
-                                {
-                                    if (_context.Database.CurrentTransaction != null)
-                                        tran.Rollback();
-                                    _logger.LogError(result.Description);
-                                    break;
-                                }
-                            }
-                            await _order.ОбновитьOrderStatus(order.Id, 5);
                         }
-                        if (реквизитыПроведенныхДокументов.Count > 0)
-                            await _предварительнаяЗаявка.ОбновитьАктивность(реквизитыПроведенныхДокументов);
-                        else 
-                            await _предварительнаяЗаявка.ОбновитьСетевуюАктивность();
-                    //}
-                    //else
-                    //{
-                    //    if (_context.Database.CurrentTransaction != null)
-                    //        _context.Database.CurrentTransaction.Rollback();
-                    //    _logger.LogError("Период не открыт");
-                    //}
+                        var отменыЗаявок = await _отменаЗаявок.ВводНаОснованииAsync(активныеСчета, needToCalcDateTime ? dateTimeTA.AddMilliseconds(2) : DateTime.Now);
+                        foreach (var формаОтменаЗаявок in отменыЗаявок)
+                        {
+                            var result = await _отменаЗаявок.ЗаписатьПровестиAsync(формаОтменаЗаявок);
+                            реквизитыПроведенныхДокументов.Add(формаОтменаЗаявок.Общие);
+                            if (result != null)
+                            {
+                                if (_context.Database.CurrentTransaction != null)
+                                    tran.Rollback();
+                                _logger.LogError(result.Description);
+                                break;
+                            }
+                        }
+                        var активныеНаборы = await _набор.ПолучитьСписокАктивныхНаборов(order.Id, false);
+                        foreach (var формаНабор in активныеНаборы)
+                        {
+                            var формаОтменаНабора = await _отменаНабора.ВводНаОснованииAsync(формаНабор, needToCalcDateTime ? dateTimeTA.AddMilliseconds(3) : DateTime.Now);
+                            var result = await _отменаНабора.ЗаписатьПровестиAsync(формаОтменаНабора);
+                            реквизитыПроведенныхДокументов.Add(формаОтменаНабора.Общие);
+                            if (result != null)
+                            {
+                                if (_context.Database.CurrentTransaction != null)
+                                    tran.Rollback();
+                                _logger.LogError(result.Description);
+                                break;
+                            }
+                        }
+                        await _order.ОбновитьOrderStatus(order.Id, 5);
+                    }
+                    if (реквизитыПроведенныхДокументов.Count > 0)
+                        await _предварительнаяЗаявка.ОбновитьАктивность(реквизитыПроведенныхДокументов);
+                    else
+                        await _предварительнаяЗаявка.ОбновитьСетевуюАктивность();
                     if (_context.Database.CurrentTransaction != null)
                         tran.Commit();
                 }
@@ -1290,7 +1282,10 @@ namespace Market.Services
             var order = await _order.ПолучитьOrderWithItems(orderId);
             if ((order != null) && (order.Status == (int)StatusYandex.PROCESSING) && (order.SubStatus == (int)SubStatusYandex.READY_TO_SHIP))
             {
-                using var tran = await _context.Database.BeginTransactionAsync();
+                int newStatus = 14;
+                if (order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP)
+                    newStatus = 6;
+                //using var tran = await _context.Database.BeginTransactionAsync();
                 try
                 {
                     if (order.Тип == "ЯНДЕКС")
@@ -1298,14 +1293,14 @@ namespace Market.Services
                         var yandexResult = await YandexClasses.YandexOperators.ChangeStatus(_httpService, "",
                             order.CampaignId, order.MarketplaceId,
                             order.ClientId, order.AuthToken,
-                            order.DeliveryPartnerType == StinDeliveryPartnerType.YANDEX_MARKET ? YandexClasses.StatusYandex.PROCESSING : YandexClasses.StatusYandex.DELIVERED,
-                            order.DeliveryPartnerType == StinDeliveryPartnerType.YANDEX_MARKET ? YandexClasses.SubStatusYandex.SHIPPED : YandexClasses.SubStatusYandex.NotFound,
+                            order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP ? StatusYandex.DELIVERED : StatusYandex.PROCESSING,
+                            order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP ? SubStatusYandex.NotFound : SubStatusYandex.SHIPPED,
                             (YandexClasses.DeliveryType)order.DeliveryType,
                             cancellationToken);
-                        if (yandexResult.Item1)
-                            await _order.ОбновитьOrderStatus(order.Id, 6);
-                        else
-                            await _order.ОбновитьOrderStatus(order.Id, -6, yandexResult.Item2);
+                        //if (yandexResult.Item1)
+                        //    await _order.ОбновитьOrderStatus(order.Id, newStatus);
+                        //else
+                        //    await _order.ОбновитьOrderStatus(order.Id, -newStatus, yandexResult.Item2);
                         result += yandexResult.Item2;
                     }
                     else if (order.Тип == "SBER")
@@ -1313,26 +1308,19 @@ namespace Market.Services
                         int boxCount = order.Items.Sum(x => (int)x.КолМест);
                         var sberResult = await SberClasses.Functions.OrderShipping(_httpService,
                             order.CampaignId, order.AuthToken, order.MarketplaceId, order.OrderNo, DateTime.Now, boxCount, cancellationToken);
-                        if (sberResult.success)
-                            await _order.ОбновитьOrderStatus(order.Id, 6);
-                        else
-                            await _order.ОбновитьOrderStatus(order.Id, -6, sberResult.error);
+                        //if (sberResult.success)
+                        //    await _order.ОбновитьOrderStatus(order.Id, newStatus);
+                        //else
+                        //    await _order.ОбновитьOrderStatus(order.Id, -newStatus, sberResult.error);
                         result += sberResult.error;
                     }
-                    if (_context.Database.CurrentTransaction != null)
-                        tran.Commit();
-                }
-                catch (DbUpdateException db_ex)
-                {
-                    if (_context.Database.CurrentTransaction != null)
-                        _context.Database.CurrentTransaction.Rollback();
-                    _logger.LogError(db_ex.InnerException.ToString());
-                    result += db_ex.InnerException.ToString();
+                    //if (_context.Database.CurrentTransaction != null)
+                    //    tran.Commit();
                 }
                 catch (Exception ex)
                 {
-                    if (_context.Database.CurrentTransaction != null)
-                        _context.Database.CurrentTransaction.Rollback();
+                    //if (_context.Database.CurrentTransaction != null)
+                    //    _context.Database.CurrentTransaction.Rollback();
                     _logger.LogError(ex.Message);
                     result += ex.Message + " " + ex.InnerException;
                 }

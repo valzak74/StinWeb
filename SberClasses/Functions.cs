@@ -296,7 +296,7 @@ namespace SberClasses
             var request = new OrderListRequest(token);
             request.Data.DateFrom = DateTime.Today.AddDays(-30);
             request.Data.DateTo = DateTime.Today;
-            request.Data.Statuses = new List<SberStatus> { SberStatus.CONFIRMED, SberStatus.CUSTOMER_CANCELED };
+            request.Data.Statuses = new List<SberStatus> { SberStatus.CONFIRMED, SberStatus.CUSTOMER_CANCELED, SberStatus.SHIPPED, SberStatus.DELIVERED };
 
             var result = await httpService.Exchange<OrderListResponse, string>(
                 $"https://{proxyHost}partner.sbermegamarket.ru/api/market/v1/orderService/order/search",

@@ -149,6 +149,7 @@ namespace StinClasses.Справочники
             IHttpService httpService, List<string> pictureUrls,
             CancellationToken cancellationToken);
         Task<string> GetColorProperty(string Id);
+        Task<Dictionary<Номенклатура, decimal>> GetAccessoriesList(string nomId);
     }
     public class НоменклатураEntity : IНоменклатура
     {
@@ -642,6 +643,20 @@ namespace StinClasses.Справочники
                           where (pr.Parentext == Id) && (prType.Descr.ToUpper().Trim() == "ЦВЕТ")
                           select prValue.Descr.Trim())
                        .FirstOrDefaultAsync();
+        }
+        public async Task<Dictionary<Номенклатура, decimal>> GetAccessoriesList(string nomId)
+        {
+            var result = new Dictionary<Номенклатура, decimal>();
+            var complectData = await _context.Sc890s
+                .Where(x => !x.Ismark && x.Parentext == nomId)
+                .Select(x => new
+                {
+                    NomId = x.Sp3470,
+                    Count = x.Sp891
+                }).ToListAsync();
+            foreach ( var comp in complectData )
+                result.Add(await GetНоменклатураByIdAsync(comp.NomId), comp.Count);
+            return result;
         }
     }
 }

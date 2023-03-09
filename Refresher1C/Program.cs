@@ -49,7 +49,10 @@ namespace Refresher1C
                 if (configuration.GetSection("Stocker:enable").Get<bool>())
                     services.AddHostedService<WorkerMarketplaceStocker>();
                 if (configuration.GetSection("Orderer:enable").Get<bool>())
+                {
                     services.AddHostedService<WorkerMarketplaceOrderer>();
+                    services.AddHostedService<WorkerMarketplaceOrdererSlow>();
+                }
                 if (configuration.GetSection("Marketplace:enable").Get<bool>())
                     services.AddHostedService<WorkerMarketplaces>();
                 if (configuration.GetSection("Pricer:enable").Get<bool>())
