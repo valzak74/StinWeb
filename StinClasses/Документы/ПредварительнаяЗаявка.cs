@@ -113,7 +113,7 @@ namespace StinClasses.Документы
             string предпочтительныйСпособОплаты = "";
             if (!((order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP) && (order.DeliveryType == StinDeliveryType.PICKUP)))
             {
-                string маршрутКод = _графикМаршрутов.ПолучитьКодМаршрута(order.ShipmentDate, "13"); //направление 13 == Самара
+                string маршрутКод = _графикМаршрутов.ПолучитьКодМаршрута(order.ShipmentDate, "50"); //направление 50 == Самара Преображенка
                 if (!string.IsNullOrEmpty(маршрутКод))
                 {
                     маршрут = _маршрут.НовыйЭлемент();

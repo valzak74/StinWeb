@@ -1,6 +1,4 @@
-﻿using HttpExtensions;
-using JsonExtensions;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using System.Security.Cryptography;
 using System.Text;
 using StinClasses;
@@ -10,15 +8,14 @@ using SixLabors.Fonts;
 using System.Globalization;
 using Microsoft.Win32;
 using System.Text.RegularExpressions;
-using YandexClasses;
-//using Top.Api;
-//using Top.Api.Request;
-//using Top.Api.Response;
+using JsonExtensions;
+using HttpExtensions;
 
 namespace HelloWorld
 {
     class Program
     {
+
         //public static IEnumerable<int> MyWhere(this IEnumerable<int> source, Func<int,bool> predicate)
         //{
         //    foreach (int item in source)
@@ -170,8 +167,8 @@ namespace HelloWorld
                 }
             }
         }        //private List<string> GetFilesForFont(string fontName)
-        //{
-        //    var fontNameToFiles = new Dictionary<string, List<string>>();
+                 //{
+                 //    var fontNameToFiles = new Dictionary<string, List<string>>();
 
         //    foreach (var fontFile in Directory.GetFiles(Environment.GetFolderPath(Environment.SpecialFolder.Fonts)))
         //    {
@@ -200,8 +197,40 @@ namespace HelloWorld
 
         //    return result;
         //}
+        static string ComputeSha256Hash(string rawData)
+        {
+            // Create a SHA256   
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                // ComputeHash - returns byte array  
+                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData));
+
+                // Convert byte array to a string   
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    builder.Append(bytes[i].ToString("x2"));
+                }
+                return builder.ToString();
+            }
+        }
+
         static async Task Main(string[] args)
         {
+            var signature = Convert.FromBase64String("MEQCIEvYEHjmiAuraVFE6ORq1ag88mp+lxCJ353CbOgeeTyFAiBTWPfKs+uePhKKGb4Qamgw25lPJN+Vrn9pJj78cfTMzw==");
+            StringBuilder builder = new StringBuilder();
+            for (int ii = 0; ii < signature.Length; ii++)
+            {
+                builder.Append(signature[ii].ToString("x2"));
+            }
+            Console.WriteLine(builder.ToString());
+            string plainData = "{\"message_type\": \"TYPE_PING\", \"time\": \"2023-03-14T08:14:24Z\"}";
+            Console.WriteLine("Raw data: {0}", plainData);
+            string hashedData = ComputeSha256Hash(plainData);
+            Console.WriteLine("Hash {0}", hashedData);
+            Console.ReadLine();
+
+            int e = 0;
             //IPAddress.TryParse("192.168.229.145", out IPAddress ip);
             //if (ip != null)
             ////foreach (var ip in Dns.GetHostAddresses(Dns.GetHostName()))

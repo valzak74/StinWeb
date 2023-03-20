@@ -217,6 +217,14 @@ namespace Market.Services
                             orderDeliveryPartnerType, orderDeliveryType, orderDeliveryServiceId, orderServiceName, deliveryPrice, deliverySubsidy,
                             orderDeliveryShipmentId, orderShipmentDate,
                             orderDeliveryRegionId, orderDeliveryRegionName, address, orderNotes, items);
+                        if (new_order == null)
+                        {
+                            if (_context.Database.CurrentTransaction != null)
+                                tran.Rollback();
+                            _logger.LogError("Ошибка создания заказа");
+                            return (orderNo: "", ShipmentDate: DateTime.Now);
+                        }
+
                         var формаПредварительнаяЗаявка = await _предварительнаяЗаявка.НовыйДокумент(
                                  needToCalcDateTime ? dateTimeTA.AddMilliseconds(1) : DateTime.Now,
                                  _defFirmaId,
@@ -512,6 +520,14 @@ namespace Market.Services
                             (StinDeliveryPartnerType)order.Delivery.DeliveryPartnerType, (StinDeliveryType)order.Delivery.Type, order.Delivery.DeliveryServiceId, order.Delivery.ServiceName, deliveryPrice, deliverySubsidy,
                             orderDeliveryShipmentId, orderShipmentDate,
                             order.Delivery.Region.Id.ToString(), order.Delivery.Region.Name, address, order.Notes, orderItems);
+                        if (new_order == null)
+                        {
+                            if (_context.Database.CurrentTransaction != null)
+                                tran.Rollback();
+                            _logger.LogError("Ошибка создания заказа");
+                            return Tuple.Create("", DateTime.Now);
+                        }
+
                         var формаПредварительнаяЗаявка = await _предварительнаяЗаявка.НовыйДокумент(
                                  needToCalcDateTime ? dateTimeTA.AddMilliseconds(1) : DateTime.Now,
                                  _defFirmaId,

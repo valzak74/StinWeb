@@ -24,6 +24,7 @@ namespace StinClasses.Справочники
         public string Code { get; set; }
         public string Артикул { get; set; }
         public string Наименование { get; set; }
+        public string ПолнНаименование { get; set; }
         public bool ЭтоУслуга { get; set; }
         public bool PickupOnly { get; set; }
         public Производитель Производитель { get; set; }
@@ -201,6 +202,7 @@ namespace StinClasses.Справочники
                               IsFolder = sc84.Isfolder == 1,
                               Code = sc84.Code.Trim(),
                               Наименование = sc84.Descr.Trim(),
+                              ПолнНаименование = sc84.Sp101,
                               Артикул = sc84.Sp85.Trim(),
                               ЭтоУслуга = sc84.Sp2417 != ВидыНоменклатуры.Товар,
                               PickupOnly = sc84.Sp14121 == 1,
@@ -245,6 +247,7 @@ namespace StinClasses.Справочники
                               IsFolder = sc84.Isfolder == 1,
                               Code = sc84.Code.Trim(),
                               Наименование = sc84.Descr.Trim(),
+                              ПолнНаименование = sc84.Sp101,
                               Артикул = sc84.Sp85.Trim(),
                               ЭтоУслуга = sc84.Sp2417 != ВидыНоменклатуры.Товар,
                               PickupOnly = sc84.Sp14121 == 1,
@@ -309,6 +312,7 @@ namespace StinClasses.Справочники
                               IsFolder = sc84.Isfolder == 1,
                               Code = sc84.Code.Trim(),
                               Наименование = sc84.Descr.Trim(),
+                              ПолнНаименование = sc84.Sp101,
                               Артикул = sc84.Sp85.Trim(),
                               ЭтоУслуга = sc84.Sp2417 != ВидыНоменклатуры.Товар,
                               PickupOnly = sc84.Sp14121 == 1,
@@ -465,6 +469,7 @@ namespace StinClasses.Справочники
                        IsFolder = sc84.Isfolder == 1,
                        Code = sc84.Code.Trim(),
                        Наименование = sc84.Descr.Trim(),
+                       ПолнНаименование = sc84.Sp101,
                        Артикул = sc84.Sp85.Trim(),
                        ЭтоУслуга = sc84.Sp2417 != ВидыНоменклатуры.Товар,
                        PickupOnly = sc84.Sp14121 == 1,
@@ -489,6 +494,7 @@ namespace StinClasses.Справочники
                               IsFolder = sc84.Isfolder == 1,
                               Code = sc84.Code.Trim(),
                               Наименование = sc84.Descr.Trim(),
+                              ПолнНаименование = sc84.Sp101,
                               Артикул = sc84.Sp85.Trim(),
                               ЭтоУслуга = sc84.Sp2417 != ВидыНоменклатуры.Товар,
                               PickupOnly = sc84.Sp14121 == 1,

@@ -295,6 +295,13 @@ namespace Refresher1C.Service
                     marketplaceName, postingNumber, paymentType, paymentMethod, partnerType, deliveryType,
                     deliveryServiceId, deliveryServiceName, deliveryPrice, deliverySubsidy, shipmentId, shipmentDate,
                     regionId, regionName, address, notes, items);
+                if (new_order == null)
+                {
+                    if (_context.Database.CurrentTransaction != null)
+                        tran.Rollback();
+                    _logger.LogError("Ошибка создания заказа");
+                    return;
+                }
 
                 var формаПредварительнаяЗаявка = await _предварительнаяЗаявка.НовыйДокумент(
                          needToCalcDateTime ? dateTimeTA.AddMilliseconds(1) : DateTime.Now,
@@ -641,7 +648,7 @@ namespace Refresher1C.Service
         }
         public async Task ОбновитьНомерМаршрута(Order order)
         {
-            string маршрутКод = _графикМаршрутов.ПолучитьКодМаршрута(order.ShipmentDate, "13");
+            string маршрутКод = _графикМаршрутов.ПолучитьКодМаршрута(order.ShipmentDate, "50");
             using var tran = await _context.Database.BeginTransactionAsync();
             try
             { 

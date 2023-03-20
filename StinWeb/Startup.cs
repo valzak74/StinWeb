@@ -34,7 +34,7 @@ namespace StinWeb
         {
             //services.AddLogging(opt => { opt.AddConsole(); opt.AddDebug(); });
             services.AddDbContext<StinDbContext>(opts => opts.UseLoggerFactory(MyLoggerFactory).EnableSensitiveDataLogging().UseSqlServer(Configuration["ConnectionString:DB"]));
-            services.AddSession(option => option.IdleTimeout = TimeSpan.FromHours(10));
+            services.AddSession(option => option.IdleTimeout = TimeSpan.FromHours(23));
             services.AddHttpClient<IHttpService, HttpService>()
                 .AddPolicyHandler(GetRetryPolicy());
             services.AddScoped<IEmailSender,EmailSender>();
@@ -43,7 +43,7 @@ namespace StinWeb
                 .AddCookie(options =>
                 {
                     options.SlidingExpiration = true;
-                    options.ExpireTimeSpan = TimeSpan.FromHours(10);
+                    options.ExpireTimeSpan = TimeSpan.FromHours(23);
                     options.LoginPath = new Microsoft.AspNetCore.Http.PathString("/Account/Login");
                     options.AccessDeniedPath = new Microsoft.AspNetCore.Http.PathString("/Account/Login");
                 });

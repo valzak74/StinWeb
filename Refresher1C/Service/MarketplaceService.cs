@@ -3826,7 +3826,7 @@ namespace Refresher1C.Service
                             join market in _context.Sc14042s on markUse.Sp14147 equals market.Id
                             join vzTovar in _context.VzTovars on nom.Id equals vzTovar.Id into _vzTovar
                             from vzTovar in _vzTovar.DefaultIfEmpty()
-                            where !markUse.Ismark && (markUse.Sp14147 == marketplaceId) &&
+                            where (markUse.Sp14147 == marketplaceId) &&
                               (markUse.Sp14158 == 1) //Есть в каталоге 
                               && offerCodes.Contains(nom.Code)
                             select new
@@ -3900,7 +3900,7 @@ namespace Refresher1C.Service
                         join ed in _context.Sc75s on nom.Sp94 equals ed.Id
                         join vzTovar in _context.VzTovars on nom.Id equals vzTovar.Id into _vzTovar
                         from vzTovar in _vzTovar.DefaultIfEmpty()
-                        where !markUse.Ismark && (markUse.Sp14147 == marketplaceId) &&
+                        where (markUse.Sp14147 == marketplaceId) &&
                           (markUse.Sp14158 == 1) //Есть в каталоге 
                           && !string.IsNullOrEmpty(nomParent.Sp95)
                           && nomParent.Sp95.Contains("WB")
@@ -3968,7 +3968,7 @@ namespace Refresher1C.Service
                         join nom in _context.Sc84s on markUse.Parentext equals nom.Id
                         join vzTovar in _context.VzTovars on nom.Id equals vzTovar.Id into _vzTovar
                         from vzTovar in _vzTovar.DefaultIfEmpty()
-                        where !markUse.Ismark && (markUse.Sp14147 == marketplaceId) &&
+                        where (markUse.Sp14147 == marketplaceId) &&
                           (markUse.Sp14158 == 1) //Есть в каталоге 
                         orderby nom.Code
                         select new
@@ -4039,7 +4039,7 @@ namespace Refresher1C.Service
                         join nom in _context.Sc84s on markUse.Parentext equals nom.Id
                         join vzTovar in _context.VzTovars on nom.Id equals vzTovar.Id into _vzTovar
                         from vzTovar in _vzTovar.DefaultIfEmpty()
-                        where !markUse.Ismark && (markUse.Sp14147 == marketplaceId) &&
+                        where (markUse.Sp14147 == marketplaceId) &&
                           (markUse.Sp14158 == 1) //Есть в каталоге 
                           //&& nom.Code == "D00028044"
                         select new
@@ -4301,7 +4301,7 @@ namespace Refresher1C.Service
                         join market in _context.Sc14042s on markUse.Sp14147 equals market.Id
                         join vzTovar in _context.VzTovars on nom.Id equals vzTovar.Id into _vzTovar
                         from vzTovar in _vzTovar.DefaultIfEmpty()
-                        where !markUse.Ismark && (markUse.Sp14147 == marketplaceId) &&
+                        where (markUse.Sp14147 == marketplaceId) &&
                           (markUse.Sp14158 == 1) //Есть в каталоге 
                           //&& nom.Code == "K00039119"
                         select new
