@@ -233,7 +233,7 @@ namespace WbClasses
                     headers[queryKey + "next"] = next.ToString();
                 }
                 if (result.Item1?.Supplies?.Count > 0)
-                    foreach (var supply in result.Item1.Supplies.Where(x => x.ClosedAt == DateTime.MinValue))
+                    foreach (var supply in result.Item1.Supplies.Where(x => !x.ClosedAt.HasValue || x.ClosedAt.Value == DateTime.MinValue))
                         data.Add(supply.Id ?? "");
             }
             return (supplyIds: data, error: string.IsNullOrEmpty(err) ? "" : "WbGetSuppliesList: " + err);

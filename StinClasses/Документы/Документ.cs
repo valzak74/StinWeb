@@ -28,10 +28,12 @@ namespace StinClasses.Документы
         ВозвратИзДоставки = 8724,
         ПКО = 2196,
         ОтчетКомиссионера = 1774,
+        Согласие = 11101,
     }
     public class ОбщиеРеквизиты
     {
         public string IdDoc { get; set; }
+        public string IdDoc13 => ВидДокумента36.PadLeft(4) + IdDoc;
         public string DateTimeIdDoc { get; set; }
         public ДокОснование ДокОснование { get; set; }
         public bool Удален { get; set; }
@@ -51,6 +53,14 @@ namespace StinClasses.Документы
         public Фирма Фирма { get; set; }
         public Пользователь Автор { get; set; }
         public string Комментарий { get; set; }
+        public ОбщиеРеквизиты()
+        { 
+        }
+        public ОбщиеРеквизиты(ВидДокумента видДокумента):this()
+        {
+            this.ВидДокумента10 = (int)видДокумента;
+            this.ВидДокумента36 = Common.Encode36(this.ВидДокумента10);
+        }
     }
     public class ДокОснование
     {
@@ -63,6 +73,13 @@ namespace StinClasses.Документы
         public bool Проведен { get; set; }
         public Фирма Фирма { get; set; }
         public Пользователь Автор { get; set; }
+        public ДокОснование()
+        {
+        }
+        public ДокОснование(ВидДокумента видДокумента) : this()
+        {
+            this.ВидДокумента10 = (int)видДокумента;
+        }
     }
     public class ExceptionData
     {
@@ -75,6 +92,7 @@ namespace StinClasses.Документы
         bool NeedToOpenPeriod();
         bool IsNew(string idDoc);
         Task<ОбщиеРеквизиты> ОбщиеРеквизитыAsync(string IdDoc);
+        Task SetCommonProperties(ОбщиеРеквизиты Общие, _1sjourn journ, string parentIdDoc13, string comment);
         _1sjourn GetEntityJourn(StinDbContext context, int ЖурналИД_md, int ВидДокИД_dds, string Нумератор, string ВидДок, string НомерДок, DateTime dateTime,
                string ФирмаИД,
                string ПользовательИД,
@@ -102,7 +120,7 @@ namespace StinClasses.Документы
         Task<ФормаРеализация> GetФормаРеализацияById(string idDoc);
         Task<ФормаНабор> GetФормаНаборById(string idDoc);
     }
-    public class Документ : IДокумент
+    public abstract class Документ : IДокумент
     {
         private protected StinDbContext _context;
         private protected IПользователь _пользователь;
@@ -169,6 +187,18 @@ namespace StinClasses.Документы
                               НомерДок = j.Docno,
                               ДатаДок = j.DateTimeIddoc.ToDateTime(),
                           }).SingleOrDefaultAsync();
+        }
+        public async Task SetCommonProperties(ОбщиеРеквизиты Общие, _1sjourn journ, string parentIdDoc13, string comment)
+        {
+            Общие.IdDoc = journ.Iddoc;
+            Общие.ДокОснование = (string.IsNullOrWhiteSpace(parentIdDoc13) || parentIdDoc13 == Common.ПустоеЗначениеИд13) ? null : await ДокОснованиеAsync(parentIdDoc13.Substring(4));
+            Общие.Фирма = _фирма.GetEntityById(journ.Sp4056);
+            Общие.Автор = _пользователь.GetUserById(journ.Sp74);
+            Общие.НомерДок = journ.Docno;
+            Общие.ДатаДок = journ.DateTimeIddoc.ToDateTime();
+            Общие.Проведен = journ.Closed == 1;
+            Общие.Удален = journ.Ismark;
+            Общие.Комментарий = comment;
         }
         public async Task<ВидДокумента> ПолучитьВидДокумента(string idDoc)
         {
@@ -711,7 +741,9 @@ namespace StinClasses.Документы
                 СпособОтгрузки = Common.СпособыОтгрузки.FirstOrDefault(x => x.Key == d.dh.Sp12327).Value,
                 СкидКарта = await _контрагент.GetСкидКартаAsync(d.dh.Sp12996),
                 Кладовщик = await _кладовщик.GetКладовщикByIdAsync(d.dh.Sp12559),
-                Order = await _order.ПолучитьOrderWithItems(d.dh.Sp14003)
+                Order = await _order.ПолучитьOrderWithItems(d.dh.Sp14003),
+                StartCompectation = d.dh.Sp14285,
+                EndComplectation = d.dh.Sp14286
             };
             var ТаблЧасть = await _context.Dt11948s
                 .Where(x => x.Iddoc == idDoc)

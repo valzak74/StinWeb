@@ -1741,18 +1741,6 @@
       "PackagePath": "staticwebassets\\templates\\ЛистСборки_ТаблЧасть.htm"
     },
     {
-      "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\templates\\Набор_Div.htm",
-      "PackagePath": "staticwebassets\\templates\\Набор_Div.htm"
-    },
-    {
-      "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\templates\\Набор_Styles.htm",
-      "PackagePath": "staticwebassets\\templates\\Набор_Styles.htm"
-    },
-    {
-      "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\templates\\Набор_ТаблЧасть.htm",
-      "PackagePath": "staticwebassets\\templates\\Набор_ТаблЧасть.htm"
-    },
-    {
       "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\templates\\ПриемВРемонт_Div.htm",
       "PackagePath": "staticwebassets\\templates\\ПриемВРемонт_Div.htm"
     },
@@ -1779,18 +1767,6 @@
     {
       "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\templates\\РеестрСберМегаМаркет_ТаблЧасть.htm",
       "PackagePath": "staticwebassets\\templates\\РеестрСберМегаМаркет_ТаблЧасть.htm"
-    },
-    {
-      "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\templates\\ТоварныйЧек_Div.htm",
-      "PackagePath": "staticwebassets\\templates\\ТоварныйЧек_Div.htm"
-    },
-    {
-      "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\templates\\ТоварныйЧек_Styles.htm",
-      "PackagePath": "staticwebassets\\templates\\ТоварныйЧек_Styles.htm"
-    },
-    {
-      "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\templates\\ТоварныйЧек_ТаблЧасть.htm",
-      "PackagePath": "staticwebassets\\templates\\ТоварныйЧек_ТаблЧасть.htm"
     },
     {
       "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\vakata-jstree\\dist\\jstree.js",

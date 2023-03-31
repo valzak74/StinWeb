@@ -1487,5 +1487,9 @@ namespace Market.Services
             if ((order != null) && (order.DeliveryServiceName != code))
                 await _order.RefreshOrderDeliveryServiceId(order.Id, long.Parse(order.DeliveryServiceId), code, cancellationToken);
         }
+        public async Task<IDictionary<string, decimal>> ПолучитьРезервМаркета(string marketId, IEnumerable<string> nomIds)
+        {
+            return await _номенклатура.GetReserveByMarketplace(marketId, nomIds);
+        }
     }
 }

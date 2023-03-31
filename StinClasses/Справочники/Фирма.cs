@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using StinClasses.Models;
@@ -9,6 +10,7 @@ namespace StinClasses.Справочники
 {
     public interface IФирма : IDisposable
     {
+        Фирма GetEntityById(string Id);
         Task<Фирма> GetEntityByIdAsync(string Id);
         Task<List<string>> ПолучитьСписокРазрешенныхФирмAsync(string firmaId = null);
         Task<List<string>> ПолучитьСписокФирмБезНДС(string firmaId);
@@ -82,49 +84,67 @@ namespace StinClasses.Справочники
         {
             _context = context;
         }
+        Фирма Map(Sc4014 фирмы, Sc131 своиЮрЛица, Sc1710 банковскиеСчета, Sc163 банки)
+        {
+            if ((фирмы == null) || (своиЮрЛица == null))
+                return null;
+            return new Фирма
+            {
+                Id = фирмы.Id,
+                Наименование = фирмы.Descr.Trim(),
+                ЮрЛицо = new ЮрЛицо
+                {
+                    Id = своиЮрЛица.Id,
+                    Наименование = своиЮрЛица.Descr.Trim(),
+                    ИНН = своиЮрЛица.Sp135.Trim(),
+                    Префикс = своиЮрЛица.Sp145.Trim(),
+                    УчитыватьНДС = своиЮрЛица.Sp4828,
+                    Адрес = своиЮрЛица.Sp149,
+                },
+                Счет = new БанковскийСчет
+                {
+                    Id = банковскиеСчета?.Id ?? "<не указан>",
+                    РасчетныйСчет = банковскиеСчета?.Sp4219.Trim() ?? "<не указан>",
+                    Банк = банки == null ? null : new Банк
+                    {
+                        Id = банки.Id,
+                        Наименование = банки.Descr.Trim(),
+                        КоррСчет = банки.Sp165.Trim() ?? string.Empty,
+                        БИК = банки.Code.Trim() ?? string.Empty,
+                        Город = банки.Sp164.Trim() ?? string.Empty
+                    }
+                },
+                НетСчетФактуры = фирмы.Sp12015 == 1,
+                СистемаНалогооблажения = фирмы.Sp13106.Trim(),
+                МестоОнлайнРасчетов = фирмы.Sp14144.Trim(),
+                AtolLogin = фирмы.Sp14141.Trim(),
+                AtolPassword = фирмы.Sp14142.Trim(),
+                AlolGroupCode = фирмы.Sp14143.Trim()
+            };
+        }
+        public Фирма GetEntityById(string Id)
+        {
+            var data = (from фирмы in _context.Sc4014s
+                        join своиЮрЛица in _context.Sc131s on фирмы.Sp4011 equals своиЮрЛица.Id
+                        join банковскиеСчета in _context.Sc1710s on фирмы.Sp4133 equals банковскиеСчета.Id into _банковскиеСчета
+                        from банковскиеСчета in _банковскиеСчета.DefaultIfEmpty()
+                        join банки in _context.Sc163s on банковскиеСчета.Sp1712 equals банки.Id into _банки
+                        from банки in _банки.DefaultIfEmpty()
+                        where фирмы.Id == Id && фирмы.Ismark == false
+                        select new { фирмы, своиЮрЛица, банковскиеСчета, банки }).SingleOrDefault();
+            return Map(data?.фирмы, data?.своиЮрЛица, data?.банковскиеСчета, data?.банки);
+        }
         public async Task<Фирма> GetEntityByIdAsync(string Id)
         {
-            return await (from фирмы in _context.Sc4014s
-                          join своиЮрЛица in _context.Sc131s on фирмы.Sp4011 equals своиЮрЛица.Id
-                          join банковскиеСчета in _context.Sc1710s on фирмы.Sp4133 equals банковскиеСчета.Id into _банковскиеСчета
-                          from банковскиеСчета in _банковскиеСчета.DefaultIfEmpty()
-                          join банки in _context.Sc163s on банковскиеСчета.Sp1712 equals банки.Id into _банки
-                          from банки in _банки.DefaultIfEmpty()
-                          where фирмы.Id == Id && фирмы.Ismark == false
-                          select new Фирма
-                          {
-                              Id = фирмы.Id,
-                              Наименование = фирмы.Descr.Trim(),
-                              ЮрЛицо = new ЮрЛицо
-                              {
-                                  Id = своиЮрЛица.Id,
-                                  Наименование = своиЮрЛица.Descr.Trim(),
-                                  ИНН = своиЮрЛица.Sp135.Trim(),
-                                  Префикс = своиЮрЛица.Sp145.Trim(),
-                                  УчитыватьНДС = своиЮрЛица.Sp4828,
-                                  Адрес = своиЮрЛица.Sp149,
-                              },
-                              Счет = new БанковскийСчет
-                              {
-                                  Id = банковскиеСчета != null ? банковскиеСчета.Id : "<не указан>",
-                                  РасчетныйСчет = банковскиеСчета != null ? банковскиеСчета.Sp4219.Trim() : "<не указан>",
-                                  Банк = банки == null ? null : new Банк
-                                  {
-                                      Id = банки.Id,
-                                      Наименование = банки.Descr.Trim(),
-                                      КоррСчет = банки.Sp165.Trim() ?? string.Empty,
-                                      БИК = банки.Code.Trim() ?? string.Empty,
-                                      Город = банки.Sp164.Trim() ?? string.Empty
-                                  }
-                              },
-                              НетСчетФактуры = фирмы.Sp12015 == 1,
-                              СистемаНалогооблажения = фирмы.Sp13106.Trim(),
-                              МестоОнлайнРасчетов = фирмы.Sp14144.Trim(),
-                              AtolLogin = фирмы.Sp14141.Trim(),
-                              AtolPassword = фирмы.Sp14142.Trim(),
-                              AlolGroupCode = фирмы.Sp14143.Trim()
-                          }
-                ).FirstOrDefaultAsync();
+            var data = await (from фирмы in _context.Sc4014s
+                              join своиЮрЛица in _context.Sc131s on фирмы.Sp4011 equals своиЮрЛица.Id
+                              join банковскиеСчета in _context.Sc1710s on фирмы.Sp4133 equals банковскиеСчета.Id into _банковскиеСчета
+                              from банковскиеСчета in _банковскиеСчета.DefaultIfEmpty()
+                              join банки in _context.Sc163s on банковскиеСчета.Sp1712 equals банки.Id into _банки
+                              from банки in _банки.DefaultIfEmpty()
+                              where фирмы.Id == Id && фирмы.Ismark == false
+                              select new { фирмы, своиЮрЛица, банковскиеСчета, банки }).SingleOrDefaultAsync();
+            return Map(data?.фирмы, data?.своиЮрЛица, data?.банковскиеСчета, data?.банки);
         }
         public async Task<БанковскийСчет> ПолучитьБанковскийСчетById(string Id)
         {

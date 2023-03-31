@@ -92,6 +92,7 @@ namespace StinClasses.Справочники
     }
     public interface IКонтрагент : IDisposable
     {
+        Контрагент GetКонтрагентById(string Id);
         Task<Контрагент> GetКонтрагентAsync(string Id);
         Task<Договор> GetДоговорAsync(string Id);
         Task<List<Договор>> GetAllДоговорыAsync(string контрагентId);
@@ -142,7 +143,56 @@ namespace StinClasses.Справочники
             else
                 return null;
         }
-
+        public Контрагент GetКонтрагентById(string Id)
+        {
+            var sc172 = _context.Sc172s.SingleOrDefault(x => x.Id == Id && !x.Ismark);
+            Контрагент result = Map(sc172);
+            string ВидЮрЛица = "";
+            string ЮрФизЛицоId = "";
+            if (!string.IsNullOrEmpty(sc172.Sp521))
+            {
+                ВидЮрЛица = sc172.Sp521.Substring(0, 4).Trim();
+                ЮрФизЛицоId = sc172.Sp521.Substring(4);
+            }
+            if (!string.IsNullOrEmpty(ВидЮрЛица) && !string.IsNullOrEmpty(ЮрФизЛицоId))
+            {
+                if (ВидЮрЛица == "DP")
+                {
+                    //юр лицо
+                    var ДанныеЮрЛица = _context.Sc493s.SingleOrDefault(x => x.Id == ЮрФизЛицоId && x.Ismark == false);
+                    result.ПолнНаименование = ДанныеЮрЛица.Sp498.Trim();
+                    result.ЮридическийАдрес = ДанныеЮрЛица.Sp666.Trim();
+                    result.ФактическийАдрес = ДанныеЮрЛица.Sp499.Trim();
+                }
+                else if (ВидЮрЛица == "3N")
+                {
+                    //собственное юр лицо
+                    var ДанныеЮрЛица = _context.Sc131s.SingleOrDefault(x => x.Id == ЮрФизЛицоId && x.Ismark == false);
+                    result.ПолнНаименование = ДанныеЮрЛица.Sp143.Trim();
+                    result.ЮридическийАдрес = ДанныеЮрЛица.Sp149.Trim();
+                    result.ФактическийАдрес = ДанныеЮрЛица.Sp144.Trim();
+                }
+                else
+                {
+                    //физ лица
+                    var ДанныеФизЛица = _context.Sc503s.SingleOrDefault(x => x.Id == ЮрФизЛицоId && x.Ismark == false);
+                    result.ПолнНаименование = ДанныеФизЛица.Sp508.Trim();
+                    result.ЮридическийАдрес = ДанныеФизЛица.Sp673.Trim();
+                    result.ФактическийАдрес = ДанныеФизЛица.Sp674.Trim();
+                }
+            }
+            var ВидСвойстваМенеджер = _context.Sc546s.FirstOrDefault(x => x.Descr.Trim() == "Менеджер");
+            result.Менеджер = (from спрСвваКонтрагентов in _context.Sc558s
+                               join спрЗначениеСвойства in _context.Sc556s on спрСвваКонтрагентов.Sp560 equals спрЗначениеСвойства.Id into _спрЗначениеСвойства
+                               from спрЗначениеСвойства in _спрЗначениеСвойства.DefaultIfEmpty()
+                               where спрСвваКонтрагентов.Sp559 == ВидСвойстваМенеджер.Id && спрСвваКонтрагентов.Parentext == result.Id
+                               select new Менеджер
+                               {
+                                   Id = спрЗначениеСвойства.Id,
+                                   Наименование = спрЗначениеСвойства.Descr.Trim()
+                               }).FirstOrDefault();
+            return result;
+        }
         public async Task<Контрагент> GetКонтрагентAsync(string Id)
         {
             var sc172 = await _context.Sc172s.FirstOrDefaultAsync(x => x.Id == Id && !x.Ismark);

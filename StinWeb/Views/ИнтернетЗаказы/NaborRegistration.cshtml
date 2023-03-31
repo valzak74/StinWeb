@@ -49,8 +49,12 @@
             },
             async: true,
             cache: false,
-            beforeSend: EnableBusyScreen(),
-            complete: DisableBusyScreen(),
+            beforeSend: function () {
+                EnableBusyScreen()
+            },
+            complete: function () {
+                DisableBusyScreen()
+            },
             success: function (obj) {
                 if (obj) {
                     document.getElementById('soundOk').play();

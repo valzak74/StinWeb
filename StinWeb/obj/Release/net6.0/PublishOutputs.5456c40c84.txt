@@ -1,4 +1,7 @@
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\StinWeb.exe
+C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\Templates\ТоварныйЧек_Div.htm
+C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\Templates\ТоварныйЧек_Styles.htm
+C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\Templates\ТоварныйЧек_ТаблЧасть.htm
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\appsettings.Development.json
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\appsettings.json
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\StinWeb.dll
@@ -80,6 +83,7 @@ C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\Polly.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\Polly.Extensions.Http.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\BouncyCastle.Crypto.dll
+C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\QRCoder.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\ICSharpCode.SharpZipLib.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\SixLabors.Fonts.dll
 C:\Users\Валентин\source\repos\StinWeb\StinWeb\obj\Release\net6.0\PubTmp\Out\SixLabors.ImageSharp.dll

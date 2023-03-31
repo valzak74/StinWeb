@@ -22,6 +22,8 @@ namespace StinClasses.Models
         public string Sp12559 { get; set; }
         public string Sp12996 { get; set; }
         public string Sp14003 { get; set; }
+        public DateTime Sp14285 { get; set; }
+        public DateTime Sp14286 { get; set; }
         public decimal Sp11946 { get; set; }
         public string Sp660 { get; set; }
     }

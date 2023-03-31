@@ -19,3 +19,5 @@ C:\Users\Валентин\source\repos\StinWeb\StinClasses\obj\Debug\net6.0\refi
 C:\Users\Валентин\source\repos\StinWeb\StinClasses\obj\Debug\net6.0\StinClasses.pdb
 C:\Users\Валентин\source\repos\StinWeb\StinClasses\obj\Debug\net6.0\StinClasses.genruntimeconfig.cache
 C:\Users\Валентин\source\repos\StinWeb\StinClasses\obj\Debug\net6.0\ref\StinClasses.dll
+C:\Users\Валентин\source\repos\StinWeb\StinClasses\bin\Debug\net6.0\PdfHelper.dll
+C:\Users\Валентин\source\repos\StinWeb\StinClasses\bin\Debug\net6.0\PdfHelper.pdb

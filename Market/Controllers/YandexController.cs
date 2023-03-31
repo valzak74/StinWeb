@@ -9,6 +9,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using StinClasses;
 using YandexClasses;
+using StinClasses.Справочники;
+using OzonClasses;
 
 namespace Market.Controllers
 {
@@ -119,8 +121,8 @@ namespace Market.Controllers
             var номенклатураCodes = requestedStock.Skus.Select(x => x.Decode(market.Encoding))
                 .Where(x => !string.IsNullOrEmpty(x))
                 .ToList();
-                //market.HexEncoding ? requestedStock.Skus.Select(x => x.TryDecodeHexString()).Where(x => !string.IsNullOrEmpty(x)).ToList() : requestedStock.Skus;
             var НоменклатураList = await bridge.ПолучитьСвободныеОстатки(номенклатураCodes, списокСкладов);
+            var резервыМаркета = await bridge.ПолучитьРезервМаркета(market.Id, НоменклатураList.Select(x => x.Id));
 
             var lockedNomIds = await bridge.ПолучитьLockedНоменклатураIds(headers.Authorization, номенклатураCodes);
             var nomQuantums = await bridge.ПолучитьКвант(номенклатураCodes, cancellationToken);
@@ -131,22 +133,26 @@ namespace Market.Controllers
                 int count = 0;
                 var номенклатура = НоменклатураList.Where(x => x.Code == requestedSku.Decode(market.Encoding))
                     .FirstOrDefault();
-                //(market.HexEncoding ? requestedSku.TryDecodeHexString() : requestedSku)).FirstOrDefault();
                 if ((номенклатура != null) && !lockedNomIds.Any(x => x == номенклатура.Id))
                 {
+                    резервыМаркета.TryGetValue(номенклатура.Id, out decimal резервМаркета);
                     var quantum = (int)nomQuantums.Where(x => x.Key == номенклатура.Id).Select(x => x.Value).FirstOrDefault();
                     var deltaStock = (int)nomDeltaStock.Where(x => x.Key == номенклатура.Id).Select(x => x.Value).FirstOrDefault();
                     if (quantum > 1)
                     {
-                        var остатокКвантов = (int)(((номенклатура.Остатки
+                        var остатокРегистр = номенклатура.Остатки
                             .Where(x => x.СкладId == Common.SkladEkran)
-                            .Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - deltaStock) / quantum);
+                            .Sum(x => x.СвободныйОстаток);
+                        остатокРегистр += резервМаркета;
+                        var остатокКвантов = (int)(((остатокРегистр / номенклатура.Единица.Коэффициент) - deltaStock) / quantum);
                         остатокКвантов = Math.Max(остатокКвантов, 0);
                         count = остатокКвантов * quantum;
                     }
                     else
                     {
-                        count = (int)(номенклатура.Остатки.Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - deltaStock;
+                        var остатокРегистр = номенклатура.Остатки.Sum(x => x.СвободныйОстаток);
+                        остатокРегистр += резервМаркета;
+                        count = (int)(остатокРегистр / номенклатура.Единица.Коэффициент) - deltaStock;
                         count = Math.Max(count, 0);
                     }
                 }

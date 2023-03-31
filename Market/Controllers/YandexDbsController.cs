@@ -239,8 +239,8 @@ namespace Market.Controllers
                 списокСкладов = await bridge.ПолучитьСкладIdОстатковMarketplace();
 
             var номенклатураCodes = requestedStock.Skus.Select(x => x.Decode(market.Encoding)).Where(x => !string.IsNullOrEmpty(x)).ToList();
-                //market.HexEncoding ? requestedStock.Skus.Select(x => x.TryDecodeHexString()).Where(x => !string.IsNullOrEmpty(x)).ToList() : requestedStock.Skus;
             var НоменклатураList = await bridge.ПолучитьСвободныеОстатки(номенклатураCodes, списокСкладов);
+            var резервыМаркета = await bridge.ПолучитьРезервМаркета(market.Id, НоменклатураList.Select(x => x.Id));
 
             var lockedNomIds = await bridge.ПолучитьLockedНоменклатураIds(headers.Authorization, номенклатураCodes);
             var nomDeltaStock = await bridge.ПолучитьDeltaStock(market.Id, номенклатураCodes, cancellationToken);
@@ -249,11 +249,13 @@ namespace Market.Controllers
             {
                 int count = 0;
                 var номенклатура = НоменклатураList.Where(x => x.Code == requestedSku.Decode(market.Encoding)).FirstOrDefault();
-                //(market.HexEncoding ? requestedSku.TryDecodeHexString() : requestedSku)).FirstOrDefault();
                 if ((номенклатура != null) && !lockedNomIds.Any(x => x == номенклатура.Id))
                 {
+                    резервыМаркета.TryGetValue(номенклатура.Id, out decimal резервМаркета);
+                    var остатокРегистр = номенклатура.Остатки.Sum(x => x.СвободныйОстаток);
+                    остатокРегистр += резервМаркета;
                     var deltaStock = (int)nomDeltaStock.Where(x => x.Key == номенклатура.Id).Select(x => x.Value).FirstOrDefault();
-                    count = Math.Max((int)(номенклатура.Остатки.Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - deltaStock, 0);
+                    count = Math.Max((int)(остатокРегистр / номенклатура.Единица.Коэффициент) - deltaStock, 0);
                 }
                 responseStock.Skus.Add(new SkuEntry
                 {

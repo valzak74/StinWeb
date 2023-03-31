@@ -30,7 +30,7 @@ namespace WbClasses
         public long Id { get; set; }
         public string? Rid { get; set; }
         [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
-        public DateTime DateCreated { get; set; }
+        public DateTime CreatedAt { get; set; }
         public long WarehouseId { get; set; }
         public string? SupplyId { get; set; }
         public List<string>? PrioritySc { get; set; }

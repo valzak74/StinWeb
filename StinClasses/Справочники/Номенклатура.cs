@@ -133,9 +133,12 @@ namespace StinClasses.Справочники
         Task<List<string>> GetНоменклатураIdByListBarcodeAsync(List<string> Barcodes, CancellationToken cancellationToken);
         Task<string> GetНоменклатураIdByBarcodeAsync(string Barcode, CancellationToken cancellationToken);
         Task<string> GetIdByCode(string code);
+        Номенклатура GetНоменклатураById(string Id);
         Task<Номенклатура> GetНоменклатураByIdAsync(string Id);
+        Единица GetЕдиницаById(string Id);
         Task<Единица> GetЕдиницаByIdAsync(string Id);
         СтавкаНДС GetСтавкаНДС(string Id);
+        СтавкаНДС GetСтавкаНДСByNomId(string номенклатураId);
         Task<СтавкаНДС> GetСтавкаНДСAsync(string номенклатураId);
         Task<bool> IsОсновноеСвойствоКомиссияAsync(string номенклатураId);
         Task<List<Номенклатура>> ПолучитьСвободныеОстатки(List<string> ФирмаIds, List<string> СкладIds, List<string> НоменклатураIds, bool IsCode = false);
@@ -151,6 +154,7 @@ namespace StinClasses.Справочники
             CancellationToken cancellationToken);
         Task<string> GetColorProperty(string Id);
         Task<Dictionary<Номенклатура, decimal>> GetAccessoriesList(string nomId);
+        Task<IDictionary<string, decimal>> GetReserveByMarketplace(string marketplaceId, IEnumerable<string> nomIds);
     }
     public class НоменклатураEntity : IНоменклатура
     {
@@ -159,6 +163,7 @@ namespace StinClasses.Справочники
         private IРегистрОстаткиТМЦ _регистрОстаткиТМЦ;
         private IРегистрРезервыТМЦ _регистрРезервыТМЦ;
         private IРегистрСтопЛистЗЧ _регистрСтопЛистЗЧ;
+        private IРегистрНаборНаСкладе _регистрНаборНаСкладе;
         protected virtual void Dispose(bool disposing)
         {
             if (!this.disposed)
@@ -168,6 +173,7 @@ namespace StinClasses.Справочники
                     _регистрОстаткиТМЦ.Dispose();
                     _регистрРезервыТМЦ.Dispose();
                     _регистрСтопЛистЗЧ.Dispose();
+                    _регистрНаборНаСкладе.Dispose();
                     _context.Dispose();
                 }
             }
@@ -184,6 +190,7 @@ namespace StinClasses.Справочники
             _регистрОстаткиТМЦ = new Регистр_ОстаткиТМЦ(context);
             _регистрРезервыТМЦ = new Регистр_РезервыТМЦ(context);
             _регистрСтопЛистЗЧ = new Регистр_СтопЛистЗЧ(context);
+            _регистрНаборНаСкладе = new Регистр_НаборНаСкладе(context);
         }
         public async Task<List<Номенклатура>> GetНоменклатураByListIdAsync(List<string> Ids)
         {
@@ -295,9 +302,66 @@ namespace StinClasses.Справочники
         {
             return await _context.Sc84s.Where(x => x.Code == code).Select(x => x.Id).FirstOrDefaultAsync();
         }
+        Номенклатура Map(Sc84 sc84, Sc75 sc75, Sc41 sc41, Sc8840 sc8840, VzTovar vzTovar)
+        {
+            if (sc84 == null)
+                return null;
+            return new Номенклатура
+            {
+                Id = sc84.Id,
+                ParentId = sc84.Parentid,
+                IsFolder = sc84.Isfolder == 1,
+                Code = sc84.Code.Trim(),
+                Наименование = sc84.Descr.Trim(),
+                ПолнНаименование = sc84.Sp101,
+                Артикул = sc84.Sp85.Trim(),
+                ЭтоУслуга = sc84.Sp2417 != ВидыНоменклатуры.Товар,
+                PickupOnly = sc84.Sp14121 == 1,
+                Единица = Map(sc75, sc41),
+                Производитель = sc8840 != null ? new Производитель
+                {
+                    Id = sc8840.Id,
+                    Наименование = sc8840.Descr.Trim()
+                } : null,
+                Цена = vzTovar != null ? new Цены
+                {
+                    Закупочная = vzTovar.Zakup ?? 0,
+                    Оптовая = vzTovar.Opt ?? 0,
+                    Розничная = vzTovar.Rozn ?? 0,
+                    ОптСП = vzTovar.OptSp ?? 0,
+                    РозСП = vzTovar.RoznSp ?? 0
+                } : null
+            };
+        }
+        Единица Map(Sc75 sc75, Sc41 sc41)
+        {
+            if (sc75 == null)
+                return null;
+            return new Единица
+            {
+                Id = sc75.Id,
+                Код = sc41.Code,
+                Наименование = sc41.Descr.Trim(),
+                Barcode = sc75.Sp80.Trim(),
+                Коэффициент = sc75.Sp78 == 0 ? 1 : sc75.Sp78
+            };
+        }
+        public Номенклатура GetНоменклатураById(string Id)
+        {
+            var data = (from sc84 in _context.Sc84s
+                        join sc75 in _context.Sc75s on sc84.Sp94 equals sc75.Id
+                        join sc41 in _context.Sc41s on sc75.Sp79 equals sc41.Id
+                        join sc8840 in _context.Sc8840s on sc84.Sp8842 equals sc8840.Id into _sc8840
+                        from sc8840 in _sc8840.DefaultIfEmpty()
+                        join vzTovar in _context.VzTovars on sc84.Id equals vzTovar.Id into _vzTovar
+                        from vzTovar in _vzTovar.DefaultIfEmpty()
+                        where sc84.Isfolder == 2 && sc84.Ismark == false && sc84.Id == Id
+                        select new { sc84, sc75, sc41, sc8840, vzTovar }).FirstOrDefault();
+            return Map(data?.sc84, data?.sc75, data?.sc41, data?.sc8840, data?.vzTovar);
+        }
         public async Task<Номенклатура> GetНоменклатураByIdAsync(string Id)
         {
-            return await (from sc84 in _context.Sc84s
+            var data = await (from sc84 in _context.Sc84s
                           join sc75 in _context.Sc75s on sc84.Sp94 equals sc75.Id
                           join sc41 in _context.Sc41s on sc75.Sp79 equals sc41.Id
                           join sc8840 in _context.Sc8840s on sc84.Sp8842 equals sc8840.Id into _sc8840
@@ -305,56 +369,26 @@ namespace StinClasses.Справочники
                           join vzTovar in _context.VzTovars on sc84.Id equals vzTovar.Id into _vzTovar
                           from vzTovar in _vzTovar.DefaultIfEmpty()
                           where sc84.Isfolder == 2 && sc84.Ismark == false && sc84.Id == Id
-                          select new Номенклатура
-                          {
-                              Id = sc84.Id,
-                              ParentId = sc84.Parentid,
-                              IsFolder = sc84.Isfolder == 1,
-                              Code = sc84.Code.Trim(),
-                              Наименование = sc84.Descr.Trim(),
-                              ПолнНаименование = sc84.Sp101,
-                              Артикул = sc84.Sp85.Trim(),
-                              ЭтоУслуга = sc84.Sp2417 != ВидыНоменклатуры.Товар,
-                              PickupOnly = sc84.Sp14121 == 1,
-                              Единица = new Единица
-                              {
-                                  Id = sc75.Id,
-                                  Код = sc41.Code,
-                                  Наименование = sc41.Descr.Trim(),
-                                  Barcode = sc75.Sp80.Trim(),
-                                  Коэффициент = sc75.Sp78 == 0 ? 1 : sc75.Sp78
-                              },
-                              Производитель = sc8840 != null ? new Производитель
-                              {
-                                  Id = sc8840.Id,
-                                  Наименование = sc8840.Descr.Trim()
-                              } : null,
-                              Цена = vzTovar != null ? new Цены
-                              {
-                                  Закупочная = vzTovar.Zakup ?? 0,
-                                  Оптовая = vzTovar.Opt ?? 0,
-                                  Розничная = vzTovar.Rozn ?? 0,
-                                  ОптСП = vzTovar.OptSp ?? 0,
-                                  РозСП = vzTovar.RoznSp ?? 0
-                              } : null
-
-                          })
+                          select new { sc84, sc75, sc41, sc8840, vzTovar })
                           .FirstOrDefaultAsync();
+            return Map(data?.sc84, data?.sc75, data?.sc41, data?.sc8840, data?.vzTovar);
+        }
+        public Единица GetЕдиницаById(string Id)
+        {
+            var data = (from sc75 in _context.Sc75s
+                        join sc41 in _context.Sc41s on sc75.Sp79 equals sc41.Id
+                        where sc75.Id == Id
+                        select new { sc75, sc41 }).FirstOrDefault();
+            return Map(data.sc75, data.sc41);
         }
         public async Task<Единица> GetЕдиницаByIdAsync(string Id)
         {
-            return await (from единицы in _context.Sc75s
-                          join океи in _context.Sc41s on единицы.Sp79 equals океи.Id
-                          where единицы.Id == Id 
-                          select new Единица
-                          {
-                              Id = единицы.Id,
-                              Код = океи.Code,
-                              Наименование = океи.Descr.Trim(),
-                              Barcode = единицы.Sp80.Trim(),
-                              Коэффициент = единицы.Sp78
-                          })
+            var data = await (from sc75 in _context.Sc75s
+                          join sc41 in _context.Sc41s on sc75.Sp79 equals sc41.Id
+                          where sc75.Id == Id 
+                          select new { sc75, sc41 })
                          .FirstOrDefaultAsync();
+            return Map(data.sc75, data.sc41);
         }
         public СтавкаНДС GetСтавкаНДС(string Id)
         {
@@ -378,6 +412,13 @@ namespace StinClasses.Справочники
                     break;
             }
             return new СтавкаНДС { Id = Id, Наименование = СтавкаНаименование, Процент = Процент };
+        }
+        public СтавкаНДС GetСтавкаНДСByNomId(string номенклатураId)
+        {
+            string ставкаId = _context.Sc84s.Where(x => x.Id == номенклатураId).Select(x => x.Sp103).FirstOrDefault();
+            if (!string.IsNullOrEmpty(ставкаId))
+                return GetСтавкаНДС(ставкаId);
+            return null;
         }
         public async Task<СтавкаНДС> GetСтавкаНДСAsync(string номенклатураId)
         {
@@ -663,6 +704,27 @@ namespace StinClasses.Справочники
             foreach ( var comp in complectData )
                 result.Add(await GetНоменклатураByIdAsync(comp.NomId), comp.Count);
             return result;
+        }
+        public async Task<IDictionary<string, decimal>> GetReserveByMarketplace(string marketplaceId, IEnumerable<string> nomIds)
+        {
+            var inReserve = await _регистрРезервыТМЦ.ПолучитьКоличествоНоменклатурыВРезервахAsync(DateTime.MinValue, null, false, nomIds, marketplaceId);
+            var inNabor = await _регистрНаборНаСкладе.ПолучитьКоличествоНоменклатурыВНаборахAsync(DateTime.MinValue, null, false, nomIds, marketplaceId);
+            if (inReserve != null && inNabor != null)
+            {
+                foreach (var item in inReserve)
+                {
+                    if (inNabor.ContainsKey(item.Key))
+                        inNabor[item.Key] += item.Value;
+                    else
+                        inNabor.Add(item.Key, item.Value);
+                }
+                return inNabor;
+            }
+            else if (inNabor != null)
+                return inNabor;
+            else if (inReserve != null)
+                return inReserve;
+            return new Dictionary<string,decimal>();
         }
     }
 }

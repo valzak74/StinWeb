@@ -6,6 +6,7 @@ using System.Diagnostics;
 using MigraDocCore.DocumentObjectModel;
 using MigraDocCore.Rendering;
 using BarcodeLib;
+using QRCoder;
 
 namespace PdfHelper
 {
@@ -61,6 +62,13 @@ namespace PdfHelper
             }
             document.Save(outputStream);
             return outputStream.ToArray();
+        }
+        public byte[] GenerateQRCode(string barcodeText, int moduleSize = 10)
+        {
+            using QRCodeGenerator qrGenerator = new QRCodeGenerator();
+            using QRCodeData qrCodeData = qrGenerator.CreateQrCode(barcodeText, QRCodeGenerator.ECCLevel.Q);
+            using PngByteQRCode qrCode = new PngByteQRCode(qrCodeData);
+            return qrCode.GetGraphic(moduleSize);
         }
         public byte[] GenerateBarcode128(string barcodeText, int height = 0, int width = 0, bool withLabel = false)
         {

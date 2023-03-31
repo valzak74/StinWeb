@@ -346,10 +346,48 @@ namespace OzonClasses
             }
 
         }
+        static async Task<List<(string OfferId, int Present, int Reserved)>> GetStockInfo(IHttpService httpService, string proxyHost, string clientId, string authToken,
+            List<string> offerIds,
+            CancellationToken cancellationToken)
+        {
+            var result = new List<(string OfferId, int Present, int Reserved)>();
+            var request = new StockInfoRequest(offerIds);
+            var response = await httpService.Exchange<StockInfoResponse, ErrorResponse>(
+                $"https://{proxyHost}api-seller.ozon.ru/v3/product/info/stocks",
+                HttpMethod.Post,
+                GetOzonHeaders(clientId, authToken),
+                request,
+                cancellationToken);
+            string err = "";
+            if (response.Item2 != null)
+            {
+                if (!string.IsNullOrEmpty(err))
+                    err += Environment.NewLine;
+                err += ParseOzonError(response.Item2);
+            }
+            if (response.Item1?.Result?.Items?.Count > 0)
+                foreach (var item in response.Item1.Result.Items)
+                {
+                    if (item.Stocks?.Count > 0)
+                        result.Add((
+                            OfferId: item.Offer_id ?? "",
+                            Present: item.Stocks.Where(x => x.Type == StockType.fbs).Sum(x => x.Present),
+                            Reserved: item.Stocks.Where(x => x.Type == StockType.fbs).Sum(x => x.Reserved)
+                        ));
+                }
+            return result;
+        }
         public static async Task<(List<string> updatedOfferIds, List<string> tooManyRequests, List<string> errorOfferIds, string errorMessage)> UpdateStock(IHttpService httpService, string proxyHost, string clientId, string authToken,
             List<StockRequest> stockData,
             CancellationToken cancellationToken)
         {
+            var stockInfo = await GetStockInfo(httpService, proxyHost, clientId, authToken, stockData.Select(x => x.Offer_id ?? "").ToList(), cancellationToken);
+            foreach (var data in stockData)
+            {
+                var info = stockInfo.FirstOrDefault(x => x.OfferId == data.Offer_id);
+                if (info != default)
+                    data.Stock = Math.Max(data.Stock - info.Reserved, 0);
+            }
             var request = new OzonStockRequest();
             request.Stocks = stockData;
             var result = await httpService.Exchange<OzonStockResponse, ErrorResponse>(

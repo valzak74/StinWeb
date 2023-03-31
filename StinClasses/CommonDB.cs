@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
 using StinClasses.Models;
+using StinClasses.Документы;
 using StinClasses.Справочники;
 using System;
 using System.Collections.Generic;

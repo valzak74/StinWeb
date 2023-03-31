@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using StinClasses.Models;
@@ -15,6 +18,7 @@ namespace StinClasses.Справочники
     public interface IКладовщик : IDisposable
     {
         Task<Кладовщик> GetКладовщикByIdAsync(string Id);
+        Task<IEnumerable<Кладовщик>> GetAll(string skladId, bool onlyActive = false);
     }
     public class КладовщикEntity : IКладовщик
     {
@@ -57,6 +61,31 @@ namespace StinClasses.Справочники
                 };
             }
             return null;
+        }
+        public async Task<IEnumerable<Кладовщик>> GetAll(string skladId, bool onlyActive = false)
+        {
+            var data = await _context.Sc12558s
+                .Where(x => !x.Ismark && (onlyActive ? x.Sp12556 == 0 : true) && (string.IsNullOrEmpty(skladId) ? true : x.Sp12555 == skladId))
+                .Select(x => new 
+                {
+                    Id = x.Id,
+                    Наименование = x.Descr.Trim(),
+                    SkladId = x.Sp12555,
+                    Уволен = x.Sp12556 == 1
+                })
+                .ToListAsync();
+            var result = new List<Кладовщик>(); 
+            foreach (var item in data)
+            {
+                result.Add(new Кладовщик
+                {
+                    Id = item.Id,
+                    Наименование = item.Наименование,
+                    Склад = item.SkladId != Common.ПустоеЗначение ? await _склад.GetEntityByIdAsync(item.SkladId) : null,
+                    Уволен = item.Уволен
+                });
+            }
+            return result;
         }
     }
 }

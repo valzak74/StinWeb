@@ -53,5 +53,6 @@ namespace Market.Services
         Task<Dictionary<string, decimal>> ПолучитьКвант(List<string> списокКодовНоменклатуры, CancellationToken cancellationToken);
         Task<Dictionary<string, decimal>> ПолучитьDeltaStock(string marketId, List<string> списокКодовНоменклатуры, CancellationToken cancellationToken);
         Task SetElectronicAcceptanceCertificateCode(string authorizationApi, long Id, string code, CancellationToken cancellationToken);
+        Task<IDictionary<string, decimal>> ПолучитьРезервМаркета(string marketId, IEnumerable<string> nomIds);
     }
 }

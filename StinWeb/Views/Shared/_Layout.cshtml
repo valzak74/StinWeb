@@ -77,6 +77,15 @@
                                         </ul>
                                     </li>
                                 }
+                                @if ((new[] { "Любой", "Кладовщики" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
+                                {
+                                    <li class="dropdown-submenu">
+                                        <a class="dropdown-item dropdown-toggle" href="#">Наборы</a>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" asp-controller="DocNabor" asp-action="ManageStorekeeper">Работа кладовщика</a></li>
+                                        </ul>
+                                    </li>
+                                }
                                 @if ((new[] { "Любой", "Продажи", "ИнтернетЗаказы", "Водители", "Кладовщики" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
                                 {
                                     <li class="dropdown-submenu">

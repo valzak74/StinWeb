@@ -1,4 +1,7 @@
 \\server2012\Refresher1C\Refresher1C.exe
+\\server2012\Refresher1C\Templates\ТоварныйЧек_Div.htm
+\\server2012\Refresher1C\Templates\ТоварныйЧек_Styles.htm
+\\server2012\Refresher1C\Templates\ТоварныйЧек_ТаблЧасть.htm
 \\server2012\Refresher1C\appsettings.Development.json
 \\server2012\Refresher1C\appsettings.json
 \\server2012\Refresher1C\Refresher1C.dll
@@ -29,6 +32,7 @@
 \\server2012\Refresher1C\PdfSharpCore.Charting.dll
 \\server2012\Refresher1C\Polly.dll
 \\server2012\Refresher1C\Polly.Extensions.Http.dll
+\\server2012\Refresher1C\QRCoder.dll
 \\server2012\Refresher1C\Serilog.dll
 \\server2012\Refresher1C\Serilog.AspNetCore.dll
 \\server2012\Refresher1C\Serilog.Extensions.Hosting.dll

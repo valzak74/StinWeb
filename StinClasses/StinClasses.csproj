@@ -5,6 +5,42 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Templates\PageSeparator.htm" />
+    <None Remove="Templates\PageSplitter.htm" />
+    <None Remove="Templates\PrintPage.htm" />
+    <None Remove="Templates\Набор_Div.htm" />
+    <None Remove="Templates\Набор_Styles.htm" />
+    <None Remove="Templates\Набор_ТаблЧасть.htm" />
+    <None Remove="Templates\ТоварныйЧек_Div.htm" />
+    <None Remove="Templates\ТоварныйЧек_Styles.htm" />
+    <None Remove="Templates\ТоварныйЧек_ТаблЧасть.htm" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Templates\ТоварныйЧек_Div.htm">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Templates\ТоварныйЧек_Styles.htm">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Templates\ТоварныйЧек_ТаблЧасть.htm">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Templates\PageSeparator.htm" />
+    <EmbeddedResource Include="Templates\PageSplitter.htm" />
+    <EmbeddedResource Include="Templates\PrintPage.htm" />
+    <EmbeddedResource Include="Templates\Набор_Div.htm" />
+    <EmbeddedResource Include="Templates\Набор_Styles.htm" />
+    <EmbeddedResource Include="Templates\Набор_ТаблЧасть.htm" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -16,6 +52,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\JsonExtensions\JsonExtensions.csproj" />
+    <ProjectReference Include="..\PdfHelper\PdfHelper.csproj" />
     <ProjectReference Include="..\YandexClasses\YandexClasses.csproj" />
   </ItemGroup>
 

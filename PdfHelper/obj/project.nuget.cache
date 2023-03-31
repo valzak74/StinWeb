@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "n7RrsGvWLUuObVJB07q8gteaIqp4JAdTNL2V6oRMxar122HATrqOCuf32FM5G4mWytb7mZ/hckC7gOpboGh8Mw==",
+  "dgSpecHash": "15XILqH5xMhAmKTJWRucBDcPbRACR4L7hn+pSCir6TmCfSi8dyr+ywQezWygnU02uxuRv8u/3dzo4KZFB3uy9Q==",
   "success": true,
   "projectFilePath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj",
   "expectedPackageFiles": [
@@ -12,6 +12,7 @@
     "C:\\Users\\Валентин\\.nuget\\packages\\migradoccore.rendering\\1.3.43\\migradoccore.rendering.1.3.43.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\pdfsharpcore\\1.3.43\\pdfsharpcore.1.3.43.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\pdfsharpcore.charting\\1.3.43\\pdfsharpcore.charting.1.3.43.nupkg.sha512",
+    "C:\\Users\\Валентин\\.nuget\\packages\\qrcoder\\1.4.3\\qrcoder.1.4.3.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\sharpziplib\\1.3.3\\sharpziplib.1.3.3.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\sixlabors.fonts\\1.0.0-beta17\\sixlabors.fonts.1.0.0-beta17.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\sixlabors.imagesharp\\1.0.4\\sixlabors.imagesharp.1.0.4.nupkg.sha512",

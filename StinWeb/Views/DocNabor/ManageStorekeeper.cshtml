@@ -1,0 +1,110 @@
+﻿@using StinWeb.Models.DataManager.Extensions
+
+@{
+    ViewBag.Title = "Работа кладовщика в наборах";
+}
+<audio id="soundOk" src="/lib/sounds/OkSound.mp3" preload="auto"></audio>
+<audio id="soundBeep" src="/lib/sounds/beep.mp3" preload="auto"></audio>
+<div class="alert alert-danger d-none" role="alert">
+    <strong>Ошибка!</strong><span id="alertText" style="padding-left: 10px;"> Change a few things up and try submitting again.</span>
+</div>
+<div class="alert alert-success" role="alert">
+    <h5 class="alert-heading" align="center">Кладовщик</h5>
+    <hr>
+    <div id="infoStorekeeper"></div>
+</div>
+<div style="width:0;overflow:hidden;">
+    <input id="barcodeText" />
+</div>
+@Html.InputGroup("collapse", "Кладовщик :", "", "select", "Storekeepers", (SelectList)ViewBag.Storekeepers, new { id = "storekeepers", @class = "form-control" })
+
+<div id="scanning" class="d-flex justify-content-center" style="padding-top: 170px;">
+    <h4><strong class="text-success" id="infoText"> Сканирование... </strong></h4>
+    <div class="spinner-border text-success" role="status" aria-hidden="true"></div>
+</div>
+<div class="modal fade" id="formNabor" tabindex="-1" role="dialog" aria-labelledby="formNabor" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-body"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $("#storekeepers").on("change", function () {
+        var info = "<h2 align='center'>";
+        if (this.value != undefined) {
+            info += $(this).find("option:selected").text();
+        }
+        info += "</h2>";
+        $("#infoStorekeeper").html(info);
+
+    });
+    $("#storekeepers").trigger("change");
+
+    $("#barcodeText").focus();
+    $('#barcodeText').on('blur', function () {
+        _this = this;
+        timerScan = setTimeout(function () {
+            _this.focus();
+        }, 0);
+    });
+    $("#barcodeText").on("change", function () {
+        //alert(this.value);
+        if (this.value.length == 9)
+        {
+            $("#storekeepers option[value='" + this.value + "']").prop('selected', true).trigger("change");
+        }
+        else {
+            NaborScan(this.value);
+        }
+        this.value = "";
+    });
+    function NaborScan(barcodeText) {
+        $.ajax({
+            url: "NaborScan",
+            type: "post",
+            datatype: "xml",
+            data: {
+                barcodeText: barcodeText,
+                storekeeperId: $('#storekeepers').val()
+            },
+            async: true,
+            cache: false,
+            beforeSend: function() {
+                $("#barcodeText").prop("disabled", true);
+                $(".spinner-border").toggleClass("text-success text-danger");
+                $("#infoText").toggleClass("text-success text-danger");
+                $("#infoText").text("...ОБРАБОТКА...");
+                EnableBusyScreen()
+            },
+            success: function (obj) {
+                if (obj) {
+                    document.getElementById('soundOk').play();
+                    $(".modal-body").html(obj);
+                    $("#formNabor").modal("show");
+                    setTimeout(() => { $("#formNabor").modal('hide'); }, 3000);
+                }
+            },
+            error: function (jqXHR, exception, f) {
+                var msg = 'Internal Server Error';
+                if (jqXHR.status == 502) {
+                    if (jqXHR.responseText != "")
+                        msg = jqXHR.responseText;
+                }
+                $("#alertText").text(msg);
+                $('.alert-danger').removeClass('d-none');
+                document.getElementById('soundBeep').play();
+                setTimeout(() => { $('.alert-danger').addClass('d-none'); $("#alertText").text(""); }, 6000);
+            },
+            complete: function () {
+                DisableBusyScreen();
+                $("#barcodeText").prop("disabled", false);
+                $("#barcodeText").focus();
+                $(".spinner-border").toggleClass("text-danger text-success");
+                $("#infoText").toggleClass("text-danger text-success");
+                $("#infoText").text("Сканирование...");
+            }
+        });
+    }
+</script>

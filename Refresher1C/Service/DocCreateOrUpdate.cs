@@ -41,6 +41,7 @@ namespace Refresher1C.Service
         private IСчетФактура _счетФактура;
         private IОтчетКомиссионера _отчетКомиссионера;
 
+
         private protected bool disposed = false;
         protected virtual void Dispose(bool disposing)
         {

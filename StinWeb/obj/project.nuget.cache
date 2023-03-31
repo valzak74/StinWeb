@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "MpiQSkbcW8+obzk7zvTaA42HgRB5eFg0pjvdP92u1NHO9zgF5aQRvct1q4+Odzfs7IiGspRIdBFMlpA0p520mA==",
+  "dgSpecHash": "7k1M5OettB5E9rlwBRRjgQ0wiOZVc62KHq2bYjkpoqH0avk4C8CgWTB0TphyZcyZRYzK7a+HHx3dVLrKFxemNQ==",
   "success": true,
   "projectFilePath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\StinWeb.csproj",
   "expectedPackageFiles": [
@@ -145,6 +145,7 @@
     "C:\\Users\\Валентин\\.nuget\\packages\\polly\\7.2.2\\polly.7.2.2.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\polly.extensions.http\\3.0.0\\polly.extensions.http.3.0.0.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\portable.bouncycastle\\1.8.6\\portable.bouncycastle.1.8.6.nupkg.sha512",
+    "C:\\Users\\Валентин\\.nuget\\packages\\qrcoder\\1.4.3\\qrcoder.1.4.3.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\runtime.debian.8-x64.runtime.native.system.security.cryptography.openssl\\4.3.0\\runtime.debian.8-x64.runtime.native.system.security.cryptography.openssl.4.3.0.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\runtime.fedora.23-x64.runtime.native.system.security.cryptography.openssl\\4.3.0\\runtime.fedora.23-x64.runtime.native.system.security.cryptography.openssl.4.3.0.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\runtime.fedora.24-x64.runtime.native.system.security.cryptography.openssl\\4.3.0\\runtime.fedora.24-x64.runtime.native.system.security.cryptography.openssl.4.3.0.nupkg.sha512",

@@ -2797,6 +2797,14 @@ namespace StinClasses.Models
                     .HasColumnName("SP14003")
                     .IsFixedLength();
 
+                entity.Property(e => e.Sp14285)
+                    .HasColumnType("datetime")
+                    .HasColumnName("SP14285");
+
+                entity.Property(e => e.Sp14286)
+                    .HasColumnType("datetime")
+                    .HasColumnName("SP14286");
+
                 entity.Property(e => e.Sp660)
                     .IsRequired()
                     .HasMaxLength(150)

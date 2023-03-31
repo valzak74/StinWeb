@@ -10,12 +10,12 @@ namespace Refresher1C
 {
     public class WorkerMarketplaces : BackgroundService
     {
-        private IServiceScopeFactory _scopeFactory;
+        readonly IServiceScopeFactory _scopeFactory;
         private TimeSpan _delay;
         int _errorsTaskCount;
-        public WorkerMarketplaces(IServiceScopeFactory serviceScopeFactory, IConfiguration config)
+        public WorkerMarketplaces(IServiceScopeFactory scopeFactory, IConfiguration config)
         {
-            _scopeFactory = serviceScopeFactory;
+            _scopeFactory = scopeFactory;
             int.TryParse(config["Marketplace:refreshIntervalSec"], out int refreshInterval);
             refreshInterval = Math.Max(refreshInterval, 1);
             _delay = TimeSpan.FromSeconds(refreshInterval);
@@ -42,43 +42,28 @@ namespace Refresher1C
         {
             try
             {
-                Task checkNabor = Task.Run(async () =>
-                {
-                    using IMarketplaceService MarketplaceScope = _scopeFactory.CreateScope()
-                           .ServiceProvider.GetService<IMarketplaceService>();
-                    await MarketplaceScope.CheckNaborNeeded(stoppingToken);
+                var checkNabor = Task.Run(async () => {
+                    using var _service = _scopeFactory.CreateScope().ServiceProvider.GetService<IMarketplaceService>();
+                    await _service.CheckNaborNeeded(stoppingToken);
                 });
-                Task yandexBoxes = Task.Run(async () =>
-                {
-                    using IMarketplaceService MarketplaceScope = _scopeFactory.CreateScope()
-                           .ServiceProvider.GetService<IMarketplaceService>();
-                    await MarketplaceScope.PrepareYandexFbsBoxes(regular, stoppingToken);
+                var yandexBoxes = Task.Run(async () => {
+                    using var _service = _scopeFactory.CreateScope().ServiceProvider.GetService<IMarketplaceService>();
+                    await _service.PrepareYandexFbsBoxes(regular, stoppingToken);
                 });
-                Task fbsLabels = Task.Run(async () =>
-                {
-                    using IMarketplaceService MarketplaceScope = _scopeFactory.CreateScope()
-                           .ServiceProvider.GetService<IMarketplaceService>();
-                    await MarketplaceScope.PrepareFbsLabels(regular, stoppingToken);
+                var fbsLabels = Task.Run(async () => {
+                    using var _service = _scopeFactory.CreateScope().ServiceProvider.GetService<IMarketplaceService>();
+                    await _service.PrepareFbsLabels(regular, stoppingToken);
                 });
-                Task buyerInfo = Task.Run(async () =>
-                {
-                    using IMarketplaceService MarketplaceScope = _scopeFactory.CreateScope()
-                           .ServiceProvider.GetService<IMarketplaceService>();
-                    await MarketplaceScope.RefreshBuyerInfo(stoppingToken);
+                var buyerInfo = Task.Run(async () => {
+                    using var _service = _scopeFactory.CreateScope().ServiceProvider.GetService<IMarketplaceService>();
+                    await _service.RefreshBuyerInfo(stoppingToken);
                 });
-                Task orderStatus = Task.Run(async () =>
-                {
-                    using IMarketplaceService MarketplaceScope = _scopeFactory.CreateScope()
-                           .ServiceProvider.GetService<IMarketplaceService>();
-                    await MarketplaceScope.ChangeOrderStatus(stoppingToken);
+                var orderStatus = Task.Run(async () => {
+                    using var _service = _scopeFactory.CreateScope().ServiceProvider.GetService<IMarketplaceService>();
+                    await _service.ChangeOrderStatus(stoppingToken);
                 });
-                await Task.WhenAll(
-                    checkNabor,
-                    yandexBoxes,
-                    fbsLabels,
-                    buyerInfo,
-                    orderStatus
-                    );
+
+                await Task.WhenAll(checkNabor, yandexBoxes, fbsLabels, buyerInfo, orderStatus);
             }
             catch
             {

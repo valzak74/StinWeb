@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "IKGyUOHRXUvVdeuFENObTv7HCQ+09TaQh5pmmb95UePcLCLi5dFg/ONf012kVhn8dkojtWgfvPXLqNQbOv09Cg==",
+  "dgSpecHash": "t0RtVbWQ/gbJyc6j0bTJNWGW0VTJVuLbimu00GrN7D2L9cp09g+IAHuyR7Sv1vhvbZdfCCwL6rSAjWAzfS5+eg==",
   "success": true,
   "projectFilePath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\Refresher1C\\Refresher1C.csproj",
   "expectedPackageFiles": [
@@ -67,6 +67,7 @@
     "C:\\Users\\Валентин\\.nuget\\packages\\pdfsharpcore.charting\\1.3.43\\pdfsharpcore.charting.1.3.43.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\polly\\7.2.3\\polly.7.2.3.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\polly.extensions.http\\3.0.0\\polly.extensions.http.3.0.0.nupkg.sha512",
+    "C:\\Users\\Валентин\\.nuget\\packages\\qrcoder\\1.4.3\\qrcoder.1.4.3.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\runtime.native.system\\4.3.0\\runtime.native.system.4.3.0.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\serilog\\2.10.0\\serilog.2.10.0.nupkg.sha512",
     "C:\\Users\\Валентин\\.nuget\\packages\\serilog.aspnetcore\\4.1.0\\serilog.aspnetcore.4.1.0.nupkg.sha512",

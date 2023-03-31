@@ -6,6 +6,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using StinClasses.Справочники;
+using System.Globalization;
+using System.Text;
+using System.Threading;
 
 namespace StinClasses.Документы
 {
@@ -25,6 +28,8 @@ namespace StinClasses.Документы
         public СкидКарта СкидКарта { get; set; }
         public Кладовщик Кладовщик { get; set; }
         public Order Order { get; set; }
+        public DateTime StartCompectation { get; set; }
+        public DateTime EndComplectation { get; set; }
         public List<ФормаНаборТЧ> ТабличнаяЧасть { get; set; }
         public ФормаНабор()
         {
@@ -49,8 +54,11 @@ namespace StinClasses.Документы
         Task<ExceptionData> ЗаписатьAsync(ФормаНабор doc);
         Task<ExceptionData> ПровестиAsync(ФормаНабор doc);
         Task<ExceptionData> ЗаписатьПровестиAsync(ФормаНабор doc);
+        Task<(string html, int docOnPage)> PrintForm(string html, int totalPerPage, int docOnPage, ФормаНабор form, CancellationToken cancellationToken);
+        bool IsActive(string idDoc);
         Task<List<ФормаНабор>> ПолучитьСписокАктивныхНаборов(string orderId, bool onlyFinished);
         Task ОбновитьНомерМаршрута(ФормаНабор doc, string маршрутНаименование);
+        Task ОбновитьКладовщика(ФормаНабор doc, string кладовщикId);
     }
     public class Набор : Документ, IНабор
     {
@@ -59,12 +67,14 @@ namespace StinClasses.Документы
         private IРегистрРезервыТМЦ _регистрРезервыТМЦ;
         private IРегистрНаборНаСкладе _регистрНабор;
         private IРегистрMarketplaceOrders _регистрMarketplaceOrders;
+        IРегистрРаботаКладовщика _регистрРаботаКладовщика;
         public Набор(StinDbContext context) : base(context)
         {
             _регистрЗаявки = new Регистр_Заявки(context);
             _регистрОстаткиТМЦ = new Регистр_ОстаткиТМЦ(context);
             _регистрРезервыТМЦ = new Регистр_РезервыТМЦ(context);
             _регистрНабор = new Регистр_НаборНаСкладе(context);
+            _регистрРаботаКладовщика = new Регистр_РаботаКладовщика(context);
             _регистрMarketplaceOrders = new Регистр_MarketplaceOrders(context);
         }
         protected override void Dispose(bool disposing)
@@ -77,6 +87,7 @@ namespace StinClasses.Документы
                     _регистрОстаткиТМЦ.Dispose();
                     _регистрРезервыТМЦ.Dispose();
                     _регистрНабор.Dispose();
+                    _регистрРаботаКладовщика.Dispose();
                     _регистрMarketplaceOrders.Dispose();
                 }
             }
@@ -289,6 +300,8 @@ namespace StinClasses.Документы
                 docHeader.Sp12996 = (doc.СкидКарта == null ? Common.ПустоеЗначение : doc.СкидКарта.Id);
                 docHeader.Sp14003 = doc.Order != null ? doc.Order.Id : Common.ПустоеЗначение;
                 docHeader.Sp11946 = 0; //Сумма
+                docHeader.Sp14285 = doc.StartCompectation < Common.min1cDate ? Common.min1cDate : doc.StartCompectation; //ДатаНачалаСборки
+                docHeader.Sp14286 = doc.EndComplectation < Common.min1cDate ? Common.min1cDate : doc.EndComplectation; //ДатаКонцаСборки
                 docHeader.Sp660 = string.IsNullOrEmpty(doc.Общие.Комментарий) ? "" : doc.Общие.Комментарий;
 
                 if (isNew)
@@ -458,7 +471,16 @@ namespace StinClasses.Документы
                         }
                     }
                 }
-                //Регистр.РаботаКладовщика ДОДЕЛАТЬ
+                if (doc.Завершен && doc.Кладовщик != null)
+                {
+                    КоличествоДвижений++;
+                    j.Rf12566 = await _регистрРаботаКладовщика.ВыполнитьДвижениеAsync(doc.Общие.IdDoc, doc.Общие.ДатаДок, КоличествоДвижений,
+                        doc.Кладовщик.Id,
+                        1,
+                        doc.ТабличнаяЧасть.Count,
+                        doc.ТабличнаяЧасть.Sum(x => x.Количество)
+                        );
+                }
                 //Работа с ячейками доделать
                 if (!string.IsNullOrEmpty(message))
                 {
@@ -500,6 +522,247 @@ namespace StinClasses.Документы
         {
             return await ЗаписатьAsync(doc) ?? await ПровестиAsync(doc);
         }
+        public async Task<(string html, int docOnPage)> PrintForm(string html, int totalPerPage, int docOnPage, ФормаНабор form, CancellationToken cancellationToken)
+        {
+            string pref = "&nbsp;&nbsp;&nbsp;&nbsp;";
+            var singleBoxMarket = new List<string> { "ALIEXPRESS", "OZON", "WILDBERRIES" };
+            var isSingleBox = singleBoxMarket.Contains(form.Order?.Тип);
+            bool withOrder = form.Order != null;
+            var таблЧасть = Enumerable.Repeat(new
+            {
+                Ном = "",
+                Товар = "",
+                ТоварЧек = "",
+                Производитель = "",
+                Артикул = "",
+                КолВо = 0m,
+                Количество = "",
+                КоличествоЧек = "",
+                Единица = "",
+                ЕдиницаЧек = "",
+                КолМест = "",
+                КолЭтикеток = "",
+                Цена = "",
+                ЦенаСоСкидкой = "",
+                Сумма = "",
+                СуммаСоСкидкой = ""
+            }, 0).ToList();
+            var СписокФирм = form.ТабличнаяЧасть.Select(x => x.ФирмаНоменклатуры.Id).Distinct().ToList();
+            var НоменклатураIds = form.ТабличнаяЧасть.Select(x => x.Номенклатура.Id).Distinct().ToList();
+            var наборНаСкладе_Остатки = await _регистрНабор.ПолучитьОстаткиAsync(DateTime.Now, null, false,
+                СписокФирм, form.Склад.Id, form.Договор.Id, НоменклатураIds, form.Общие.IdDoc);
+            int номСтроки = 0; decimal итого = 0; decimal итогоСоСкидкой = 0;
+            var nomQuantums = new Dictionary<string, decimal>();
+            if ((form.Order?.Модель == "FBY") || (form.Order?.Модель == "FBS"))
+                nomQuantums = await _номенклатура.ПолучитьКвант(form.ТабличнаяЧасть.Select(x => x.Номенклатура.Code).ToList(), cancellationToken);
+            var groupedОстатки = наборНаСкладе_Остатки.GroupBy(x => x.НоменклатураId).Select(gr => new { НоменклатураId = gr.Key, Остаток = gr.Sum(s => s.Количество) });
+            foreach (var row in form.ТабличнаяЧасть)
+            {
+                if (groupedОстатки.Any(x => (x.НоменклатураId == row.Номенклатура.Id) && (x.Остаток > 0)))
+                {
+                    var остатокПоРегистру = groupedОстатки.Where(x => x.НоменклатураId == row.Номенклатура.Id).Sum(x => x.Остаток) / row.Единица.Коэффициент;
+                    var можноОтпустить = Math.Max(Math.Min(row.Количество, остатокПоРегистру), 0);
+                    if (можноОтпустить > 0)
+                    {
+                        номСтроки++;
+                        decimal ценаСоСкидкой = 0;
+                        decimal суммаСоСкидкой = 0;
+                        decimal сумма = row.Количество == можноОтпустить ? row.Сумма : (row.Количество * row.Цена);
+                        if (withOrder)
+                        {
+                            var orderItems = form.Order.Items.Where(x => x.НоменклатураId == row.Номенклатура.Id);
+                            var orderCount = orderItems.Sum(x => x.Количество);
+                            var orderPriceDiscount = orderItems.Sum(x => x.ЦенаСоСкидкой) / orderItems.Count();
+                            ценаСоСкидкой = row.Количество == orderCount ? orderPriceDiscount : (row.Количество * orderPriceDiscount / orderCount);
+                            суммаСоСкидкой = ценаСоСкидкой * row.Количество;
+                        }
+                        итого = итого + сумма;
+                        итогоСоСкидкой += суммаСоСкидкой;
+                        var quantum = (int)nomQuantums.Where(q => q.Key == row.Номенклатура.Id).Select(q => q.Value).FirstOrDefault();
+                        var accessoriesList = await _номенклатура.GetAccessoriesList(row.Номенклатура.Id);
+                        decimal boxCount = await _номенклатура.ПолучитьКоличествоМест(row.Номенклатура.Id);
+                        if (boxCount < 1)
+                            boxCount = 1;
+                        var sbKvant = new StringBuilder("Квант по ");
+                        sbKvant.Append(quantum.ToString("0", CultureInfo.InvariantCulture));
+                        sbKvant.Append(" ");
+                        sbKvant.Append(row.Единица.Наименование);
+                        var sbComplect = new StringBuilder("Комплект из ");
+                        sbComplect.Append(accessoriesList.Count.ToString("0", CultureInfo.InvariantCulture));
+                        sbComplect.Append("-х товаров");
+                        var sbMultiBox = new StringBuilder("Товар из ");
+                        sbMultiBox.Append(boxCount.ToString("0", CultureInfo.InvariantCulture));
+                        sbMultiBox.Append("-х частей");
+                        var isMultiLine = (quantum > 1) || (accessoriesList.Count > 1) || (boxCount > 1);
+                        таблЧасть.Add(new
+                        {
+                            Ном = номСтроки.ToString("0", CultureInfo.InvariantCulture),
+                            Товар = (quantum > 1) ? sbKvant.ToString() :
+                                accessoriesList.Count > 1 ? sbComplect.ToString() :
+                                boxCount > 1 ? sbMultiBox.ToString() :
+                                row.Номенклатура.ПолнНаименование,
+                            ТоварЧек = row.Номенклатура.ПолнНаименование,
+                            Производитель = isMultiLine ? "" : row.Номенклатура.Производитель.Наименование,
+                            Артикул = isMultiLine ? "" : row.Номенклатура.Артикул,
+                            КолВо = isMultiLine ? 0 : можноОтпустить,
+                            Количество = isMultiLine ? "" : можноОтпустить.ToString("0", CultureInfo.InvariantCulture),
+                            КоличествоЧек = можноОтпустить.ToString("0", CultureInfo.InvariantCulture),
+                            Единица = isMultiLine ? "" : row.Единица.Наименование,
+                            ЕдиницаЧек = row.Единица.Наименование,
+                            КолМест = withOrder ? row.Цена.ToString("0.00", CultureInfo.InvariantCulture) : ((accessoriesList.Count > 1) || (boxCount > 1)) ? (boxCount * можноОтпустить).ToString("0", CultureInfo.InvariantCulture) :
+                                можноОтпустить.ToString("0", CultureInfo.InvariantCulture),
+                            КолЭтикеток = withOrder ? сумма.ToString("0.00", CultureInfo.InvariantCulture) : (((quantum > 1) && (можноОтпустить >= quantum)) ? Math.Round(можноОтпустить / quantum, MidpointRounding.AwayFromZero) :
+                                isSingleBox ? можноОтпустить : (можноОтпустить * boxCount)).ToString("0", CultureInfo.InvariantCulture),
+                            Цена = row.Цена.ToString("0.00", CultureInfo.InvariantCulture),
+                            ЦенаСоСкидкой = ценаСоСкидкой.ToString("0.00", CultureInfo.InvariantCulture),
+                            Сумма = сумма.ToString("0.00", CultureInfo.InvariantCulture),
+                            СуммаСоСкидкой = суммаСоСкидкой.ToString("0.00", CultureInfo.InvariantCulture)
+                        });
+                        if (quantum > 1)
+                            таблЧасть.Add(new
+                            {
+                                Ном = "",
+                                Товар = pref + row.Номенклатура.Наименование,
+                                ТоварЧек = "",
+                                Производитель = row.Номенклатура.Производитель.Наименование,
+                                Артикул = row.Номенклатура.Артикул,
+                                КолВо = можноОтпустить,
+                                Количество = можноОтпустить.ToString("0", CultureInfo.InvariantCulture),
+                                КоличествоЧек = "",
+                                Единица = row.Единица.Наименование,
+                                ЕдиницаЧек = "",
+                                КолМест = "",
+                                КолЭтикеток = "",
+                                Цена = "",
+                                ЦенаСоСкидкой = "",
+                                Сумма = "",
+                                СуммаСоСкидкой = ""
+                            });
+                        if (accessoriesList.Count > 1)
+                            foreach (var comp in accessoriesList)
+                                таблЧасть.Add(new
+                                {
+                                    Ном = "",
+                                    Товар = pref + comp.Key.Наименование,
+                                    ТоварЧек = "",
+                                    Производитель = comp.Key.Производитель.Наименование,
+                                    Артикул = comp.Key.Артикул,
+                                    КолВо = comp.Value * можноОтпустить,
+                                    Количество = (comp.Value * можноОтпустить).ToString("0", CultureInfo.InvariantCulture),
+                                    КоличествоЧек = "",
+                                    Единица = comp.Key.Единица.Наименование,
+                                    ЕдиницаЧек = "",
+                                    КолМест = "",
+                                    КолЭтикеток = "",
+                                    Цена = "",
+                                    ЦенаСоСкидкой = "",
+                                    Сумма = "",
+                                    СуммаСоСкидкой = ""
+                                });
+                        if ((accessoriesList.Count <= 1) && (boxCount > 1))
+                        {
+                            таблЧасть.Add(new
+                            {
+                                Ном = "",
+                                Товар = pref + row.Номенклатура.Наименование,
+                                ТоварЧек = "",
+                                Производитель = row.Номенклатура.Производитель.Наименование,
+                                Артикул = row.Номенклатура.Артикул,
+                                КолВо = можноОтпустить,
+                                Количество = можноОтпустить.ToString("0", CultureInfo.InvariantCulture),
+                                КоличествоЧек = "",
+                                Единица = row.Единица.Наименование,
+                                ЕдиницаЧек = "",
+                                КолМест = "",
+                                КолЭтикеток = "",
+                                Цена = "",
+                                ЦенаСоСкидкой = "",
+                                Сумма = "",
+                                СуммаСоСкидкой = ""
+                            });
+                            for (int i = 2; i <= boxCount; i++)
+                                таблЧасть.Add(new
+                                {
+                                    Ном = "",
+                                    Товар = pref + "Доп. место № " + (i - 1).ToString("0", CultureInfo.InvariantCulture),
+                                    ТоварЧек = "",
+                                    Производитель = "",
+                                    Артикул = "",
+                                    КолВо = можноОтпустить,
+                                    Количество = можноОтпустить.ToString("0", CultureInfo.InvariantCulture),
+                                    КоличествоЧек = "",
+                                    Единица = row.Единица.Наименование,
+                                    ЕдиницаЧек = "",
+                                    КолМест = "",
+                                    КолЭтикеток = "",
+                                    Цена = "",
+                                    ЦенаСоСкидкой = "",
+                                    Сумма = "",
+                                    СуммаСоСкидкой = ""
+                                });
+                        }
+                        groupedОстатки = groupedОстатки
+                            .Select(item => new
+                            {
+                                НоменклатураId = item.НоменклатураId,
+                                Остаток = item.НоменклатураId == row.Номенклатура.Id ? item.Остаток - (можноОтпустить * row.Единица.Коэффициент) : item.Остаток
+                            });
+                    }
+                }
+            }
+            var barcodeText = form.Общие.IdDoc13.Replace(' ', '%');
+            var data = Enumerable.Repeat(new
+            {
+                BarcodeStart = Convert.ToBase64String(PdfHelper.PdfFunctions.Instance.GenerateQRCode(barcodeText, 2)),
+                BarcodeEnd = Convert.ToBase64String(PdfHelper.PdfFunctions.Instance.GenerateQRCode(barcodeText + "0", 2)),
+                Название = form.Завершен ? "Готов" : "Набор",
+                НомерДок = form.Общие.НомерДок,
+                ДатаДок = form.Общие.ДатаДок.ToString("dd.MM.yyyy"),
+                Маршрут = form.Маршрут?.Наименование ?? "",
+                КолДокументов = "Док-тов = " + form.ТабличнаяЧасть.Select(x => x.ФирмаНоменклатуры.Id).Distinct().Count().ToString(),
+                OrderId = form.Order?.Id ?? "",
+                Тип = form.Order?.Тип,
+                OrderNo = form.Order?.Тип == "ALIEXPRESS" ? (form.Order?.MarketplaceId ?? "") + " / " + (form.Order?.DeliveryServiceName ?? "") : (form.Order?.MarketplaceId ?? ""),
+                Поставщик = form.Общие.Фирма.Наименование,
+                Покупатель = form.Контрагент?.Наименование ?? "",
+                Склад = (form.Склад?.Наименование ?? "") + "/" + (form.ПодСклад?.Наименование ?? ""),
+                КолонкаЦена = withOrder ? "Места" : "Цена",
+                КолонкаСумма = withOrder ? "Этикетки" : "Сумма",
+                ТаблЧасть = таблЧасть,
+                Итого = итого.ToString("0.00", CultureInfo.InvariantCulture),
+                ИтогоСоСкидкой = итогоСоСкидкой.ToString("0.00", CultureInfo.InvariantCulture),
+                КолСтрок = номСтроки.ToString("0", CultureInfo.InvariantCulture),
+                СуммаПрописью = итого.Прописью(),
+                СуммаПрописьюСоСкидкой = итогоСоСкидкой.Прописью(),
+                ФирмаНаименование = form.Общие.Фирма.ЮрЛицо.Наименование,
+                ФирмаАдрес = form.Общие.Фирма.ЮрЛицо.Адрес,
+                ФирмаИНН = form.Общие.Фирма.ЮрЛицо.ИНН,
+                ФирмаСайт = "https://stinmarket.ru",
+                ФирмаEmail = "omfbs@yandex.ru",
+                ФирмаТелефон = "+7-927-768-97-89",
+                КлиентНаименование = form.Order?.Recipient?.Recipient ?? "",
+                КлиентАдрес = form.Order?.Address?.Street ?? "",
+                КлиентТелефон = form.Order?.Recipient?.Phone ?? "",
+                ИтКолВо = таблЧасть.Sum(x => x.КолВо).ToString("0", CultureInfo.InvariantCulture),
+                СуммаНДС = form.Общие.Фирма.ЮрЛицо.УчитыватьНДС == 1 ? "В том числе НДС " + (итого * 0.166666666666666666666666666667m).ToString("0.00", CultureInfo.InvariantCulture) + " руб." : "Без НДС",
+                СуммаНДСсоСкидкой = form.Общие.Фирма.ЮрЛицо.УчитыватьНДС == 1 ? "В том числе НДС " + (итогоСоСкидкой * 0.166666666666666666666666666667m).ToString("0.00", CultureInfo.InvariantCulture) + " руб." : "Без НДС"
+            }, 1).FirstOrDefault();
+
+            docOnPage++;
+            html = html.CreateOrUpdateHtmlPrintPage("Набор", data, docOnPage > totalPerPage);
+            if (docOnPage > totalPerPage)
+                docOnPage = 1;
+            if (data.Тип == "SBER")
+            {
+                data.ТаблЧасть.RemoveAll(x => string.IsNullOrEmpty(x.ТоварЧек));
+                docOnPage++;
+                html = html.CreateOrUpdateHtmlPrintPage("ТоварныйЧек", data, docOnPage > totalPerPage);
+                if (docOnPage > totalPerPage)
+                    docOnPage = 1;
+            }
+
+            return (html, docOnPage);
+        }
         public async Task<List<ФормаНабор>> ПолучитьСписокАктивныхНаборов(string orderId, bool onlyFinished)
         {
             List<ФормаНабор> наборы = new List<ФормаНабор>();
@@ -509,6 +772,13 @@ namespace StinClasses.Документы
                 наборы.Add(await GetФормаНаборById(наборId));
             }
             return наборы;
+        }
+        public bool IsActive(string idDoc)
+        {
+            DateTime dateRegTA = _context.GetRegTA();
+            return _context.Rg11973s
+                .Where(x => x.Period == dateRegTA && x.Sp11970 == idDoc)
+                .Sum(x => x.Sp11972) > 0;
         }
         public async Task ОбновитьНомерМаршрута(ФормаНабор doc, string маршрутНаименование)
         {
@@ -524,6 +794,15 @@ namespace StinClasses.Документы
                     _context.РегистрацияИзмененийРаспределеннойИБ(doc.Общие.ВидДокумента10, dh.Iddoc);
                     await _context.SaveChangesAsync();
                 }
+            }
+        }
+        public async Task ОбновитьКладовщика(ФормаНабор doc, string кладовщикId)
+        {
+            if (doc.Кладовщик?.Id != кладовщикId)
+            {
+                if (string.IsNullOrEmpty(кладовщикId))
+                    кладовщикId = Common.ПустоеЗначение;
+                doc.Кладовщик = await _кладовщик.GetКладовщикByIdAsync(кладовщикId);
             }
         }
     }

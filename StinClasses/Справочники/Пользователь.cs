@@ -18,6 +18,7 @@ namespace StinClasses.Справочники
     }
     public interface IПользователь : IDisposable
     {
+        Пользователь GetUserById(string Id);
         Task<Пользователь> GetUserByIdAsync(string Id);
         Task<Пользователь> GetUserByRowIdAsync(int RowId);
         string Постфикс(string userId);
@@ -46,9 +47,11 @@ namespace StinClasses.Справочники
         {
             _context = context;
         }
-        public async Task<Пользователь> GetUserByIdAsync(string Id)
+        Пользователь Map(Sc30 entity)
         {
-            return await _context.Sc30s.Where(x => x.Id == Id && !x.Ismark).Select(entity => new Пользователь
+            if (entity == null)
+                return null;
+            return new Пользователь
             {
                 Id = entity.Id,
                 Name = entity.Code.Trim(),
@@ -56,7 +59,17 @@ namespace StinClasses.Справочники
                 FullName = entity.Descr.Trim(),
                 Department = entity.Sp13679.Trim(),
                 Role = entity.Sp13678.Trim(),
-            }).FirstOrDefaultAsync();
+            };
+        }
+        public Пользователь GetUserById(string Id)
+        {
+            var entity = _context.Sc30s.Where(x => x.Id == Id && !x.Ismark).SingleOrDefault();
+            return Map(entity);
+        }
+        public async Task<Пользователь> GetUserByIdAsync(string Id)
+        {
+            var entity = await _context.Sc30s.Where(x => x.Id == Id && !x.Ismark).SingleOrDefaultAsync();
+            return Map(entity);
         }
         public async Task<Пользователь> GetUserByRowIdAsync(int RowId)
         {

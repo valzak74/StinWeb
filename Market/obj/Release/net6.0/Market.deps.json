@@ -29,6 +29,18 @@
           "Market.dll": {}
         }
       },
+      "BarcodeLib/2.4.0": {
+        "dependencies": {
+          "System.Drawing.Common": "7.0.0",
+          "System.Text.Json": "5.0.2"
+        },
+        "runtime": {
+          "lib/netstandard2.0/BarcodeStandard.dll": {
+            "assemblyVersion": "2.4.0.0",
+            "fileVersion": "2.4.0.0"
+          }
+        }
+      },
       "Humanizer.Core/2.8.26": {},
       "Microsoft.AspNetCore.JsonPatch/6.0.1": {
         "dependencies": {
@@ -126,8 +138,8 @@
           "System.Collections": "4.0.11",
           "System.IO": "4.3.0",
           "System.IO.FileSystem": "4.0.1",
-          "System.Reflection.TypeExtensions": "4.1.0",
-          "System.Runtime.Extensions": "4.1.0",
+          "System.Reflection.TypeExtensions": "4.7.0",
+          "System.Runtime.Extensions": "4.3.0",
           "System.Runtime.InteropServices": "4.3.0",
           "System.Runtime.InteropServices.RuntimeInformation": "4.3.0"
         },
@@ -235,7 +247,7 @@
         "dependencies": {
           "Microsoft.DotNet.PlatformAbstractions": "2.0.4",
           "Newtonsoft.Json": "13.0.1",
-          "System.Diagnostics.Debug": "4.0.11",
+          "System.Diagnostics.Debug": "4.3.0",
           "System.Dynamic.Runtime": "4.0.11",
           "System.Linq": "4.1.0"
         },
@@ -418,6 +430,34 @@
           }
         }
       },
+      "MigraDocCore.DocumentObjectModel/1.3.43": {
+        "dependencies": {
+          "PdfSharpCore": "1.3.43",
+          "System.Collections.NonGeneric": "4.3.0",
+          "System.Reflection.TypeExtensions": "4.7.0"
+        },
+        "runtime": {
+          "lib/net6.0/MigraDocCore.DocumentObjectModel.dll": {
+            "assemblyVersion": "1.3.43.0",
+            "fileVersion": "1.3.43.0"
+          }
+        }
+      },
+      "MigraDocCore.Rendering/1.3.43": {
+        "dependencies": {
+          "MigraDocCore.DocumentObjectModel": "1.3.43",
+          "PdfSharpCore": "1.3.43",
+          "PdfSharpCore.Charting": "1.3.43",
+          "System.Diagnostics.Debug": "4.3.0",
+          "System.Diagnostics.Tracing": "4.3.0"
+        },
+        "runtime": {
+          "lib/net6.0/MigraDocCore.Rendering.dll": {
+            "assemblyVersion": "1.3.43.0",
+            "fileVersion": "1.3.43.0"
+          }
+        }
+      },
       "Newtonsoft.Json/13.0.1": {
         "runtime": {
           "lib/netstandard2.0/Newtonsoft.Json.dll": {
@@ -437,6 +477,36 @@
           }
         }
       },
+      "PdfSharpCore/1.3.43": {
+        "dependencies": {
+          "SharpZipLib": "1.3.3",
+          "SixLabors.Fonts": "1.0.0-beta17",
+          "SixLabors.ImageSharp": "1.0.4"
+        },
+        "runtime": {
+          "lib/net6.0/PdfSharpCore.dll": {
+            "assemblyVersion": "1.3.43.0",
+            "fileVersion": "1.3.43.0"
+          }
+        },
+        "resources": {
+          "lib/net6.0/de/PdfSharpCore.resources.dll": {
+            "locale": "de"
+          }
+        }
+      },
+      "PdfSharpCore.Charting/1.3.43": {
+        "dependencies": {
+          "PdfSharpCore": "1.3.43",
+          "System.Collections.NonGeneric": "4.3.0"
+        },
+        "runtime": {
+          "lib/net6.0/PdfSharpCore.Charting.dll": {
+            "assemblyVersion": "1.3.43.0",
+            "fileVersion": "1.3.43.0"
+          }
+        }
+      },
       "Polly/7.2.2": {
         "runtime": {
           "lib/netstandard2.0/Polly.dll": {
@@ -453,6 +523,14 @@
           "lib/netstandard2.0/Polly.Extensions.Http.dll": {
             "assemblyVersion": "3.0.0.0",
             "fileVersion": "3.0.0.0"
+          }
+        }
+      },
+      "QRCoder/1.4.3": {
+        "runtime": {
+          "lib/net6.0/QRCoder.dll": {
+            "assemblyVersion": "1.4.3.0",
+            "fileVersion": "1.4.3.0"
           }
         }
       },
@@ -579,6 +657,30 @@
           }
         }
       },
+      "SharpZipLib/1.3.3": {
+        "runtime": {
+          "lib/netstandard2.1/ICSharpCode.SharpZipLib.dll": {
+            "assemblyVersion": "1.3.3.11",
+            "fileVersion": "1.3.3.11"
+          }
+        }
+      },
+      "SixLabors.Fonts/1.0.0-beta17": {
+        "runtime": {
+          "lib/netcoreapp3.1/SixLabors.Fonts.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "SixLabors.ImageSharp/1.0.4": {
+        "runtime": {
+          "lib/netcoreapp3.1/SixLabors.ImageSharp.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.4.0"
+          }
+        }
+      },
       "Swashbuckle.AspNetCore/5.6.3": {
         "dependencies": {
           "Microsoft.Extensions.ApiDescription.Server": "3.0.0",
@@ -635,6 +737,16 @@
           "System.Runtime.CompilerServices.Unsafe": "6.0.0"
         }
       },
+      "System.Collections.NonGeneric/4.3.0": {
+        "dependencies": {
+          "System.Diagnostics.Debug": "4.3.0",
+          "System.Globalization": "4.3.0",
+          "System.Resources.ResourceManager": "4.3.0",
+          "System.Runtime": "4.3.0",
+          "System.Runtime.Extensions": "4.3.0",
+          "System.Threading": "4.3.0"
+        }
+      },
       "System.Configuration.ConfigurationManager/4.7.0": {
         "dependencies": {
           "System.Security.Cryptography.ProtectedData": "4.7.0",
@@ -656,7 +768,7 @@
           "System.Text.Encoding": "4.3.0"
         }
       },
-      "System.Diagnostics.Debug/4.0.11": {
+      "System.Diagnostics.Debug/4.3.0": {
         "dependencies": {
           "Microsoft.NETCore.Platforms": "3.1.0",
           "Microsoft.NETCore.Targets": "1.1.0",
@@ -666,6 +778,13 @@
       "System.Diagnostics.DiagnosticSource/6.0.0": {
         "dependencies": {
           "System.Runtime.CompilerServices.Unsafe": "6.0.0"
+        }
+      },
+      "System.Diagnostics.Tracing/4.3.0": {
+        "dependencies": {
+          "Microsoft.NETCore.Platforms": "3.1.0",
+          "Microsoft.NETCore.Targets": "1.1.0",
+          "System.Runtime": "4.3.0"
         }
       },
       "System.Drawing.Common/7.0.0": {
@@ -690,7 +809,7 @@
       "System.Dynamic.Runtime/4.0.11": {
         "dependencies": {
           "System.Collections": "4.0.11",
-          "System.Diagnostics.Debug": "4.0.11",
+          "System.Diagnostics.Debug": "4.3.0",
           "System.Globalization": "4.3.0",
           "System.Linq": "4.1.0",
           "System.Linq.Expressions": "4.1.0",
@@ -699,10 +818,10 @@
           "System.Reflection.Emit": "4.0.1",
           "System.Reflection.Emit.ILGeneration": "4.0.1",
           "System.Reflection.Primitives": "4.3.0",
-          "System.Reflection.TypeExtensions": "4.1.0",
+          "System.Reflection.TypeExtensions": "4.7.0",
           "System.Resources.ResourceManager": "4.3.0",
           "System.Runtime": "4.3.0",
-          "System.Runtime.Extensions": "4.1.0",
+          "System.Runtime.Extensions": "4.3.0",
           "System.Threading": "4.3.0"
         }
       },
@@ -754,16 +873,16 @@
       "System.Linq/4.1.0": {
         "dependencies": {
           "System.Collections": "4.0.11",
-          "System.Diagnostics.Debug": "4.0.11",
+          "System.Diagnostics.Debug": "4.3.0",
           "System.Resources.ResourceManager": "4.3.0",
           "System.Runtime": "4.3.0",
-          "System.Runtime.Extensions": "4.1.0"
+          "System.Runtime.Extensions": "4.3.0"
         }
       },
       "System.Linq.Expressions/4.1.0": {
         "dependencies": {
           "System.Collections": "4.0.11",
-          "System.Diagnostics.Debug": "4.0.11",
+          "System.Diagnostics.Debug": "4.3.0",
           "System.Globalization": "4.3.0",
           "System.IO": "4.3.0",
           "System.Linq": "4.1.0",
@@ -774,17 +893,17 @@
           "System.Reflection.Emit.Lightweight": "4.0.1",
           "System.Reflection.Extensions": "4.3.0",
           "System.Reflection.Primitives": "4.3.0",
-          "System.Reflection.TypeExtensions": "4.1.0",
+          "System.Reflection.TypeExtensions": "4.7.0",
           "System.Resources.ResourceManager": "4.3.0",
           "System.Runtime": "4.3.0",
-          "System.Runtime.Extensions": "4.1.0",
+          "System.Runtime.Extensions": "4.3.0",
           "System.Threading": "4.3.0"
         }
       },
       "System.ObjectModel/4.0.12": {
         "dependencies": {
           "System.Collections": "4.0.11",
-          "System.Diagnostics.Debug": "4.0.11",
+          "System.Diagnostics.Debug": "4.3.0",
           "System.Resources.ResourceManager": "4.3.0",
           "System.Runtime": "4.3.0",
           "System.Threading": "4.3.0"
@@ -838,12 +957,7 @@
           "System.Runtime": "4.3.0"
         }
       },
-      "System.Reflection.TypeExtensions/4.1.0": {
-        "dependencies": {
-          "System.Reflection": "4.3.0",
-          "System.Runtime": "4.3.0"
-        }
-      },
+      "System.Reflection.TypeExtensions/4.7.0": {},
       "System.Resources.ResourceManager/4.3.0": {
         "dependencies": {
           "Microsoft.NETCore.Platforms": "3.1.0",
@@ -879,7 +993,7 @@
         }
       },
       "System.Runtime.CompilerServices.Unsafe/6.0.0": {},
-      "System.Runtime.Extensions/4.1.0": {
+      "System.Runtime.Extensions/4.3.0": {
         "dependencies": {
           "Microsoft.NETCore.Platforms": "3.1.0",
           "Microsoft.NETCore.Targets": "1.1.0",
@@ -971,6 +1085,7 @@
         }
       },
       "System.Text.Encodings.Web/4.5.0": {},
+      "System.Text.Json/5.0.2": {},
       "System.Threading/4.3.0": {
         "dependencies": {
           "System.Runtime": "4.3.0",
@@ -1047,6 +1162,18 @@
           "OzonClasses.dll": {}
         }
       },
+      "PdfHelper/1.0.0": {
+        "dependencies": {
+          "BarcodeLib": "2.4.0",
+          "MigraDocCore.DocumentObjectModel": "1.3.43",
+          "MigraDocCore.Rendering": "1.3.43",
+          "PdfSharpCore": "1.3.43",
+          "QRCoder": "1.4.3"
+        },
+        "runtime": {
+          "PdfHelper.dll": {}
+        }
+      },
       "SberClasses/1.0.0": {
         "dependencies": {
           "HttpExtensions": "1.0.0",
@@ -1061,6 +1188,7 @@
           "JsonExtensions": "1.0.0",
           "Microsoft.EntityFrameworkCore.SqlServer": "6.0.1",
           "Newtonsoft.Json": "13.0.1",
+          "PdfHelper": "1.0.0",
           "System.Drawing.Common": "7.0.0",
           "YandexClasses": "1.0.0"
         },
@@ -1095,6 +1223,13 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "BarcodeLib/2.4.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-SXMILkQm3jpngFmSa6AafsaJNid8UWCZh1v4w2oWxBzXnuVaL/S7H+nMxslWbPOPz1AVaLenRbFgy3OtX9J4dQ==",
+      "path": "barcodelib/2.4.0",
+      "hashPath": "barcodelib.2.4.0.nupkg.sha512"
     },
     "Humanizer.Core/2.8.26": {
       "type": "package",
@@ -1404,6 +1539,20 @@
       "path": "microsoft.win32.systemevents/7.0.0",
       "hashPath": "microsoft.win32.systemevents.7.0.0.nupkg.sha512"
     },
+    "MigraDocCore.DocumentObjectModel/1.3.43": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-T1JCqJoViEsviPsTC+ZD6vvLRnt2jdpu6AYLG8tCHHiTuBNC/zXua9JAUSEFNzO8VrKabudIgdM/+W/48V1s/w==",
+      "path": "migradoccore.documentobjectmodel/1.3.43",
+      "hashPath": "migradoccore.documentobjectmodel.1.3.43.nupkg.sha512"
+    },
+    "MigraDocCore.Rendering/1.3.43": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-nKYe9eU68raOPJ0P9oqZHnIYtXcIJumS7fOcCS2AFtQC3HZ+DxAxuhJ85bKr+zXZAum587LRGJkCo7Cd2xcing==",
+      "path": "migradoccore.rendering/1.3.43",
+      "hashPath": "migradoccore.rendering.1.3.43.nupkg.sha512"
+    },
     "Newtonsoft.Json/13.0.1": {
       "type": "package",
       "serviceable": true,
@@ -1418,6 +1567,20 @@
       "path": "newtonsoft.json.bson/1.0.2",
       "hashPath": "newtonsoft.json.bson.1.0.2.nupkg.sha512"
     },
+    "PdfSharpCore/1.3.43": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ADyhiAhn/baBiQqi8IDu2UBDZjPR/N9WNSho/6vMkrQviSGfAK+6X1JVk/Lpe1iH8MEYvFYDuFi/tr5GVLc87Q==",
+      "path": "pdfsharpcore/1.3.43",
+      "hashPath": "pdfsharpcore.1.3.43.nupkg.sha512"
+    },
+    "PdfSharpCore.Charting/1.3.43": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ExLKcFMrfmcAYUDk0ryZx3BskoEflnUzdmiAXhpzSkyTqN08/kgPXyiJ+2kcrpMcinfRzdOlQENG5cTwgMc6RA==",
+      "path": "pdfsharpcore.charting/1.3.43",
+      "hashPath": "pdfsharpcore.charting.1.3.43.nupkg.sha512"
+    },
     "Polly/7.2.2": {
       "type": "package",
       "serviceable": true,
@@ -1431,6 +1594,13 @@
       "sha512": "sha512-drrG+hB3pYFY7w1c3BD+lSGYvH2oIclH8GRSehgfyP5kjnFnHKQuuBhuHLv+PWyFuaTDyk/vfRpnxOzd11+J8g==",
       "path": "polly.extensions.http/3.0.0",
       "hashPath": "polly.extensions.http.3.0.0.nupkg.sha512"
+    },
+    "QRCoder/1.4.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-fWuFqjm8GTlEb2GqBl3Hi8HZZeZQwBSHxvRPtPjyNbT82H0ff0JwavKRBmMaXCno1Av6McPC8aJzri0Mj2w9Jw==",
+      "path": "qrcoder/1.4.3",
+      "hashPath": "qrcoder.1.4.3.nupkg.sha512"
     },
     "runtime.native.System/4.3.0": {
       "type": "package",
@@ -1502,6 +1672,27 @@
       "path": "serilog.sinks.file/4.1.0",
       "hashPath": "serilog.sinks.file.4.1.0.nupkg.sha512"
     },
+    "SharpZipLib/1.3.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-N8+hwhsKZm25tDJfWpBSW7EGhH/R7EMuiX+KJ4C4u+fCWVc1lJ5zg1u3S1RPPVYgTqhx/C3hxrqUpi6RwK5+Tg==",
+      "path": "sharpziplib/1.3.3",
+      "hashPath": "sharpziplib.1.3.3.nupkg.sha512"
+    },
+    "SixLabors.Fonts/1.0.0-beta17": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-qubgVovAoSR7vyv9tJ68gSzRIPWz7HBjTM9rwAaLjpcJ6T50arnX+GHAZcC0r2mVagyRMknCNda3DGoe8StUUQ==",
+      "path": "sixlabors.fonts/1.0.0-beta17",
+      "hashPath": "sixlabors.fonts.1.0.0-beta17.nupkg.sha512"
+    },
+    "SixLabors.ImageSharp/1.0.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-H2rPiEr2ddBOltOuqRYhpLBAsQXDAhbzMMhhuksnBG2oefup1MXMchALe7yYkKJksNbtxbZHKeM6dn/68I75qw==",
+      "path": "sixlabors.imagesharp/1.0.4",
+      "hashPath": "sixlabors.imagesharp.1.0.4.nupkg.sha512"
+    },
     "Swashbuckle.AspNetCore/5.6.3": {
       "type": "package",
       "serviceable": true,
@@ -1558,6 +1749,13 @@
       "path": "system.collections.immutable/6.0.0",
       "hashPath": "system.collections.immutable.6.0.0.nupkg.sha512"
     },
+    "System.Collections.NonGeneric/4.3.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-prtjIEMhGUnQq6RnPEYLpFt8AtLbp9yq2zxOSrY7KJJZrw25Fi97IzBqY7iqssbM61Ek5b8f3MG/sG1N2sN5KA==",
+      "path": "system.collections.nongeneric/4.3.0",
+      "hashPath": "system.collections.nongeneric.4.3.0.nupkg.sha512"
+    },
     "System.Configuration.ConfigurationManager/4.7.0": {
       "type": "package",
       "serviceable": true,
@@ -1572,12 +1770,12 @@
       "path": "system.console/4.3.0",
       "hashPath": "system.console.4.3.0.nupkg.sha512"
     },
-    "System.Diagnostics.Debug/4.0.11": {
+    "System.Diagnostics.Debug/4.3.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-w5U95fVKHY4G8ASs/K5iK3J5LY+/dLFd4vKejsnI/ZhBsWS9hQakfx3Zr7lRWKg4tAw9r4iktyvsTagWkqYCiw==",
-      "path": "system.diagnostics.debug/4.0.11",
-      "hashPath": "system.diagnostics.debug.4.0.11.nupkg.sha512"
+      "sha512": "sha512-ZUhUOdqmaG5Jk3Xdb8xi5kIyQYAA4PnTNlHx1mu9ZY3qv4ELIdKbnL/akbGaKi2RnNUWaZsAs31rvzFdewTj2g==",
+      "path": "system.diagnostics.debug/4.3.0",
+      "hashPath": "system.diagnostics.debug.4.3.0.nupkg.sha512"
     },
     "System.Diagnostics.DiagnosticSource/6.0.0": {
       "type": "package",
@@ -1585,6 +1783,13 @@
       "sha512": "sha512-frQDfv0rl209cKm1lnwTgFPzNigy2EKk1BS3uAvHvlBVKe5cymGyHO+Sj+NLv5VF/AhHsqPIUUwya5oV4CHMUw==",
       "path": "system.diagnostics.diagnosticsource/6.0.0",
       "hashPath": "system.diagnostics.diagnosticsource.6.0.0.nupkg.sha512"
+    },
+    "System.Diagnostics.Tracing/4.3.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-rswfv0f/Cqkh78rA5S8eN8Neocz234+emGCtTF3lxPY96F+mmmUen6tbn0glN6PMvlKQb9bPAY5e9u7fgPTkKw==",
+      "path": "system.diagnostics.tracing/4.3.0",
+      "hashPath": "system.diagnostics.tracing.4.3.0.nupkg.sha512"
     },
     "System.Drawing.Common/7.0.0": {
       "type": "package",
@@ -1698,12 +1903,12 @@
       "path": "system.reflection.primitives/4.3.0",
       "hashPath": "system.reflection.primitives.4.3.0.nupkg.sha512"
     },
-    "System.Reflection.TypeExtensions/4.1.0": {
+    "System.Reflection.TypeExtensions/4.7.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-tsQ/ptQ3H5FYfON8lL4MxRk/8kFyE0A+tGPXmVP967cT/gzLHYxIejIYSxp4JmIeFHVP78g/F2FE1mUUTbDtrg==",
-      "path": "system.reflection.typeextensions/4.1.0",
-      "hashPath": "system.reflection.typeextensions.4.1.0.nupkg.sha512"
+      "sha512": "sha512-VybpaOQQhqE6siHppMktjfGBw1GCwvCqiufqmP8F1nj7fTUNtW35LOEt3UZTEsECfo+ELAl/9o9nJx3U91i7vA==",
+      "path": "system.reflection.typeextensions/4.7.0",
+      "hashPath": "system.reflection.typeextensions.4.7.0.nupkg.sha512"
     },
     "System.Resources.ResourceManager/4.3.0": {
       "type": "package",
@@ -1733,12 +1938,12 @@
       "path": "system.runtime.compilerservices.unsafe/6.0.0",
       "hashPath": "system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512"
     },
-    "System.Runtime.Extensions/4.1.0": {
+    "System.Runtime.Extensions/4.3.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-CUOHjTT/vgP0qGW22U4/hDlOqXmcPq5YicBaXdUR2UiUoLwBT+olO6we4DVbq57jeX5uXH2uerVZhf0qGj+sVQ==",
-      "path": "system.runtime.extensions/4.1.0",
-      "hashPath": "system.runtime.extensions.4.1.0.nupkg.sha512"
+      "sha512": "sha512-guW0uK0fn5fcJJ1tJVXYd7/1h5F+pea1r7FLSOz/f8vPEqbR2ZAknuRDvTQ8PzAilDveOxNjSfr0CHfIQfFk8g==",
+      "path": "system.runtime.extensions/4.3.0",
+      "hashPath": "system.runtime.extensions.4.3.0.nupkg.sha512"
     },
     "System.Runtime.Handles/4.3.0": {
       "type": "package",
@@ -1824,6 +2029,13 @@
       "path": "system.text.encodings.web/4.5.0",
       "hashPath": "system.text.encodings.web.4.5.0.nupkg.sha512"
     },
+    "System.Text.Json/5.0.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-I47dVIGiV6SfAyppphxqupertT/5oZkYLDCX6vC3HpOI4ZLjyoKAreUoem2ie6G0RbRuFrlqz/PcTQjfb2DOfQ==",
+      "path": "system.text.json/5.0.2",
+      "hashPath": "system.text.json.5.0.2.nupkg.sha512"
+    },
     "System.Threading/4.3.0": {
       "type": "package",
       "serviceable": true,
@@ -1868,6 +2080,11 @@
       "sha512": ""
     },
     "OzonClasses/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "PdfHelper/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

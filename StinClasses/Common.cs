@@ -8,6 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.Intrinsics.Arm;
 using System.Drawing.Imaging;
+using System.IO;
+using System.Reflection;
+using System.Xml.Linq;
 
 namespace StinClasses
 {
@@ -485,6 +488,22 @@ namespace StinClasses
             using var destMs = new System.IO.MemoryStream();
             ((Image)b).Save(destMs, original.RawFormat);
             return destMs.ToArray();
+        }
+        public static string GetTemplateFileContentAsString(string resourceName)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            string resource = null;
+            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+            {
+                if (stream == null)
+                    throw new ArgumentException("No resource with name " + resourceName);
+                using (StreamReader reader = new StreamReader(stream, Encoding.GetEncoding(1251)))
+                {
+                    resource = reader.ReadToEnd();
+                }
+            }
+            return resource;
         }
     }
 }
