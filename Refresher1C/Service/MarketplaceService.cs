@@ -3774,7 +3774,7 @@ namespace Refresher1C.Service
             {
                 var marketplaceIds = await (from market in _context.Sc14042s
                                             where !market.Ismark
-                                                //&& market.Code.Trim() == "43956" 
+                                                //&& market.Code.Trim() == "D0000000000000000001"
                                                 //&& market.Sp14155.Trim().ToUpper() == "OZON" 
                                                 //&& market.Sp14155.Trim().ToUpper() == "WILDBERRIES"
                                                 //&& market.Code.Trim() == "23005267" // Yandex DBS
@@ -4244,89 +4244,87 @@ namespace Refresher1C.Service
         private (double percent, double limMin, double limMax) CommissionValuesFbsVolumeWeight(double volumeWeight, bool kgt)
         {
             if (kgt)
-                return (percent: 8, limMin: 1000, limMax: 1400);
+                return (percent: 7, limMin: 1100, limMax: 1950);
             return volumeWeight switch
             {
-                0.1d => (percent: 4, limMin: 41, limMax: 50),
-                0.2d => (percent: 4, limMin: 42, limMax: 50),
-                0.3d => (percent: 4, limMin: 43, limMax: 60),
-                0.4d => (percent: 4, limMin: 45, limMax: 65),
-                0.5d => (percent: 4, limMin: 47, limMax: 70),
-                0.6d => (percent: 4, limMin: 50, limMax: 70),
-                0.7d => (percent: 4, limMin: 53, limMax: 75),
-                0.8d => (percent: 4, limMin: 55, limMax: 75),
-                0.9d => (percent: 4, limMin: 55, limMax: 80),
-                1d => (percent: 5, limMin: 57, limMax: 95),
-                1.1d => (percent: 5, limMin: 59, limMax: 95),
-                1.2d => (percent: 5, limMin: 63, limMax: 100),
-                1.3d => (percent: 5, limMin: 63, limMax: 105),
-                1.4d => (percent: 5, limMin: 67, limMax: 105),
-                1.5d => (percent: 5, limMin: 67, limMax: 125),
-                1.6d => (percent: 5, limMin: 70, limMax: 125),
-                1.7d => (percent: 5, limMin: 71, limMax: 125),
-                1.8d => (percent: 5, limMin: 75, limMax: 130),
-                1.9d => (percent: 5, limMin: 77, limMax: 130),
-                < 3d => (percent: 5, limMin: 90, limMax: 145),
-                < 4d => (percent: 5.5, limMin: 115, limMax: 175),
-                < 5d => (percent: 5.5, limMin: 155, limMax: 215),
-                < 6d => (percent: 5.5, limMin: 175, limMax: 275),
-                < 7d => (percent: 5.5, limMin: 200, limMax: 315),
-                < 8d => (percent: 5.5, limMin: 215, limMax: 350),
-                < 9d => (percent: 5.5, limMin: 245, limMax: 385),
-                < 10d => (percent: 5.5, limMin: 270, limMax: 395),
-                < 11d => (percent: 6, limMin: 300, limMax: 400),
-                < 12d => (percent: 6, limMin: 315, limMax: 450),
-                < 13d => (percent: 6, limMin: 345, limMax: 490),
-                < 14d => (percent: 6, limMin: 365, limMax: 510),
-                < 15d => (percent: 6, limMin: 400, limMax: 515),
-                < 20d => (percent: 6, limMin: 485, limMax: 550),
-                < 25d => (percent: 6, limMin: 585, limMax: 650),
-                _ => (percent: 8, limMin: 650, limMax: double.MaxValue)
+                0.1d => (percent: 5, limMin: 40, limMax: 100),
+                0.2d => (percent: 5, limMin: 41, limMax: 105),
+                0.3d => (percent: 5, limMin: 42, limMax: 115),
+                0.4d => (percent: 5, limMin: 43, limMax: 120),
+                0.5d => (percent: 5, limMin: 43, limMax: 125),
+                0.6d => (percent: 5, limMin: 45, limMax: 130),
+                0.7d => (percent: 5, limMin: 45, limMax: 135),
+                0.8d => (percent: 5, limMin: 47, limMax: 140),
+                0.9d => (percent: 5, limMin: 49, limMax: 145),
+                1d => (percent: 6, limMin: 51, limMax: 155),
+                1.1d => (percent: 6, limMin: 55, limMax: 165),
+                1.2d => (percent: 6, limMin: 57, limMax: 175),
+                1.3d => (percent: 6, limMin: 61, limMax: 190),
+                1.4d => (percent: 6, limMin: 63, limMax: 200),
+                1.5d => (percent: 6, limMin: 65, limMax: 225),
+                1.6d => (percent: 6, limMin: 67, limMax: 230),
+                1.7d => (percent: 6, limMin: 69, limMax: 245),
+                1.8d => (percent: 6, limMin: 70, limMax: 255),
+                1.9d => (percent: 6, limMin: 71, limMax: 265),
+                < 3d => (percent: 6, limMin: 79, limMax: 285),
+                < 4d => (percent: 6, limMin: 100, limMax: 330),
+                < 5d => (percent: 6, limMin: 120, limMax: 400),
+                < 6d => (percent: 6, limMin: 135, limMax: 425),
+                < 7d => (percent: 6, limMin: 160, limMax: 450),
+                < 8d => (percent: 6, limMin: 185, limMax: 500),
+                < 9d => (percent: 6, limMin: 210, limMax: 525),
+                < 10d => (percent: 6, limMin: 225, limMax: 550),
+                < 11d => (percent: 7, limMin: 265, limMax: 575),
+                < 12d => (percent: 7, limMin: 290, limMax: 625),
+                < 13d => (percent: 7, limMin: 315, limMax: 685),
+                < 14d => (percent: 7, limMin: 350, limMax: 700),
+                < 15d => (percent: 7, limMin: 370, limMax: 700),
+                < 20d => (percent: 7, limMin: 400, limMax: 700),
+                < 25d => (percent: 7, limMin: 525, limMax: 700),
+                _ => (percent: 7, limMin: 700, limMax: 700)
             };
         }
-        private (double percent, double limMin, double limMax) CommissionValuesFbsVolumeWeight01102022(double volumeWeight, bool kgt)
+        private (double percent, double limMin, double limMax) CommissionValuesFbsVolumeWeightFbo(double volumeWeight, bool kgt)
         {
-            if (kgt)
-                return (percent: 7, limMin: 1000, limMax: 1400);
             return volumeWeight switch
             {
-                0.1 => (percent: 5, limMin: 38, limMax: 50),
-                0.2 => (percent: 5, limMin: 39, limMax: 50),
-                0.3 => (percent: 5, limMin: 40, limMax: 60),
-                0.4 => (percent: 5, limMin: 41, limMax: 60),
-                0.5 => (percent: 5, limMin: 41, limMax: 65),
-                0.6 => (percent: 5, limMin: 43, limMax: 70),
-                0.7 => (percent: 5, limMin: 43, limMax: 70),
-                0.8 => (percent: 5, limMin: 45, limMax: 75),
-                0.9 => (percent: 5, limMin: 47, limMax: 75),
-                1.0 => (percent: 6, limMin: 49, limMax: 85),
-                1.1 => (percent: 6, limMin: 53, limMax: 90),
-                1.2 => (percent: 6, limMin: 55, limMax: 95),
-                1.3 => (percent: 6, limMin: 59, limMax: 100),
-                1.4 => (percent: 6, limMin: 60, limMax: 100),
-                1.5 => (percent: 6, limMin: 61, limMax: 115),
-                1.6 => (percent: 6, limMin: 63, limMax: 115),
-                1.7 => (percent: 6, limMin: 65, limMax: 120),
-                1.8 => (percent: 6, limMin: 67, limMax: 125),
-                1.9 => (percent: 6, limMin: 67, limMax: 130),
-                < 3.0 => (percent: 6, limMin: 75, limMax: 140),
-                < 4.0 => (percent: 6, limMin: 95, limMax: 170),
-                < 5.0 => (percent: 6, limMin: 115, limMax: 210),
-                < 6.0 => (percent: 6, limMin: 130, limMax: 250),
-                < 7.0 => (percent: 6, limMin: 150, limMax: 300),
-                < 8.0 => (percent: 6, limMin: 175, limMax: 330),
-                < 9.0 => (percent: 6, limMin: 200, limMax: 350),
-                < 10.0 => (percent: 6, limMin: 215, limMax: 375),
-                < 11.0 => (percent: 7, limMin: 250, limMax: 390),
-                < 12.0 => (percent: 7, limMin: 275, limMax: 430),
-                < 13.0 => (percent: 7, limMin: 300, limMax: 470),
-                < 14.0 => (percent: 7, limMin: 330, limMax: 500),
-                < 15.0 => (percent: 7, limMin: 350, limMax: 525),
-                < 20.0 => (percent: 7, limMin: 375, limMax: 550),
-                < 25.0 => (percent: 7, limMin: 500, limMax: 650),
-                < 30.0 => (percent: 7, limMin: 650, limMax: 1200),
-                < 35.0 => (percent: 7, limMin: 750, limMax: 1200),
-                _ => (percent: 7, limMin: 950, limMax: 1200)
+                0.1d => (percent: 5, limMin: 40, limMax: 100),
+                0.2d => (percent: 5, limMin: 41, limMax: 105),
+                0.3d => (percent: 5, limMin: 42, limMax: 115),
+                0.4d => (percent: 5, limMin: 43, limMax: 120),
+                0.5d => (percent: 5, limMin: 43, limMax: 125),
+                0.6d => (percent: 5, limMin: 45, limMax: 130),
+                0.7d => (percent: 5, limMin: 45, limMax: 135),
+                0.8d => (percent: 5, limMin: 47, limMax: 140),
+                0.9d => (percent: 5, limMin: 49, limMax: 145),
+                1d => (percent: 6, limMin: 51, limMax: 155),
+                1.1d => (percent: 6, limMin: 55, limMax: 165),
+                1.2d => (percent: 6, limMin: 57, limMax: 175),
+                1.3d => (percent: 6, limMin: 61, limMax: 190),
+                1.4d => (percent: 6, limMin: 63, limMax: 200),
+                1.5d => (percent: 6, limMin: 65, limMax: 225),
+                1.6d => (percent: 6, limMin: 67, limMax: 230),
+                1.7d => (percent: 6, limMin: 69, limMax: 245),
+                1.8d => (percent: 6, limMin: 70, limMax: 255),
+                1.9d => (percent: 6, limMin: 71, limMax: 265),
+                < 3d => (percent: 6, limMin: 79, limMax: 285),
+                < 4d => (percent: 6, limMin: 100, limMax: 330),
+                < 5d => (percent: 6, limMin: 120, limMax: 400),
+                < 6d => (percent: 6, limMin: 135, limMax: 425),
+                < 7d => (percent: 6, limMin: 160, limMax: 450),
+                < 8d => (percent: 6, limMin: 185, limMax: 500),
+                < 9d => (percent: 6, limMin: 210, limMax: 525),
+                < 10d => (percent: 6, limMin: 225, limMax: 550),
+                < 11d => (percent: 7, limMin: 265, limMax: 575),
+                < 12d => (percent: 7, limMin: 290, limMax: 625),
+                < 13d => (percent: 7, limMin: 315, limMax: 685),
+                < 14d => (percent: 7, limMin: 350, limMax: 700),
+                < 15d => (percent: 7, limMin: 370, limMax: 700),
+                < 20d => (percent: 7, limMin: 400, limMax: 700),
+                < 25d => (percent: 7, limMin: 525, limMax: 700),
+                < 30d => (percent: 7, limMin: 700, limMax: 1750),
+                < 35d => (percent: 7, limMin: 800, limMax: 1750),
+                _ => (percent: 7, limMin: 1000, limMax: 1750)
             };
         }
         private double CommissionFbsVolumeWeight(double volumeWeight, double price, bool kgt)
@@ -4368,7 +4366,7 @@ namespace Refresher1C.Service
                         from vzTovar in _vzTovar.DefaultIfEmpty()
                         where (markUse.Sp14147 == marketplaceId) &&
                           (markUse.Sp14158 == 1) //Есть в каталоге 
-                          //&& nom.Code == "K00039119"
+                          //&& nom.Code == "D00044987"
                         select new
                         {
                             Id = markUse.Id,
@@ -4389,7 +4387,7 @@ namespace Refresher1C.Service
                 {
                     var comResult = await OzonClasses.OzonOperators.ProductComission(_httpService, _firmProxy[firmaId], clientId, authToken,
                         item.Sku.Encode(encoding),
-                        item.realFbs ? "rfbs" : "fbs",
+                        model == "FBS" ? (item.realFbs ? "rfbs" : "fbs") : "fbo",
                         cancellationToken);
                     if (comResult.Error != null && !string.IsNullOrEmpty(comResult.Error))
                     {
@@ -4408,55 +4406,75 @@ namespace Refresher1C.Service
                                 var Порог = (double)(item.ЦенаЗакуп * item.Квант) * (100 + КоэфМинНаценки) / 100;
                                 var c_saleType = comResult.ComPercent / 100;
                                 //var c_premium = 2.0 / 100; //2% premium
-                                if (item.realFbs)
+                                if ((model == "FBS") && (item.realFbs))
                                 {
                                     double base15Kg = 1300;
                                     double overKg = 20;
                                     minPrice = (Порог + base15Kg + (comResult.VolumeWeight - 15) * overKg) / (1 - c_saleType); // - c_premium);
                                 }
-                                else //fbs
+                                else //fbs or fbo
                                 {
-                                    var tariffWeight = CommissionValuesFbsVolumeWeight01102022(comResult.VolumeWeight, false);
-                                    var tariffLastMile = (percent: 5.0, limMin: 20.0, limMax: 250.0);
-                                    var limits = LimitValues(tariffWeight, tariffLastMile);
+                                    //var tariffWeight = CommissionValuesFbsVolumeWeight01102022(comResult.VolumeWeight, false);
+                                    var tariffWeight = (percent: 0d, limMin: 0d, limMax: 0d);
+                                    if (model == "FBS")
+                                        tariffWeight = CommissionValuesFbsVolumeWeight(comResult.VolumeWeight, false);
+                                    else
+                                        tariffWeight = CommissionValuesFbsVolumeWeightFbo(comResult.VolumeWeight, false);
+                                    var tariffLastMile = (percent: 5.5, limMin: 20.0, limMax: 500.0);
+                                    //var limits = LimitValues(tariffWeight, tariffLastMile);
                                     //_logger.LogError("Порог = " + Порог.ToString());
                                     //var c_saleType = comResult.ComPercent / 100;
-                                    var c_delivery = 0.0;//Обработка отправления ТСЦ = 0
+                                    //var c_delivery = 0.0;//Обработка отправления ТСЦ = 0
                                     var c_weight = tariffWeight.percent / 100;
                                     var c_lastMile = tariffLastMile.percent / 100;
+
+                                    var logisticsSum = Порог * c_weight;
+                                    if (logisticsSum < tariffWeight.limMin)
+                                        logisticsSum = tariffWeight.limMin;
+                                    else if (logisticsSum > tariffWeight.limMax)
+                                        logisticsSum = tariffWeight.limMax;
+
+                                    var lastMileSum = Порог * c_lastMile;
+                                    if (lastMileSum < tariffLastMile.limMin)
+                                        lastMileSum = tariffLastMile.limMin;
+                                    else if (lastMileSum > tariffLastMile.limMax)
+                                        lastMileSum = tariffLastMile.limMax;
                                     //var c_premium = 2d / 100; //2% premium
                                     //_logger.LogError("c_saleType = " + c_saleType.ToString());
                                     //_logger.LogError("c_delivery = " + c_delivery.ToString());
                                     //_logger.LogError("c_weight = " + c_weight.ToString());
                                     //_logger.LogError("c_lastMile = " + c_lastMile.ToString());
                                     //_logger.LogError("c_premium = " + c_premium.ToString());
-                                    minPrice = Порог / (1 - c_saleType - c_delivery - c_weight - c_lastMile); // - c_premium);
+                                    minPrice = Порог;
+                                    minPrice += Порог * c_saleType; //за продажу
+                                    minPrice += logisticsSum; //за доставку
+                                    minPrice += lastMileSum;  //за последнюю милю
                                     //_logger.LogError("minPrice = " + minPrice.ToString());
-                                    if (minPrice < Math.Min(limits["MinWeightLimit"], limits["MinLastMileLimit"]))
-                                    {
-                                        if (limits["MinWeightLimit"] > limits["MinLastMileLimit"])
-                                            minPrice = (Порог + tariffLastMile.limMin) / (1 - c_saleType - c_delivery - c_weight); // - c_premium);
-                                        else
-                                            minPrice = (Порог + tariffWeight.limMin) / (1 - c_saleType - c_delivery - c_lastMile); // - c_premium);
-                                    }
-                                    //_logger.LogError("minPrice = " + minPrice.ToString());
-                                    if (minPrice < Math.Max(limits["MinWeightLimit"], limits["MinLastMileLimit"]))
-                                    {
-                                        minPrice = (Порог + tariffWeight.limMin + tariffLastMile.limMin) / (1 - c_saleType - c_delivery); // - c_premium);
-                                    }
-                                    //_logger.LogError("minPrice = " + minPrice.ToString());
-                                    if (minPrice > Math.Min(limits["MaxWeightLimit"], limits["MaxLastMileLimit"]))
-                                    {
-                                        if (limits["MaxWeightLimit"] < limits["MaxLastMileLimit"])
-                                            minPrice = (Порог + tariffWeight.limMax) / (1 - c_saleType - c_delivery - c_lastMile); // - c_premium);
-                                        else
-                                            minPrice = (Порог + tariffLastMile.limMax) / (1 - c_saleType - c_delivery - c_weight); // - c_premium);
-                                    }
-                                    //_logger.LogError("minPrice = " + minPrice.ToString());
-                                    if (minPrice > Math.Max(limits["MaxWeightLimit"], limits["MaxLastMileLimit"]))
-                                    {
-                                        minPrice = (Порог + tariffWeight.limMax + tariffLastMile.limMax) / (1 - c_saleType - c_delivery); // - c_premium);
-                                    }
+                                    //if (minPrice < Math.Min(limits["MinWeightLimit"], limits["MinLastMileLimit"]))
+                                    //{
+                                    //    if (limits["MinWeightLimit"] > limits["MinLastMileLimit"])
+                                    //        minPrice = (Порог + tariffLastMile.limMin) / (1 - c_saleType - c_delivery - c_weight); // - c_premium);
+                                    //    else
+                                    //        minPrice = (Порог + tariffWeight.limMin) / (1 - c_saleType - c_delivery - c_lastMile); // - c_premium);
+                                    //}
+                                    ////_logger.LogError("minPrice = " + minPrice.ToString());
+                                    //if (minPrice < Math.Max(limits["MinWeightLimit"], limits["MinLastMileLimit"]))
+                                    //{
+                                    //    minPrice = (Порог + tariffWeight.limMin + tariffLastMile.limMin) / (1 - c_saleType - c_delivery); // - c_premium);
+                                    //}
+                                    ////_logger.LogError("minPrice = " + minPrice.ToString());
+                                    //if (minPrice > Math.Min(limits["MaxWeightLimit"], limits["MaxLastMileLimit"]))
+                                    //{
+                                    //    if (limits["MaxWeightLimit"] < limits["MaxLastMileLimit"])
+                                    //        minPrice = (Порог + tariffWeight.limMax) / (1 - c_saleType - c_delivery - c_lastMile); // - c_premium);
+                                    //    else
+                                    //        minPrice = (Порог + tariffLastMile.limMax) / (1 - c_saleType - c_delivery - c_weight); // - c_premium);
+                                    //}
+                                    ////_logger.LogError("minPrice = " + minPrice.ToString());
+                                    //if (minPrice > Math.Max(limits["MaxWeightLimit"], limits["MaxLastMileLimit"]))
+                                    //{
+                                    //    minPrice = (Порог + tariffWeight.limMax + tariffLastMile.limMax) / (1 - c_saleType - c_delivery); // - c_premium);
+                                    //}
                                     //_logger.LogError("sku = " + item.Sku + ";minPrice = " + minPrice.ToString());
                                 }
                                 decimal updateMinPrice = decimal.Round((decimal)minPrice / item.Квант, 2, MidpointRounding.AwayFromZero);
