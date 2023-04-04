@@ -514,11 +514,12 @@ namespace Refresher1C.Service
                 var активныеНаборы = await _набор.ПолучитьСписокАктивныхНаборов(order.Id, true);
                 if (активныеНаборы != null && активныеНаборы.Count > 0)
                 {
+                    ExceptionData result = null;
                     var формаПредварительнаяЗаявка = await _предварительнаяЗаявка.GetФормаПредварительнаяЗаявкаByOrderId(order.Id);
                     var списокКомплеснаяПродажа = await _комплекснаяПродажа.ЗаполнитьНаОснованииAsync(Common.UserRobot, формаПредварительнаяЗаявка, needToCalcDateTime ? dateTimeTA.AddMilliseconds(1) : DateTime.Now, активныеНаборы, transferred);
                     foreach (var формаКомплеснаяПродажа in списокКомплеснаяПродажа)
                     {
-                        var result = await _комплекснаяПродажа.ЗаписатьПровестиAsync(формаКомплеснаяПродажа);
+                        result = await _комплекснаяПродажа.ЗаписатьПровестиAsync(формаКомплеснаяПродажа);
                         реквизитыПроведенныхДокументов.Add(формаКомплеснаяПродажа.Общие);
                         if (result == null)
                         {
@@ -549,7 +550,8 @@ namespace Refresher1C.Service
                             break;
                         }
                     }
-                    await _order.ОбновитьOrderStatus(order.Id, transferred ? 14 : 6);
+                    if (result == null)
+                        await _order.ОбновитьOrderStatus(order.Id, transferred ? 14 : 6);
                 }
                 else
                     await _order.ОбновитьOrderStatus(order.Id, transferred ? -14 : -6);
