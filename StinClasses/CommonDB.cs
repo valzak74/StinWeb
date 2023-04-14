@@ -182,5 +182,10 @@ namespace StinClasses
                 new SqlParameter("@iddoc", j.Iddoc));
             j.Actcnt = 0;
         }
+        public static async Task<string> ПолучитьЗначениеКонстанты(this StinDbContext context, int Id)
+        {
+            var entity = await context._1sconsts.SingleOrDefaultAsync(x => x.Id == Id);
+            return entity?.Value;
+        }
     }
 }

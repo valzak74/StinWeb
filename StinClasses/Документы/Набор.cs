@@ -609,9 +609,9 @@ namespace StinClasses.Документы
                             КоличествоЧек = можноОтпустить.ToString("0", CultureInfo.InvariantCulture),
                             Единица = isMultiLine ? "" : row.Единица.Наименование,
                             ЕдиницаЧек = row.Единица.Наименование,
-                            КолМест = withOrder ? row.Цена.ToString("0.00", CultureInfo.InvariantCulture) : ((accessoriesList.Count > 1) || (boxCount > 1)) ? (boxCount * можноОтпустить).ToString("0", CultureInfo.InvariantCulture) :
+                            КолМест = !withOrder ? row.Цена.ToString("0.00", CultureInfo.InvariantCulture) : ((accessoriesList.Count > 1) || (boxCount > 1)) ? (boxCount * можноОтпустить).ToString("0", CultureInfo.InvariantCulture) :
                                 можноОтпустить.ToString("0", CultureInfo.InvariantCulture),
-                            КолЭтикеток = withOrder ? сумма.ToString("0.00", CultureInfo.InvariantCulture) : (((quantum > 1) && (можноОтпустить >= quantum)) ? Math.Round(можноОтпустить / quantum, MidpointRounding.AwayFromZero) :
+                            КолЭтикеток = !withOrder ? сумма.ToString("0.00", CultureInfo.InvariantCulture) : (((quantum > 1) && (можноОтпустить >= quantum)) ? Math.Round(можноОтпустить / quantum, MidpointRounding.AwayFromZero) :
                                 isSingleBox ? можноОтпустить : (можноОтпустить * boxCount)).ToString("0", CultureInfo.InvariantCulture),
                             Цена = row.Цена.ToString("0.00", CultureInfo.InvariantCulture),
                             ЦенаСоСкидкой = ценаСоСкидкой.ToString("0.00", CultureInfo.InvariantCulture),
@@ -722,7 +722,9 @@ namespace StinClasses.Документы
                 КолДокументов = "Док-тов = " + form.ТабличнаяЧасть.Select(x => x.ФирмаНоменклатуры.Id).Distinct().Count().ToString(),
                 OrderId = form.Order?.Id ?? "",
                 Тип = form.Order?.Тип,
-                OrderNo = form.Order?.Тип == "ALIEXPRESS" ? (form.Order?.MarketplaceId ?? "") + " / " + (form.Order?.DeliveryServiceName ?? "") : (form.Order?.MarketplaceId ?? ""),
+                OrderNo = (form.Order?.MarketplaceId ?? "") + 
+                    (form.Order?.Тип == "ALIEXPRESS" ? " / " + (form.Order?.DeliveryServiceName ?? "") :
+                     form.Order?.Тип == "WILDBERRIES" ? " / " + (form.Order?.DeliveryServiceId ?? "") + " / " + (form.Order?.RegionId ?? "") : ""),
                 Поставщик = form.Общие.Фирма.Наименование,
                 Покупатель = form.Контрагент?.Наименование ?? "",
                 Склад = (form.Склад?.Наименование ?? "") + "/" + (form.ПодСклад?.Наименование ?? ""),

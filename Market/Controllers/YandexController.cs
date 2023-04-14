@@ -45,7 +45,7 @@ namespace Market.Controllers
             if (!string.IsNullOrEmpty(market.СкладId))
                 списокСкладов = new List<string> { market.СкладId };
             else
-                списокСкладов = await bridge.ПолучитьСкладIdОстатковMarketplace();
+                списокСкладов = new List<string> { Common.SkladEkran }; // await bridge.ПолучитьСкладIdОстатковMarketplace();
 
             var номенклатураCodes = requestedCart.Cart.Items.Select(x => x.OfferId.Decode(market.Encoding))
                 .Where(x => !string.IsNullOrEmpty(x)).ToList();
@@ -116,7 +116,7 @@ namespace Market.Controllers
             if (!string.IsNullOrEmpty(market.СкладId))
                 списокСкладов = new List<string> { market.СкладId };
             else
-                списокСкладов = await bridge.ПолучитьСкладIdОстатковMarketplace();
+                списокСкладов = new List<string> { Common.SkladEkran }; // await bridge.ПолучитьСкладIdОстатковMarketplace();
 
             var номенклатураCodes = requestedStock.Skus.Select(x => x.Decode(market.Encoding))
                 .Where(x => !string.IsNullOrEmpty(x))

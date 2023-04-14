@@ -499,6 +499,11 @@ namespace Refresher1C.Service
                                     label = PdfHelper.PdfFunctions.Instance.GetPdfFromImage(result.png.ResizeImage(58,40), 0, 0);
                                 if (!string.IsNullOrEmpty(result.barcode))
                                     entity.Sp13992 = result.barcode;
+                                if (result.partA.HasValue && result.partB.HasValue)
+                                {
+                                    entity.Sp13986 = result.partA.Value;
+                                    entity.Sp13991 = result.partB.Value;
+                                }
                             }
                             if (!string.IsNullOrEmpty(err))
                                 entity.Sp14055 = err;
@@ -1950,6 +1955,7 @@ namespace Refresher1C.Service
                                             {
                                                 Id = market.Id,
                                                 Тип = market.Sp14155.Trim().ToUpper(),
+                                                Модель = market.Sp14164.Trim().ToUpper(),
                                                 //Наименование = market.Descr.Trim(),
                                                 FirmaId = market.Parentext,
                                                 ClientId = market.Sp14053.Trim(),
@@ -1963,7 +1969,7 @@ namespace Refresher1C.Service
                                             })
                                             .ToListAsync(stoppingToken);
                 foreach (var marketplace in marketplaceIds)
-                    await UpdateStockMarketplace(regular, marketplace.Тип, 100, marketplace.Id, marketplace.ClientId, marketplace.AuthToken, marketplace.AuthSecret,
+                    await UpdateStockMarketplace(regular, marketplace.Тип, marketplace.Модель, 100, marketplace.Id, marketplace.ClientId, marketplace.AuthToken, marketplace.AuthSecret,
                         marketplace.FirmaId, marketplace.Encoding, marketplace.СкладId, marketplace.StockOriginal, marketplace.Code, stoppingToken);
             }
             catch (Exception ex)
@@ -1971,7 +1977,7 @@ namespace Refresher1C.Service
                 _logger.LogError(ex.Message);
             }
         }
-        private async Task UpdateStockMarketplace(bool regular, string marketType, int limit, string marketplaceId,
+        private async Task UpdateStockMarketplace(bool regular, string marketType, string marketModel, int limit, string marketplaceId,
             string clientId, string authToken, string authSecret,
             string firmaId, EncodeVersion encoding, string складId, bool stockOriginal,
             string marketplaceCode,
@@ -2023,7 +2029,12 @@ namespace Refresher1C.Service
                     var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(firmaId);
                     List<string> списокСкладов = null;
                     if (string.IsNullOrEmpty(складId))
-                        списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
+                    {
+                        if (marketModel == "DBS")
+                            списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
+                        else
+                            списокСкладов = new List<string> { Common.SkladEkran }; 
+                    }
                     else
                         списокСкладов = new List<string> { складId };
 
@@ -2267,6 +2278,7 @@ namespace Refresher1C.Service
                                             //&& (market.Sp14155.Trim() == "Wildberries")
                                             //&& (market.Code.Trim() == "22498162235000")
                                             //&& (market.Code.Trim() == "23503334320000")
+                                            //&& (market.Code.Trim() == "1020000171757000")
                                             //&& (market.Code.Trim() == "45715133")
                                         select new
                                         {
@@ -3774,10 +3786,10 @@ namespace Refresher1C.Service
             {
                 var marketplaceIds = await (from market in _context.Sc14042s
                                             where !market.Ismark
-                                                //&& market.Code.Trim() == "D0000000000000000001"
-                                                //&& market.Sp14155.Trim().ToUpper() == "OZON" 
-                                                //&& market.Sp14155.Trim().ToUpper() == "WILDBERRIES"
-                                                //&& market.Code.Trim() == "23005267" // Yandex DBS
+                                                //&& market.Code.Trim() == "3530297616"
+                                            //&& market.Sp14155.Trim().ToUpper() == "OZON" 
+                                            //&& market.Sp14155.Trim().ToUpper() == "WILDBERRIES"
+                                            //&& market.Code.Trim() == "23005267" // Yandex DBS
                                             select new
                                             {
                                                 Id = market.Id,
@@ -4020,6 +4032,7 @@ namespace Refresher1C.Service
                         from vzTovar in _vzTovar.DefaultIfEmpty()
                         where (markUse.Sp14147 == marketplaceId) &&
                           (markUse.Sp14158 == 1) //Есть в каталоге 
+                          //&& (nom.Code == "D00040383")
                         orderby nom.Code
                         select new
                         {
@@ -4048,14 +4061,14 @@ namespace Refresher1C.Service
                             < 5 => 359,
                             _ => 659
                         };
-                        var minPrice = (Порог + delivery) / (100 - baseTariff / 100);
+                        var minPrice = (Порог + delivery) / ((100 - baseTariff) / 100);
                         if (minPrice < 1000)
                         {
-                            var deliveryCompensation = (49 * (100 + deliveryForCustomer) / 100) / (100 - baseTariff / 100); //сумма заказа от 499 до 999 руб - компенсация 49 руб
+                            var deliveryCompensation = (49 * (100 + deliveryForCustomer) / 100) / ((100 - baseTariff) / 100); //сумма заказа от 499 до 999 руб - компенсация 49 руб
                             if (minPrice - deliveryCompensation > 499)
                                 minPrice -= deliveryCompensation;
                             else
-                                minPrice -= (99 * (100 + deliveryForCustomer) / 100) / (100 - baseTariff / 100); //сумма заказа до 499 руб - компенсация 99 руб
+                                minPrice -= (99 * (100 + deliveryForCustomer) / 100) / ((100 - baseTariff) / 100); //сумма заказа до 499 руб - компенсация 99 руб
                         }
                         decimal updateMinPrice = decimal.Round((decimal)minPrice / dataItem.Квант, 2, MidpointRounding.AwayFromZero);
 

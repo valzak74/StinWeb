@@ -83,7 +83,7 @@
                     document.getElementById('soundOk').play();
                     $(".modal-body").html(obj);
                     $("#formNabor").modal("show");
-                    setTimeout(() => { $("#formNabor").modal('hide'); }, 3000);
+                    setTimeout(() => { $("#formNabor").modal('hide'); }, 2000);
                 }
             },
             error: function (jqXHR, exception, f) {
@@ -95,7 +95,7 @@
                 $("#alertText").text(msg);
                 $('.alert-danger').removeClass('d-none');
                 document.getElementById('soundBeep').play();
-                setTimeout(() => { $('.alert-danger').addClass('d-none'); $("#alertText").text(""); }, 6000);
+                setTimeout(() => { $('.alert-danger').addClass('d-none'); $("#alertText").text(""); }, 3000);
             },
             complete: function () {
                 DisableBusyScreen();

@@ -82,3 +82,4 @@ C:\Users\Валентин\source\repos\StinWeb\Test2\obj\Debug\net6.0\refint\Tes
 C:\Users\Валентин\source\repos\StinWeb\Test2\obj\Debug\net6.0\Test2.pdb
 C:\Users\Валентин\source\repos\StinWeb\Test2\obj\Debug\net6.0\Test2.genruntimeconfig.cache
 C:\Users\Валентин\source\repos\StinWeb\Test2\obj\Debug\net6.0\ref\Test2.dll
+C:\Users\Валентин\source\repos\StinWeb\Test2\bin\Debug\net6.0\QRCoder.dll

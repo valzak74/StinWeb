@@ -23,6 +23,7 @@ using JsonExtensions;
 using HttpExtensions;
 using System.Threading;
 using System.Text;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace StinWeb.Controllers
 {
@@ -45,7 +46,9 @@ namespace StinWeb.Controllers
         private StinClasses.Документы.IНабор _набор;
         private StinClasses.Регистры.IРегистрНаборНаСкладе _регистрНабор;
 
-        public ИнтернетЗаказы(StinDbContext context, IWebHostEnvironment webHostEnvironment, IHttpService httpService)
+        StinClasses.Справочники.Functions.IOrderFunctions _orderFunctions;
+
+        public ИнтернетЗаказы(StinDbContext context, IWebHostEnvironment webHostEnvironment, IHttpService httpService, StinClasses.Справочники.Functions.IOrderFunctions orderFunctions)
         {
             _httpService = httpService;
             _context = context;
@@ -60,6 +63,7 @@ namespace StinWeb.Controllers
             _сообщения = new StinClasses.Справочники.СообщенияEntity(context);
             _набор = new StinClasses.Документы.Набор(context);
             _регистрНабор = new StinClasses.Регистры.Регистр_НаборНаСкладе(context);
+            _orderFunctions = orderFunctions;
         }
         protected override void Dispose(bool disposing)
         {
@@ -135,63 +139,74 @@ namespace StinWeb.Controllers
             return View("NaborRegistration");
         }
         [HttpPost]
-        public async Task<IActionResult> NaborRegistrationScan(string barcodeText, CancellationToken cancellationToken)
+        public async Task<IActionResult> NaborScan(string barcodeText, CancellationToken cancellationToken)
         {
             if (!string.IsNullOrEmpty(barcodeText) && (barcodeText.Length == 13) && (barcodeText.Substring(0,4) == "%97W"))
             {
                 var docId = barcodeText.Substring(4).Replace('%', ' ');
                 var formNabor = await _набор.GetФормаНаборById(docId);
-                if (formNabor.Завершен)
-                    return StatusCode(502, "Набор уже готов. Ничего не требуется");
-                formNabor.Завершен = true;
-                var реквизитыПроведенныхДокументов = new List<StinClasses.Документы.ОбщиеРеквизиты>();
-                using var tran = await _context.Database.BeginTransactionAsync();
-                try
-                {
-                    var result = await _набор.ЗаписатьПровестиAsync(formNabor);
-                    if (result != null)
-                    {
-                        if (_context.Database.CurrentTransaction != null)
-                            tran.Rollback();
-                        return StatusCode(502, result.Description);
-                    }
-                    else
-                    {
-                        реквизитыПроведенныхДокументов.Add(formNabor.Общие);
-                        await _набор.ОбновитьАктивность(реквизитыПроведенныхДокументов);
-                    }
-                    if (formNabor.Общие.Автор.Id != Common.UserRobot)
-                    {
-                        var sbSubject = new StringBuilder("Набор готов (");
-                        sbSubject.Append(formNabor.Контрагент.Наименование);
-                        sbSubject.Append(" ");
-                        sbSubject.Append(formNabor.Склад.Наименование);
-                        sbSubject.Append("/");
-                        sbSubject.Append(formNabor.ПодСклад.Наименование);
-                        sbSubject.Append(")");
-                        var sbMessage = new StringBuilder("Набор ");
-                        sbMessage.Append(formNabor.Общие.НомерДок);
-                        sbMessage.Append(" от ");
-                        sbMessage.Append(formNabor.Общие.ДатаДок.ToString("dd.MM.yyyy"));
-                        sbMessage.AppendLine(" готов");
-                        sbMessage.Append("Контрагент: ");
-                        sbMessage.AppendLine(formNabor.Контрагент.Наименование);
-                        sbMessage.Append("Склад: ");
-                        sbMessage.AppendLine(formNabor.Склад.Наименование);
-                        sbMessage.Append("Место хранения: ");
-                        sbMessage.AppendLine(formNabor.ПодСклад.Наименование);
-                        sbMessage.Append("Клиент приглашается за товаром!");
-                        await _сообщения.SendMessage(sbSubject.ToString(), sbMessage.ToString(), formNabor.Общие.Автор.Id, Common.UserRobot);
-                    }
-                    if (_context.Database.CurrentTransaction != null)
-                        tran.Commit();
-                }
-                catch (Exception ex)
-                {
-                    if (_context.Database.CurrentTransaction != null)
-                        _context.Database.CurrentTransaction.Rollback();
-                    return StatusCode(502, ex.Message);
-                }
+                if (formNabor == null)
+                    return StatusCode(502, "Не удалось получить форму набора");
+                if (!formNabor.Общие.Проведен)
+                    return StatusCode(502, "Набор не проведен");
+                //if (formNabor.Завершен)
+                //    return StatusCode(502, "Набор уже завершен");
+                if (formNabor.Order?.InternalStatus == 5)
+                    return StatusCode(502, "Заказ уже отменен");
+                if (!_набор.IsActive(docId))
+                    return StatusCode(502, "Набор отменен");
+                //if (formNabor.StartCompectation <= Common.min1cDate)
+                //    return StatusCode(502, "Набор не начат");
+                //formNabor.Завершен = true;
+                //formNabor.EndComplectation = DateTime.Now;
+                //var реквизитыПроведенныхДокументов = new List<StinClasses.Документы.ОбщиеРеквизиты>();
+                //using var tran = await _context.Database.BeginTransactionAsync();
+                //try
+                //{
+                //    var result = await _набор.ЗаписатьПровестиAsync(formNabor);
+                //    if (result != null)
+                //    {
+                //        if (_context.Database.CurrentTransaction != null)
+                //            tran.Rollback();
+                //        return StatusCode(502, result.Description);
+                //    }
+                //    else
+                //    {
+                //        реквизитыПроведенныхДокументов.Add(formNabor.Общие);
+                //        await _набор.ОбновитьАктивность(реквизитыПроведенныхДокументов);
+                //    }
+                //    if (formNabor.Общие.Автор.Id != Common.UserRobot)
+                //    {
+                //        var sbSubject = new StringBuilder("Набор готов (");
+                //        sbSubject.Append(formNabor.Контрагент.Наименование);
+                //        sbSubject.Append(" ");
+                //        sbSubject.Append(formNabor.Склад.Наименование);
+                //        sbSubject.Append("/");
+                //        sbSubject.Append(formNabor.ПодСклад.Наименование);
+                //        sbSubject.Append(")");
+                //        var sbMessage = new StringBuilder("Набор ");
+                //        sbMessage.Append(formNabor.Общие.НомерДок);
+                //        sbMessage.Append(" от ");
+                //        sbMessage.Append(formNabor.Общие.ДатаДок.ToString("dd.MM.yyyy"));
+                //        sbMessage.AppendLine(" готов");
+                //        sbMessage.Append("Контрагент: ");
+                //        sbMessage.AppendLine(formNabor.Контрагент.Наименование);
+                //        sbMessage.Append("Склад: ");
+                //        sbMessage.AppendLine(formNabor.Склад.Наименование);
+                //        sbMessage.Append("Место хранения: ");
+                //        sbMessage.AppendLine(formNabor.ПодСклад.Наименование);
+                //        sbMessage.Append("Клиент приглашается за товаром!");
+                //        await _сообщения.SendMessage(sbSubject.ToString(), sbMessage.ToString(), formNabor.Общие.Автор.Id, Common.UserRobot);
+                //    }
+                //    if (_context.Database.CurrentTransaction != null)
+                //        tran.Commit();
+                //}
+                //catch (Exception ex)
+                //{
+                //    if (_context.Database.CurrentTransaction != null)
+                //        _context.Database.CurrentTransaction.Rollback();
+                //    return StatusCode(502, ex.Message);
+                //}
                 var printData = await _набор.PrintForm("", 1, 0, formNabor, cancellationToken);
                 return Ok(printData.html);
             }
@@ -235,7 +250,7 @@ namespace StinWeb.Controllers
         [HttpPost]
         public async Task<IActionResult> LoadingListOrderScan(string campaignInfo, DateTime shipDate, string barcodeText, CancellationToken cancellationToken)
         {
-            var result = await _order.SetOrderScanned(shipDate, campaignInfo, barcodeText, 1, cancellationToken);
+            var result = await _orderFunctions.SetOrderScanned(shipDate, campaignInfo, barcodeText, 1, cancellationToken);
             return Ok(result);
         }
         [HttpPost]
@@ -244,7 +259,7 @@ namespace StinWeb.Controllers
             var campaignData = campaignInfo.Split('/');
             var campaignIds = campaignData[0].Split(',').Select(x => x.Replace('_', ' ')).ToList();
             var warehouseId = (campaignData.Length > 1) ? campaignData[1] : string.Empty;
-            await _order.ClearOrderScanned(shipDate, campaignIds, warehouseId, cancellationToken);
+            await _orderFunctions.ClearOrderScanned(shipDate, campaignIds, warehouseId, cancellationToken);
             return Ok();
         }
         [HttpPost]
@@ -310,7 +325,9 @@ namespace StinWeb.Controllers
                               group new { order, market, item, nom, ed } by new
                               {
                                   orderId = order.Id,
-                                  orderNo = order.Code + (market.Sp14155.ToUpper().Trim() == "ALIEXPRESS" ? " / " + order.Sp13987.Trim() : ""),
+                                  orderNo = order.Code + 
+                                    (market.Sp14155.ToUpper().Trim() == "ALIEXPRESS" ? " / " + order.Sp13987.Trim() :
+                                     market.Sp14155.ToUpper().Trim() == "WILDBERRIES" ? " / " + order.Sp13986.ToString() + " / " + order.Sp13991.ToString() : ""),
                                   status = order.Sp13982,
                                   типДоставкиПартнер = order.Sp13985,
                                   типДоставки = order.Sp13988,
@@ -325,8 +342,7 @@ namespace StinWeb.Controllers
                                   Scanned = gr.Key.scanned,
                                   КолТовара = gr.Sum(x => x.item.Sp14023),
                                   СуммаТовара = gr.Sum(x => ((x.item.Sp14025 > 0 ? x.item.Sp14025 : x.item.Sp14024) + x.item.Sp14026) * x.item.Sp14023),
-                                  КолГрузоМест = gr.Sum(x => x.market.Sp14155.ToUpper().Trim() == "ЯНДЕКС" ? ((x.ed.Sp14063 == 0 ? 1 : x.ed.Sp14063) * x.item.Sp14023) / (x.nom.Sp14188 == 0 ? 1 : x.nom.Sp14188) :
-                                    x.market.Sp14155.ToUpper().Trim() == "SBER" ? ((x.ed.Sp14063 == 0 ? 1 : x.ed.Sp14063) * x.item.Sp14023) : 1),
+                                  КолГрузоМест = gr.Sum(x => ((x.market.Sp14155.ToUpper().Trim() == "ЯНДЕКС") || (x.market.Sp14155.ToUpper().Trim() == "SBER")) ? ((x.ed.Sp14063 == 0 ? 1 : x.ed.Sp14063) * x.item.Sp14023) / (x.nom.Sp14188 == 0 ? 1 : x.nom.Sp14188) : 1)
                               }).ToListAsync(cancellationToken);
             if (reportType == 1)
                 data = data.Where(x => x.Scanned == x.КолГрузоМест).ToList();
@@ -449,10 +465,10 @@ namespace StinWeb.Controllers
                     var boxCosts = new List<string>();
                     foreach (var item in gr)
                     {
-                        int boxes = (int)(item.Количество * item.КолМест);
+                        int boxes = (int)(item.Количество / item.Квант * item.КолМест);
                         boxCount += boxes;
                         boxNos.Add(boxPref + boxCount);
-                        boxCosts.Add((item.Цена / boxes).ToString(Common.ФорматЦеныСи, CultureInfo.InvariantCulture));
+                        boxCosts.Add(((item.Цена * item.Количество) / boxes).ToString(Common.ФорматЦеныСи, CultureInfo.InvariantCulture));
                     }
                     return new
                     {
@@ -460,11 +476,11 @@ namespace StinWeb.Controllers
                         gr.Key.DeliveryId,
                         gr.Key.ShipmentId,
                         gr.Key.НомерСПрефиксом,
-                        КолМест = gr.Sum(x => x.Количество * x.КолМест).ToString("0", CultureInfo.InvariantCulture),
-                        НомерМеста = string.Join(Environment.NewLine, boxNos),
-                        СтоимостьМеста = string.Join(Environment.NewLine, boxCosts),
+                        КолМест = gr.Sum(x => x.Количество / x.Квант * x.КолМест).ToString("0", CultureInfo.InvariantCulture),
+                        НомерМеста = string.Join("<br>", boxNos),
+                        СтоимостьМеста = string.Join("<br>", boxCosts),
                         СтоимостьОтправления = gr.Sum(x => x.Количество * x.Цена).ToString(Common.ФорматЦеныСи, CultureInfo.InvariantCulture),
-                        КолМестNum = gr.Sum(x => x.Количество * x.КолМест),
+                        КолМестNum = gr.Sum(x => x.Количество / x.Квант * x.КолМест),
                         СтоимостьОтправленияNum = gr.Sum(x => x.Количество * x.Цена)
                     };
                 }).ToList();
@@ -1257,7 +1273,7 @@ namespace StinWeb.Controllers
                 var активныеНаборы = await _набор.ПолучитьСписокАктивныхНаборов(orderId, false);
                 foreach (var формаНабор in активныеНаборы)
                 {
-                    var data = await _набор.PrintForm(html, 2, docOnPage, формаНабор, cancellationToken);
+                    var data = await _набор.PrintForm(html, 1, docOnPage, формаНабор, cancellationToken);
                     html = data.html;
                     docOnPage = data.docOnPage;
                     if (!printedOrderIds.Contains(orderId))
@@ -1273,7 +1289,7 @@ namespace StinWeb.Controllers
                     using var tran = await _context.Database.BeginTransactionAsync();
                     try
                     {
-                        await _order.SetOrdersPrinted(printedOrderIds);
+                        await _orderFunctions.SetOrdersPrinted(printedOrderIds);
 
                         if (_context.Database.CurrentTransaction != null)
                             tran.Commit();

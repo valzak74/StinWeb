@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
-using System.Linq;
 
 namespace StinClasses.Models
 {
@@ -497,19 +496,18 @@ namespace StinClasses.Models
         public virtual DbSet<_1suidctl> _1suidctls { get; set; }
         public virtual DbSet<_1supdt> _1supdts { get; set; }
         public virtual DbSet<_1suser> _1susers { get; set; }
-        public IQueryable<VzTree> fn_GetTreeById(string id, bool findRoot) => FromExpression(() => fn_GetTreeById(id, findRoot));
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
             {
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
                 optionsBuilder.UseSqlServer("Server=192.168.229.204;Database=Valentin;User Id=User1C;Password=66826877Server2012;");
             }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.HasDbFunction(() => fn_GetTreeById(default, default));
             modelBuilder.Entity<Dh10054>(entity =>
             {
                 entity.HasKey(e => e.Iddoc);
@@ -27846,7 +27844,7 @@ namespace StinClasses.Models
                     .HasColumnName("SP13985");
 
                 entity.Property(e => e.Sp13986)
-                    .HasColumnType("numeric(15, 0)")
+                    .HasColumnType("numeric(18, 0)")
                     .HasColumnName("SP13986");
 
                 entity.Property(e => e.Sp13987)

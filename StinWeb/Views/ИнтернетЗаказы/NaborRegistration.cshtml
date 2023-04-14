@@ -41,7 +41,7 @@
     });
     function ShowFormNabor(barcodeText) {
         $.ajax({
-            url: "NaborRegistrationScan",
+            url: "NaborScan",
             type: "post",
             datatype: "xml",
             data: {
@@ -52,15 +52,12 @@
             beforeSend: function () {
                 EnableBusyScreen()
             },
-            complete: function () {
-                DisableBusyScreen()
-            },
             success: function (obj) {
                 if (obj) {
                     document.getElementById('soundOk').play();
                     $(".modal-body").html(obj);
                     $("#formNabor").modal("show");
-                    setTimeout(() => { $("#formNabor").modal('hide'); }, 6000);
+                    setTimeout(() => { $("#formNabor").modal('hide'); }, 2000);
                 }
             },
             error: function (jqXHR, exception, f) {
@@ -72,8 +69,11 @@
                 $("#alertText").text(msg);
                 $('.alert').removeClass('d-none');
                 document.getElementById('soundBeep').play();
-                setTimeout(() => { $('.alert').addClass('d-none'); $("#alertText").text(""); }, 6000);
-            }
+                setTimeout(() => { $('.alert').addClass('d-none'); $("#alertText").text(""); }, 3000);
+            },
+            complete: function () {
+                DisableBusyScreen()
+            },
         });
     }
 </script>

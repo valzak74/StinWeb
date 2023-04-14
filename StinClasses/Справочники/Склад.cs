@@ -13,11 +13,22 @@ namespace StinClasses.Справочники
         public string Code { get; set; }
         public string Наименование { get; set; }
     }
-
     public class ПодСклад
     {
         public string Id { get; set; }
         public string Наименование { get; set; }
+    }
+    public class СкладExtended : RefBook
+    {
+        public СкладExtended(RefBook refBook)
+        {
+            Id = refBook.Id;
+            Code = refBook.Code;
+            Наименование = refBook.Наименование;
+            Deleted = refBook.Deleted;
+        }
+        public bool SaturdayOn { get; set;}
+        public bool SundayOn { get; set;}
     }
     public interface IСклад : IDisposable
     {

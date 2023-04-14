@@ -259,6 +259,7 @@ namespace Refresher1C.Service
                 x.Количество = x.Количество * quantum;
                 x.Цена = x.Цена / quantum;
                 x.ЦенаСоСкидкой = x.ЦенаСоСкидкой / quantum;
+                x.Вознаграждение = x.Вознаграждение / quantum;
             });
             DateTime dateTimeTA = _context.GetDateTimeTA();
             bool needToCalcDateTime = dateTimeTA.Month != DateTime.Now.Month;
@@ -334,9 +335,9 @@ namespace Refresher1C.Service
                     else
                     {
                         реквизитыПроведенныхДокументов.Add(формаПредварительнаяЗаявка.Общие);
-                        bool необходимоПеремещать = (формаПредварительнаяЗаявка.Order != null) &&
-                            (формаПредварительнаяЗаявка.Order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP) &&
-                            (формаПредварительнаяЗаявка.Order.DeliveryType == StinDeliveryType.PICKUP);
+                        bool необходимоПеремещать = (формаПредварительнаяЗаявка.Order != null); //&&
+                            //(формаПредварительнаяЗаявка.Order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP) &&
+                            //(формаПредварительнаяЗаявка.Order.DeliveryType == StinDeliveryType.PICKUP);
                         var ПереченьНаличия = await _предварительнаяЗаявка.РаспределитьТоварПоНаличиюAsync(формаПредварительнаяЗаявка, списокСкладовНаличияТовара);
                         List<string> notNativeKeys = new List<string> { "ДилерскаяЗаявка", "Спрос" };
                         var списокУслуг = формаПредварительнаяЗаявка.ТабличнаяЧасть.Where(x => x.Номенклатура.ЭтоУслуга).ToList();

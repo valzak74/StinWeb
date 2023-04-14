@@ -40,7 +40,7 @@ namespace StinClasses.Справочники
             Sc10814 Message = new Sc10814
             {
                 Id = _context.GenerateId(10814),
-                Descr = Subject,
+                Descr = Subject.StringLimit(50),
                 Parentext = ReceiverId,
                 Ismark = false,
                 Verstamp = 0,

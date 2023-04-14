@@ -18,11 +18,6 @@ namespace Refresher1C
             int.TryParse(config["Pricer:refreshIntervalSec"], out int refreshInterval);
             refreshInterval = Math.Max(refreshInterval, 1);
             _delay = TimeSpan.FromSeconds(refreshInterval);
-            //if (int.TryParse(config["Pricer:refreshIntervalSec"], out _refreshInterval))
-            //    _refreshInterval = Math.Max(_refreshInterval, 1);
-            //else
-            //    _refreshInterval = 60;
-            //_dueTime = TimeSpan.FromSeconds(_refreshInterval);
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -32,17 +27,18 @@ namespace Refresher1C
                 await Task.Delay(_delay, stoppingToken);
             }
         }
-        //public override async Task ExecuteTaskAsync(CancellationToken stoppingToken)
-        //{
-        //    await CheckMarketplacePriceData(stoppingToken);
-        //}
         private async Task CheckMarketplacePriceData(CancellationToken stoppingToken)
         {
             try
             {
-                using IMarketplaceService MarketplaceScope = _scopeFactory.CreateScope()
-                       .ServiceProvider.GetService<IMarketplaceService>();
-                await MarketplaceScope.UpdatePrices(stoppingToken);
+                //using IMarketplaceService MarketplaceScope = _scopeFactory.CreateScope()
+                //       .ServiceProvider.GetService<IMarketplaceService>();
+                //await MarketplaceScope.UpdatePrices(stoppingToken);
+                using (IServiceScope scope = _scopeFactory.CreateScope())
+                {
+                    IPricer pricer = scope.ServiceProvider.GetRequiredService<IPricer>();
+                    await pricer.UpdatePrices(stoppingToken);
+                }
             }
             catch
             {

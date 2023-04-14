@@ -1689,8 +1689,28 @@
       "PackagePath": "staticwebassets\\lib\\jquery\\dist\\jquery.min.map"
     },
     {
+      "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\lib\\sounds\\Cancelled.mp3",
+      "PackagePath": "staticwebassets\\lib\\sounds\\Cancelled.mp3"
+    },
+    {
+      "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\lib\\sounds\\Completed.mp3",
+      "PackagePath": "staticwebassets\\lib\\sounds\\Completed.mp3"
+    },
+    {
+      "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\lib\\sounds\\DifferentMarket.mp3",
+      "PackagePath": "staticwebassets\\lib\\sounds\\DifferentMarket.mp3"
+    },
+    {
       "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\lib\\sounds\\OkSound.mp3",
       "PackagePath": "staticwebassets\\lib\\sounds\\OkSound.mp3"
+    },
+    {
+      "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\lib\\sounds\\RepeatScan.mp3",
+      "PackagePath": "staticwebassets\\lib\\sounds\\RepeatScan.mp3"
+    },
+    {
+      "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\lib\\sounds\\WrongDelieveryDate.mp3",
+      "PackagePath": "staticwebassets\\lib\\sounds\\WrongDelieveryDate.mp3"
     },
     {
       "Id": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinWeb\\wwwroot\\lib\\sounds\\beep.mp3",

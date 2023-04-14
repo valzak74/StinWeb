@@ -14,6 +14,7 @@ using HttpExtensions;
 using Polly.Extensions.Http;
 using Polly;
 using System.Net.Http;
+using StinClasses.Справочники.Functions;
 
 namespace StinWeb
 {
@@ -33,12 +34,14 @@ namespace StinWeb
         public void ConfigureServices(IServiceCollection services)
         {
             //services.AddLogging(opt => { opt.AddConsole(); opt.AddDebug(); });
+            services.AddMemoryCache();
             services.AddDbContext<StinDbContext>(opts => opts.UseLoggerFactory(MyLoggerFactory).EnableSensitiveDataLogging().UseSqlServer(Configuration["ConnectionString:DB"]));
             services.AddSession(option => option.IdleTimeout = TimeSpan.FromHours(23));
             services.AddHttpClient<IHttpService, HttpService>()
                 .AddPolicyHandler(GetRetryPolicy());
             services.AddScoped<IEmailSender,EmailSender>();
             services.AddScoped<IFileDownloader, FileDownloader>();
+            services.AddScoped<IOrderFunctions, OrderFunctions>();
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
                 {

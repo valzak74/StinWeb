@@ -56,8 +56,4 @@
     <ProjectReference Include="..\YandexClasses\YandexClasses.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Models\" />
-  </ItemGroup>
-
 </Project>

@@ -10,6 +10,8 @@ using Microsoft.Win32;
 using System.Text.RegularExpressions;
 using JsonExtensions;
 using HttpExtensions;
+using MigraDocCore.DocumentObjectModel;
+using StinClasses.Справочники;
 
 namespace HelloWorld
 {
@@ -123,52 +125,6 @@ namespace HelloWorld
    
         return "";
     }
-        public static string GetSystemFontFileName(Font font)
-        {
-            RegistryKey fonts = null;
-            try
-            {
-                fonts = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts", false);
-                if (fonts == null)
-                {
-                    fonts = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Fonts", false);
-                    if (fonts == null)
-                    {
-                        throw new Exception("Can't find font registry database.");
-                    }
-                }
-
-                string suffix = "";
-                //if (font.Bold)
-                //    suffix += "(?: Bold)?";
-                //if (font.Italic)
-                //    suffix += "(?: Italic)?";
-
-                var regex = new Regex(@"^(?:.+ & )?" + Regex.Escape(font.Name) + @"(?: & .+)?(?<suffix>" + suffix + @") \(TrueType\)$");
-
-                string[] names = fonts.GetValueNames();
-
-                string name = names.Select(n => regex.Match(n)).Where(m => m.Success).OrderByDescending(m => m.Groups["suffix"].Length).Select(m => m.Value).FirstOrDefault();
-
-                if (name != null)
-                {
-                    return fonts.GetValue(name).ToString();
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            finally
-            {
-                if (fonts != null)
-                {
-                    fonts.Dispose();
-                }
-            }
-        }        //private List<string> GetFilesForFont(string fontName)
-                 //{
-                 //    var fontNameToFiles = new Dictionary<string, List<string>>();
 
         //    foreach (var fontFile in Directory.GetFiles(Environment.GetFolderPath(Environment.SpecialFolder.Fonts)))
         //    {
@@ -217,6 +173,14 @@ namespace HelloWorld
 
         static async Task Main(string[] args)
         {
+            var A = new Номенклатура { Id = "123" };
+            var B = new RefBook { Id = "123" };
+            var d = A.GetHashCode();
+            var c = B.GetHashCode();
+            if (B.Equals(A))
+                Console.Write(A.ToString());
+            if (A.Equals(B))
+                Console.Write(B.ToString());
             var signature = Convert.FromBase64String("MEQCIEvYEHjmiAuraVFE6ORq1ag88mp+lxCJ353CbOgeeTyFAiBTWPfKs+uePhKKGb4Qamgw25lPJN+Vrn9pJj78cfTMzw==");
             StringBuilder builder = new StringBuilder();
             for (int ii = 0; ii < signature.Length; ii++)

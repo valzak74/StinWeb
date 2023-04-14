@@ -6,6 +6,11 @@
 }
 <audio id="soundOk" src="/lib/sounds/OkSound.mp3" preload="auto"></audio>
 <audio id="soundBeep" src="/lib/sounds/beep.mp3" preload="auto"></audio>
+<audio id="soundCompleted" src="/lib/sounds/Completed.mp3" preload="auto"></audio>
+<audio id="soundCancelled" src="/lib/sounds/Cancelled.mp3" preload="auto"></audio>
+<audio id="soundRepeatScan" src="/lib/sounds/RepeatScan.mp3" preload="auto"></audio>
+<audio id="soundDifferentMarket" src="/lib/sounds/DifferentMarket.mp3" preload="auto"></audio>
+<audio id="soundWrongDelieveryDate" src="/lib/sounds/WrongDelieveryDate.mp3" preload="auto"></audio>
 <div class="alert alert-danger d-none" role="alert">
     <strong>Ошибка!</strong><span id="alertText" style="padding-left: 10px;"> Change a few things up and try submitting again.</span>
 </div>
@@ -227,10 +232,19 @@
                 if (obj) {  // check if data is defined
                     $("#alertText").text(obj);
                     $('.alert').removeClass('d-none');
-                    document.getElementById('soundBeep').play();
+                    if (obj == "Повторное сканирование")
+                        document.getElementById('soundRepeatScan').play();
+                    else if (obj == "Заказ отменен")
+                        document.getElementById('soundCancelled').play();
+                    else if (obj == "Неверная дата доставки")
+                        document.getElementById('soundWrongDelieveryDate').play();
+                    else if (obj == "Штрихкод от другого маркетплейс")
+                        document.getElementById('soundDifferentMarket').play();
+                    else
+                        document.getElementById('soundBeep').play();
                     setTimeout(() => { $('.alert').addClass('d-none'); $("#alertText").text(""); }, 3000);
                 } else {
-                    document.getElementById('soundOk').play();
+                    document.getElementById('soundCompleted').play();
                     ReloadGrid();
                 }
             },

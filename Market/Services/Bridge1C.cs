@@ -191,6 +191,7 @@ namespace Market.Services
                     item.Количество = item.Количество * quantum;
                     item.Цена = item.Цена / quantum;
                     item.ЦенаСоСкидкой = item.ЦенаСоСкидкой / quantum;
+                    item.Вознаграждение = item.Вознаграждение / quantum;
                 }
 
                 bool нетВНаличие = НоменклатураList
@@ -279,9 +280,9 @@ namespace Market.Services
                             else
                             {
                                 реквизитыПроведенныхДокументов.Add(формаПредварительнаяЗаявка.Общие);
-                                bool необходимоПеремещать = (формаПредварительнаяЗаявка.Order != null) &&
-                                    (формаПредварительнаяЗаявка.Order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP) &&
-                                    (формаПредварительнаяЗаявка.Order.DeliveryType == StinDeliveryType.PICKUP);
+                                bool необходимоПеремещать = (формаПредварительнаяЗаявка.Order != null); //&&
+                                    //(формаПредварительнаяЗаявка.Order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP) &&
+                                    //(формаПредварительнаяЗаявка.Order.DeliveryType == StinDeliveryType.PICKUP);
                                 var ПереченьНаличия = await _предварительнаяЗаявка.РаспределитьТоварПоНаличиюAsync(формаПредварительнаяЗаявка, списокСкладовНаличияТовара);
                                 List<string> notNativeKeys = new List<string> { "ДилерскаяЗаявка", "Спрос" };
                                 var списокУслуг = формаПредварительнаяЗаявка.ТабличнаяЧасть.Where(x => x.Номенклатура.ЭтоУслуга).ToList();
@@ -560,9 +561,9 @@ namespace Market.Services
                             else
                             {
                                 реквизитыПроведенныхДокументов.Add(формаПредварительнаяЗаявка.Общие);
-                                bool необходимоПеремещать = (формаПредварительнаяЗаявка.Order != null) &&
-                                    (формаПредварительнаяЗаявка.Order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP) &&
-                                    (формаПредварительнаяЗаявка.Order.DeliveryType == StinDeliveryType.PICKUP);
+                                bool необходимоПеремещать = (формаПредварительнаяЗаявка.Order != null); //&&
+                                    //(формаПредварительнаяЗаявка.Order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP) &&
+                                    //(формаПредварительнаяЗаявка.Order.DeliveryType == StinDeliveryType.PICKUP);
                                 var ПереченьНаличия = await _предварительнаяЗаявка.РаспределитьТоварПоНаличиюAsync(формаПредварительнаяЗаявка, списокСкладовНаличияТовара);
                                 List<string> notNativeKeys = new List<string> { "ДилерскаяЗаявка", "Спрос" };
                                 var списокУслуг = формаПредварительнаяЗаявка.ТабличнаяЧасть.Where(x => x.Номенклатура.ЭтоУслуга).ToList();
@@ -809,7 +810,7 @@ namespace Market.Services
                                                                 price = row.Сумма / row.Количество,
                                                                 quantity = row.Количество,
                                                                 sum = row.Сумма,
-                                                                measurement_unit = row.Единица.Код,
+                                                                measurement_unit = row.Единица.Code,
                                                                 payment_method = суммаПКО == суммаРеализации ? SellPaymentMethod.full_payment : SellPaymentMethod.partial_payment,
                                                                 payment_object = row.Номенклатура.ЭтоУслуга ? SellPaymentObject.service : SellPaymentObject.commodity,
                                                                 vat = new SellVat { type = AtolOperations.АтолСтавкиНДС.Where(x => x.Key == row.СтавкаНДС.Наименование).Select(x => x.Value).FirstOrDefault() }

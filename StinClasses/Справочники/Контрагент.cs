@@ -209,7 +209,7 @@ namespace StinClasses.Справочники
                 if (ВидЮрЛица == "DP")
                 {
                     //юр лицо
-                    var ДанныеЮрЛица = await _context.Sc493s.FirstOrDefaultAsync(x => x.Id == ЮрФизЛицоId && x.Ismark == false);
+                    var ДанныеЮрЛица = await _context.Sc493s.FirstOrDefaultAsync(x => x.Id == ЮрФизЛицоId);
                     result.ПолнНаименование = ДанныеЮрЛица.Sp498.Trim();
                     result.ЮридическийАдрес = ДанныеЮрЛица.Sp666.Trim();
                     result.ФактическийАдрес = ДанныеЮрЛица.Sp499.Trim();
@@ -217,7 +217,7 @@ namespace StinClasses.Справочники
                 else if (ВидЮрЛица == "3N")
                 {
                     //собственное юр лицо
-                    var ДанныеЮрЛица = await _context.Sc131s.FirstOrDefaultAsync(x => x.Id == ЮрФизЛицоId && x.Ismark == false);
+                    var ДанныеЮрЛица = await _context.Sc131s.FirstOrDefaultAsync(x => x.Id == ЮрФизЛицоId);
                     result.ПолнНаименование = ДанныеЮрЛица.Sp143.Trim();
                     result.ЮридическийАдрес = ДанныеЮрЛица.Sp149.Trim();
                     result.ФактическийАдрес = ДанныеЮрЛица.Sp144.Trim();
@@ -225,7 +225,7 @@ namespace StinClasses.Справочники
                 else
                 {
                     //физ лица
-                    var ДанныеФизЛица = await _context.Sc503s.FirstOrDefaultAsync(x => x.Id == ЮрФизЛицоId && x.Ismark == false);
+                    var ДанныеФизЛица = await _context.Sc503s.FirstOrDefaultAsync(x => x.Id == ЮрФизЛицоId);
                     result.ПолнНаименование = ДанныеФизЛица.Sp508.Trim();
                     result.ЮридическийАдрес = ДанныеФизЛица.Sp673.Trim();
                     result.ФактическийАдрес = ДанныеФизЛица.Sp674.Trim();

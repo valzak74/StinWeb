@@ -9,22 +9,23 @@ using System.Threading.Tasks;
 
 namespace StinClasses.Справочники
 {
-    public class Marketplace
+    public class Marketplace : RefBook
     {
-        public string Id { get; set; }
+        public override RefBookType BookType => RefBookType.Marketplace;
         public string CampaignId { get; set; }    
         public string Тип { get; set; }
         public string Модель { get; set; }
-        public string Наименование { get; set; }
         public string ShortName { get; set; }
         public decimal Сортировка { get; set; }
         public string ClientId { get; set; }
+        public string Secret { get; set; }
         public string TokenKey { get; set; }
         public string UrlApi { get; set; }
         public string Authorization { get; set; }
         public EncodeVersion Encoding { get; set; }
         public string FeedId { get; set; }
         public decimal КоэфПроверкиЦен { get; set; }
+        public string ФирмаId { get; set; }
         public string КонтрагентId { get; set; }
         public string ДоговорId { get; set; }
         private string _складId;
@@ -39,6 +40,33 @@ namespace StinClasses.Справочники
             } 
         }
         public bool NeedStockUpdate { get; set; }
+        public bool StockOriginal { get; set; }
+    }
+    public class MarketUseInfo : RefBook
+    {
+        public override RefBookType BookType => RefBookType.MarketUse;
+        public bool Locked { get; set; }
+        public string NomId { get; set; }
+        public string OfferId { get; set;}
+        public string ProductId { get; set; }
+        public string Barcode { get; set; }
+        decimal _квант;
+        public decimal Квант { get => _квант; set => _квант = Math.Max(value, 1); }
+    }
+    public class MarketUseInfoStock : MarketUseInfo
+    {
+        public decimal DeltaStock { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public bool UpdatedFlag { get; set; }
+    }
+    public class MarketUseInfoPrice : MarketUseInfo
+    {
+        public decimal DeltaPrice { get; set; }
+        public decimal Rozn { get; set; }
+        public decimal RoznSp { get; set; }
+        public decimal Zakup { get; set; }
+        public decimal Fix { get; set; }
+        public decimal Multiply { get; set; }
     }
     public interface IMarketplace : IDisposable
     {

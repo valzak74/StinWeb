@@ -16,14 +16,12 @@ namespace StinClasses.Справочники
         public static string Услуга { get { return "   1X3   "; } }
         public static string Работа { get { return "   690   "; } }
     }
-    public class Номенклатура
+    public class Номенклатура : RefBook
     {
-        public string Id { get; set; }
+        public override RefBookType BookType => RefBookType.Nomenklatura;
         public string ParentId { get; set; }
         public bool IsFolder { get; set; }
-        public string Code { get; set; }
         public string Артикул { get; set; }
-        public string Наименование { get; set; }
         public string ПолнНаименование { get; set; }
         public bool ЭтоУслуга { get; set; }
         public bool PickupOnly { get; set; }
@@ -44,21 +42,15 @@ namespace StinClasses.Справочники
                 return false;
             return Id == (obj as Номенклатура).Id;
         }
-        public override int GetHashCode()
-        {
-            return ("ClassНоменклатура" + Id).GetHashCode();
-        }
+        public override int GetHashCode() => (BookType36 + Id).GetHashCode();
     }
-    public class Производитель
+    public class Производитель : RefBook
     {
-        public string Id { get; set; }
-        public string Наименование { get; set; }
+        public override RefBookType BookType => RefBookType.Brend;
     }
-    public class Единица
+    public class Единица : RefBook
     {
-        public string Id { get; set; }
-        public string Код { get; set; }
-        public string Наименование { get; set; }
+        public override RefBookType BookType => RefBookType.Unit;
         public decimal Коэффициент { get; set; }
         public string Barcode { get; set; }
         public override bool Equals(object obj)
@@ -66,10 +58,6 @@ namespace StinClasses.Справочники
             if (!(obj is Единица)) return false;
             if (obj == null) return false;
             return Id == (obj as Единица).Id;
-        }
-        public override int GetHashCode()
-        {
-            return ("ClassЕдиница" + Id).GetHashCode();
         }
     }
     public class ParentTree
@@ -216,7 +204,7 @@ namespace StinClasses.Справочники
                               Единица = new Единица
                               {
                                   Id = sc75.Id,
-                                  Код = sc41.Code,
+                                  Code = sc41.Code,
                                   Наименование = sc41.Descr.Trim(),
                                   Barcode = sc75.Sp80.Trim(),
                                   Коэффициент = sc75.Sp78 == 0 ? 1 : sc75.Sp78
@@ -261,7 +249,7 @@ namespace StinClasses.Справочники
                               Единица = new Единица
                               {
                                   Id = sc75.Id,
-                                  Код = sc41.Code,
+                                  Code = sc41.Code,
                                   Наименование = sc41.Descr.Trim(),
                                   Barcode = sc75.Sp80.Trim(),
                                   Коэффициент = sc75.Sp78 == 0 ? 1 : sc75.Sp78
@@ -340,7 +328,7 @@ namespace StinClasses.Справочники
             return new Единица
             {
                 Id = sc75.Id,
-                Код = sc41.Code,
+                Code = sc41.Code,
                 Наименование = sc41.Descr.Trim(),
                 Barcode = sc75.Sp80.Trim(),
                 Коэффициент = sc75.Sp78 == 0 ? 1 : sc75.Sp78

@@ -119,14 +119,9 @@ namespace StinClasses.Справочники
         Task ОбновитьOrderNo(string Id, string OrderNo);
         Task ОбновитьOrderStatus(string Id, int NewStatus, string errMessage = "");
         Task ОбновитьOrderNoAndStatus(string Id, string OrderNo, int NewStatus);
-        //Task<string> ReduceOrderItems(Order order, List<OrderItem> списокВозврата, CancellationToken cancellationToken);
-        //Task<string> ChangeStatus(Order order, int статус, StinOrderStatus status, StinOrderSubStatus subStatus, CancellationToken cancellationToken);
         Task ОбновитьПолучателяЗаказаАдрес(string orderId, string LastName, string FirstName, string MiddleName, string Recipient, string Phone,
             string PostCode, string Country, string City, string Subway, string Street, string House, string Block, string Entrance, string Entryphone, string Floor, string Apartment,
             string CustomerNotes);
-        Task SetOrdersPrinted(List<string> ids);
-        Task<string> SetOrderScanned(DateTime shipDate, string campaignInfo, string barcode, int scanMark, CancellationToken cancellationToken);
-        Task ClearOrderScanned(DateTime shipDate, List<string> campaignIds, string warehouseId, CancellationToken cancellationToken);
         Task ОбновитьOrderShipmentDate(string Id, DateTime ShipmentDate);
         Task RefreshOrderDeliveryServiceId(string Id, long DeliveryServiceId, string DeliveryServiceName, CancellationToken cancellationToken);
     }
@@ -600,123 +595,6 @@ namespace StinClasses.Справочники
             {
                 return null;
             }
-        }
-        public async Task SetOrdersPrinted(List<string> ids)
-        {
-            var entities = await _context.Sc13994s.Where(x => ids.Contains(x.Id)).ToListAsync();
-            foreach (var entity in entities)
-            {
-                entity.Sp14192 = 1;
-                _context.Update(entity);
-                _context.РегистрацияИзмененийРаспределеннойИБ(13994, entity.Id);
-            }
-            await _context.SaveChangesAsync();
-        }
-        public async Task<string> SetOrderScanned(DateTime shipDate, string campaignInfo, string barcode, int scanMark, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var campaignData = campaignInfo.Split('/');
-                var campaignIds = campaignData[0].Split(',').Select(x => x.Replace('_', ' ')).ToList();
-                var marketData = await _context.Sc14042s
-                    .Where(x => campaignIds.Contains(x.Id))
-                    .GroupBy(x => x.Sp14155.Trim().ToUpper())
-                    .Select(gr => gr.Key + (campaignData.Length > 1 ? "_REAL" : ""))
-                    .SingleOrDefaultAsync(cancellationToken);
-                int logNumber = 1;
-                string[] barcodeData;
-                Sc13994 entity = null;
-                switch (marketData)
-                {
-                    case "OZON":
-                        entity = await _context.Sc13994s.FirstOrDefaultAsync(x => (x.Sp13987.Trim() == barcode) || (x.Sp13992.Trim() == barcode), cancellationToken); //ServiceName or RegionName
-                        break;
-                    case "SBER":
-                        barcodeData = barcode.Split('*');
-                        if ((barcodeData.Length != 3) && !int.TryParse(barcodeData[2], out logNumber))
-                            return "Формат штрихкода не распознан";
-                        entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Sp13981.Trim() == barcodeData[1], cancellationToken); //Id (DW0001235-2023)
-                        break;
-                    case "ЯНДЕКС":
-                        barcodeData = barcode.Split('-');
-                        if (barcodeData.Length == 1)
-                            return "Отсканируйте другой штрихкод на этикетке";
-                            //entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Code.Trim() == barcode);
-                        else if (barcodeData.Length == 2)
-                        {
-                            if (barcodeData[0].All(x => char.IsDigit(x)))
-                            {
-                                entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Code.Trim() == barcodeData[0], cancellationToken);
-                                int.TryParse(barcodeData[1], out logNumber);
-                            }
-                            else
-                                return "Отсканируйте другой штрихкод на этикетке";
-                                //entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Sp13981.Trim() == barcode, cancellationToken); //Id (DW0001235-2023)
-                        }
-                        else
-                            return "Формат штрихкода не распознан";
-                        break;
-                    case "ALIEXPRESS":
-                        entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Sp13987.Trim() == barcode); //ServiceName
-                        break;
-                    case "WILDBERRIES":
-                        entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Sp13992.Trim() == barcode); //RegionName
-                        break;
-                    default:
-                        entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Code.Trim() == barcode);
-                        break;
-                }
-
-                if (entity == null)
-                    return "Штрихкод не обнаружен";
-                if (!campaignIds.Contains(entity.Sp14038))
-                    return "Штрихкод от другого маркетплейс";
-                if (entity.Sp13990.Date != shipDate.Date)
-                    return "Неверная дата доставки";
-                if (entity.Sp13982 == 5)
-                    return "Заказ отменен";
-                if (entity.Ismark)
-                    return "Установлена пометка удаления";
-                var logInfo = entity.Sp14255.Trim();
-                string logNumberStr = logNumber.ToString();
-                if (logInfo.Split(';').Any(x => x == logNumberStr))
-                    return "Повторное сканирование";
-                entity.Sp14254 += scanMark;
-                if (!string.IsNullOrEmpty(logInfo))
-                    logInfo += ";";
-                logInfo += logNumberStr;
-                entity.Sp14255 = logInfo;
-                _context.Update(entity);
-                _context.РегистрацияИзмененийРаспределеннойИБ(13994, entity.Id);
-                await _context.SaveChangesAsync(cancellationToken);
-                return "";
-            }
-            catch (Exception ex)
-            {
-                return ex.Message;
-            }
-        }
-        public async Task ClearOrderScanned(DateTime shipDate, List<string> campaignIds, string warehouseId, CancellationToken cancellationToken)
-        {
-            var entities = await (from x in _context.Sc13994s
-                                  join m in _context.Sc14042s on x.Sp14038 equals m.Id
-                                  join item in _context.Sc14033s on x.Id equals item.Parentext
-                                  join nom in _context.Sc84s on item.Sp14022 equals nom.Id
-                                  join markUse in _context.Sc14152s on new { nomId = nom.Id, marketId = m.Id } equals new { nomId = markUse.Parentext, marketId = markUse.Sp14147 } into _markUse
-                                  from markUse in _markUse.DefaultIfEmpty()
-                                  where campaignIds.Contains(m.Id) && (x.Sp13990.Date == shipDate) && (x.Sp14254 > 0) &&
-                                     (!string.IsNullOrEmpty(warehouseId) ? markUse.Sp14190.Trim() == warehouseId :
-                                        (!string.IsNullOrWhiteSpace(m.Sp14154) ? markUse.Sp14190.Trim() != m.Sp14154.Trim() :
-                                            true))
-                                  select x).ToListAsync(cancellationToken);
-            foreach (var entity in entities)
-            {
-                entity.Sp14254 = 0;
-                entity.Sp14255 = "";
-                _context.Update(entity);
-                _context.РегистрацияИзмененийРаспределеннойИБ(13994, entity.Id);
-            }
-            await _context.SaveChangesAsync();
         }
     }
 }
