@@ -89,7 +89,7 @@ namespace Refresher1C.Service
             }
         }
         async Task SetYandexPrice(List<string> uploadIds,
-            List<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount)> priceData,
+            IEnumerable<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount)> priceData,
             Marketplace marketplace,
             long feedId,
             CancellationToken cancellationToken)
@@ -127,7 +127,7 @@ namespace Refresher1C.Service
                 uploadIds.AddRange(priceData.Select(x => x.id));
         }
         async Task SetOzonPrice(List<string> uploadIds,
-            List<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount)> priceData,
+            IEnumerable<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount)> priceData,
             Marketplace marketplace,
             CancellationToken cancellationToken)
         {
@@ -167,7 +167,7 @@ namespace Refresher1C.Service
             }
         }
         async Task SetSberPrice(List<string> uploadIds,
-            List<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount)> priceData,
+            IEnumerable<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount)> priceData,
             Marketplace marketplace,
             CancellationToken cancellationToken)
         {
@@ -191,7 +191,7 @@ namespace Refresher1C.Service
             }
         }
         async Task SetAliExpressPrice(List<string> uploadIds,
-            List<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount)> priceData,
+            IEnumerable<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount)> priceData,
             Marketplace marketplace,
             CancellationToken cancellationToken)
         {
@@ -223,7 +223,7 @@ namespace Refresher1C.Service
             }
         }
         async Task SetWildberriesPrice(List<string> uploadIds,
-            List<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount)> priceData,
+            IEnumerable<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount)> priceData,
             Marketplace marketplace,
             CancellationToken cancellationToken)
         {

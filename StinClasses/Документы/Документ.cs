@@ -321,14 +321,7 @@ namespace StinClasses.Документы
             }
             if (dateTime == DateTime.MinValue)
                 dateTime = DateTime.Now;
-            var datestr = dateTime.ToString("yyyyMMdd");
-            var h = dateTime.Hour;
-            var m = dateTime.Minute;
-            var s = dateTime.Second;
-            var ms = dateTime.Millisecond;
-            var time = (h * 3600 * 10000) + (m * 60 * 10000) + (s * 10000) + (ms * 10);
-            var timestr = Common.Encode36(time).PadLeft(6);
-            var dateTimeIddoc = datestr + timestr + docId;
+            var dateTimeIddoc = dateTime.ToDateTimeIdDoc(docId);
             if (string.IsNullOrEmpty(Нумератор))
                 Нумератор = ВидДокИД_dds.ToString();
             var dnPrefix = Нумератор.PadLeft(10) + dateTime.ToString("yyyy").PadRight(8);

@@ -11,6 +11,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Reflection;
 using System.Xml.Linq;
+using System.Security.Cryptography;
 
 namespace StinClasses
 {
@@ -272,6 +273,27 @@ namespace StinClasses
                 result = result.AddMilliseconds(milliseconds);
             }
             return result;
+        }
+        public static string ToDateTimeIdDoc(this DateTime dateTime, string idDoc)
+        {
+            var sb = new StringBuilder(dateTime.ToString("yyyyMMdd"));
+            var h = dateTime.Hour;
+            var m = dateTime.Minute;
+            var s = dateTime.Second;
+            var ms = dateTime.Millisecond;
+            var time = (h * 3600 * 10000) + (m * 60 * 10000) + (s * 10000) + (ms * 10);
+            var timestr = Encode36(time).PadLeft(6);
+            sb.Append(timestr);
+            if (!string.IsNullOrEmpty(idDoc))
+                sb.Append(idDoc);
+            return sb.ToString();
+        }
+        public static void GetDateTimeValuesForRegistry(this DateTime dateTime, string idDoc, out DateTime previousRegPeriod, out string periodStart, out string periodEnd)
+        {
+            DateTime startOfMonth = new DateTime(dateTime.Year, dateTime.Month, 1);
+            previousRegPeriod = startOfMonth.AddMonths(-1);
+            periodStart = startOfMonth.ToString("yyyyMMdd");
+            periodEnd = dateTime.ToDateTimeIdDoc(idDoc);
         }
         public static string FormatTo1CId(this string aValue)
         {

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Refresher1C.Service;
+using StinClasses.Справочники.Functions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -71,9 +72,16 @@ namespace Refresher1C
                            .ServiceProvider.GetService<IMarketplaceService>();
                     await MarketplaceScope.UpdateTariffs(stoppingToken);
                 });
+                Task checkComissStack = Task.Run(async () =>
+                {
+                    using var scope = _scopeFactory.CreateScope();
+                    var marketplaceFunctions = scope.ServiceProvider.GetRequiredService<IMarketplaceFunctions>();
+                    await marketplaceFunctions.CheckOrdersStackInComission(stoppingToken);
+                });
                 await Task.WhenAll(
                     pickupExpired,
-                    tariffs
+                    tariffs,
+                    checkComissStack
                     );
             }
             catch

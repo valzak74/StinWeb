@@ -18,7 +18,7 @@ namespace StinClasses.Справочники.Functions
             StinDeliveryPartnerType deliveryPartnerType, StinDeliveryType deliveryType, string deliveryServiceId, string deliveryServiceName, double deliveryPrice, double deliverySubsidy,
             string shipmentId, DateTime shipmentDate, string regionId, string regionName, OrderRecipientAddress address, string notes, List<OrderItem> items);
         Task ОбновитьOrderNo(string Id, string OrderNo);
-        Task ОбновитьOrderStatus(string Id, int NewStatus, string errMessage = "");
+        Task UpdateOrderStatus(string id, int newStatus, string errMessage, CancellationToken cancellationToken);
         Task ОбновитьOrderNoAndStatus(string Id, string OrderNo, int NewStatus);
         Task ОбновитьПолучателяЗаказаАдрес(string orderId, string LastName, string FirstName, string MiddleName, string Recipient, string Phone,
             string PostCode, string Country, string City, string Subway, string Street, string House, string Block, string Entrance, string Entryphone, string Floor, string Apartment,
@@ -28,5 +28,6 @@ namespace StinClasses.Справочники.Functions
         Task ClearOrderScanned(DateTime shipDate, List<string> campaignIds, string warehouseId, CancellationToken cancellationToken);
         Task ОбновитьOrderShipmentDate(string Id, DateTime ShipmentDate);
         Task RefreshOrderDeliveryServiceId(string Id, long DeliveryServiceId, string DeliveryServiceName, CancellationToken cancellationToken);
+        DateTime GetShipmentDateByServiceName(string marketplaceId, string serviceName);
     }
 }

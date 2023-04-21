@@ -18,7 +18,7 @@ namespace StinClasses.Справочники
         {
             if (obj == null) return false;
             if (!(obj is RefBook)) return false;
-            return Id == (obj as RefBook).Id;
+            return GetHashCode() == obj.GetHashCode();
         }
         public override int GetHashCode()
         {
@@ -31,8 +31,12 @@ namespace StinClasses.Справочники
         Order = 13994,
         Marketplace = 14042,
         MarketUse = 14152,
+        MarketPickup = 14101,
         Stock = 55,
         Firma = 4014,
+        UrLizo = 131,
+        Bank = 163,
+        BankAccount = 1710,
         Nomenklatura = 84,
         Unit = 75,
         Brend = 8840,

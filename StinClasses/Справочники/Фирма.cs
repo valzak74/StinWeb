@@ -22,10 +22,9 @@ namespace StinClasses.Справочники
         string ПолучитьПостфикс(string фирмаId);
         Task<БанковскийСчет> ПолучитьБанковскийСчетById(string Id);
     }
-    public class Фирма
+    public class Фирма : RefBook
     {
-        public string Id { get; set; }
-        public string Наименование { get; set; }
+        public override RefBookType BookType => RefBookType.Firma;
         public ЮрЛицо ЮрЛицо { get; set; }
         public БанковскийСчет Счет { get; set; }
         public bool НетСчетФактуры { get; set; }
@@ -35,10 +34,9 @@ namespace StinClasses.Справочники
         public string AtolPassword { get; set; }
         public string AlolGroupCode { get; set; }
     }
-    public class ЮрЛицо
+    public class ЮрЛицо : RefBook
     {
-        public string Id { get; set; }
-        public string Наименование { get; set; }
+        public override RefBookType BookType => RefBookType.UrLizo; 
         public string ИНН { get; set; }
         public string ТолькоИНН => ИНН.IndexOf('/') > 0 ? ИНН.Substring(0, ИНН.IndexOf('/')) : ИНН;
         public string ТолькоКПП => ИНН.IndexOf('/') > 0 ? ИНН.Substring(ИНН.IndexOf('/') + 1) : "";
@@ -46,16 +44,15 @@ namespace StinClasses.Справочники
         public decimal УчитыватьНДС { get; set; }
         public string Адрес { get; set; }
     }
-    public class БанковскийСчет
+    public class БанковскийСчет : RefBook
     {
-        public string Id { get; set; }
+        public override RefBookType BookType => RefBookType.BankAccount;
         public string РасчетныйСчет { get; set; }
         public Банк Банк { get; set; }
     }
-    public class Банк
+    public class Банк : RefBook
     {
-        public string Id { get; set; }
-        public string Наименование { get; set; }
+        public override RefBookType BookType => RefBookType.Bank;
         public string КоррСчет { get; set; }
         public string БИК { get; set; }
         public string Город { get; set; }

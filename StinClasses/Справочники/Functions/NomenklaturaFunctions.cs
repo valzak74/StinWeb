@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using StinClasses.Models;
-using StinClasses.Регистры.Functions;
+using StinClasses.Регистры;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -88,9 +88,9 @@ namespace StinClasses.Справочники.Functions
                 НоменклатураIds = НоменклатураList.Select(x => x.Id).ToList();
             using (var scope = _serviceProvider.CreateScope())
             {
-                var registrОстаткиТМЦ = scope.ServiceProvider.GetRequiredService<IRegistrОстаткиТМЦ>();
-                var registrРезервыТМЦ = scope.ServiceProvider.GetRequiredService<IRegistrРезервыТМЦ>();
-                var registrСтопЛистЗЧ = scope.ServiceProvider.GetRequiredService<IRegistrСтопЛистЗЧ>();
+                var registrОстаткиТМЦ = scope.ServiceProvider.GetRequiredService<IРегистрОстаткиТМЦ>();
+                var registrРезервыТМЦ = scope.ServiceProvider.GetRequiredService<IРегистрРезервыТМЦ>();
+                var registrСтопЛистЗЧ = scope.ServiceProvider.GetRequiredService<IРегистрСтопЛистЗЧ>();
                 var ОстаткиТМЦ = await registrОстаткиТМЦ.ПолучитьОстаткиПоСпискуСкладовAsync(
                     DateTime.Now,
                     null,
@@ -144,8 +144,8 @@ namespace StinClasses.Справочники.Functions
         {
             using (var scope = _serviceProvider.CreateScope())
             {
-                var registrРезервыТМЦ = scope.ServiceProvider.GetRequiredService<IRegistrРезервыТМЦ>();
-                var registrНаборНаСкладе = scope.ServiceProvider.GetRequiredService<IRegistrНаборНаСкладе>();
+                var registrРезервыТМЦ = scope.ServiceProvider.GetRequiredService<IРегистрРезервыТМЦ>();
+                var registrНаборНаСкладе = scope.ServiceProvider.GetRequiredService<IРегистрНаборНаСкладе>();
                 var inReserve = await registrРезервыТМЦ.ПолучитьКоличествоНоменклатурыВРезервахAsync(DateTime.MinValue, null, false, nomIds, marketplaceId);
                 var inNabor = await registrНаборНаСкладе.ПолучитьКоличествоНоменклатурыВНаборахAsync(DateTime.MinValue, null, false, nomIds, marketplaceId);
                 if (inReserve != null && inNabor != null)

@@ -57,7 +57,7 @@ namespace Market.Services
                     _order.Dispose();
                     _marketplace.Dispose();
                     _номенклатура.Dispose();
-                    _pickup.Dispose();
+                    //_pickup.Dispose();
                     _склад.Dispose();
                     _предварительнаяЗаявка.Dispose();
                     _заявкаПокупателя.Dispose();

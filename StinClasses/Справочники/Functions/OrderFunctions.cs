@@ -52,9 +52,18 @@ namespace StinClasses.Справочники.Functions
         {
             throw new NotImplementedException();
         }
-        public async Task ОбновитьOrderStatus(string Id, int NewStatus, string errMessage = "")
+        public async Task UpdateOrderStatus(string id, int newStatus, string errMessage, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var entity = await _context.Sc13994s.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+            if (entity != null)
+            {
+                entity.Sp13982 = newStatus;
+                if (!string.IsNullOrEmpty(errMessage))
+                    entity.Sp14055 = errMessage;
+                _context.Update(entity);
+                _context.РегистрацияИзмененийРаспределеннойИБ(13994, entity.Id);
+                await _context.SaveChangesAsync(cancellationToken);
+            }
         }
         public async Task ОбновитьOrderNoAndStatus(string Id, string OrderNo, int NewStatus)
         {
@@ -212,6 +221,10 @@ namespace StinClasses.Справочники.Functions
                 _context.РегистрацияИзмененийРаспределеннойИБ(13994, entity.Id);
             }
             await _context.SaveChangesAsync(cancellationToken);
+        }
+        public DateTime GetShipmentDateByServiceName(string marketplaceId, string serviceName)
+        {
+            return _context.Sc13994s.Where(x => (x.Sp14038 == marketplaceId) && (x.Sp13987.Trim() == serviceName)).Select(x => x.Sp13990).Max();
         }
     }
 }

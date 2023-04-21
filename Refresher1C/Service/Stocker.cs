@@ -9,7 +9,6 @@ using StinClasses.Справочники.Functions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,25 +20,16 @@ namespace Refresher1C.Service
         IHttpService _httpService;
         StinDbContext _context;
         IMarketplaceFunctions _marketplaceFunctions;
-        IStockFunctions _stockFunctions;
-        IFirmaFunctions _firmaFunctions;
-        INomenklaturaFunctions _nomenklaturaFunctions;
 
         readonly string defFirmaId = "";
         readonly Dictionary<string, string> _firmProxy;
         public Stocker(StinDbContext context, IHttpService httpService, IConfiguration configuration, ILogger<IStocker> logger,
-            IStockFunctions stockFunctions,
-            IFirmaFunctions firmFunctions,
-            INomenklaturaFunctions nomenklaturaFunctions,
             IMarketplaceFunctions marketplaceFunctions) 
         { 
             _context = context;
             _httpService = httpService;
             _logger = logger;
             _marketplaceFunctions = marketplaceFunctions;
-            _stockFunctions = stockFunctions;
-            _firmaFunctions = firmFunctions;
-            _nomenklaturaFunctions = nomenklaturaFunctions;
             defFirmaId = configuration["Stocker:" + configuration["Stocker:Firma"] + ":FirmaId"];
             _firmProxy = new Dictionary<string, string>();
             foreach (var item in configuration.GetSection("CommonSettings:FirmData").GetChildren())
@@ -59,26 +49,18 @@ namespace Refresher1C.Service
         async Task UpdateStockMarketplace(bool regular, Marketplace marketplace, CancellationToken stoppingToken)
         {
             await _marketplaceFunctions.ClearTakenMarkVzUpdStock(marketplace.Id, stoppingToken);
-            var data = await _marketplaceFunctions.GetMarketUseInfoForStockAsync(marketplace, regular, 100, stoppingToken);
+            var data = await _marketplaceFunctions.GetMarketUseInfoForStockAsync(null, marketplace, regular, 100, stoppingToken);
             if (data?.Count() > 0)
             {
-                bool fullLock = false;
                 var notReadyIds = new List<string>();
                 if (marketplace.Тип == "OZON")
-                {
-                    var offersDictionary = data.ToDictionary(k => k.OfferId, v => v.Id);
-                    notReadyIds = await GetOzonNotReadyProducts(marketplace.ФирмаId, marketplace.ClientId, marketplace.TokenKey, offersDictionary, stoppingToken);
-                }
-                else if (marketplace.Тип == "WILDBERRIES")
-                {
-                    fullLock = await _stockFunctions.NextBusinessDay(Common.SkladEkran, DateTime.Today, 1, stoppingToken) != 1;
-                }
+                    notReadyIds = await GetOzonNotReadyProducts(marketplace.ФирмаId, marketplace.ClientId, marketplace.TokenKey, data.ToDictionary(k => k.OfferId, v => v.Id), stoppingToken);
                 var validItems = data.Where(x => !notReadyIds.Contains(x.Id));
                 var listIds = validItems.Select(x => x.Id).ToList();
-                if (MarkVzUpdateStock(listIds, notReadyIds, null, null, null) && (listIds.Count > 0))
+                if (await MarkVzUpdateStock(listIds, notReadyIds, null, null, null, stoppingToken) && (listIds.Count > 0))
                 {
-                    var stockData = await GetStockData(validItems, fullLock, marketplace, stoppingToken);
-                    if (stockData.Count > 0)
+                    var stockData = await _marketplaceFunctions.GetStockData(validItems, marketplace, stoppingToken);
+                    if (stockData.Count() > 0)
                     {
                         List<string> uploadIds = new List<string>();
                         List<string> tooManyIds = new List<string>();
@@ -102,76 +84,86 @@ namespace Refresher1C.Service
                                 break;
                         }
                         if ((uploadIds.Count > 0) || (tooManyIds.Count > 0) || (errorIds.Count > 0))
-                            MarkVzUpdateStock(null, null, uploadIds, tooManyIds, errorIds);
+                            await MarkVzUpdateStock(null, null, uploadIds, tooManyIds, errorIds, stoppingToken);
                     }
                 }
             }
         }
-        bool MarkVzUpdateStock(List<string> markIds, List<string> notReadyIds, List<string> uploadIds, List<string> tooManyIds, List<string> errorIds)
+        async Task<bool> MarkVzUpdateStock(List<string> markIds, List<string> notReadyIds, List<string> uploadIds, List<string> tooManyIds, List<string> errorIds, CancellationToken cancellationToken)
         {
             int tryCount = 5;
             TimeSpan sleepPeriod = TimeSpan.FromSeconds(3);
             while (true)
             {
-                using var tran = _context.Database.BeginTransaction();
+                using var tran = await _context.Database.BeginTransactionAsync(cancellationToken);
                 try
                 {
                     if (markIds?.Count > 0)
-                        _context.VzUpdatingStocks
+                    {
+                        var d = await _context.VzUpdatingStocks
                             .Where(x => markIds.Contains(x.MuId))
-                            .ToList()
-                            .ForEach(x =>
-                            {
-                                x.Flag = false;
-                                x.Taken = true;
-                                x.IsError = false;
-                            });
+                            .ToListAsync(cancellationToken);
+                        foreach (var entity in d)
+                        {
+                            entity.Flag = false;
+                            entity.Taken = true;
+                            entity.IsError = false;
+                        }
+                    }
                     if (notReadyIds?.Count > 0)
-                        _context.VzUpdatingStocks
+                    {
+                        var d = await _context.VzUpdatingStocks
                             .Where(x => notReadyIds.Contains(x.MuId))
-                            .ToList()
-                            .ForEach(x =>
-                            {
-                                x.Flag = false;
-                                x.Taken = false;
-                                x.IsError = true;
-                                x.Updated = DateTime.Now;
-                            });
+                            .ToListAsync(cancellationToken);
+                        foreach (var entity in d)
+                        {
+                            entity.Flag = false;
+                            entity.Taken = false;
+                            entity.IsError = true;
+                            entity.Updated = DateTime.Now;
+                        }
+                    }
                     if (uploadIds?.Count > 0)
-                        _context.VzUpdatingStocks
+                    {
+                        var d = await _context.VzUpdatingStocks
                             .Where(x => uploadIds.Contains(x.MuId) && x.Taken)
-                            .ToList()
-                            .ForEach(x =>
-                            {
-                                x.Flag = false;
-                                x.Taken = false;
-                                x.IsError = false;
-                                x.Updated = DateTime.Now;
-                            });
+                            .ToListAsync(cancellationToken);
+                        foreach (var entity in d)
+                        {
+                            entity.Flag = false;
+                            entity.Taken = false;
+                            entity.IsError = false;
+                            entity.Updated = DateTime.Now;
+                        }
+                    }
                     if (tooManyIds?.Count > 0)
-                        _context.VzUpdatingStocks
+                    {
+                        var d = await _context.VzUpdatingStocks
                             .Where(x => tooManyIds.Contains(x.MuId) && x.Taken)
-                            .ToList()
-                            .ForEach(x =>
-                            {
-                                x.Flag = true;
-                                x.Taken = false;
-                                x.IsError = false;
-                                x.Updated = DateTime.Now;
-                            });
+                            .ToListAsync(cancellationToken);
+                        foreach (var entity in d)
+                        {
+                            entity.Flag = true;
+                            entity.Taken = false;
+                            entity.IsError = false;
+                            entity.Updated = DateTime.Now;
+                        }
+                    }
                     if (errorIds?.Count > 0)
-                        _context.VzUpdatingStocks
+                    {
+                        var d = await _context.VzUpdatingStocks
                             .Where(x => errorIds.Contains(x.MuId) && x.Taken)
-                            .ToList()
-                            .ForEach(x =>
-                            {
-                                x.Flag = false;
-                                x.Taken = false;
-                                x.IsError = true;
-                                x.Updated = DateTime.Now;
-                            });
-                    _context.SaveChanges();
-                    tran.Commit();
+                            .ToListAsync(cancellationToken);
+                        foreach (var entity in d)
+                        {
+                            entity.Flag = false;
+                            entity.Taken = false;
+                            entity.IsError = true;
+                            entity.Updated = DateTime.Now;
+                        }
+                    }
+                    await _context.SaveChangesAsync(cancellationToken);
+                    await tran.CommitAsync(cancellationToken);
                     return true;
                 }
                 catch (Exception ex)
@@ -183,63 +175,10 @@ namespace Refresher1C.Service
                         _logger.LogError(ex.Message);
                         break;
                     }
-                    Task.Delay(sleepPeriod);
+                    await Task.Delay(sleepPeriod, cancellationToken);
                 }
             }
             return false;
-        }
-        async Task<List<(string productId, string offerId, string barcode, int stock)>> GetStockData(IEnumerable<MarketUseInfoStock> data, bool fullLock,
-            Marketplace marketplace,
-            CancellationToken cancellationToken)
-        {
-            var stockData = new List<(string productId, string offerId, string barcode, int stock)>();
-            var разрешенныеФирмы = await _firmaFunctions.GetListAcseptedAsync(marketplace.ФирмаId);
-            List<string> списокСкладов = null;
-            if (string.IsNullOrEmpty(marketplace.СкладId))
-            {
-                if (marketplace.Модель == "DBS")
-                    списокСкладов = await _stockFunctions.ПолучитьСкладIdОстатковMarketplace();
-                else
-                    списокСкладов = new List<string> { Common.SkladEkran };
-            }
-            else
-                списокСкладов = new List<string> { marketplace.СкладId };
-            var validNomIds = data.Select(x => x.NomId).ToList();
-            var списокНоменклатуры = await _nomenklaturaFunctions.ПолучитьСвободныеОстатки(разрешенныеФирмы, списокСкладов, validNomIds, false);
-            var резервыМаркета = await _nomenklaturaFunctions.GetReserveByMarketplace(marketplace.Id, validNomIds);
-            foreach (var item in data)
-            {
-                long остаток = 0;
-                if (!fullLock)
-                {
-                    var номенклатура = списокНоменклатуры.FirstOrDefault(x => x.Id == item.NomId);
-                    if (номенклатура != null)
-                    {
-                        резервыМаркета.TryGetValue(item.NomId, out decimal резервМаркета);
-                        if (item.Квант > 1)
-                        {
-                            var остатокРегистр = номенклатура.Остатки
-                                .Where(x => x.СкладId == Common.SkladEkran)
-                                .Sum(x => x.СвободныйОстаток);
-                            if (marketplace.Тип == "ЯНДЕКС")
-                                остатокРегистр += резервМаркета;
-                            остаток = (int)(((остатокРегистр / номенклатура.Единица.Коэффициент) - item.DeltaStock) / item.Квант);
-                            if (marketplace.Тип == "ЯНДЕКС")
-                                остаток = остаток * (int)item.Квант;
-                        }
-                        else
-                        {
-                            var остатокРегистр = номенклатура.Остатки.Sum(x => x.СвободныйОстаток);
-                            if (marketplace.Тип == "ЯНДЕКС")
-                                остатокРегистр += резервМаркета;
-                            остаток = (long)((остатокРегистр - item.DeltaStock) / номенклатура.Единица.Коэффициент);
-                        }
-                        остаток = Math.Max(остаток, 0);
-                    }
-                }
-                stockData.Add((productId: item.ProductId, offerId: item.OfferId, barcode: item.Barcode, stock: (item.Locked ? 0 : (int)остаток)));
-            }
-            return stockData;
         }
         async Task<List<string>> GetOzonNotReadyProducts(string firmaId, string clientId, string authToken, Dictionary<string, string> offersDictionary, CancellationToken cancellationToken)
         {
@@ -255,7 +194,7 @@ namespace Refresher1C.Service
         }
         async Task SetOzonData(List<string> uploadIds, List<string> tooManyIds, List<string> errorIds,
             IEnumerable<MarketUseInfoStock> data,
-            List<(string productId, string offerId, string barcode, int stock)> stockData, 
+            IEnumerable<(string productId, string offerId, string barcode, int stock)> stockData, 
             Marketplace marketplace, 
             CancellationToken cancellationToken)
         {
@@ -282,7 +221,7 @@ namespace Refresher1C.Service
                 errorIds.AddRange(data.Where(x => result.errorOfferIds.Contains(x.OfferId)).Select(x => x.Id));
         }
         async Task SetSberData(List<string> uploadIds,
-            List<(string productId, string offerId, string barcode, int stock)> stockData, 
+            IEnumerable<(string productId, string offerId, string barcode, int stock)> stockData, 
             List<string> listIds,
             Marketplace marketplace,
             CancellationToken cancellationToken)
@@ -297,7 +236,7 @@ namespace Refresher1C.Service
         }
         async Task SetAliExpressData(List<string> uploadIds, List<string> errorIds,
             IEnumerable<MarketUseInfoStock> data,
-            List<(string productId, string offerId, string barcode, int stock)> stockData,
+            IEnumerable<(string productId, string offerId, string barcode, int stock)> stockData,
             Marketplace marketplace,
             CancellationToken cancellationToken)
         {
@@ -328,7 +267,7 @@ namespace Refresher1C.Service
         }
         async Task SetWildberriesData(List<string> uploadIds, List<string> errorIds,
             IEnumerable<MarketUseInfoStock> data,
-            List<(string productId, string offerId, string barcode, int stock)> stockData,
+            IEnumerable<(string productId, string offerId, string barcode, int stock)> stockData,
             Marketplace marketplace,
             CancellationToken cancellationToken)
         {
@@ -349,7 +288,7 @@ namespace Refresher1C.Service
                 uploadIds.AddRange(data.Where(x => stockData.Select(y => y.barcode).Contains(x.Barcode)).Select(x => x.Id));
         }
         async Task SetYandexData(List<string> uploadIds,
-            List<(string productId, string offerId, string barcode, int stock)> stockData,
+            IEnumerable<(string productId, string offerId, string barcode, int stock)> stockData,
             List<string> listIds,
             Marketplace marketplace,
             CancellationToken cancellationToken)

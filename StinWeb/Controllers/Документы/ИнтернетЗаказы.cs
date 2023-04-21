@@ -466,9 +466,14 @@ namespace StinWeb.Controllers
                     foreach (var item in gr)
                     {
                         int boxes = (int)(item.Количество / item.Квант * item.КолМест);
+                        int b = 0;
+                        while (b < boxes)
+                        {
+                            b++;
+                            boxNos.Add(boxPref + (boxCount + b).ToString());
+                            boxCosts.Add(((item.Цена * item.Количество) / boxes).ToString(Common.ФорматЦеныСи, CultureInfo.InvariantCulture));
+                        }
                         boxCount += boxes;
-                        boxNos.Add(boxPref + boxCount);
-                        boxCosts.Add(((item.Цена * item.Количество) / boxes).ToString(Common.ФорматЦеныСи, CultureInfo.InvariantCulture));
                     }
                     return new
                     {

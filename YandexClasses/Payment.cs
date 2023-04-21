@@ -23,6 +23,7 @@ namespace YandexClasses
     {
         PREPAID = 0,
         POSTPAID = 1,
+        CREDIT = 2,
         NotFound
     }
 }

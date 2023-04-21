@@ -1,9 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using StinClasses.Models;
+using StinClasses.Документы;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection.PortableExecutable;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -49,10 +54,12 @@ namespace StinClasses.Справочники.Functions
     {
         StinDbContext _context;
         IMemoryCache _cache;
-        public MarketplaceFunctions(StinDbContext context, IMemoryCache cache) 
+        IServiceProvider _serviceProvider;
+        public MarketplaceFunctions(IServiceProvider serviceProvider, StinDbContext context, IMemoryCache cache) 
         { 
             _context = context;
             _cache = cache;
+            _serviceProvider = serviceProvider;
         }
         public async Task<IEnumerable<Marketplace>> GetAllAsync(CancellationToken cancellationToken)
         {
@@ -66,35 +73,206 @@ namespace StinClasses.Справочники.Functions
             }
             return markerplaces;
         }
-        public async Task<IEnumerable<MarketUseInfoStock>> GetMarketUseInfoForStockAsync(Marketplace marketplace, bool regular, int limit, CancellationToken cancellationToken)
+        public async Task<Marketplace> GetMarketplaceByFirmaAsync(string firmaId, string authApi, CancellationToken cancellationToken)
         {
-            return await (from markUse in _context.Sc14152s
-                          join nom in _context.Sc84s on markUse.Parentext equals nom.Id
-                          join sc75 in _context.Sc75s on nom.Sp94 equals sc75.Id
-                          join updStock in _context.VzUpdatingStocks on markUse.Id equals updStock.MuId
-                          where (markUse.Sp14147 == marketplace.Id) &&
-                            (markUse.Sp14158 == 1) && //Есть в каталоге 
-                            (((regular ? updStock.Flag : updStock.IsError) &&
-                              (updStock.Updated < DateTime.Now.AddSeconds(-150))) ||
-                             (updStock.Updated.Date != DateTime.Today))
-                          //(nom.Code == "D00040383")
-                          select new MarketUseInfoStock
-                          {
-                              Id = markUse.Id,
-                              Locked = markUse.Ismark,
-                              NomId = markUse.Parentext,
-                              OfferId = nom.Code.Encode(marketplace.Encoding),
-                              ProductId = markUse.Sp14190.Trim(),
-                              Barcode = sc75.Sp80.Trim(),
-                              Квант = nom.Sp14188,
-                              DeltaStock = marketplace.StockOriginal ? 0 : nom.Sp14215, //markUse.Sp14214,
-                              UpdatedAt = updStock.Updated,
-                              UpdatedFlag = updStock.Flag
-                          })
-            .OrderByDescending(x => x.UpdatedFlag)
-            .ThenBy(x => x.UpdatedAt)
-            .Take(limit)
-            .ToListAsync(cancellationToken);
+            var sb = new StringBuilder("Market");
+            sb.Append(firmaId);
+            sb.Append(authApi);
+            string searchKey = sb.ToString();
+            if (!_cache.TryGetValue(searchKey, out Marketplace marketplace))
+            {
+                var entity = await _context.Sc14042s
+                .FirstOrDefaultAsync(x => (x.Parentext == firmaId) && (x.Sp14077.Trim() == authApi));
+                marketplace = entity?.Map();
+                if (marketplace != null)
+                    _cache.Set(searchKey, marketplace, TimeSpan.FromDays(1));
+            }
+            return marketplace;
+        }
+        public async Task<IEnumerable<MarketUseInfoStock>> GetMarketUseInfoForStockAsync(IEnumerable<string> nomCodes, Marketplace marketplace, bool regular, int limit, CancellationToken cancellationToken)
+        {
+            var data = from markUse in _context.Sc14152s
+                       join nom in _context.Sc84s on markUse.Parentext equals nom.Id
+                       join sc75 in _context.Sc75s on nom.Sp94 equals sc75.Id
+                       join updStock in _context.VzUpdatingStocks on markUse.Id equals updStock.MuId
+                       where (markUse.Sp14147 == marketplace.Id) &&
+                            ((nomCodes != null && (nomCodes.Count() > 0)) ? nomCodes.Contains(nom.Code) : 
+                                (markUse.Sp14158 == 1) && //Есть в каталоге 
+                                (((regular ? updStock.Flag : updStock.IsError) &&
+                                    (updStock.Updated < DateTime.Now.AddSeconds(-150))) ||
+                                    (updStock.Updated.Date != DateTime.Today)))
+                       //(nom.Code == "D00040383")
+                       orderby updStock.Flag descending, updStock.Updated ascending
+                       select new MarketUseInfoStock
+                       {
+                           Id = markUse.Id,
+                           Locked = markUse.Ismark,
+                           NomId = markUse.Parentext,
+                           OfferId = nom.Code.Encode(marketplace.Encoding),
+                           ProductId = markUse.Sp14190.Trim(),
+                           Barcode = sc75.Sp80.Trim(),
+                           Квант = nom.Sp14188,
+                           DeltaStock = marketplace.StockOriginal ? 0 : nom.Sp14215, //markUse.Sp14214,
+                           UpdatedAt = updStock.Updated,
+                           UpdatedFlag = updStock.Flag
+                       };
+            if (limit > 0)
+                data = data.Take(limit);
+            return await data.ToListAsync(cancellationToken);
+        }
+        public async Task<IEnumerable<(string productId, string offerId, string barcode, int stock)>> GetStockData(IEnumerable<MarketUseInfoStock> data,
+            Marketplace marketplace,
+            CancellationToken cancellationToken)
+        {
+            var stockData = new List<(string productId, string offerId, string barcode, int stock)>();
+            var validNomIds = data.Select(x => x.NomId).ToList();
+            using var scope = _serviceProvider.CreateScope();
+            var firmaFunctions = scope.ServiceProvider.GetRequiredService<IFirmaFunctions>();
+            var stockFunctions = scope.ServiceProvider.GetRequiredService<IStockFunctions>();
+            var nomenklaturaFunctions = scope.ServiceProvider.GetRequiredService<INomenklaturaFunctions>();
+
+            var разрешенныеФирмы = await firmaFunctions.GetListAcseptedAsync(marketplace.ФирмаId);
+            List<string> списокСкладов = null;
+            if (string.IsNullOrEmpty(marketplace.СкладId))
+            {
+                if (marketplace.Модель == "DBS")
+                    списокСкладов = await stockFunctions.ПолучитьСкладIdОстатковMarketplace();
+                else
+                    списокСкладов = new List<string> { Common.SkladEkran };
+            }
+            else
+                списокСкладов = new List<string> { marketplace.СкладId };
+            bool fullLock = false;
+            decimal defDeltaStock = 0;
+            if (marketplace.Тип == "WILDBERRIES")
+            {
+                fullLock = await stockFunctions.NextBusinessDay(Common.SkladEkran, DateTime.Today, 1, cancellationToken) != 1;
+                defDeltaStock = 1;
+            }
+            var списокНоменклатуры = await nomenklaturaFunctions.ПолучитьСвободныеОстатки(разрешенныеФирмы, списокСкладов, validNomIds, false);
+            var резервыМаркета = await nomenklaturaFunctions.GetReserveByMarketplace(marketplace.Id, validNomIds);
+            foreach (var item in data)
+            {
+                long остаток = 0;
+                if (!fullLock && !item.Locked)
+                {
+                    var номенклатура = списокНоменклатуры.FirstOrDefault(x => x.Id == item.NomId);
+                    if (номенклатура != null)
+                    {
+                        резервыМаркета.TryGetValue(item.NomId, out decimal резервМаркета);
+                        if (item.Квант > 1)
+                        {
+                            var остатокРегистр = номенклатура.Остатки
+                                .Where(x => x.СкладId == Common.SkladEkran)
+                                .Sum(x => x.СвободныйОстаток);
+                            if (marketplace.Тип == "ЯНДЕКС")
+                                остатокРегистр += резервМаркета;
+                            остаток = (int)(((остатокРегистр / номенклатура.Единица.Коэффициент) - (item.DeltaStock + defDeltaStock)) / item.Квант);
+                            if (marketplace.Тип == "ЯНДЕКС")
+                                остаток = остаток * (int)item.Квант;
+                        }
+                        else
+                        {
+                            var остатокРегистр = номенклатура.Остатки.Sum(x => x.СвободныйОстаток);
+                            if (marketplace.Тип == "ЯНДЕКС")
+                                остатокРегистр += резервМаркета;
+                            остаток = (long)((остатокРегистр - (item.DeltaStock + defDeltaStock)) / номенклатура.Единица.Коэффициент);
+                        }
+                        остаток = Math.Max(остаток, 0);
+                    }
+                }
+                stockData.Add((productId: item.ProductId, offerId: item.OfferId, barcode: item.Barcode, stock: (int)остаток));
+            }
+            return stockData;
+        }
+        public async Task<IEnumerable<(string productId, string offerId, string barcode, int stock, decimal price, bool pickupOnly, Dictionary<Pickup, int> pickupsInfo)>> GetStockData(IEnumerable<MarketUseInfoStock> data,
+            Marketplace marketplace,
+            string regionName,
+            CancellationToken cancellationToken)
+        {
+            var stockData = new List<(string productId, string offerId, string barcode, int stock, decimal price, bool pickupOnly, Dictionary<Pickup,int> pickupsInfo)>();
+            var validNomIds = data.Select(x => x.NomId).ToList();
+            using var scope = _serviceProvider.CreateScope();
+            var firmaFunctions = scope.ServiceProvider.GetRequiredService<IFirmaFunctions>();
+            var stockFunctions = scope.ServiceProvider.GetRequiredService<IStockFunctions>();
+            var nomenklaturaFunctions = scope.ServiceProvider.GetRequiredService<INomenklaturaFunctions>();
+            var pickupFunctions = scope.ServiceProvider.GetRequiredService<IPickupFunctions>();
+
+            var разрешенныеФирмы = await firmaFunctions.GetListAcseptedAsync(marketplace.ФирмаId);
+            List<string> списокСкладов = null;
+            if (string.IsNullOrEmpty(marketplace.СкладId))
+            {
+                if (marketplace.Модель == "DBS")
+                    списокСкладов = await stockFunctions.ПолучитьСкладIdОстатковMarketplace();
+                else
+                    списокСкладов = new List<string> { Common.SkladEkran };
+            }
+            else
+                списокСкладов = new List<string> { marketplace.СкладId };
+            bool fullLock = false;
+            decimal defDeltaStock = 0;
+            if (marketplace.Тип == "WILDBERRIES")
+            {
+                fullLock = await stockFunctions.NextBusinessDay(Common.SkladEkran, DateTime.Today, 1, cancellationToken) != 1;
+                defDeltaStock = 1;
+            }
+            var списокНоменклатуры = await nomenklaturaFunctions.ПолучитьСвободныеОстатки(разрешенныеФирмы, списокСкладов, validNomIds, false);
+            var резервыМаркета = await nomenklaturaFunctions.GetReserveByMarketplace(marketplace.Id, validNomIds);
+            var pickups = await pickupFunctions.GetPickups(marketplace.ФирмаId, marketplace.Authorization, regionName);
+            foreach (var item in data)
+            {
+                long остаток = 0;
+                decimal price = 0;
+                bool pickupOnly = false;
+                Dictionary<Pickup, int> pickupsInfo = new();
+                if (!fullLock && !item.Locked)
+                {
+                    var номенклатура = списокНоменклатуры.FirstOrDefault(x => x.Id == item.NomId);
+                    if (номенклатура != null)
+                    {
+                        pickupOnly = номенклатура.PickupOnly;
+                        if (номенклатура?.Цена != null)
+                            price = номенклатура.Цена.РозСП > 0 ? номенклатура.Цена.РозСП : номенклатура.Цена.Розничная;
+                        резервыМаркета.TryGetValue(item.NomId, out decimal резервМаркета);
+                        if (item.Квант > 1)
+                        {
+                            var остатокРегистр = номенклатура.Остатки
+                                .Where(x => x.СкладId == Common.SkladEkran)
+                                .Sum(x => x.СвободныйОстаток);
+                            if (marketplace.Тип == "ЯНДЕКС")
+                                остатокРегистр += резервМаркета;
+                            остаток = (int)(((остатокРегистр / номенклатура.Единица.Коэффициент) - (item.DeltaStock + defDeltaStock)) / item.Квант);
+                            if (marketplace.Тип == "ЯНДЕКС")
+                                остаток = остаток * (int)item.Квант;
+                            if (остаток > 0)
+                            {
+                                var pickup = pickups.SingleOrDefault(x => x.СкладId == Common.SkladEkran);
+                                if (pickup != null)
+                                    pickupsInfo.Add(pickup, (int)остаток);
+                            }
+                        }
+                        else
+                        {
+                            var остатокРегистр = номенклатура.Остатки.Sum(x => x.СвободныйОстаток);
+                            if (marketplace.Тип == "ЯНДЕКС")
+                                остатокРегистр += резервМаркета;
+                            остаток = (long)((остатокРегистр - (item.DeltaStock + defDeltaStock)) / номенклатура.Единица.Коэффициент);
+                            if (остаток > 0)
+                            {
+                                foreach (var pickup in pickups)
+                                {
+                                    var pickupStock = (int)(номенклатура.Остатки.Where(x => x.СкладId == pickup.СкладId).Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент);
+                                    if (pickupStock > 0)
+                                        pickupsInfo.Add(pickup, pickupStock);
+                                }
+                            }
+                        }
+                        остаток = Math.Max(остаток, 0);
+                    }
+                }
+                stockData.Add((productId: item.ProductId, offerId: item.OfferId, barcode: item.Barcode, stock: (int)остаток, price, pickupOnly, pickupsInfo));
+            }
+            return stockData;
         }
         public async Task UpdateVzUpdPrice(List<string> muIds, CancellationToken cancellationToken)
         {
@@ -148,11 +326,11 @@ namespace StinClasses.Справочники.Functions
                               Fix = markUse.Sp14148,
                               Multiply = markUse.Sp14149,
                           })
-                        .OrderBy(x => x.OfferId)
+                        .OrderBy(x => x.NomId)
                         .Take(limit)
                         .ToListAsync(cancellationToken);
         }
-        public List<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount)> GetPriceData(IEnumerable<MarketUseInfoPrice> data,
+        public IEnumerable<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount)> GetPriceData(IEnumerable<MarketUseInfoPrice> data,
             Marketplace marketplace, decimal checkCoeff)
         {
             var priceData = new List<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount)>();
@@ -188,6 +366,26 @@ namespace StinClasses.Справочники.Functions
                 priceData.Add((id: item.Id, productId: item.ProductId, offerId: item.OfferId, квант: item.Квант, price: Цена, priceBeforeDiscount: priceBeforeDiscount));
             }
             return priceData;
+        }
+        public async Task CheckOrdersStackInComission(CancellationToken cancellationToken)
+        {
+            DateTime dateRegTA = _context.GetRegTA();
+            string base36 = Common.Encode36((long)ВидДокумента.КомплекснаяПродажа).PadLeft(4);
+            var orderIds = await (from r in _context.Rg351s //ПартииОтданные
+                                  join doc in _context.Dh12542s on r.Sp364 equals (base36 + doc.Iddoc)
+                                  join order in _context.Sc13994s on doc.Sp14005 equals order.Id
+                                  where (r.Period == dateRegTA) && (r.Sp357 != 0) &&
+                                      (order.Sp13982 == 6)
+                                  group new { r, order } by order.Id into gr
+                                  where gr.Sum(x => x.r.Sp357) != 0
+                                  select gr.Key).ToListAsync(cancellationToken);
+            if (orderIds?.Count > 0)
+            {
+                using var scope = _serviceProvider.CreateScope();
+                var orderFunctions = scope.ServiceProvider.GetRequiredService<IOrderFunctions>();
+                foreach (var orderId in orderIds)
+                    await orderFunctions.UpdateOrderStatus(orderId, 14, null, cancellationToken);
+            }
         }
     }
 }

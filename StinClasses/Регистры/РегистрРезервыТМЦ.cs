@@ -84,15 +84,7 @@ namespace StinClasses.Регистры
             }
             else
             {
-                DateTime startOfMonth = new DateTime(dateReg.Year, dateReg.Month, 1);
-                DateTime previousRegPeriod = startOfMonth.AddMonths(-1);
-                string PeriodStart = startOfMonth.ToString("yyyyMMdd");
-                var h = dateReg.Hour;
-                var m = dateReg.Minute;
-                var s = dateReg.Second;
-                var time = (h * 3600 + m * 60 + s) * 10000;
-                var timestr = Common.Encode36(time).PadLeft(6);
-                string PeriodEnd = dateReg.ToString("yyyyMMdd") + timestr + (string.IsNullOrEmpty(idDocDeadLine) ? "" : idDocDeadLine);
+                dateReg.GetDateTimeValuesForRegistry(idDocDeadLine, out DateTime previousRegPeriod, out string PeriodStart, out string PeriodEnd);
                 var регистр = (from rg in _context.Rg4480s
                                where rg.Period == previousRegPeriod &&
                                     (складIds != null ? true : складIds.Contains(rg.Sp4476)) &&
@@ -175,15 +167,7 @@ namespace StinClasses.Регистры
             }
             else
             {
-                DateTime startOfMonth = new DateTime(dateReg.Year, dateReg.Month, 1);
-                DateTime previousRegPeriod = startOfMonth.AddMonths(-1);
-                string PeriodStart = startOfMonth.ToString("yyyyMMdd");
-                var h = dateReg.Hour;
-                var m = dateReg.Minute;
-                var s = dateReg.Second;
-                var time = (h * 3600 + m * 60 + s) * 10000;
-                var timestr = Common.Encode36(time).PadLeft(6);
-                string PeriodEnd = dateReg.ToString("yyyyMMdd") + timestr + (string.IsNullOrEmpty(idDocDeadLine) ? "" : idDocDeadLine);
+                dateReg.GetDateTimeValuesForRegistry(idDocDeadLine, out DateTime previousRegPeriod, out string PeriodStart, out string PeriodEnd);
                 var регистр = (from rg in _context.Rg4480s
                                where rg.Period == previousRegPeriod &&
                                     (складIds != null ? true : складIds.Contains(rg.Sp4476)) &&
@@ -260,15 +244,7 @@ namespace StinClasses.Регистры
             }
             else
             {
-                DateTime startOfMonth = new DateTime(dateReg.Year, dateReg.Month, 1);
-                DateTime previousRegPeriod = startOfMonth.AddMonths(-1);
-                string PeriodStart = startOfMonth.ToString("yyyyMMdd");
-                var h = dateReg.Hour;
-                var m = dateReg.Minute;
-                var s = dateReg.Second;
-                var time = (h * 3600 + m * 60 + s) * 10000;
-                var timestr = Common.Encode36(time).PadLeft(6);
-                string PeriodEnd = dateReg.ToString("yyyyMMdd") + timestr + (string.IsNullOrEmpty(idDocDeadLine) ? "" : idDocDeadLine);
+                dateReg.GetDateTimeValuesForRegistry(idDocDeadLine, out DateTime previousRegPeriod, out string PeriodStart, out string PeriodEnd);
                 var регистр = (from rg in _context.Rg4480s
                                join doc in _context.Dh2457s on rg.Sp4762 equals doc.Iddoc
                                join order in _context.Sc13994s on doc.Sp13995 equals order.Id into _order

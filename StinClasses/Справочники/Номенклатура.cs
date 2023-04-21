@@ -34,15 +34,6 @@ namespace StinClasses.Справочники
         {
             Остатки = new List<Остатки>();
         }
-        public override bool Equals(object obj)
-        {
-            if (!(obj is Номенклатура))
-                return false;
-            if (obj == null)
-                return false;
-            return Id == (obj as Номенклатура).Id;
-        }
-        public override int GetHashCode() => (BookType36 + Id).GetHashCode();
     }
     public class Производитель : RefBook
     {
@@ -53,12 +44,6 @@ namespace StinClasses.Справочники
         public override RefBookType BookType => RefBookType.Unit;
         public decimal Коэффициент { get; set; }
         public string Barcode { get; set; }
-        public override bool Equals(object obj)
-        {
-            if (!(obj is Единица)) return false;
-            if (obj == null) return false;
-            return Id == (obj as Единица).Id;
-        }
     }
     public class ParentTree
     {

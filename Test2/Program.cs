@@ -173,14 +173,6 @@ namespace HelloWorld
 
         static async Task Main(string[] args)
         {
-            var A = new Номенклатура { Id = "123" };
-            var B = new RefBook { Id = "123" };
-            var d = A.GetHashCode();
-            var c = B.GetHashCode();
-            if (B.Equals(A))
-                Console.Write(A.ToString());
-            if (A.Equals(B))
-                Console.Write(B.ToString());
             var signature = Convert.FromBase64String("MEQCIEvYEHjmiAuraVFE6ORq1ag88mp+lxCJ353CbOgeeTyFAiBTWPfKs+uePhKKGb4Qamgw25lPJN+Vrn9pJj78cfTMzw==");
             StringBuilder builder = new StringBuilder();
             for (int ii = 0; ii < signature.Length; ii++)

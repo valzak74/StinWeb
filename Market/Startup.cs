@@ -13,6 +13,9 @@ using Polly.Extensions.Http;
 using Polly;
 using System.Net.Http;
 using HttpExtensions;
+using StinClasses.—правочники.Functions;
+using StinClasses.—правочники;
+using StinClasses.–егистры;
 
 namespace Market
 {
@@ -33,10 +36,23 @@ namespace Market
         {
             services.AddControllers()
                 .AddNewtonsoftJson();
+            services.AddMemoryCache();
             services.AddDbContext<StinDbContext>(opts => opts.UseLoggerFactory(MyLoggerFactory).EnableSensitiveDataLogging().UseSqlServer(Configuration["ConnectionString:DB"]));
             services.AddHttpClient<IHttpService, HttpService>()
                 .AddPolicyHandler(GetRetryPolicy());
             services.AddScoped<IBridge1C, Bridge1C>();
+
+            services.AddScoped<IStockFunctions, StockFunctions>();
+            services.AddScoped<IFirmaFunctions, FirmaFunctions>();
+            services.AddScoped<IMarketplaceFunctions, MarketplaceFunctions>();
+            services.AddScoped<INomenklaturaFunctions, NomenklaturaFunctions>();
+            services.AddScoped<IPickupFunctions, PickupFunctions>();
+
+            services.AddScoped<I–егистрќстатки“ћ÷, –егистр_ќстатки“ћ÷>();
+            services.AddScoped<I–егистр–езервы“ћ÷, –егистр_–езервы“ћ÷>();
+            services.AddScoped<I–егистр—топЋист«„, –егистр_—топЋист«„>();
+            services.AddScoped<I–егистрЌаборЌа—кладе, –егистр_ЌаборЌа—кладе>();
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Market", Version = "v1" });

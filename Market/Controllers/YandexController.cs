@@ -9,8 +9,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using StinClasses;
 using YandexClasses;
+using StinClasses.Справочники.Functions;
 using StinClasses.Справочники;
-using OzonClasses;
 
 namespace Market.Controllers
 {
@@ -20,12 +20,14 @@ namespace Market.Controllers
     public class YandexController : ControllerBase
     {
         private IServiceScopeFactory _serviceScopeFactory;
+        IMarketplaceFunctions _marketplaceFunctions;
         private IConfiguration _configuration;
         private string _defFirma;
         private string _defFirmaId;
-        public YandexController(IConfiguration configuration, IServiceScopeFactory serviceScopeFactory)
+        public YandexController(IConfiguration configuration, IServiceScopeFactory serviceScopeFactory, IMarketplaceFunctions marketplaceFunctions)
         {
             _serviceScopeFactory = serviceScopeFactory;
+            _marketplaceFunctions = marketplaceFunctions;
             _configuration = configuration;
             _defFirma = _configuration["Settings:Firma"];
             _defFirmaId = _configuration["Settings:" + _defFirma + ":FirmaId"];
@@ -36,71 +38,89 @@ namespace Market.Controllers
             var responseCart = new ResponseCartFBS();
             responseCart.Cart = new CartResponseFBSEntry();
 
-            using IBridge1C bridge = _serviceScopeFactory.CreateScope()
-                .ServiceProvider.GetService<IBridge1C>();
-
-            var market = await bridge.ПолучитьМаркет(headers.Authorization, _defFirmaId);
-
-            List<string> списокСкладов = null;
-            if (!string.IsNullOrEmpty(market.СкладId))
-                списокСкладов = new List<string> { market.СкладId };
-            else
-                списокСкладов = new List<string> { Common.SkladEkran }; // await bridge.ПолучитьСкладIdОстатковMarketplace();
-
-            var номенклатураCodes = requestedCart.Cart.Items.Select(x => x.OfferId.Decode(market.Encoding))
+            var marketplace = await _marketplaceFunctions.GetMarketplaceByFirmaAsync(_defFirmaId, headers.Authorization, cancellationToken);
+            var nomCodes = requestedCart.Cart.Items.Select(x => x.OfferId.Decode(marketplace.Encoding))
                 .Where(x => !string.IsNullOrEmpty(x)).ToList();
-            var НоменклатураList = await bridge.ПолучитьСвободныеОстатки(номенклатураCodes, списокСкладов);
-            
-            var lockedNomIds = await bridge.ПолучитьLockedНоменклатураIds(headers.Authorization, номенклатураCodes);
-            var nomQuantums = await bridge.ПолучитьКвант(номенклатураCodes, cancellationToken);
-            var nomDeltaStock = await bridge.ПолучитьDeltaStock(market.Id, номенклатураCodes, cancellationToken);
-
+            var marketUseData = await _marketplaceFunctions.GetMarketUseInfoForStockAsync(nomCodes, marketplace, false, 0, cancellationToken);
+            var stockData = await _marketplaceFunctions.GetStockData(marketUseData, marketplace, cancellationToken);
             foreach (var requestedItem in requestedCart.Cart.Items)
             {
-                var номенклатура = НоменклатураList.Where(x => x.Code == requestedItem.OfferId.Decode(market.Encoding)).FirstOrDefault();
-                if (номенклатура != null)
+                var result = stockData.FirstOrDefault(x => x.offerId == requestedItem.OfferId).stock;
+                result = Math.Min(requestedItem.Count, result);
+                responseCart.Cart.Items.Add(new ResponseItemFBS
                 {
-                    int МожноОтпустить = 0;
-                    if (!lockedNomIds.Any(x => x == номенклатура.Id))
-                    {
-                        var quantum = (int)nomQuantums.Where(x => x.Key == номенклатура.Id).Select(x => x.Value).FirstOrDefault();
-                        var deltaStock = (int)nomDeltaStock.Where(x => x.Key == номенклатура.Id).Select(x => x.Value).FirstOrDefault();
-                        if (quantum > 1)
-                        {
-                            var запрошеноКвантов = (int)(requestedItem.Count / quantum);
-                            if (запрошеноКвантов > 0)
-                            {
-                                var остатокКвантов = (int)(((номенклатура.Остатки
-                                    .Where(x => x.СкладId == Common.SkladEkran)
-                                    .Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - deltaStock) / quantum);
-                                остатокКвантов = Math.Max(остатокКвантов, 0);
-                                МожноОтпустить = Math.Min(запрошеноКвантов * quantum, остатокКвантов * quantum);
-                            }
-                        }
-                        else
-                        {
-                            var остаток = (int)((номенклатура.Остатки.Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - deltaStock);
-                            остаток = Math.Max(остаток, 0);
-                            МожноОтпустить = Math.Min(requestedItem.Count, остаток);
-                        }
-                    }
-                    responseCart.Cart.Items.Add(new ResponseItemFBS
-                    {
-                        FeedId = requestedItem.FeedId,
-                        OfferId = requestedItem.OfferId,
-                        Count = МожноОтпустить,
-                        Delivery = МожноОтпустить > 0
-                    });
-                }
-                else
-                    responseCart.Cart.Items.Add(new ResponseItemFBS
-                    {
-                        FeedId = requestedItem.FeedId,
-                        OfferId = requestedItem.OfferId,
-                        Count = 0,
-                        Delivery = false
-                    });
+                    FeedId = requestedItem.FeedId,
+                    OfferId = requestedItem.OfferId,
+                    Count = result,
+                    Delivery = result > 0
+                });
             }
+
+            //using IBridge1C bridge = _serviceScopeFactory.CreateScope()
+            //.ServiceProvider.GetService<IBridge1C>();
+
+            //var market = await bridge.ПолучитьМаркет(headers.Authorization, _defFirmaId);
+
+            //List<string> списокСкладов = null;
+            //if (!string.IsNullOrEmpty(market.СкладId))
+            //    списокСкладов = new List<string> { market.СкладId };
+            //else
+            //    списокСкладов = new List<string> { Common.SkladEkran }; // await bridge.ПолучитьСкладIdОстатковMarketplace();
+
+            //var номенклатураCodes = requestedCart.Cart.Items.Select(x => x.OfferId.Decode(market.Encoding))
+            //    .Where(x => !string.IsNullOrEmpty(x)).ToList();
+            //var НоменклатураList = await bridge.ПолучитьСвободныеОстатки(номенклатураCodes, списокСкладов);
+            
+            //var lockedNomIds = await bridge.ПолучитьLockedНоменклатураIds(headers.Authorization, номенклатураCodes);
+            //var nomQuantums = await bridge.ПолучитьКвант(номенклатураCodes, cancellationToken);
+            //var nomDeltaStock = await bridge.ПолучитьDeltaStock(market.Id, номенклатураCodes, cancellationToken);
+
+            //foreach (var requestedItem in requestedCart.Cart.Items)
+            //{
+            //    var номенклатура = НоменклатураList.Where(x => x.Code == requestedItem.OfferId.Decode(market.Encoding)).FirstOrDefault();
+            //    if (номенклатура != null)
+            //    {
+            //        int МожноОтпустить = 0;
+            //        if (!lockedNomIds.Any(x => x == номенклатура.Id))
+            //        {
+            //            var quantum = (int)nomQuantums.Where(x => x.Key == номенклатура.Id).Select(x => x.Value).FirstOrDefault();
+            //            var deltaStock = (int)nomDeltaStock.Where(x => x.Key == номенклатура.Id).Select(x => x.Value).FirstOrDefault();
+            //            if (quantum > 1)
+            //            {
+            //                var запрошеноКвантов = (int)(requestedItem.Count / quantum);
+            //                if (запрошеноКвантов > 0)
+            //                {
+            //                    var остатокКвантов = (int)(((номенклатура.Остатки
+            //                        .Where(x => x.СкладId == Common.SkladEkran)
+            //                        .Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - deltaStock) / quantum);
+            //                    остатокКвантов = Math.Max(остатокКвантов, 0);
+            //                    МожноОтпустить = Math.Min(запрошеноКвантов * quantum, остатокКвантов * quantum);
+            //                }
+            //            }
+            //            else
+            //            {
+            //                var остаток = (int)((номенклатура.Остатки.Sum(x => x.СвободныйОстаток) / номенклатура.Единица.Коэффициент) - deltaStock);
+            //                остаток = Math.Max(остаток, 0);
+            //                МожноОтпустить = Math.Min(requestedItem.Count, остаток);
+            //            }
+            //        }
+            //        responseCart.Cart.Items.Add(new ResponseItemFBS
+            //        {
+            //            FeedId = requestedItem.FeedId,
+            //            OfferId = requestedItem.OfferId,
+            //            Count = МожноОтпустить,
+            //            Delivery = МожноОтпустить > 0
+            //        });
+            //    }
+            //    else
+            //        responseCart.Cart.Items.Add(new ResponseItemFBS
+            //        {
+            //            FeedId = requestedItem.FeedId,
+            //            OfferId = requestedItem.OfferId,
+            //            Count = 0,
+            //            Delivery = false
+            //        });
+            //}
             return Ok(responseCart);
         }
         [HttpPost("stocks")]
@@ -108,69 +128,94 @@ namespace Market.Controllers
         {
             var responseStock = new ResponseStocks();
 
-            using IBridge1C bridge = _serviceScopeFactory.CreateScope()
-                .ServiceProvider.GetService<IBridge1C>();
-
-            var market = await bridge.ПолучитьМаркет(headers.Authorization, _defFirmaId);
-            List<string> списокСкладов = null;
-            if (!string.IsNullOrEmpty(market.СкладId))
-                списокСкладов = new List<string> { market.СкладId };
-            else
-                списокСкладов = new List<string> { Common.SkladEkran }; // await bridge.ПолучитьСкладIdОстатковMarketplace();
-
-            var номенклатураCodes = requestedStock.Skus.Select(x => x.Decode(market.Encoding))
-                .Where(x => !string.IsNullOrEmpty(x))
-                .ToList();
-            var НоменклатураList = await bridge.ПолучитьСвободныеОстатки(номенклатураCodes, списокСкладов);
-            var резервыМаркета = await bridge.ПолучитьРезервМаркета(market.Id, НоменклатураList.Select(x => x.Id));
-
-            var lockedNomIds = await bridge.ПолучитьLockedНоменклатураIds(headers.Authorization, номенклатураCodes);
-            var nomQuantums = await bridge.ПолучитьКвант(номенклатураCodes, cancellationToken);
-            var nomDeltaStock = await bridge.ПолучитьDeltaStock(market.Id, номенклатураCodes, cancellationToken);
-
+            var marketplace = await _marketplaceFunctions.GetMarketplaceByFirmaAsync(_defFirmaId, headers.Authorization, cancellationToken);
+            var nomCodes = requestedStock.Skus.Select(x => x.Decode(marketplace.Encoding))
+                .Where(x => !string.IsNullOrEmpty(x)).ToList();
+            var marketUseData = await _marketplaceFunctions.GetMarketUseInfoForStockAsync(nomCodes, marketplace, false, 0, cancellationToken);
+            var stockData = await _marketplaceFunctions.GetStockData(marketUseData, marketplace, cancellationToken);
             foreach (var requestedSku in requestedStock.Skus)
             {
-                int count = 0;
-                var номенклатура = НоменклатураList.Where(x => x.Code == requestedSku.Decode(market.Encoding))
-                    .FirstOrDefault();
-                if ((номенклатура != null) && !lockedNomIds.Any(x => x == номенклатура.Id))
-                {
-                    резервыМаркета.TryGetValue(номенклатура.Id, out decimal резервМаркета);
-                    var quantum = (int)nomQuantums.Where(x => x.Key == номенклатура.Id).Select(x => x.Value).FirstOrDefault();
-                    var deltaStock = (int)nomDeltaStock.Where(x => x.Key == номенклатура.Id).Select(x => x.Value).FirstOrDefault();
-                    if (quantum > 1)
-                    {
-                        var остатокРегистр = номенклатура.Остатки
-                            .Where(x => x.СкладId == Common.SkladEkran)
-                            .Sum(x => x.СвободныйОстаток);
-                        остатокРегистр += резервМаркета;
-                        var остатокКвантов = (int)(((остатокРегистр / номенклатура.Единица.Коэффициент) - deltaStock) / quantum);
-                        остатокКвантов = Math.Max(остатокКвантов, 0);
-                        count = остатокКвантов * quantum;
-                    }
-                    else
-                    {
-                        var остатокРегистр = номенклатура.Остатки.Sum(x => x.СвободныйОстаток);
-                        остатокРегистр += резервМаркета;
-                        count = (int)(остатокРегистр / номенклатура.Единица.Коэффициент) - deltaStock;
-                        count = Math.Max(count, 0);
-                    }
-                }
-                responseStock.Skus.Add(new SkuEntry 
+                var result = stockData.FirstOrDefault(x => x.offerId == requestedSku).stock;
+                result = Math.Max(result, 0);
+                responseStock.Skus.Add(new SkuEntry
                 {
                     Sku = requestedSku,
                     WarehouseId = requestedStock.WarehouseId,
-                    Items = new List<SkuItem> 
+                    Items = new List<SkuItem>
                     {
                         new SkuItem
                         {
                             Type = ItemType.FIT,
-                            Count = count.ToString(),
+                            Count = result.ToString(),
                             UpdatedAt = DateTime.Now
                         }
                     }
                 });
             }
+
+            //using IBridge1C bridge = _serviceScopeFactory.CreateScope()
+            //    .ServiceProvider.GetService<IBridge1C>();
+
+            //var market = await bridge.ПолучитьМаркет(headers.Authorization, _defFirmaId);
+            //List<string> списокСкладов = null;
+            //if (!string.IsNullOrEmpty(market.СкладId))
+            //    списокСкладов = new List<string> { market.СкладId };
+            //else
+            //    списокСкладов = new List<string> { Common.SkladEkran }; // await bridge.ПолучитьСкладIdОстатковMarketplace();
+
+            //var номенклатураCodes = requestedStock.Skus.Select(x => x.Decode(market.Encoding))
+            //    .Where(x => !string.IsNullOrEmpty(x))
+            //    .ToList();
+            //var НоменклатураList = await bridge.ПолучитьСвободныеОстатки(номенклатураCodes, списокСкладов);
+            //var резервыМаркета = await bridge.ПолучитьРезервМаркета(market.Id, НоменклатураList.Select(x => x.Id));
+
+            //var lockedNomIds = await bridge.ПолучитьLockedНоменклатураIds(headers.Authorization, номенклатураCodes);
+            //var nomQuantums = await bridge.ПолучитьКвант(номенклатураCodes, cancellationToken);
+            //var nomDeltaStock = await bridge.ПолучитьDeltaStock(market.Id, номенклатураCodes, cancellationToken);
+
+            //foreach (var requestedSku in requestedStock.Skus)
+            //{
+            //    int count = 0;
+            //    var номенклатура = НоменклатураList.Where(x => x.Code == requestedSku.Decode(market.Encoding))
+            //        .FirstOrDefault();
+            //    if ((номенклатура != null) && !lockedNomIds.Any(x => x == номенклатура.Id))
+            //    {
+            //        резервыМаркета.TryGetValue(номенклатура.Id, out decimal резервМаркета);
+            //        var quantum = (int)nomQuantums.Where(x => x.Key == номенклатура.Id).Select(x => x.Value).FirstOrDefault();
+            //        var deltaStock = (int)nomDeltaStock.Where(x => x.Key == номенклатура.Id).Select(x => x.Value).FirstOrDefault();
+            //        if (quantum > 1)
+            //        {
+            //            var остатокРегистр = номенклатура.Остатки
+            //                .Where(x => x.СкладId == Common.SkladEkran)
+            //                .Sum(x => x.СвободныйОстаток);
+            //            остатокРегистр += резервМаркета;
+            //            var остатокКвантов = (int)(((остатокРегистр / номенклатура.Единица.Коэффициент) - deltaStock) / quantum);
+            //            остатокКвантов = Math.Max(остатокКвантов, 0);
+            //            count = остатокКвантов * quantum;
+            //        }
+            //        else
+            //        {
+            //            var остатокРегистр = номенклатура.Остатки.Sum(x => x.СвободныйОстаток);
+            //            остатокРегистр += резервМаркета;
+            //            count = (int)(остатокРегистр / номенклатура.Единица.Коэффициент) - deltaStock;
+            //            count = Math.Max(count, 0);
+            //        }
+            //    }
+            //    responseStock.Skus.Add(new SkuEntry 
+            //    {
+            //        Sku = requestedSku,
+            //        WarehouseId = requestedStock.WarehouseId,
+            //        Items = new List<SkuItem> 
+            //        {
+            //            new SkuItem
+            //            {
+            //                Type = ItemType.FIT,
+            //                Count = count.ToString(),
+            //                UpdatedAt = DateTime.Now
+            //            }
+            //        }
+            //    });
+            //}
             return Ok(responseStock);
         }
         [HttpPost("order/accept")]

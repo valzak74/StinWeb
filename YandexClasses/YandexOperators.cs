@@ -173,6 +173,27 @@ namespace YandexClasses
                 cancellationToken);
             return (Orders: result.Item2?.Orders, NextPage: result.Item2?.Pager?.CurrentPage < result.Item2?.Pager?.PagesCount);
         }
+        public static async Task<(List<OrdersStatsOrder> Orders, string NextPageToken)> OrdersStats(IHttpService httpService,
+            string proxyHost,
+            string campaignId,
+            string clientId,
+            string authToken,
+            string status,
+            DateTime fromDate,
+            string pageToken,
+            CancellationToken cancellationToken)
+        {
+            var queryString = string.IsNullOrEmpty(pageToken) ? "" : $"?page_token={pageToken}";
+            var request = new StatsOrdersRequest { DateFrom = fromDate, Statuses = new List<StatusYandex> { (StatusYandex)Enum.Parse(typeof(StatusYandex), status) } };
+            var result = await Exchange<StatsOrdersResponse>(httpService,
+                $"https://{proxyHost}api.partner.market.yandex.ru/campaigns/{campaignId}/stats/orders{queryString}",
+                HttpMethod.Post,
+                clientId,
+                authToken,
+                request,
+                cancellationToken);
+            return (Orders: result.Item2?.Result?.Orders, NextPageToken: result.Item2?.Result?.Paging?.NextPageToken);
+        }
         public static async Task<Tuple<bool, string>> UpdateOfferEntries(IHttpService httpService, string proxyHost, string campaignId, string clientId, string authToken, List<OfferMappingEntry> data, CancellationToken cancellationToken)
         {
             var request = new OfferMappingUpdateRequest { OfferMappingEntries = data };

@@ -11,7 +11,7 @@ using Polly;
 using Polly.Extensions.Http;
 using HttpExtensions;
 using StinClasses.Справочники.Functions;
-using StinClasses.Регистры.Functions;
+using StinClasses.Регистры;
 
 namespace Refresher1C
 {
@@ -49,11 +49,13 @@ namespace Refresher1C
                 services.AddScoped<IFirmaFunctions, FirmaFunctions>();
                 services.AddScoped<IMarketplaceFunctions, MarketplaceFunctions>();
                 services.AddScoped<INomenklaturaFunctions, NomenklaturaFunctions>();
+                services.AddScoped<IOrderFunctions, OrderFunctions>();
+                services.AddScoped<IWildberriesHelper, WildberriesHelper>();
 
-                services.AddScoped<IRegistrОстаткиТМЦ, RegistrОстаткиТМЦ>();
-                services.AddScoped<IRegistrРезервыТМЦ, RegistrРезервыТМЦ>();
-                services.AddScoped<IRegistrСтопЛистЗЧ, RegistrСтопЛистЗЧ>();
-                services.AddScoped<IRegistrНаборНаСкладе, RegistrНаборНаСкладе>();
+                services.AddScoped<IРегистрОстаткиТМЦ, Регистр_ОстаткиТМЦ>();
+                services.AddScoped<IРегистрРезервыТМЦ, Регистр_РезервыТМЦ>();
+                services.AddScoped<IРегистрСтопЛистЗЧ, Регистр_СтопЛистЗЧ>();
+                services.AddScoped<IРегистрНаборНаСкладе, Регистр_НаборНаСкладе>();
 
                 if (configuration.GetSection("YouKassa:enable").Get<bool>())
                 {

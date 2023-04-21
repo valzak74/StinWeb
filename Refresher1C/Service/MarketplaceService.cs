@@ -16,6 +16,8 @@ using System.Data;
 using System.IO;
 using System.Collections;
 using System.Xml.Linq;
+using Microsoft.Extensions.DependencyInjection;
+using StinClasses.Справочники.Functions;
 
 namespace Refresher1C.Service
 {
@@ -26,6 +28,7 @@ namespace Refresher1C.Service
         private readonly ILogger<MarketplaceService> _logger;
         private IHttpService _httpService;
         private IDocCreateOrUpdate _docService;
+        IServiceProvider _serviceProvider;
 
         private readonly Dictionary<string, string> _firmProxy;
         private readonly List<SleepPeriod> _sleepPeriods;
@@ -66,10 +69,12 @@ namespace Refresher1C.Service
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-        public MarketplaceService(IConfiguration configuration, ILogger<MarketplaceService> logger, IDocCreateOrUpdate docService, StinDbContext context, IHttpService httpService)
+        public MarketplaceService(IConfiguration configuration, ILogger<MarketplaceService> logger, IDocCreateOrUpdate docService, StinDbContext context, IHttpService httpService,
+            IServiceProvider serviceProvider)
         {
             _logger = logger;
             _docService = docService;
+            _serviceProvider = serviceProvider;
             _httpService = httpService;
             _context = context;
             _configuration = configuration;
@@ -2401,6 +2406,7 @@ namespace Refresher1C.Service
             {
                 _logger.LogError("RefreshSlowOrders : " + ex.Message);
             }
+            //_logger.LogError("Done");
         }
         private async Task GetSberOrders(string authToken, string marketplaceId, string authorization,
             string firmaId, string customerId, string dogovorId, EncodeVersion encoding,
@@ -2956,6 +2962,9 @@ namespace Refresher1C.Service
             if (!string.IsNullOrEmpty(result.error))
                 _logger.LogError(result.error);
             if (result.data?.Orders?.Count > 0)
+            {
+                using var scope = _serviceProvider.CreateScope();
+                var wbHelper = scope.ServiceProvider.GetRequiredService<IWildberriesHelper>();
                 foreach (var wbOrder in result.data.Orders)
                 {
                     var order = await _order.ПолучитьOrderByMarketplaceId(id, wbOrder.Id.ToString());
@@ -3010,12 +3019,14 @@ namespace Refresher1C.Service
                                 _logger.LogError("Wb order: " + wbOrder.Id.ToString() + " can't be cancelled");
                             continue;
                         }
-                        if (!TimeSpan.TryParse("09:00", out TimeSpan limitTime))
+                        DateTime shipmentDate = await wbHelper.GetActiveSupplyShipmentDate(_firmProxy[firmaId], authToken, id, stoppingToken);
+                        if (shipmentDate <= Common.min1cDate)
                         {
-                            limitTime = TimeSpan.MinValue;
+                            if (!TimeSpan.TryParse("09:00", out TimeSpan limitTime))
+                                limitTime = TimeSpan.MinValue;
+                            var leavingDate = DateTime.Now.TimeOfDay > limitTime ? 1 : 0;
+                            shipmentDate = DateTime.Today.AddDays(await _склад.ЭтоРабочийДень(Common.SkladEkran, leavingDate));
                         }
-                        var leavingDate = DateTime.Now.TimeOfDay > limitTime ? 1 : 0;
-                        DateTime shipmentDate = DateTime.Today.AddDays(await _склад.ЭтоРабочийДень(Common.SkladEkran, leavingDate));
                         string deliveryServiceName = ""; //wbOrder.ScOfficesNames.FirstOrDefault() ?? string.Empty;
                         var address = new OrderRecipientAddress
                         {
@@ -3058,6 +3069,7 @@ namespace Refresher1C.Service
                            stoppingToken);
                     }
                 }
+            }
         }
         private async Task RefreshWbOrders(string authToken, string marketplaceId, string firmaId, CancellationToken cancellationToken)
         {
@@ -3361,22 +3373,22 @@ namespace Refresher1C.Service
         }
         private async Task GetYandexDeliveredOrders(string campaignId, string clientId, string authToken, string marketplaceId, string firmaId, CancellationToken cancellationToken)
         {
-            int pageNumber = 0;
+            string pageToken = "";
             bool nextPage = true;
             while (nextPage)
             {
-                pageNumber++;
                 nextPage = false;
-                var result = await YandexClasses.YandexOperators.OrdersList(_httpService,
+                var result = await YandexClasses.YandexOperators.OrdersStats(_httpService,
                     _firmProxy[firmaId],
                     campaignId,
                     clientId,
                     authToken,
                     "DELIVERED",
-                    DateTime.Today.AddDays(-30),
-                    pageNumber,
+                    DateTime.Today.AddDays(-60),
+                    pageToken,
                     cancellationToken);
-                nextPage = result.NextPage;
+                pageToken = result.NextPageToken;
+                nextPage = !string.IsNullOrEmpty(pageToken);
                 if (result.Orders?.Count > 0)
                 {
                     foreach (var detailOrder in result.Orders)
@@ -3390,6 +3402,35 @@ namespace Refresher1C.Service
                     }
                 }
             }
+            //int pageNumber = 0;
+            //bool nextPage = true;
+            //while (nextPage)
+            //{
+            //    pageNumber++;
+            //    nextPage = false;
+            //    var result = await YandexClasses.YandexOperators.OrdersList(_httpService,
+            //        _firmProxy[firmaId],
+            //        campaignId,
+            //        clientId,
+            //        authToken,
+            //        "DELIVERED",
+            //        DateTime.Today.AddDays(-60),
+            //        pageNumber,
+            //        cancellationToken);
+            //    nextPage = result.NextPage;
+            //    if (result.Orders?.Count > 0)
+            //    {
+            //        foreach (var detailOrder in result.Orders)
+            //        {
+            //            var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, detailOrder.Id.ToString());
+            //            if ((order != null) && (detailOrder.Status == YandexClasses.StatusYandex.DELIVERED) &&
+            //                (order.InternalStatus == 14))
+            //            {
+            //                await _docService.OrderFromTransferDeliveried(order);
+            //            }
+            //        }
+            //    }
+            //}
         }
         private async Task GetYandexNewDeliveringOrders(string campaignId, string clientId, string authToken, string authorization,
             string marketplaceId,
@@ -3734,7 +3775,7 @@ namespace Refresher1C.Service
         private async Task GetOzonDeliveredOrders(string marketplaceId, string firmaId, string clientId, string authToken, CancellationToken stoppingToken)
         {
             var activeOrders = await _context.Sc13994s
-                .Where(x => (x.Sp13982 == 14) &&
+                .Where(x => ((x.Sp13982 == 14) || (x.Sp13982 == 16)) &&
                     ((StinDeliveryPartnerType)x.Sp13985 == StinDeliveryPartnerType.OZON_LOGISTIC) &&
                     (x.Sp14038 == marketplaceId))
                 .Select(x => x.Code.Trim())
