@@ -20,13 +20,6 @@ namespace StinClasses.Справочники
     }
     public class СкладExtended : RefBook
     {
-        public СкладExtended(RefBook refBook)
-        {
-            Id = refBook.Id;
-            Code = refBook.Code;
-            Наименование = refBook.Наименование;
-            Deleted = refBook.Deleted;
-        }
         public bool SaturdayOn { get; set;}
         public bool SundayOn { get; set;}
     }

@@ -2,7 +2,9 @@
 using JsonExtensions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -178,13 +180,19 @@ namespace YandexClasses
             string campaignId,
             string clientId,
             string authToken,
-            string status,
+            IEnumerable<string> statuses,
             DateTime fromDate,
+            int limit,
             string pageToken,
             CancellationToken cancellationToken)
         {
-            var queryString = string.IsNullOrEmpty(pageToken) ? "" : $"?page_token={pageToken}";
-            var request = new StatsOrdersRequest { DateFrom = fromDate, Statuses = new List<StatusYandex> { (StatusYandex)Enum.Parse(typeof(StatusYandex), status) } };
+            if (limit <= 0)
+                limit = 200;
+            var sb = new StringBuilder($"?limit={limit}");
+            if (!string.IsNullOrEmpty(pageToken))
+                sb.Append($"&page_token={pageToken}");
+            var queryString = sb.ToString();
+            var request = new StatsOrdersRequest { DateFrom = fromDate, Statuses = statuses.Select(x => (StatusYandex)Enum.Parse(typeof(StatusYandex), x)).ToList() };
             var result = await Exchange<StatsOrdersResponse>(httpService,
                 $"https://{proxyHost}api.partner.market.yandex.ru/campaigns/{campaignId}/stats/orders{queryString}",
                 HttpMethod.Post,
@@ -193,6 +201,33 @@ namespace YandexClasses
                 request,
                 cancellationToken);
             return (Orders: result.Item2?.Result?.Orders, NextPageToken: result.Item2?.Result?.Paging?.NextPageToken);
+        }
+        public static async Task<(Return[] Returns, string NextPageToken)> OrderReturns(IHttpService httpService,
+            string proxyHost,
+            string campaignId,
+            string clientId,
+            string authToken,
+            DateTime fromDate,
+            int limit,
+            string pageToken,
+            CancellationToken cancellationToken)
+        {
+            if (limit <= 0)
+                limit = 200;
+            var sb = new StringBuilder($"?limit={limit}");
+            if (fromDate > DateTime.MinValue)
+                sb.Append($"&from_date={fromDate.ToString("yyyy-MM-dd")}");
+            if (!string.IsNullOrEmpty(pageToken))
+                sb.Append($"&page_token={pageToken}");
+            var queryString = sb.ToString();
+            var result = await Exchange<ReturnsResponse>(httpService,
+                $"https://{proxyHost}api.partner.market.yandex.ru/campaigns/{campaignId}/returns{queryString}",
+                HttpMethod.Get,
+                clientId,
+                authToken,
+                null,
+                cancellationToken);
+            return (Returns: result.Item2?.Result?.Returns, NextPageToken: result.Item2?.Result?.Paging?.NextPageToken);
         }
         public static async Task<Tuple<bool, string>> UpdateOfferEntries(IHttpService httpService, string proxyHost, string campaignId, string clientId, string authToken, List<OfferMappingEntry> data, CancellationToken cancellationToken)
         {

@@ -17,8 +17,9 @@ namespace StinClasses.Справочники
         public override bool Equals(object obj)
         {
             if (obj == null) return false;
-            if (!(obj is RefBook)) return false;
-            return GetHashCode() == obj.GetHashCode();
+            if (obj is RefBook refBook)
+                return (BookType36 == refBook.BookType36) && (Id == refBook.Id);
+            return false;
         }
         public override int GetHashCode()
         {

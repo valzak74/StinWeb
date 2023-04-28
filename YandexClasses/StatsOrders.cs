@@ -43,7 +43,7 @@ namespace YandexClasses
         [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd")]
         public DateTime? CreationDate { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:ss")]
+        [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:ss.fffzzz")]
         public DateTime? StatusUpdateDate { get; set; }
         public StatusYandex Status { get; set; }
         public string PartnerOrderId { get; set; }
@@ -140,7 +140,7 @@ namespace YandexClasses
     }
     [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]
     public enum OrderStatsCommissionType
-        {
+    {
         NotFound = -1,
         AGENCY = 0,
         FEE = 1,

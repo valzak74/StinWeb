@@ -17,7 +17,6 @@ using System.IO;
 using System.Collections;
 using System.Xml.Linq;
 using Microsoft.Extensions.DependencyInjection;
-using StinClasses.Справочники.Functions;
 
 namespace Refresher1C.Service
 {
@@ -365,7 +364,7 @@ namespace Refresher1C.Service
                                   join binary in _context.VzOrderBinaries.Where(x => x.Extension.Trim().ToUpper() == "LABELS") on order.Id equals binary.Id into _binary
                                   from binary in _binary.DefaultIfEmpty()
                                   where //order.Code.Trim() == "2301258054266676" &&
-                                        (regular ? ((order.Sp13982 == 1) || (order.Sp13982 == 3)) : (order.Sp13982 == -2)) && //order статус = 1 (грузовые места сформированы)
+                                        (regular ? ((order.Sp13982 == 1) || (order.Sp13982 == 2) || (order.Sp13982 == 3)) : (order.Sp13982 == -2)) && //order статус = 1 (грузовые места сформированы)
                                         (((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.YANDEX_MARKET) ||
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.SBER_MEGA_MARKET) ||
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.ALIEXPRESS_LOGISTIC) ||
@@ -2345,6 +2344,7 @@ namespace Refresher1C.Service
                                             //&& (market.Code.Trim() == "22498162235000")
                                             //&& (market.Code.Trim() == "23503334320000")
                                             //&& (market.Code.Trim() == "45715133")
+                                            
                                             select new
                                             {
                                                 Id = market.Id,
@@ -2376,9 +2376,11 @@ namespace Refresher1C.Service
                     {
                         await GetYandexNewDeliveringOrders(marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Authorization, marketplace.Id,
                             marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId, marketplace.Encoding, stoppingToken);
-                        await GetYandexCancelOrders(marketplace.FirmaId, marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Id, stoppingToken);
-                        if (periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
-                            await GetYandexDeliveredOrders(marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Id, marketplace.FirmaId, stoppingToken);
+                        await GetYandexOrders(periodOpened, marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Id,
+                            marketplace.FirmaId, stoppingToken);
+                        //await GetYandexCancelOrders(marketplace.FirmaId, marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Id, stoppingToken);
+                        //if (periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                        //    await GetYandexDeliveredOrders(marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Id, marketplace.FirmaId, stoppingToken);
                     }
                     else if (marketplace.Тип == "ALIEXPRESS")
                     {
@@ -2392,7 +2394,7 @@ namespace Refresher1C.Service
                     }
                     else if (marketplace.Тип == "SBER")
                     {
-                        await GetSberOrders(marketplace.AuthToken, marketplace.Id, marketplace.Authorization,
+                        await GetSberOrders(periodOpened, marketplace.AuthToken, marketplace.Id, marketplace.Authorization,
                             marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId, marketplace.Encoding,
                             stoppingToken);
                     }
@@ -2408,11 +2410,61 @@ namespace Refresher1C.Service
             }
             //_logger.LogError("Done");
         }
-        private async Task GetSberOrders(string authToken, string marketplaceId, string authorization,
+        async Task GetYandexOrders(bool periodOpened, string campaignId, string clientId, string authToken, string marketplaceId,
+            string firmaId, CancellationToken cancellationToken)
+        {
+            string pageToken = "";
+            bool nextPage = true;
+            while (nextPage)
+            {
+                nextPage = false;
+                var result = await YandexClasses.YandexOperators.OrdersStats(_httpService,
+                    _firmProxy[firmaId],
+                    campaignId,
+                    clientId,
+                    authToken,
+                    new List<string> { "DELIVERY", "DELIVERED", "CANCELLED_IN_PROCESSING" },
+                    DateTime.Today.AddDays(-60),
+                    200,
+                    pageToken,
+                    cancellationToken);
+                pageToken = result.NextPageToken;
+                nextPage = !string.IsNullOrEmpty(pageToken);
+                if (result.Orders?.Count > 0)
+                {
+                    var readyToShipOrders = await ActiveOrders(marketplaceId, cancellationToken);
+                    foreach (var detailOrder in result.Orders)
+                    {
+                        var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, detailOrder.Id.ToString());
+                        if (order != null)
+                        {
+                            switch (detailOrder.Status)
+                            {
+                                case YandexClasses.StatusYandex.CANCELLED_IN_PROCESSING:
+                                    if ((order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14) && (order.InternalStatus != 16))
+                                        await _docService.OrderCancelled(order);
+                                    break;
+                                case YandexClasses.StatusYandex.DELIVERY:
+                                    TimeSpan ts = DateTime.Now - (detailOrder.StatusUpdateDate ?? DateTime.MinValue);
+                                    if ((ts.TotalMinutes > 10) && readyToShipOrders.Contains(detailOrder.Id.ToString()) && 
+                                        (order.DeliveryPartnerType != StinDeliveryPartnerType.SHOP) &&
+                                        (order.InternalStatus < 14) && (order.InternalStatus != 6) && (order.InternalStatus != 5) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                                        await _docService.OrderDeliveried(order, true);
+                                    break;
+                                case YandexClasses.StatusYandex.DELIVERED:
+                                    if (((order.InternalStatus == 14) || (order.InternalStatus == 16)) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                                        await _docService.OrderFromTransferDeliveried(order);
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        async Task GetSberOrders(bool periodOpened, string authToken, string marketplaceId, string authorization,
             string firmaId, string customerId, string dogovorId, EncodeVersion encoding,
             CancellationToken cancellationToken)
         {
-            bool periodOpened = !_заявкаПокупателя.NeedToOpenPeriod();
             var orderListResult = await SberClasses.Functions.SearchOrders(_httpService, _firmProxy[firmaId], authToken, cancellationToken);
             if (!string.IsNullOrEmpty(orderListResult.error))
                 _logger.LogError(orderListResult.error);
@@ -2515,7 +2567,7 @@ namespace Refresher1C.Service
                     else
                     {
                         if (sberOrder.Items.Any(x => x.Status == SberClasses.SberStatus.CUSTOMER_CANCELED) &&
-                                (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14))
+                                (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14) && (order.InternalStatus != 16))
                             await _docService.OrderCancelled(order);
                         else if (readyToShipOrders.Contains(sberOrder.ShipmentId) && (sberOrder.Items?.All(x => x.Status == SberClasses.SberStatus.SHIPPED) ?? false) &&
                             (order.InternalStatus < 14) && (order.InternalStatus != 6) && (order.InternalStatus != 5) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
@@ -2523,7 +2575,7 @@ namespace Refresher1C.Service
                             await _docService.OrderDeliveried(order, true);
                         }
                         else if ((sberOrder.Items?.All(x => x.Status == SberClasses.SberStatus.DELIVERED) ?? false) &&
-                            (order.InternalStatus == 14) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                            ((order.InternalStatus == 14) || (order.InternalStatus == 16)) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                         {
                             await _docService.OrderFromTransferDeliveried(order);
                         }
@@ -2735,7 +2787,7 @@ namespace Refresher1C.Service
                                  (aliOrder.Finish_reason == "AutoConfirm") ||
                                  (aliOrder.Finish_reason == "ConfirmedByLogistic"))) || 
                                 ((aliOrder.Logistic_orders?.Count > 0) && (aliOrder.Logistic_orders?.All(x => logisticsDelivered.Contains(x.Status)) ?? false))) &&
-                                (order.InternalStatus == 14) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                                ((order.InternalStatus == 14) || (order.InternalStatus == 16)) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                             {
                                 await _docService.OrderFromTransferDeliveried(order);
                             }
@@ -2772,7 +2824,7 @@ namespace Refresher1C.Service
                                 (aliOrder.Finish_reason == "BuyerChangeLogistic") || (aliOrder.Finish_reason == "BuyerCannotPayment") ||
                                 (aliOrder.Finish_reason == "BuyerOtherReasons") || (aliOrder.Finish_reason == "BuyerCannotContactSeller") ||
                                 (aliOrder.Finish_reason == "BuyerChangeCoupon") || (aliOrder.Finish_reason == "BuyerChangeMailAddress")) &&
-                                (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus < 14))
+                                (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14) && (order.InternalStatus != 16))
                             {
                                 await _docService.OrderCancelled(order);
                             }
@@ -3094,7 +3146,7 @@ namespace Refresher1C.Service
                     foreach (var wbOrderId in cancelOrderIds) 
                     {
                         var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, wbOrderId.ToString());
-                        if ((order != null) && (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14))
+                        if ((order != null) && (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14) && (order.InternalStatus != 16))
                             await _docService.OrderCancelled(order);
                     }
                     if (periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
@@ -3112,7 +3164,7 @@ namespace Refresher1C.Service
                         foreach (var wbOrderId in deliveredOrderIds)
                         {
                             var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, wbOrderId.ToString());
-                            if ((order != null) && (order.InternalStatus == 14))
+                            if ((order != null) && ((order.InternalStatus == 14) || (order.InternalStatus == 16)))
                                 await _docService.OrderFromTransferDeliveried(order);
                         }
                     }
@@ -3383,8 +3435,9 @@ namespace Refresher1C.Service
                     campaignId,
                     clientId,
                     authToken,
-                    "DELIVERED",
+                    new List<string> { "DELIVERED" },
                     DateTime.Today.AddDays(-60),
+                    200,
                     pageToken,
                     cancellationToken);
                 pageToken = result.NextPageToken;
@@ -3599,42 +3652,42 @@ namespace Refresher1C.Service
                     }
                 }
             }
-            pageNumber = 0;
-            nextPage = true;
-            while (nextPage)
-            {
-                pageNumber++;
-                nextPage = false;
-                var result = await YandexClasses.YandexOperators.OrdersList(_httpService,
-                    _firmProxy[firmaId],
-                    campaignId,
-                    clientId,
-                    authToken,
-                    "DELIVERY",
-                    DateTime.Today.AddDays(-30),
-                    pageNumber,
-                    cancellationToken);
-                nextPage = result.NextPage;
-                if (result.Orders?.Count > 0)
-                {
-                    foreach (var detailOrder in result.Orders)
-                    {
-                        TimeSpan ts = DateTime.Now - detailOrder.CreationDate.AddHours(1);
-                        if (ts.TotalMinutes > 10)
-                        {
-                            var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, detailOrder.Id.ToString());
-                            if ((order != null) && (readyToShipOrders.Contains(detailOrder.Id.ToString()) &&
-                                (detailOrder.Status == YandexClasses.StatusYandex.DELIVERY) &&
-                                (order.DeliveryPartnerType != StinDeliveryPartnerType.SHOP) &&
-                                (order.InternalStatus < 14) && (order.InternalStatus != 6) && (order.InternalStatus != 5) && 
-                                periodOpened && !_sleepPeriods.Any(x => x.IsSleeping())))
-                            { 
-                                    await _docService.OrderDeliveried(order, true);
-                            }
-                        }
-                    }
-                }
-            }
+            //pageNumber = 0;
+            //nextPage = true;
+            //while (nextPage)
+            //{
+            //    pageNumber++;
+            //    nextPage = false;
+            //    var result = await YandexClasses.YandexOperators.OrdersList(_httpService,
+            //        _firmProxy[firmaId],
+            //        campaignId,
+            //        clientId,
+            //        authToken,
+            //        "DELIVERY",
+            //        DateTime.Today.AddDays(-30),
+            //        pageNumber,
+            //        cancellationToken);
+            //    nextPage = result.NextPage;
+            //    if (result.Orders?.Count > 0)
+            //    {
+            //        foreach (var detailOrder in result.Orders)
+            //        {
+            //            TimeSpan ts = DateTime.Now - detailOrder.CreationDate.AddHours(1);
+            //            if (ts.TotalMinutes > 10)
+            //            {
+            //                var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, detailOrder.Id.ToString());
+            //                if ((order != null) && (readyToShipOrders.Contains(detailOrder.Id.ToString()) &&
+            //                    (detailOrder.Status == YandexClasses.StatusYandex.DELIVERY) &&
+            //                    (order.DeliveryPartnerType != StinDeliveryPartnerType.SHOP) &&
+            //                    (order.InternalStatus < 14) && (order.InternalStatus != 6) && (order.InternalStatus != 5) && 
+            //                    periodOpened && !_sleepPeriods.Any(x => x.IsSleeping())))
+            //                { 
+            //                        await _docService.OrderDeliveried(order, true);
+            //                }
+            //            }
+            //        }
+            //    }
+            //}
         }
         private async Task GetYandexCancelOrders(string firmaId, string campaignId, string clientId, string authToken, string marketplaceId, CancellationToken cancellationToken)
         {
@@ -3695,7 +3748,7 @@ namespace Refresher1C.Service
             var orders = await GetOzonDetailOrders(_firmProxy[firmaId], clientId, authToken, id, OzonClasses.OrderStatus.cancelled, stoppingToken);
             foreach (var order in orders)
             {
-                if ((order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14))
+                if ((order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14) && (order.InternalStatus != 16))
                 {
                     await _docService.OrderCancelled(order);
                 }
@@ -3827,7 +3880,7 @@ namespace Refresher1C.Service
             {
                 var marketplaceIds = await (from market in _context.Sc14042s
                                             where !market.Ismark
-                                                //&& market.Code.Trim() == "3530297616"
+                                                //&& market.Code.Trim() == "22498162235000"
                                             //&& market.Sp14155.Trim().ToUpper() == "OZON" 
                                             //&& market.Sp14155.Trim().ToUpper() == "WILDBERRIES"
                                             //&& market.Code.Trim() == "23005267" // Yandex DBS
@@ -3946,29 +3999,73 @@ namespace Refresher1C.Service
                     {
                         var КоэфМинНаценки = 10; // 
                         var Порог = (double)(item.ЦенаЗакуп * item.Квант) * (100 + КоэфМинНаценки) / 100;
-                        var c_saleType = komis.Percent / 100;
-                        double minPrice = Порог / (1 - c_saleType);
-                        double c_weight = 0;
-                        var tariffLight = (percent: 3.0, limMin: 50.0, limMax: 500.0);
-                        var tariffHard = (percent: 3.0, limMin: 500.0, limMax: 1000.0);
-                        var tariff = komis.Weight > 25 ? tariffHard : tariffLight;
-                        c_weight = tariff.percent / 100;
-                        var c_delivery = minPrice * c_weight;
-                        if (c_delivery < tariff.limMin)
-                            minPrice += tariff.limMin;
-                        else if (c_delivery > tariff.limMax)
-                            minPrice += tariff.limMax;
-                        else
-                            minPrice += c_delivery;
-                        minPrice += 10; //за прием заказов в СЦ (фиксированная 10 руб за отправление)
+                        var fixSort = 10d; //за сортировку 10 руб
+                        var fixProgLoyalnost = 1d; //программа лояльности 1 руб 
+                        var c_category = komis.Percent / 100;
+                        var c_transaction = 1.8 / 100; //1.8% 
+                        var tariffLogistics = (percent: 1.0, limMin: 30.0, limMax: 280.0);
+                        var fixLogistics = 0d;
+                        var c_logistics = tariffLogistics.percent / 100;
                         var tariffLastMile = (percent: 4.0, limMin: 30.0, limMax: 215.0);
-                        var c_deliveryLastMile = minPrice * tariffLastMile.percent / 100;
-                        if (c_deliveryLastMile < tariffLastMile.limMin)
-                            minPrice += tariffLastMile.limMin;
-                        else if (c_deliveryLastMile > tariffLastMile.limMax)
-                            minPrice += tariffLastMile.limMax;
-                        else
-                            minPrice += c_deliveryLastMile;
+                        var fixLastMile = 0d;
+                        var c_lastmile = tariffLastMile.percent / 100;
+                        double minPrice = (Порог + fixProgLoyalnost + fixSort + fixLogistics + fixLastMile) / (1 - c_category - c_transaction - c_logistics - c_lastmile);
+                        var limits = LimitValues(tariffLogistics, tariffLastMile, minPrice);
+                        foreach (var limit in limits)
+                        {
+                            switch (limit.Key)
+                            {
+                                case "MaxWeightLimit":
+                                    if (minPrice > limit.Value)
+                                    {
+                                        fixLogistics = tariffLogistics.limMax;
+                                        c_logistics = 0;
+                                    }
+                                    break;
+                                case "MaxLastMileLimit":
+                                    if (minPrice > limit.Value)
+                                    {
+                                        fixLastMile = tariffLastMile.limMax;
+                                        c_lastmile = 0;
+                                    }
+                                    break;
+                                case "MinWeightLimit":
+                                    if (minPrice < limit.Value)
+                                    {
+                                        fixLogistics = tariffLogistics.limMin;
+                                        c_logistics = 0;
+                                    }
+                                    break;
+                                case "MinLastMileLimit":
+                                    if (minPrice < limit.Value)
+                                    {
+                                        fixLastMile = tariffLastMile.limMin;
+                                        c_lastmile = 0;
+                                    }
+                                    break;
+                            }
+                            minPrice = (Порог + fixProgLoyalnost + fixSort + fixLogistics + fixLastMile) / (1 - c_category - c_transaction - c_logistics - c_lastmile);
+                        }
+                        //double c_weight = 0;
+                        //var tariffLight = (percent: 3.0, limMin: 50.0, limMax: 500.0);
+                        //var tariffHard = (percent: 3.0, limMin: 500.0, limMax: 1000.0);
+                        //var tariff = komis.Weight > 25 ? tariffHard : tariffLight;
+                        //c_weight = tariff.percent / 100;
+                        //var c_delivery = minPrice * c_weight;
+                        //if (c_delivery < tariff.limMin)
+                        //    minPrice += tariff.limMin;
+                        //else if (c_delivery > tariff.limMax)
+                        //    minPrice += tariff.limMax;
+                        //else
+                        //    minPrice += c_delivery;
+                        //minPrice += 10; //за прием заказов в СЦ (фиксированная 10 руб за отправление)
+                        //var c_deliveryLastMile = minPrice * tariffLastMile.percent / 100;
+                        //if (c_deliveryLastMile < tariffLastMile.limMin)
+                        //    minPrice += tariffLastMile.limMin;
+                        //else if (c_deliveryLastMile > tariffLastMile.limMax)
+                        //    minPrice += tariffLastMile.limMax;
+                        //else
+                        //    minPrice += c_deliveryLastMile;
 
                         decimal updateMinPrice = decimal.Round((decimal)minPrice / item.Квант, 2, MidpointRounding.AwayFromZero);
                         if (updateMinPrice != entity.Sp14198)
@@ -4234,6 +4331,11 @@ namespace Refresher1C.Service
                                 }
                                 else
                                 {
+                                    var fixFeeLight = 0d;
+                                    var fixFeeLight_OutBorder = 0d;
+                                    var c_feeLight = shipmentFeeLightPercent / 100;
+                                    var c_feeLightOutBorder = shipmentFeeLightPercent_OutBorder / 100;
+                                    minPrice = (Порог + tariffPerOrder + fixFeeLight_OutBorder + fixFeeLight) / (1 - sumPercentTariffs - c_feeLight - c_feeLightOutBorder);
                                     Dictionary<string, double> limits = new Dictionary<string, double>();
                                     var minLimit = shipmentFeeLightPercent > 0 ? shipmentFeeLightMin * 100 / shipmentFeeLightPercent : double.MinValue;
                                     var maxLimit = shipmentFeeLightPercent > 0 && shipmentFeeLightMax < double.MaxValue ? shipmentFeeLightMax * 100 / shipmentFeeLightPercent : double.MaxValue;
@@ -4245,38 +4347,74 @@ namespace Refresher1C.Service
                                     limits.Add("MinFeeLightOutBorder", minLimit);
                                     limits.Add("MaxFeeLightOutBorder", maxLimit);
 
-                                    minPrice = (Порог + tariffPerOrder) / (1 - sumPercentTariffs - shipmentFeeLightPercent / 100 - shipmentFeeLightPercent_OutBorder / 100);
-                                    if (minPrice < Math.Min(limits["MinFeeLight"], limits["MinFeeLightOutBorder"]))
+                                    limits = limits.OrderByDescending(x => Math.Abs(x.Value - minPrice)).ThenBy(x => x.Key).ToDictionary(k => k.Key, v => v.Value);
+                                    foreach (var limit in limits)
                                     {
-                                        if (limits["MinFeeLight"] > limits["MinFeeLightOutBorder"])
-                                            minPrice = (Порог + tariffPerOrder + shipmentFeeLightMin_OutBorder) / (1 - sumPercentTariffs - shipmentFeeLightPercent / 100);
-                                        else
-                                            minPrice = (Порог + tariffPerOrder + shipmentFeeLightMin) / (1 - sumPercentTariffs - shipmentFeeLightPercent_OutBorder / 100);
+                                        switch (limit.Key)
+                                        {
+                                            case "MaxFeeLight":
+                                                if (minPrice > limit.Value)
+                                                {
+                                                    fixFeeLight = shipmentFeeLightMax;
+                                                    c_feeLight = 0;
+                                                }
+                                                break;
+                                            case "MaxFeeLightOutBorder":
+                                                if (minPrice > limit.Value)
+                                                {
+                                                    fixFeeLight_OutBorder = shipmentFeeLightMax_OutBorder;
+                                                    c_feeLightOutBorder = 0;
+                                                }
+                                                break;
+                                            case "MinFeeLight":
+                                                if (minPrice < limit.Value)
+                                                {
+                                                    fixFeeLight = shipmentFeeLightMin;
+                                                    c_feeLight = 0;
+                                                }
+                                                break;
+                                            case "MinFeeLightOutBorder":
+                                                if (minPrice < limit.Value)
+                                                {
+                                                    fixFeeLight_OutBorder = shipmentFeeLightMin_OutBorder;
+                                                    c_feeLightOutBorder = 0;
+                                                }
+                                                break;
+                                        }
+                                        minPrice = (Порог + tariffPerOrder + fixFeeLight_OutBorder + fixFeeLight) / (1 - sumPercentTariffs - c_feeLight - c_feeLightOutBorder);
                                     }
-                                    //_logger.LogError("minPrice = " + minPrice.ToString());
-                                    if (minPrice < Math.Max(limits["MinFeeLight"], limits["MinFeeLightOutBorder"]))
-                                    {
-                                        minPrice = (Порог + tariffPerOrder + shipmentFeeLightMin + shipmentFeeLightMin_OutBorder) / (1 - sumPercentTariffs);
-                                    }
-                                    //_logger.LogError("minPrice = " + minPrice.ToString());
-                                    if (minPrice > Math.Min(limits["MaxFeeLight"], limits["MaxFeeLightOutBorder"]))
-                                    {
-                                        if (limits["MaxFeeLight"] < limits["MaxFeeLightOutBorder"])
-                                            minPrice = (Порог + tariffPerOrder + shipmentFeeLightMax) / (1 - sumPercentTariffs - shipmentFeeLightPercent_OutBorder / 100);
-                                        else
-                                            minPrice = (Порог + tariffPerOrder + shipmentFeeLightMax_OutBorder) / (1 - sumPercentTariffs - shipmentFeeLightPercent / 100);
-                                    }
-                                    //_logger.LogError("minPrice = " + minPrice.ToString());
-                                    if (minPrice > Math.Max(limits["MaxFeeLight"], limits["MaxFeeLightOutBorder"]))
-                                    {
-                                        minPrice = (Порог + tariffPerOrder + shipmentFeeLightMax + shipmentFeeLightMax_OutBorder) / (1 - sumPercentTariffs);
-                                    }
-                                    //_logger.LogError("sku = " + item.Sku + ";minPrice = " + minPrice.ToString());
 
-                                    //tariff += (item.Price * shipmentFeeLightPercent / 100)
-                                    //    .WithLimits(shipmentFeeLightMin, shipmentFeeLightMax); //Доставка покупателю
-                                    //tariff += (item.Price * shipmentFeeLightPercent_OutBorder / 100)
-                                    //    .WithLimits(shipmentFeeLightMin_OutBorder, shipmentFeeLightMax_OutBorder); //доставка в другой округ
+                                    //if (minPrice < Math.Min(limits["MinFeeLight"], limits["MinFeeLightOutBorder"]))
+                                    //{
+                                    //    if (limits["MinFeeLight"] > limits["MinFeeLightOutBorder"])
+                                    //        minPrice = (Порог + tariffPerOrder + shipmentFeeLightMin_OutBorder) / (1 - sumPercentTariffs - shipmentFeeLightPercent / 100);
+                                    //    else
+                                    //        minPrice = (Порог + tariffPerOrder + shipmentFeeLightMin) / (1 - sumPercentTariffs - shipmentFeeLightPercent_OutBorder / 100);
+                                    //}
+                                    ////_logger.LogError("minPrice = " + minPrice.ToString());
+                                    //if (minPrice < Math.Max(limits["MinFeeLight"], limits["MinFeeLightOutBorder"]))
+                                    //{
+                                    //    minPrice = (Порог + tariffPerOrder + shipmentFeeLightMin + shipmentFeeLightMin_OutBorder) / (1 - sumPercentTariffs);
+                                    //}
+                                    ////_logger.LogError("minPrice = " + minPrice.ToString());
+                                    //if (minPrice > Math.Min(limits["MaxFeeLight"], limits["MaxFeeLightOutBorder"]))
+                                    //{
+                                    //    if (limits["MaxFeeLight"] < limits["MaxFeeLightOutBorder"])
+                                    //        minPrice = (Порог + tariffPerOrder + shipmentFeeLightMax) / (1 - sumPercentTariffs - shipmentFeeLightPercent_OutBorder / 100);
+                                    //    else
+                                    //        minPrice = (Порог + tariffPerOrder + shipmentFeeLightMax_OutBorder) / (1 - sumPercentTariffs - shipmentFeeLightPercent / 100);
+                                    //}
+                                    ////_logger.LogError("minPrice = " + minPrice.ToString());
+                                    //if (minPrice > Math.Max(limits["MaxFeeLight"], limits["MaxFeeLightOutBorder"]))
+                                    //{
+                                    //    minPrice = (Порог + tariffPerOrder + shipmentFeeLightMax + shipmentFeeLightMax_OutBorder) / (1 - sumPercentTariffs);
+                                    //}
+                                    ////_logger.LogError("sku = " + item.Sku + ";minPrice = " + minPrice.ToString());
+
+                                    ////tariff += (item.Price * shipmentFeeLightPercent / 100)
+                                    ////    .WithLimits(shipmentFeeLightMin, shipmentFeeLightMax); //Доставка покупателю
+                                    ////tariff += (item.Price * shipmentFeeLightPercent_OutBorder / 100)
+                                    ////    .WithLimits(shipmentFeeLightMin_OutBorder, shipmentFeeLightMax_OutBorder); //доставка в другой округ
                                 }
                                 decimal updateMinPrice = decimal.Round((decimal)minPrice/dataItem.Квант, 2, MidpointRounding.AwayFromZero);
 
@@ -4388,7 +4526,8 @@ namespace Refresher1C.Service
         }
         private Dictionary<string,double> LimitValues(
             (double percent, double limMin, double limMax) weightLim,
-            (double percent, double limMin, double limMax) lastMileLim)
+            (double percent, double limMin, double limMax) lastMileLim,
+            double calcPrice)
         {
             Dictionary<string,double> values = new Dictionary<string, double>();
             var minLimit = weightLim.percent > 0 ? weightLim.limMin * 100 / weightLim.percent : double.MinValue;
@@ -4401,7 +4540,7 @@ namespace Refresher1C.Service
             values.Add("MinLastMileLimit", minLimit);
             values.Add("MaxLastMileLimit", maxLimit);
 
-            return values;
+            return values.OrderByDescending(x => Math.Abs(x.Value - calcPrice)).ThenBy(x => x.Key).ToDictionary(k => k.Key, v => v.Value);
         }
         private async Task UpdateTariffsOzon(string marketplaceId, string firmaId,
             string campaignId,
@@ -4420,7 +4559,7 @@ namespace Refresher1C.Service
                         from vzTovar in _vzTovar.DefaultIfEmpty()
                         where (markUse.Sp14147 == marketplaceId) &&
                           (markUse.Sp14158 == 1) //Есть в каталоге 
-                          //&& nom.Code == "D00044987"
+                          //&& nom.Code == "D00052469"
                         select new
                         {
                             Id = markUse.Id,
@@ -4459,12 +4598,12 @@ namespace Refresher1C.Service
                                 var КоэфМинНаценки = 10; // 
                                 var Порог = (double)(item.ЦенаЗакуп * item.Квант) * (100 + КоэфМинНаценки) / 100;
                                 var c_saleType = comResult.ComPercent / 100;
-                                //var c_premium = 2.0 / 100; //2% premium
+                                var c_ekvaring = 1.5 / 100; //1.5% эквайринг
                                 if ((model == "FBS") && (item.realFbs))
                                 {
                                     double base15Kg = 1300;
                                     double overKg = 20;
-                                    minPrice = (Порог + base15Kg + (comResult.VolumeWeight - 15) * overKg) / (1 - c_saleType); // - c_premium);
+                                    minPrice = (Порог + base15Kg + (comResult.VolumeWeight - 15) * overKg) / (1 - c_saleType - c_ekvaring); // - c_premium);
                                 }
                                 else //fbs or fbo
                                 {
@@ -4475,61 +4614,47 @@ namespace Refresher1C.Service
                                     else
                                         tariffWeight = CommissionValuesFbsVolumeWeightFbo(comResult.VolumeWeight, false);
                                     var tariffLastMile = (percent: 5.5, limMin: 20.0, limMax: 500.0);
-                                    //var limits = LimitValues(tariffWeight, tariffLastMile);
-                                    //_logger.LogError("Порог = " + Порог.ToString());
-                                    //var c_saleType = comResult.ComPercent / 100;
-                                    //var c_delivery = 0.0;//Обработка отправления ТСЦ = 0
                                     var c_weight = tariffWeight.percent / 100;
                                     var c_lastMile = tariffLastMile.percent / 100;
-
-                                    var logisticsSum = Порог * c_weight;
-                                    if (logisticsSum < tariffWeight.limMin)
-                                        logisticsSum = tariffWeight.limMin;
-                                    else if (logisticsSum > tariffWeight.limMax)
-                                        logisticsSum = tariffWeight.limMax;
-
-                                    var lastMileSum = Порог * c_lastMile;
-                                    if (lastMileSum < tariffLastMile.limMin)
-                                        lastMileSum = tariffLastMile.limMin;
-                                    else if (lastMileSum > tariffLastMile.limMax)
-                                        lastMileSum = tariffLastMile.limMax;
-                                    //var c_premium = 2d / 100; //2% premium
-                                    //_logger.LogError("c_saleType = " + c_saleType.ToString());
-                                    //_logger.LogError("c_delivery = " + c_delivery.ToString());
-                                    //_logger.LogError("c_weight = " + c_weight.ToString());
-                                    //_logger.LogError("c_lastMile = " + c_lastMile.ToString());
-                                    //_logger.LogError("c_premium = " + c_premium.ToString());
-                                    minPrice = Порог;
-                                    minPrice += Порог * c_saleType; //за продажу
-                                    minPrice += logisticsSum; //за доставку
-                                    minPrice += lastMileSum;  //за последнюю милю
-                                    //_logger.LogError("minPrice = " + minPrice.ToString());
-                                    //if (minPrice < Math.Min(limits["MinWeightLimit"], limits["MinLastMileLimit"]))
-                                    //{
-                                    //    if (limits["MinWeightLimit"] > limits["MinLastMileLimit"])
-                                    //        minPrice = (Порог + tariffLastMile.limMin) / (1 - c_saleType - c_delivery - c_weight); // - c_premium);
-                                    //    else
-                                    //        minPrice = (Порог + tariffWeight.limMin) / (1 - c_saleType - c_delivery - c_lastMile); // - c_premium);
-                                    //}
-                                    ////_logger.LogError("minPrice = " + minPrice.ToString());
-                                    //if (minPrice < Math.Max(limits["MinWeightLimit"], limits["MinLastMileLimit"]))
-                                    //{
-                                    //    minPrice = (Порог + tariffWeight.limMin + tariffLastMile.limMin) / (1 - c_saleType - c_delivery); // - c_premium);
-                                    //}
-                                    ////_logger.LogError("minPrice = " + minPrice.ToString());
-                                    //if (minPrice > Math.Min(limits["MaxWeightLimit"], limits["MaxLastMileLimit"]))
-                                    //{
-                                    //    if (limits["MaxWeightLimit"] < limits["MaxLastMileLimit"])
-                                    //        minPrice = (Порог + tariffWeight.limMax) / (1 - c_saleType - c_delivery - c_lastMile); // - c_premium);
-                                    //    else
-                                    //        minPrice = (Порог + tariffLastMile.limMax) / (1 - c_saleType - c_delivery - c_weight); // - c_premium);
-                                    //}
-                                    ////_logger.LogError("minPrice = " + minPrice.ToString());
-                                    //if (minPrice > Math.Max(limits["MaxWeightLimit"], limits["MaxLastMileLimit"]))
-                                    //{
-                                    //    minPrice = (Порог + tariffWeight.limMax + tariffLastMile.limMax) / (1 - c_saleType - c_delivery); // - c_premium);
-                                    //}
-                                    //_logger.LogError("sku = " + item.Sku + ";minPrice = " + minPrice.ToString());
+                                    var fixTariffWeight = 0d;
+                                    var fixTariffLastMile = 0d;
+                                    minPrice = (Порог + fixTariffWeight + fixTariffLastMile) / (1 - c_saleType - c_ekvaring - c_weight - c_lastMile);
+                                    var limits = LimitValues(tariffWeight, tariffLastMile, minPrice);
+                                    foreach (var limit in limits)
+                                    {
+                                        switch (limit.Key)
+                                        {
+                                            case "MaxWeightLimit":
+                                                if (minPrice > limit.Value)
+                                                {
+                                                    fixTariffWeight = tariffWeight.limMax;
+                                                    c_weight = 0;
+                                                }
+                                                break;
+                                            case "MaxLastMileLimit":
+                                                if (minPrice > limit.Value)
+                                                {
+                                                    fixTariffLastMile = tariffLastMile.limMax;
+                                                    c_lastMile = 0;
+                                                }
+                                                break;
+                                            case "MinWeightLimit":
+                                                if (minPrice < limit.Value)
+                                                {
+                                                    fixTariffWeight = tariffWeight.limMin;
+                                                    c_weight = 0;
+                                                }
+                                                break;
+                                            case "MinLastMileLimit":
+                                                if (minPrice < limit.Value)
+                                                {
+                                                    fixTariffLastMile = tariffLastMile.limMin;
+                                                    c_lastMile = 0;
+                                                }
+                                                break;
+                                        }
+                                        minPrice = (Порог + fixTariffWeight + fixTariffLastMile) / (1 - c_saleType - c_ekvaring - c_weight - c_lastMile);
+                                    }
                                 }
                                 decimal updateMinPrice = decimal.Round((decimal)minPrice / item.Квант, 2, MidpointRounding.AwayFromZero);
                                 decimal updateVolumeWeight = decimal.Round((decimal)comResult.VolumeWeight / item.Квант, 3, MidpointRounding.AwayFromZero);
@@ -4556,7 +4681,7 @@ namespace Refresher1C.Service
             {
                 var marketplaceIds = await (from market in _context.Sc14042s
                                             where !market.Ismark
-                                            //&& market.Code.Trim() == "43956" 
+                                            && market.Code.Trim() == "23292582"
                                             //&& market.Sp14155.Trim().ToUpper() == "OZON" 
                                             //&& market.Sp14155.Trim().ToUpper() == "WILDBERRIES"
                                             //&& market.Code.Trim() == "23005267" // Yandex DBS
@@ -4579,6 +4704,7 @@ namespace Refresher1C.Service
                 {
                     if (marketplace.Тип == "ЯНДЕКС")
                     {
+                        await CheckReturnsYandex(marketplace.Id, _firmProxy[marketplace.FirmaId], marketplace.CampaignId, marketplace.ClientId, marketplace.AuthToken, cancellationToken);
                     }
                     else if (marketplace.Тип == "OZON")
                     {
@@ -4600,6 +4726,34 @@ namespace Refresher1C.Service
                 _logger.LogError(ex.Message);
             }
             //_logger.LogError("Finished");
+        }
+        async Task CheckReturnsYandex(string marketplaceId, string proxyHost, string campaignId, string clientId, string authToken, CancellationToken cancellationToken)
+        {
+            int requestLimit = 31;
+            string pageToken = "";
+            bool nextPage = true;
+            while (nextPage)
+            {
+                nextPage = false;
+                var result = await YandexClasses.YandexOperators.OrderReturns(_httpService, proxyHost, campaignId, clientId, authToken,
+                DateTime.Today.AddDays(-60),
+                requestLimit,
+                pageToken,
+                cancellationToken);
+                pageToken = result.NextPageToken;
+                nextPage = !string.IsNullOrEmpty(pageToken);
+                if (result.Returns?.Length > 0)
+                {
+                    try
+                    {
+                        await UpdateReturns(result.Returns, marketplaceId, cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError("Internal (CheckReturnsYandex) : " + ex.Message);
+                    }
+                }
+            }
         }
         private async Task CheckReturnsOzon(string marketplaceId, string proxyHost,
             string clientId,
@@ -4623,7 +4777,6 @@ namespace Refresher1C.Service
                 {
                     _logger.LogError("Internal (CheckReturnsOzon) : " + ex.Message);
                 }
-
         }
         private async Task UpdateReturns(object data, string marketplaceId, CancellationToken cancellationToken)
         {
@@ -4641,7 +4794,7 @@ namespace Refresher1C.Service
                     {
                         int status = item.Status switch
                         {
-                            OzonClasses.ReturnStatus.returned_to_seller => 17,
+                            //OzonClasses.ReturnStatus.returned_to_seller => 17,
                             OzonClasses.ReturnStatus.cancelled_with_compensation => 18,
                             _ => 15
                         };
@@ -4654,6 +4807,19 @@ namespace Refresher1C.Service
                                 LastWaitingDate = item.Last_free_waiting_day ?? DateTime.MinValue
                             });
                     }
+            }
+            else if (data is YandexClasses.Return[] yandexReturns)
+            {
+                foreach (var item in yandexReturns.Where(x => x.ShipmentStatus != YandexClasses.ReturnShipmentStatusType.PICKED))
+                {
+                    if (!returningOrders.Any(x => x.OrderNo == item.OrderId.ToString()))
+                        returningOrders.Add(new
+                        {
+                            OrderNo = item.OrderId.ToString(),
+                            Status = 15,
+                            LastWaitingDate = DateTime.MinValue
+                        });
+                }
             }
             foreach (var item in returningOrders)
             {

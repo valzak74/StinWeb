@@ -137,7 +137,7 @@ namespace Market.Controllers
                 {
                     var calcSklad = Common.SkladEkran;
                     if (pickupGroup.Count() == 1)
-                        calcSklad = pickupGroup.Select(x => x.Key).First();
+                        calcSklad = pickupGroup.Select(x => x.Key).First().FormatTo1CId();
                     var deliveryOption = new DeliveryOption
                     {
                         Price = 0,

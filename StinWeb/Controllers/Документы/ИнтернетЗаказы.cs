@@ -1061,6 +1061,17 @@ namespace StinWeb.Controllers
                 .Select(x => x);
             return PartialView("~/Views/ИнтернетЗаказы/Orders.cshtml", dataE);
         }
+        [HttpPost]
+        public async Task<IActionResult> DeleteLabel(string orderId, CancellationToken cancellationToken)
+        {
+            var entity = await _context.VzOrderBinaries.FirstOrDefaultAsync(x => (x.Id == orderId) && (x.Extension == "LABELS"), cancellationToken);
+            if (entity != null)
+            {
+                _context.Remove(entity);
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+            return Ok();
+        }
         [HttpGet]
         public async Task<IActionResult> GetLabelsPdf(string id, bool isNaborDocId = false)
         {

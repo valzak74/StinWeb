@@ -11,11 +11,11 @@ namespace StinClasses.Справочники.Functions
 {
     internal static class StockExtensions
     {
-        internal static RefBook Map(this Sc55 entity)
+        internal static T Map<T>(this Sc55 entity) where T : RefBook, new()
         {
             if (entity == null)
                 return null;
-            return new RefBook
+            return new T
             {
                 Id = entity.Id,
                 Code = entity.Code.Trim(),
@@ -28,8 +28,7 @@ namespace StinClasses.Справочники.Functions
         {
             if (entity == null)
                 return null;
-            var RefBookResult = entity.Map();
-            СкладExtended result = new СкладExtended(RefBookResult);
+            var result = entity.Map<СкладExtended>();
             result.SaturdayOn = entity.Sp14104 == 1;
             result.SundayOn = entity.Sp14105 == 1;
             return result;
@@ -54,7 +53,7 @@ namespace StinClasses.Справочники.Functions
                 return result;
             var entity = await _context.Sc55s
                 .FirstOrDefaultAsync(x => x.Id == Id, cancellationToken);
-            result = entity.Map();
+            result = entity.Map<RefBook>();
             if (result != null)
                 _cache.Set(_type36 + Id, result, TimeSpan.FromDays(1));
             return result;

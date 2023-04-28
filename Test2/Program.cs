@@ -12,6 +12,9 @@ using JsonExtensions;
 using HttpExtensions;
 using MigraDocCore.DocumentObjectModel;
 using StinClasses.Справочники;
+using PdfSharpCore.Pdf;
+using PdfSharpCore.Pdf.IO;
+using PdfHelper;
 
 namespace HelloWorld
 {
@@ -173,6 +176,24 @@ namespace HelloWorld
 
         static async Task Main(string[] args)
         {
+            var f = new List<byte[]> { System.IO.File.ReadAllBytes(@"f:\\tmp\15\label3.pdf") };
+            var rt = PdfFunctions.Instance.MergePdf(f);
+            File.WriteAllBytes(@"f:\\tmp\15\label4.pdf", rt);
+            //using Stream stream = new MemoryStream(f);
+            //stream.Position = 0;
+            //using PdfDocument pdfFile = PdfReader.Open(stream, PdfDocumentOpenMode.Import);
+            //try
+            //{
+            //    using var pdf = new PdfDocument(@"f:\\tmp\15\label.pdf");
+            //}
+            //catch (Exception ex)
+            //{
+            //    Console.WriteLine(ex.ToString());
+            //}
+
+            //var label = System.IO.File.ReadAllBytes(@"f:\\tmp\15\label.pdf");
+            //label[1000] = 255;
+            //File.WriteAllBytes(@"f:\\tmp\15\label3.pdf", label);
             var signature = Convert.FromBase64String("MEQCIEvYEHjmiAuraVFE6ORq1ag88mp+lxCJ353CbOgeeTyFAiBTWPfKs+uePhKKGb4Qamgw25lPJN+Vrn9pJj78cfTMzw==");
             StringBuilder builder = new StringBuilder();
             for (int ii = 0; ii < signature.Length; ii++)
