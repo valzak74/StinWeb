@@ -13,5 +13,6 @@ namespace StinClasses.Models
         public byte Isfolder { get; set; }
         public bool Ismark { get; set; }
         public int Verstamp { get; set; }
+        public string Sp14293 { get; set; }
     }
 }

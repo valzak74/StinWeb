@@ -99,7 +99,7 @@
                                             }
                                             @if ((new[] { "Любой", "ИнтернетЗаказы" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
                                             {
-                                                <li><a class="dropdown-item" asp-controller="ИнтернетЗаказы" asp-action="NaborRegistration">Регистрация наборов</a></li>
+                                                <li><a class="dropdown-item" asp-controller="ИнтернетЗаказы" asp-action="NaborPrintLabel">Печать этикеток при сканировании наборов</a></li>
                                             }
                                         </ul>
                                     </li>

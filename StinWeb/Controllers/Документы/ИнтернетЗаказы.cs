@@ -134,16 +134,18 @@ namespace StinWeb.Controllers
             return View("Console");
         }
         [Authorize]
-        public IActionResult NaborRegistration()
+        public IActionResult NaborPrintLabel()
         {
-            return View("NaborRegistration");
+            return View("NaborPrintLabel");
         }
         [HttpPost]
         public async Task<IActionResult> NaborScan(string barcodeText, CancellationToken cancellationToken)
         {
-            if (!string.IsNullOrEmpty(barcodeText) && (barcodeText.Length == 13) && (barcodeText.Substring(0,4) == "%97W"))
+            if (!string.IsNullOrEmpty(barcodeText) && ((barcodeText.Length == 13) || (barcodeText.Length == 14)) && (barcodeText.Substring(0,4) == "%97W"))
             {
                 var docId = barcodeText.Substring(4).Replace('%', ' ');
+                if (barcodeText.Length == 14)
+                    docId = docId.Remove(docId.Length - 1);
                 var formNabor = await _набор.GetФормаНаборById(docId);
                 if (formNabor == null)
                     return StatusCode(502, "Не удалось получить форму набора");
@@ -157,56 +159,6 @@ namespace StinWeb.Controllers
                     return StatusCode(502, "Набор отменен");
                 //if (formNabor.StartCompectation <= Common.min1cDate)
                 //    return StatusCode(502, "Набор не начат");
-                //formNabor.Завершен = true;
-                //formNabor.EndComplectation = DateTime.Now;
-                //var реквизитыПроведенныхДокументов = new List<StinClasses.Документы.ОбщиеРеквизиты>();
-                //using var tran = await _context.Database.BeginTransactionAsync();
-                //try
-                //{
-                //    var result = await _набор.ЗаписатьПровестиAsync(formNabor);
-                //    if (result != null)
-                //    {
-                //        if (_context.Database.CurrentTransaction != null)
-                //            tran.Rollback();
-                //        return StatusCode(502, result.Description);
-                //    }
-                //    else
-                //    {
-                //        реквизитыПроведенныхДокументов.Add(formNabor.Общие);
-                //        await _набор.ОбновитьАктивность(реквизитыПроведенныхДокументов);
-                //    }
-                //    if (formNabor.Общие.Автор.Id != Common.UserRobot)
-                //    {
-                //        var sbSubject = new StringBuilder("Набор готов (");
-                //        sbSubject.Append(formNabor.Контрагент.Наименование);
-                //        sbSubject.Append(" ");
-                //        sbSubject.Append(formNabor.Склад.Наименование);
-                //        sbSubject.Append("/");
-                //        sbSubject.Append(formNabor.ПодСклад.Наименование);
-                //        sbSubject.Append(")");
-                //        var sbMessage = new StringBuilder("Набор ");
-                //        sbMessage.Append(formNabor.Общие.НомерДок);
-                //        sbMessage.Append(" от ");
-                //        sbMessage.Append(formNabor.Общие.ДатаДок.ToString("dd.MM.yyyy"));
-                //        sbMessage.AppendLine(" готов");
-                //        sbMessage.Append("Контрагент: ");
-                //        sbMessage.AppendLine(formNabor.Контрагент.Наименование);
-                //        sbMessage.Append("Склад: ");
-                //        sbMessage.AppendLine(formNabor.Склад.Наименование);
-                //        sbMessage.Append("Место хранения: ");
-                //        sbMessage.AppendLine(formNabor.ПодСклад.Наименование);
-                //        sbMessage.Append("Клиент приглашается за товаром!");
-                //        await _сообщения.SendMessage(sbSubject.ToString(), sbMessage.ToString(), formNabor.Общие.Автор.Id, Common.UserRobot);
-                //    }
-                //    if (_context.Database.CurrentTransaction != null)
-                //        tran.Commit();
-                //}
-                //catch (Exception ex)
-                //{
-                //    if (_context.Database.CurrentTransaction != null)
-                //        _context.Database.CurrentTransaction.Rollback();
-                //    return StatusCode(502, ex.Message);
-                //}
                 var printData = await _набор.PrintForm("", 1, 0, formNabor, cancellationToken);
                 return Ok(printData.html);
             }
@@ -1077,6 +1029,8 @@ namespace StinWeb.Controllers
         {
             if (!string.IsNullOrEmpty(id))
             {
+                if (id.Length == 14)
+                    id = id.Substring(0, 13);
                 if (id.Length > 9)
                     id = id.Substring(id.Length - 9);
                 id = id.Replace('_', ' ');

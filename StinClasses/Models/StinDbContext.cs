@@ -32189,6 +32189,10 @@ namespace StinClasses.Models
                     .HasColumnName("PARENTID")
                     .IsFixedLength();
 
+                entity.Property(e => e.Sp14293)
+                    .HasColumnType("text")
+                    .HasColumnName("SP14293");
+
                 entity.Property(e => e.Verstamp).HasColumnName("VERSTAMP");
             });
 

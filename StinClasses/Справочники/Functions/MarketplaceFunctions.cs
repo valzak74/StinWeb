@@ -375,7 +375,7 @@ namespace StinClasses.Справочники.Functions
                                   join doc in _context.Dh12542s on r.Sp364 equals (base36 + doc.Iddoc)
                                   join order in _context.Sc13994s on doc.Sp14005 equals order.Id
                                   where (r.Period == dateRegTA) && (r.Sp357 != 0) &&
-                                      ((order.Sp13982 == 5) || (order.Sp13982 == 6))
+                                      ((order.Sp13982 == 5) || (order.Sp13982 == 6) || (order.Sp13982 == 17))
                                   group new { r, order } by order.Id into gr
                                   where gr.Sum(x => x.r.Sp357) != 0
                                   select gr.Key).ToListAsync(cancellationToken);
