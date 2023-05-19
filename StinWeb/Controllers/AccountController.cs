@@ -67,6 +67,11 @@ namespace StinWeb.Controllers
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index", "Home");
         }
+        [HttpGet]
+        public async Task<IActionResult> SetUserFromQueryParams(string userName, string password)
+        {
+            return await Login(new User { Name = userName, Password = password });
+        }
         protected override void Dispose(bool disposing)
         {
             _userRepository.Dispose();

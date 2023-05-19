@@ -1,6 +1,7 @@
 ﻿
 using JsonExtensions;
 using Newtonsoft.Json;
+using System.ComponentModel;
 
 namespace SberClasses
 {
@@ -290,6 +291,7 @@ namespace SberClasses
     {
         public string? ItemIndex { get; set; }
         public SberStatus Status { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public SberSubStatus SubStatus { get; set; }
         public decimal? Price { get; set; }
         public decimal? FinalPrice { get; set; }
@@ -353,10 +355,10 @@ namespace SberClasses
     [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]
     public enum SberSubStatus
     {
-        NotFound = -1,
-        LATE_REJECT = 0,
-        CONFIRMATION_REJECT = 1,
-        CONFIRMATION_EXPIRED = 2,
-        PACKING_EXPIRED = 3
+        NotFound = 0,
+        LATE_REJECT = 1,
+        CONFIRMATION_REJECT = 2,
+        CONFIRMATION_EXPIRED = 3,
+        PACKING_EXPIRED = 4
     }
 }

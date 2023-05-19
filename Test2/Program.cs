@@ -15,6 +15,7 @@ using StinClasses.Справочники;
 using PdfSharpCore.Pdf;
 using PdfSharpCore.Pdf.IO;
 using PdfHelper;
+using StinClasses.MarketCommission;
 
 namespace HelloWorld
 {

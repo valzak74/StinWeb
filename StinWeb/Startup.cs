@@ -15,6 +15,9 @@ using Polly.Extensions.Http;
 using Polly;
 using System.Net.Http;
 using StinClasses.Справочники.Functions;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http.Extensions;
 
 namespace StinWeb
 {
@@ -49,6 +52,26 @@ namespace StinWeb
                     options.ExpireTimeSpan = TimeSpan.FromHours(23);
                     options.LoginPath = new Microsoft.AspNetCore.Http.PathString("/Account/Login");
                     options.AccessDeniedPath = new Microsoft.AspNetCore.Http.PathString("/Account/Login");
+                    options.Events = new CookieAuthenticationEvents()
+                    {
+                        OnRedirectToLogin = (context) =>
+                        {
+                            var uri = context.RedirectUri;
+                            UriHelper.FromAbsolute(uri, out var scheme, out var host, out var path, out var query, out var fragment);
+                            string defUser = context.Request.Query["user"];
+                            string defPass = context.Request.Query["password"];
+                            if (!string.IsNullOrEmpty(defUser) && !string.IsNullOrEmpty(defPass))
+                            {
+                                query = query.Add("userName", defUser);
+                                query = query.Add("password", defPass);
+                                uri = UriHelper.BuildAbsolute(scheme, host, "/Account", "/SetUserFromQueryParams", query);
+                            }
+                            else
+                                uri = UriHelper.BuildAbsolute(scheme, host, path);
+                            context.Response.Redirect(uri);
+                            return Task.CompletedTask;
+                        }
+                    };
                 });
             services.AddAuthorization(opts => {
                 opts.AddPolicy("ОтделПродаж", policy => {
