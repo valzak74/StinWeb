@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "6k+XRgU2Ba4Hc9qSVidd5C9gVG9ecglogKk/noujsWqSAHQIcXDncWTedgVsVNK1biwYhPBoyvH98Hke46zmMA==",
+  "dgSpecHash": "hx9Dkl4RsHMelQWnGBTRvksHyklqGAx2BpruKLYS63/9BuT/qkHllcP4Mo7rNoHvaAJYUs9lp2IIuXA7YHG7TQ==",
   "success": true,
   "projectFilePath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\ReverseProxyAPI\\ReverseProxyAPI.csproj",
   "expectedPackageFiles": [

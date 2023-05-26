@@ -67,6 +67,7 @@ namespace StinClasses.Справочники
         public decimal Zakup { get; set; }
         public decimal Fix { get; set; }
         public decimal Multiply { get; set; }
+        public decimal MinPrice { get; set; }
     }
     public interface IMarketplace : IDisposable
     {

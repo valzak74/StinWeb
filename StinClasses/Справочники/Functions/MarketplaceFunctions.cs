@@ -325,15 +325,16 @@ namespace StinClasses.Справочники.Functions
                               Zakup = vzTovar != null ? vzTovar.Zakup ?? 0 : 0,
                               Fix = markUse.Sp14148,
                               Multiply = markUse.Sp14149,
+                              MinPrice = markUse.Sp14198
                           })
                         .OrderBy(x => x.NomId)
                         .Take(limit)
                         .ToListAsync(cancellationToken);
         }
-        public IEnumerable<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount)> GetPriceData(IEnumerable<MarketUseInfoPrice> data,
+        public IEnumerable<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount, decimal minPrice)> GetPriceData(IEnumerable<MarketUseInfoPrice> data,
             Marketplace marketplace, decimal checkCoeff)
         {
-            var priceData = new List<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount)>();
+            var priceData = new List<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount, decimal minPrice)>();
             foreach (var item in data)
             {
                 var Цена = item.RoznSp > 0 ? Math.Min(item.RoznSp, item.Rozn) : item.Rozn;
@@ -362,8 +363,9 @@ namespace StinClasses.Справочники.Functions
                     if (calcPrice >= Порог)
                         Цена = calcPrice;
                 }
+                Цена = Math.Max(Цена, item.MinPrice);
                 var priceBeforeDiscount = Цена < item.Rozn ? item.Rozn : 0.00m;
-                priceData.Add((id: item.Id, productId: item.ProductId, offerId: item.OfferId, квант: item.Квант, price: Цена, priceBeforeDiscount: priceBeforeDiscount));
+                priceData.Add((id: item.Id, productId: item.ProductId, offerId: item.OfferId, квант: item.Квант, price: Цена, priceBeforeDiscount: priceBeforeDiscount, minPrice: item.MinPrice));
             }
             return priceData;
         }

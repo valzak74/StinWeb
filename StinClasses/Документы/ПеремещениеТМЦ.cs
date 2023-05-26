@@ -178,7 +178,6 @@ namespace StinClasses.Документы
                 var датаПеремещения = DateTime.Today.AddDays(колДнейНаПеремещение);
                 маршрутКод = _графикМаршрутов.ПолучитьКодМаршрута(датаПеремещения, "50"); //направление 50 == Самара Преображенка
             }
-
             foreach (var данные in ПереченьНаличия)
             {
                 ФормаПеремещениеТМЦ doc = new ФормаПеремещениеТМЦ();
@@ -188,7 +187,8 @@ namespace StinClasses.Документы
                 doc.Общие.ВидДокумента36 = Common.Encode36(doc.Общие.ВидДокумента10);
                 doc.Общие.Фирма = фирмаDoc;
                 doc.Общие.ДатаДок = docDateTime <= Common.min1cDate ? DateTime.Now : docDateTime;
-                doc.Общие.Комментарий = докОснование.Order != null ? "Для интернет-заказа " + докОснование.Order.OrderNo : "";
+                doc.Общие.Комментарий = докОснование.Order != null ? (докОснование.Order.DeliveryPartnerType != StinDeliveryPartnerType.SHOP) ? "Интернет-заказ " + докОснование.Order.Marketplace + " №" + докОснование.Order.MarketplaceId :
+                    (докОснование.Order.DeliveryType == StinDeliveryType.PICKUP ? "Самовывоз " : "") : ""; 
 
                 doc.Склад = СкладОтгрузки;
                 doc.СкладПолучатель = докОснование.Склад;

@@ -89,7 +89,7 @@ namespace Refresher1C.Service
             }
         }
         async Task SetYandexPrice(List<string> uploadIds,
-            IEnumerable<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount)> priceData,
+            IEnumerable<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount, decimal minPrice)> priceData,
             Marketplace marketplace,
             long feedId,
             CancellationToken cancellationToken)
@@ -127,7 +127,7 @@ namespace Refresher1C.Service
                 uploadIds.AddRange(priceData.Select(x => x.id));
         }
         async Task SetOzonPrice(List<string> uploadIds,
-            IEnumerable<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount)> priceData,
+            IEnumerable<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount, decimal minPrice)> priceData,
             Marketplace marketplace,
             CancellationToken cancellationToken)
         {
@@ -136,6 +136,7 @@ namespace Refresher1C.Service
                 {
                     var oldPrice = x.priceBeforeDiscount * x.квант;
                     var price = x.price * x.квант;
+                    var minPrice = Math.Min(price, x.minPrice * x.квант);
                     if ((oldPrice > 400) && (oldPrice <= 10000))
                     {
                         if ((oldPrice - price) <= (oldPrice / 20))
@@ -150,7 +151,8 @@ namespace Refresher1C.Service
                     {
                         Offer_id = x.offerId,
                         Old_price = oldPrice.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                        Price = price.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
+                        Price = price.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                        Min_price = minPrice.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
                     };
                 }).ToList(),
                 cancellationToken);
@@ -167,7 +169,7 @@ namespace Refresher1C.Service
             }
         }
         async Task SetSberPrice(List<string> uploadIds,
-            IEnumerable<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount)> priceData,
+            IEnumerable<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount, decimal minPrice)> priceData,
             Marketplace marketplace,
             CancellationToken cancellationToken)
         {
@@ -191,7 +193,7 @@ namespace Refresher1C.Service
             }
         }
         async Task SetAliExpressPrice(List<string> uploadIds,
-            IEnumerable<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount)> priceData,
+            IEnumerable<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount, decimal minPrice)> priceData,
             Marketplace marketplace,
             CancellationToken cancellationToken)
         {
@@ -223,7 +225,7 @@ namespace Refresher1C.Service
             }
         }
         async Task SetWildberriesPrice(List<string> uploadIds,
-            IEnumerable<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount)> priceData,
+            IEnumerable<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount, decimal minPrice)> priceData,
             Marketplace marketplace,
             CancellationToken cancellationToken)
         {

@@ -1024,6 +1024,65 @@ namespace StinWeb.Controllers
             }
             return Ok();
         }
+        [HttpPost]
+        public async Task<IActionResult> GetLabelsPdf(string id, string[] nomBarcodes, CancellationToken cancellationToken)
+        {
+            if (nomBarcodes?.Length == 0)
+                return StatusCode(502, "НЕ СКАНИРОВАН ТОВАР");
+            if (!string.IsNullOrEmpty(id) && ((id.Length == 13) || (id.Length == 14)) && (id.Substring(0, 4) == "%97W"))
+            {
+                var docId = id.Substring(4).Replace('%', ' ');
+                if (id.Length == 14)
+                    docId = docId.Remove(docId.Length - 1);
+                var formNabor = await _набор.GetФормаНаборById(docId);
+                if (formNabor == null)
+                    return StatusCode(502, "Не удалось получить форму набора");
+                if (!formNabor.Общие.Проведен)
+                    return StatusCode(502, "Набор не проведен");
+                if (formNabor.Order?.InternalStatus == 5)
+                    return StatusCode(502, "Заказ уже отменен");
+                if (!_набор.IsActive(docId))
+                    return StatusCode(502, "Набор отменен");
+                var formBarcodes = formNabor?.ТабличнаяЧасть.Select(x => x.Единица?.Barcode).ToArray();
+                if (nomBarcodes.Any(x => x == "000000000") || (Enumerable.SequenceEqual(nomBarcodes.OrderBy(x => x), formBarcodes.OrderBy(x => x))))
+                {
+                    if (!formNabor.Завершен)
+                    {
+                        formNabor.Завершен = true;
+                        formNabor.EndComplectation = DateTime.Now;
+                        var реквизитыПроведенныхДокументов = new List<StinClasses.Документы.ОбщиеРеквизиты>();
+                        using var tran = await _context.Database.BeginTransactionAsync(cancellationToken);
+                        try
+                        {
+                            var result = await _набор.ЗаписатьПровестиAsync(formNabor);
+                            if (result != null)
+                            {
+                                if (_context.Database.CurrentTransaction != null)
+                                    tran.Rollback();
+                                return StatusCode(502, result.Description);
+                            }
+                            else
+                            {
+                                реквизитыПроведенныхДокументов.Add(formNabor.Общие);
+                                await _набор.ОбновитьАктивность(реквизитыПроведенныхДокументов);
+                            }
+                            if (_context.Database.CurrentTransaction != null)
+                                tran.Commit();
+                        }
+                        catch (Exception ex)
+                        {
+                            if (_context.Database.CurrentTransaction != null)
+                                _context.Database.CurrentTransaction.Rollback();
+                            return StatusCode(502, ex.Message);
+                        }
+                    }
+                    return Ok();
+                }
+                else
+                    return StatusCode(502, "Товары набора не соответствуют отсканированным");
+            }
+            return StatusCode(502, "Не удалось получить документ набора по штрих-коду");
+        }
         [HttpGet]
         public async Task<IActionResult> GetLabelsPdf(string id, bool isNaborDocId = false)
         {

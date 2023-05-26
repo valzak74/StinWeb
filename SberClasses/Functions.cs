@@ -294,7 +294,7 @@ namespace SberClasses
             CancellationToken cancellationToken)
         {
             var request = new OrderListRequest(token);
-            request.Data.DateFrom = DateTime.Today.AddDays(-60);
+            request.Data.DateFrom = DateTime.Today.AddDays(-90);
             request.Data.DateTo = DateTime.Today;
             request.Data.Statuses = new List<SberStatus> { SberStatus.CONFIRMED, SberStatus.CUSTOMER_CANCELED, SberStatus.SHIPPED, SberStatus.DELIVERED };
 

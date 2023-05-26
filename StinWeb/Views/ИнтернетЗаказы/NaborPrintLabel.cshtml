@@ -25,6 +25,7 @@
 </div>
 
 <script>
+    var nomBarcodes = [];
     $("#barcodeText").focus();
     $('#barcodeText').on('blur', function () {
         _this = this;
@@ -33,47 +34,94 @@
         }, 0);
     });
     $("#barcodeText").on("change", function () {
-        //alert(this.value);
-        var url = '@Url.Action("GetLabelsPdf", "ИнтернетЗаказы")' + '?id=' + this.value.replaceAll('%', '_') + "&isNaborDocId=true#view=fitH";
-        printPage(url, true);
-        ShowFormNabor(this.value);
-        this.value = "";
-    });
-    function ShowFormNabor(barcodeText) {
-        $.ajax({
-            url: "NaborScan",
-            type: "post",
-            datatype: "xml",
-            data: {
-                barcodeText: barcodeText
-            },
-            async: true,
-            cache: false,
-            beforeSend: function () {
-                EnableBusyScreen()
-            },
-            success: function (obj) {
-                if (obj) {
-                    document.getElementById('soundOk').play();
-                    $(".modal-body").html(obj);
-                    $("#formNabor").modal("show");
-                    setTimeout(() => { $("#formNabor").modal('hide'); }, 2000);
-                }
-            },
-            error: function (jqXHR, exception, f) {
-                var msg = 'Internal Server Error';
-                if (jqXHR.status == 502) {
-                    if (jqXHR.responseText != "")
-                        msg = jqXHR.responseText;
-                }
-                $("#alertText").text(msg);
+        if ((this.value.length > 4) && (this.value.substring(0,4) == "%97W")) {
+            if (nomBarcodes.length == 0) {
+                $("#alertText").text("НЕ СКАНИРОВАН ТОВАР");
                 $('.alert').removeClass('d-none');
                 document.getElementById('soundBeep').play();
                 setTimeout(() => { $('.alert').addClass('d-none'); $("#alertText").text(""); }, 3000);
-            },
-            complete: function () {
-                DisableBusyScreen()
-            },
-        });
-    }
+            }
+            else {
+                _this = this;
+                var barcode = this.value;
+                $.ajax({
+                    url: "GetLabelsPdf",
+                    type: "post",
+                    datatype: "xml",
+                    data: {
+                        id: this.value,
+                        nomBarcodes: nomBarcodes
+                    },
+                    async: true,
+                    cache: false,
+                    beforeSend: function () {
+                        EnableBusyScreen()
+                    },
+                    success: function () {
+                        var url = '@Url.Action("GetLabelsPdf", "ИнтернетЗаказы")' + '?id=' + barcode.replaceAll('%', '_') + "&isNaborDocId=true#view=fitH";
+                        printPage(url, true);
+                        //ShowFormNabor(barcode);
+                    },
+                    error: function (jqXHR, exception) {
+                        $("#alertText").text(jqXHR.responseText);
+                        $('.alert').removeClass('d-none');
+                        document.getElementById('soundBeep').play();
+                        setTimeout(() => { $('.alert').addClass('d-none'); $("#alertText").text(""); }, 2000);
+                    },
+                    complete: function () {
+                        nomBarcodes.length = 0;
+                        DisableBusyScreen()
+                        _this.focus();
+                    },
+                });
+            }
+        }
+        else {
+            if (nomBarcodes.indexOf(this.value) === -1) 
+                nomBarcodes.push(this.value);
+        }
+        //console.log(nomBarcodes);
+        //alert(this.value);
+        //var url = '@Url.Action("GetLabelsPdf", "ИнтернетЗаказы")' + '?id=' + this.value.replaceAll('%', '_') + "&isNaborDocId=true#view=fitH";
+        //printPage(url, true);
+        //ShowFormNabor(this.value);
+        this.value = "";
+    });
+    //function ShowFormNabor(barcodeText) {
+    //    $.ajax({
+    //        url: "NaborScan",
+    //        type: "post",
+    //        datatype: "xml",
+    //        data: {
+    //            barcodeText: barcodeText
+    //        },
+    //        async: true,
+    //        cache: false,
+    //        beforeSend: function () {
+    //            EnableBusyScreen()
+    //        },
+    //        success: function (obj) {
+    //            if (obj) {
+    //                document.getElementById('soundOk').play();
+    //                $(".modal-body").html(obj);
+    //                $("#formNabor").modal("show");
+    //                setTimeout(() => { $("#formNabor").modal('hide'); }, 2000);
+    //            }
+    //        },
+    //        error: function (jqXHR, exception, f) {
+    //            var msg = 'Internal Server Error';
+    //            if (jqXHR.status == 502) {
+    //                if (jqXHR.responseText != "")
+    //                    msg = jqXHR.responseText;
+    //            }
+    //            $("#alertText").text(msg);
+    //            $('.alert').removeClass('d-none');
+    //            document.getElementById('soundBeep').play();
+    //            setTimeout(() => { $('.alert').addClass('d-none'); $("#alertText").text(""); }, 3000);
+    //        },
+    //        complete: function () {
+    //            DisableBusyScreen()
+    //        },
+    //    });
+    //}
 </script>

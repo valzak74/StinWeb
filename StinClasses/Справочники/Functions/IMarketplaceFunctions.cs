@@ -11,7 +11,7 @@ namespace StinClasses.Справочники.Functions
         Task<IEnumerable<MarketUseInfoPrice>> GetMarketUseInfoForPriceAsync(Marketplace marketplace, int limit, CancellationToken cancellationToken);
         Task<IEnumerable<MarketUseInfoStock>> GetMarketUseInfoForStockAsync(IEnumerable<string> nomCodes, Marketplace marketplace, bool regular, int limit, CancellationToken cancellationToken);
         Task ClearTakenMarkVzUpdStock(string marketplaceId, CancellationToken cancellationToken);
-        IEnumerable<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount)> GetPriceData(IEnumerable<MarketUseInfoPrice> data,
+        IEnumerable<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount, decimal minPrice)> GetPriceData(IEnumerable<MarketUseInfoPrice> data,
             Marketplace marketplace, decimal checkCoeff);
         Task<IEnumerable<(string productId, string offerId, string barcode, int stock)>> GetStockData(IEnumerable<MarketUseInfoStock> data, 
             Marketplace marketplace,

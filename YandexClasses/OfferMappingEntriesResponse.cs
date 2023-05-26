@@ -76,7 +76,7 @@ namespace YandexClasses
         public long TransportUnitSize { get; set; }
         public long MinShipment { get; set; }
         public long QuantumOfSupply { get; set; }
-        public string SupplyScheduleDays { get; set; }
+        public DayOfWeekType[] SupplyScheduleDays { get; set; }
         public long DeliveryDurationDays { get; set; }
         public long BoxCount { get; set; }
         public long ShelfLifeDays { get; set; }
@@ -93,7 +93,18 @@ namespace YandexClasses
             return ProcessingState != null;
         }
     }
-
+    [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]
+    public enum DayOfWeekType
+    {
+        NotFound,
+        MONDAY, 
+        TUESDAY, 
+        WEDNESDAY, 
+        THURSDAY, 
+        FRIDAY, 
+        SATURDAY, 
+        SUNDAY
+    }
     [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]
     public enum Availability
     {
@@ -118,36 +129,41 @@ namespace YandexClasses
     [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]
     public enum StateType
     {
-        ASSORTMENT = 1,
-        CANCELLED = 2,
-        CONFLICTING_INFORMATION = 3,
-        CONFLICTING = 4,
-        DEPARTMENT_FROZEN = 5,
-        INCORRECT_INFORMATION = 6,
-        LEGAL_CONFLICT = 7,
-        NEED_CLASSIFICATION_INFORMATION = 8,
-        NEED_INFORMATION = 9,
-        NEED_PICTURES = 10,
-        NEED_VENDOR = 11,
-        NO_CATEGORY = 12,
-        NO_KNOWLEDGE = 13,
-        NO_PARAMETERS_IN_SHOP_TITLE = 14,
-        NO_SIZE_MEASURE = 15,
-        UNKNOWN = 16,
-        NotFound
+        NotFound,
+        ASSORTMENT, 
+        CANCELLED, 
+        CONFLICTING_INFORMATION, 
+        OTHER, 
+        DEPARTMENT_FROZEN, 
+        INCORRECT_INFORMATION, 
+        LEGAL_CONFLICT, 
+        NEED_CLASSIFICATION_INFORMATION, 
+        NEED_INFORMATION, 
+        NEED_PICTURES, 
+        NEED_VENDOR, 
+        NO_CATEGORY, 
+        NO_KNOWLEDGE, 
+        NO_PARAMETERS_IN_SHOP_TITLE, 
+        NO_SIZE_MEASURE, 
+        SAMPLE_LINE
     }
 
     [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]
     public enum StateStatus
     {
-        READY = 1,
-        IN_WORK = 2,
-        NEED_CONTENT = 3,
-        NEED_INFO = 4,
-        REJECTED = 5,
-        SUSPENDED = 6,
-        OTHER = 7,
-        NotFound
+        NotFound,
+        UNKNOWN, 
+        READY, 
+        IN_WORK, 
+        NEED_INFO, 
+        NEED_MAPPING, 
+        NEED_CONTENT, 
+        CONTENT_PROCESSING, 
+        SUSPENDED, 
+        REJECTED, 
+        REVIEW, 
+        CREATE_ERROR, 
+        UPDATE_ERROR
     }
 
     public class LifePeriod
