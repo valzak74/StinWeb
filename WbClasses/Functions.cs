@@ -80,7 +80,7 @@ namespace WbClasses
             List<PriceRequest> priceData,
             CancellationToken cancellationToken)
         {
-            var result = await httpService.Exchange<bool, List<string>>(
+            var result = await httpService.Exchange<bool, PriceError>(
                 $"https://{proxyHost}suppliers-api.wildberries.ru/public/api/v1/prices",
                 HttpMethod.Post,
                 GetCustomHeaders(authToken),
@@ -88,7 +88,7 @@ namespace WbClasses
                 cancellationToken);
             if (result.Item2 != null)
             {
-                return (false, "".ParseError(result.Item2));
+                return (false, "".ParseError(result.Item2.Errors));
             }
             return (result.Item1, null);
         }

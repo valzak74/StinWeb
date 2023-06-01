@@ -1,4 +1,6 @@
-﻿using System;
+﻿using JsonExtensions;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,5 +12,10 @@ namespace WbClasses
     {
         public long NmId { get; set; }
         public int Price { get; set; }
+    }
+    public class PriceError 
+    {
+        public List<string>? Errors { get; set; }
+        public int ErrorCode { get; set; }
     }
 }

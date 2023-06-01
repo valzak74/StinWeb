@@ -1,4 +1,7 @@
-﻿namespace OzonClasses
+﻿using JsonExtensions;
+using Newtonsoft.Json;
+
+namespace OzonClasses
 {
     public class OzonPriceRequest
     {
@@ -22,6 +25,8 @@
     }
     public class PriceResult
     {
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        [JsonConverter(typeof(SingleObjectOrArrayJsonConverter<ErrorResponse>))]
         public List<ErrorResponse>? Errors { get; set; }
         public string? Offer_id { get; set; }
         public long Product_id { get; set; }
