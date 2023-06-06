@@ -391,6 +391,7 @@ namespace StinWeb.Controllers.Обработки
                 sheet.SetValue(styleValueMoney, row, columnValues["Розничная"], item.ЦенаРозн);
                 sheet.SetValue(styleValueMoney, row, columnValues["РозничнаяСП"], item.ЦенаСп);
                 var ценаПродажи = item.ЦенаСп > 0 ? Math.Min(item.ЦенаРозн, item.ЦенаСп) : item.ЦенаРозн;
+                ценаПродажи = item.МинЦена > 0 ? Math.Max(item.МинЦена, ценаПродажи) : ценаПродажи;
                 sheet.SetValue(styleValueMoney, row, columnValues["ЦенаПродажи"], ценаПродажи);
                 sheet.SetValue(styleValueNum, row, columnValues["ЦП_ЗЦ"], item.ЦенаЗакуп == 0 ? 0 : ценаПродажи / item.ЦенаЗакуп);
                 sheet.SetValue(styleValueMoney, row, columnValues["МинЦена"], item.МинЦена);
