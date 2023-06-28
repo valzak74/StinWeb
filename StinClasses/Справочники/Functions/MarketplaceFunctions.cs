@@ -283,7 +283,14 @@ namespace StinClasses.Справочники.Functions
             {
                 entity.Flag = false;
                 entity.Updated = DateTime.Now;
+                muIds.Remove(entity.MuId);
             }
+            foreach (var id in muIds)
+                await _context.VzUpdatingPrices.AddAsync(new VzUpdatingPrice {
+                    MuId = id,
+                    Flag = false,
+                    Updated = DateTime.Now
+                }, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
         }
         public async Task ClearTakenMarkVzUpdStock(string marketplaceId, CancellationToken cancellationToken)
