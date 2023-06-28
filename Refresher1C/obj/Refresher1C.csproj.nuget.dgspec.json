@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Валентин\\source\\repos\\StinWeb\\Refresher1C\\Refresher1C.csproj": {}
+    "C:\\Users\\wsluh\\source\\repos\\StinWeb\\Refresher1C\\Refresher1C.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Валентин\\source\\repos\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj": {
+    "C:\\Users\\wsluh\\source\\repos\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj",
+        "projectUniqueName": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj",
         "projectName": "AliExpressClasses",
-        "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj",
-        "packagesPath": "C:\\Users\\Валентин\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\AliExpressClasses\\obj\\",
+        "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj",
+        "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\AliExpressClasses\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+          "D:\\Visual Studio\\Новая папка\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Валентин\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\wsluh\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -33,11 +33,11 @@
           "net6.0": {
             "targetAlias": "net6.0",
             "projectReferences": {
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj"
               },
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
               }
             }
           }
@@ -73,24 +73,24 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.302\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.202\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\Валентин\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
+    "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj",
+        "projectUniqueName": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj",
         "projectName": "HttpExtensions",
-        "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj",
-        "packagesPath": "C:\\Users\\Валентин\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\HttpExtensions\\obj\\",
+        "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj",
+        "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+          "D:\\Visual Studio\\Новая папка\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Валентин\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\wsluh\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -106,8 +106,8 @@
           "net6.0": {
             "targetAlias": "net6.0",
             "projectReferences": {
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
               }
             }
           }
@@ -147,24 +147,24 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.302\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.202\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
+    "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj",
+        "projectUniqueName": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj",
         "projectName": "JsonExtensions",
-        "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj",
-        "packagesPath": "C:\\Users\\Валентин\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\obj\\",
+        "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj",
+        "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+          "D:\\Visual Studio\\Новая папка\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Валентин\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\wsluh\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -213,24 +213,24 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.302\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.202\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\Валентин\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj": {
+    "C:\\Users\\wsluh\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj",
+        "projectUniqueName": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj",
         "projectName": "OzonClasses",
-        "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj",
-        "packagesPath": "C:\\Users\\Валентин\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\OzonClasses\\obj\\",
+        "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj",
+        "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\OzonClasses\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+          "D:\\Visual Studio\\Новая папка\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Валентин\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\wsluh\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -246,11 +246,11 @@
           "net6.0": {
             "targetAlias": "net6.0",
             "projectReferences": {
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj"
               },
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
               }
             }
           }
@@ -286,24 +286,24 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.302\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.202\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\Валентин\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj": {
+    "C:\\Users\\wsluh\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj",
+        "projectUniqueName": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj",
         "projectName": "PdfHelper",
-        "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj",
-        "packagesPath": "C:\\Users\\Валентин\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\PdfHelper\\obj\\",
+        "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj",
+        "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\PdfHelper\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+          "D:\\Visual Studio\\Новая папка\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Валентин\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\wsluh\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -368,24 +368,24 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.302\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.202\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\Валентин\\source\\repos\\StinWeb\\Refresher1C\\Refresher1C.csproj": {
+    "C:\\Users\\wsluh\\source\\repos\\StinWeb\\Refresher1C\\Refresher1C.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\Refresher1C\\Refresher1C.csproj",
+        "projectUniqueName": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\Refresher1C\\Refresher1C.csproj",
         "projectName": "Refresher1C",
-        "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\Refresher1C\\Refresher1C.csproj",
-        "packagesPath": "C:\\Users\\Валентин\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\Refresher1C\\obj\\",
+        "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\Refresher1C\\Refresher1C.csproj",
+        "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\Refresher1C\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+          "D:\\Visual Studio\\Новая папка\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Валентин\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\wsluh\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -401,32 +401,32 @@
           "net6.0": {
             "targetAlias": "net6.0",
             "projectReferences": {
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj"
               },
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj"
               },
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
               },
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj"
               },
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj"
               },
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\SberClasses\\SberClasses.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\SberClasses\\SberClasses.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\SberClasses\\SberClasses.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\SberClasses\\SberClasses.csproj"
               },
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj"
               },
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\WbClasses\\WbClasses.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\WbClasses\\WbClasses.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\WbClasses\\WbClasses.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\WbClasses\\WbClasses.csproj"
               },
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj"
               }
             }
           }
@@ -496,24 +496,24 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.302\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.202\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\Валентин\\source\\repos\\StinWeb\\SberClasses\\SberClasses.csproj": {
+    "C:\\Users\\wsluh\\source\\repos\\StinWeb\\SberClasses\\SberClasses.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\SberClasses\\SberClasses.csproj",
+        "projectUniqueName": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\SberClasses\\SberClasses.csproj",
         "projectName": "SberClasses",
-        "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\SberClasses\\SberClasses.csproj",
-        "packagesPath": "C:\\Users\\Валентин\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\SberClasses\\obj\\",
+        "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\SberClasses\\SberClasses.csproj",
+        "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\SberClasses\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+          "D:\\Visual Studio\\Новая папка\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Валентин\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\wsluh\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -529,11 +529,11 @@
           "net6.0": {
             "targetAlias": "net6.0",
             "projectReferences": {
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj"
               },
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
               }
             }
           }
@@ -563,24 +563,24 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.302\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.202\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj": {
+    "C:\\Users\\wsluh\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj",
+        "projectUniqueName": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj",
         "projectName": "StinClasses",
-        "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj",
-        "packagesPath": "C:\\Users\\Валентин\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\StinClasses\\obj\\",
+        "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj",
+        "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\StinClasses\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+          "D:\\Visual Studio\\Новая папка\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Валентин\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\wsluh\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -596,14 +596,14 @@
           "net6.0": {
             "targetAlias": "net6.0",
             "projectReferences": {
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
               },
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj"
               },
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj"
               }
             }
           }
@@ -653,24 +653,24 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.302\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.202\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\Валентин\\source\\repos\\StinWeb\\WbClasses\\WbClasses.csproj": {
+    "C:\\Users\\wsluh\\source\\repos\\StinWeb\\WbClasses\\WbClasses.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\WbClasses\\WbClasses.csproj",
+        "projectUniqueName": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\WbClasses\\WbClasses.csproj",
         "projectName": "WbClasses",
-        "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\WbClasses\\WbClasses.csproj",
-        "packagesPath": "C:\\Users\\Валентин\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\WbClasses\\obj\\",
+        "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\WbClasses\\WbClasses.csproj",
+        "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\WbClasses\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+          "D:\\Visual Studio\\Новая папка\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Валентин\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\wsluh\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -686,11 +686,11 @@
           "net6.0": {
             "targetAlias": "net6.0",
             "projectReferences": {
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj"
               },
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
               }
             }
           }
@@ -726,24 +726,24 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.302\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.202\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\Валентин\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj": {
+    "C:\\Users\\wsluh\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj",
+        "projectUniqueName": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj",
         "projectName": "YandexClasses",
-        "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj",
-        "packagesPath": "C:\\Users\\Валентин\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\YandexClasses\\obj\\",
+        "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj",
+        "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\YandexClasses\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+          "D:\\Visual Studio\\Новая папка\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Валентин\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\wsluh\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -759,11 +759,11 @@
           "net6.0": {
             "targetAlias": "net6.0",
             "projectReferences": {
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj"
               },
-              "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
-                "projectPath": "C:\\Users\\Валентин\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
+              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
+                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
               }
             }
           }
@@ -799,7 +799,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.302\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.202\\RuntimeIdentifierGraph.json"
         }
       }
     }

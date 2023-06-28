@@ -303,14 +303,15 @@ namespace StinClasses.Справочники.Functions
                           join nom in _context.Sc84s on markUse.Parentext equals nom.Id
                           join vzTovar in _context.VzTovars on nom.Id equals vzTovar.Id into _vzTovar
                           from vzTovar in _vzTovar.DefaultIfEmpty()
-                          join updPrice in _context.VzUpdatingPrices on markUse.Id equals updPrice.MuId
+                          join updPrice in _context.VzUpdatingPrices on markUse.Id equals updPrice.MuId into _updPrice
+                          from updPrice in _updPrice.DefaultIfEmpty()
                           where !markUse.Ismark &&
                               (markUse.Sp14158 == 1) && //Есть в каталоге
-                              (updPrice.Flag || (updPrice.Updated < limitDate)) &&
+                              (updPrice == null || updPrice.Flag || (updPrice.Updated < limitDate)) &&
                               (markUse.Sp14147 == marketplace.Id)
                           //&& ((vzTovar == null) || (vzTovar.Rozn <= 0))
                           //&& nom.Code == "K00035471"
-                          //&& nom.Code == "D00040383"
+                          //&& nom.Code == "D00061801"
                           select new MarketUseInfoPrice
                           {
                               Id = markUse.Id,
