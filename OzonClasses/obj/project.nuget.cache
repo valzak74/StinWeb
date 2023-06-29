@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "GZCqoWBRvWKzwsaXuX9dC9hxhrn5o4lo4afCi1BWokNm5FEihjlRA0Py87zzn7lwU5jA4tHKAJwEFcTHIOQL0w==",
+  "dgSpecHash": "BdL3kyHQhL/QQKu2wWv0w0mPEOcxiGxXN9eLc6TdeDjWqTm4g7eq8vShZ+g6vV4hlIw0X2j7/Ti9d77hRigkgw==",
   "success": true,
-  "projectFilePath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj",
+  "projectFilePath": "D:\\StinWeb\\OzonClasses\\OzonClasses.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\wsluh\\.nuget\\packages\\microsoft.aspnetcore.webutilities\\2.2.0\\microsoft.aspnetcore.webutilities.2.2.0.nupkg.sha512",
     "C:\\Users\\wsluh\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\6.0.1\\microsoft.extensions.logging.abstractions.6.0.1.nupkg.sha512",

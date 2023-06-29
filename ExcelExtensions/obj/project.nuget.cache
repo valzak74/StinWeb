@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "gAiRzsIf5OZ2K91NVfoak4XbIo40fyd21/UFAL9y6asrvQ9Shf3lqZxnq7xny2nGrz5rUVaBgijGkrIQDPMWrQ==",
+  "dgSpecHash": "jr7kGYWLqx4oubQe9UfDFwA1PRcauLldJoYK1Ql3diK2NS7Km9jFq+GCjLpV2UBIgumILAP8oIKiwF9XVDv/lg==",
   "success": true,
-  "projectFilePath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\ExcelExtensions\\ExcelHelper.csproj",
+  "projectFilePath": "D:\\StinWeb\\ExcelExtensions\\ExcelHelper.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\wsluh\\.nuget\\packages\\microsoft.netcore.platforms\\2.0.0\\microsoft.netcore.platforms.2.0.0.nupkg.sha512",
     "C:\\Users\\wsluh\\.nuget\\packages\\microsoft.win32.systemevents\\4.5.0\\microsoft.win32.systemevents.4.5.0.nupkg.sha512",

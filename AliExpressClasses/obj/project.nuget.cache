@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Jq/wKWpoq7HE/Kb2HMHzwNhNorVSpDKvORtJyzrB+jNLqv46aC2Zbp/tbmPndCYpxKC7NQOhrYJKhWqrA4reQw==",
+  "dgSpecHash": "MnIr3qnIuMnSi6l0gATWSG1c0lgbuv1VgnsdQuWNDHVwKCVsHKE9z49d62QDtUmuHGq99XhTr91XwrKnh4UDlw==",
   "success": true,
-  "projectFilePath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj",
+  "projectFilePath": "D:\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\wsluh\\.nuget\\packages\\microsoft.aspnetcore.webutilities\\2.2.0\\microsoft.aspnetcore.webutilities.2.2.0.nupkg.sha512",
     "C:\\Users\\wsluh\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\6.0.1\\microsoft.extensions.logging.abstractions.6.0.1.nupkg.sha512",

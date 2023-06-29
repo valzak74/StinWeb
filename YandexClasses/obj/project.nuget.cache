@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "4AEAWhscp4LzKFUWq8bFgFkEx847h80mCmns8acMXFgEElmwB6A87P/Nztgh0Orr06BrXguk8GS25S9YlJhKzA==",
+  "dgSpecHash": "tAh1Aw99iy+Crs+s92gO/0t5BdnP14C+M04EPsSA6lULyJa2Tq5LCJuQOhs6brMO7o7KwmQZNmgbxrXTjUVmDg==",
   "success": true,
-  "projectFilePath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj",
+  "projectFilePath": "D:\\StinWeb\\YandexClasses\\YandexClasses.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\wsluh\\.nuget\\packages\\microsoft.aspnetcore.webutilities\\2.2.0\\microsoft.aspnetcore.webutilities.2.2.0.nupkg.sha512",
     "C:\\Users\\wsluh\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\6.0.1\\microsoft.extensions.logging.abstractions.6.0.1.nupkg.sha512",

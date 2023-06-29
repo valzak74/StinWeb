@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "btRLFMKJjumHkw8Gx09NDI5mNu8c8OmN+SMfDYktRvDNZH0HMQnyEUvpQWr7wMDEn3x1t7E0WKsdhPL9zYuL1Q==",
+  "dgSpecHash": "hWiWlol3GZ20Db2/L3QKv0L7CXzJ48hCvmiXemBzEyX+cwe2c/+CluGdpxIx0mLUvc1ROPv5t96HOrDjD0Py3Q==",
   "success": true,
-  "projectFilePath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\Refresher1C\\Refresher1C.csproj",
+  "projectFilePath": "D:\\StinWeb\\Refresher1C\\Refresher1C.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\wsluh\\.nuget\\packages\\barcodelib\\2.4.0\\barcodelib.2.4.0.nupkg.sha512",
     "C:\\Users\\wsluh\\.nuget\\packages\\humanizer.core\\2.8.26\\humanizer.core.2.8.26.nupkg.sha512",

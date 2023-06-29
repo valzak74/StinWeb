@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "geW6IDbWjTju3RGXLyEcsTtxqFRW/81kF+g8+EhcYbVhgE8uwTBJ7v3EXMTTjF1wIjx+m0eC6fGdkI/Rw0ljUQ==",
+  "dgSpecHash": "Dv9shBiPWG6oWASkdEmbqpIZCuG5EosGEvoLCKAo6LXEuTjdyquChbAHglGhp3Q0irB4/1165Q1SVmt9QBP3JQ==",
   "success": true,
-  "projectFilePath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\SberClasses\\SberClasses.csproj",
+  "projectFilePath": "D:\\StinWeb\\SberClasses\\SberClasses.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\wsluh\\.nuget\\packages\\microsoft.aspnetcore.webutilities\\2.2.0\\microsoft.aspnetcore.webutilities.2.2.0.nupkg.sha512",
     "C:\\Users\\wsluh\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\6.0.1\\microsoft.extensions.logging.abstractions.6.0.1.nupkg.sha512",

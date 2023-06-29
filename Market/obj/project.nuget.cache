@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "IYaWx6jJScs0onp7XJXey9EbPtbVLwGied+6GlqqYj+WXhZH6kvyMzqXHUaQ1Gg0wWqVGxZIkWnurcPGNLNZ1g==",
+  "dgSpecHash": "37NiuYyVWobuHgx48FkXjFn72DuBFLqYBW/aoNC0xjEv3XG9+nt5ba2abTIpdURZIBtRPfsvbhT18VlZR8NiWQ==",
   "success": true,
-  "projectFilePath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\Market\\Market.csproj",
+  "projectFilePath": "D:\\StinWeb\\Market\\Market.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\wsluh\\.nuget\\packages\\barcodelib\\2.4.0\\barcodelib.2.4.0.nupkg.sha512",
     "C:\\Users\\wsluh\\.nuget\\packages\\humanizer.core\\2.8.26\\humanizer.core.2.8.26.nupkg.sha512",

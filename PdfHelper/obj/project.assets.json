@@ -1686,11 +1686,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\wsluh\\Source\\Repos\\StinWeb\\PdfHelper\\PdfHelper.csproj",
+      "projectUniqueName": "D:\\StinWeb\\PdfHelper\\PdfHelper.csproj",
       "projectName": "PdfHelper",
-      "projectPath": "C:\\Users\\wsluh\\Source\\Repos\\StinWeb\\PdfHelper\\PdfHelper.csproj",
+      "projectPath": "D:\\StinWeb\\PdfHelper\\PdfHelper.csproj",
       "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\wsluh\\Source\\Repos\\StinWeb\\PdfHelper\\obj\\",
+      "outputPath": "D:\\StinWeb\\PdfHelper\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "D:\\Visual Studio\\Новая папка\\NuGetPackages"

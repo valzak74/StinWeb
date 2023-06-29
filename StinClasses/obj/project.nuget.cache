@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "VLxZY2zSCew+KU8bIp7yMlLCMIWaoDhu2qY11LFzlGk/SRbg5fs3JbXxenAn9yUnuRHjuZN7j0JBJeQZPN0Tcg==",
+  "dgSpecHash": "Nll66bxVL4NhEyNgWm1C0//MbLDQCnKXKw9Eb/Rwno61MGFupf2QW+l1g1fqQzYWjKmQmO7c8VzYRi6M1D9UDA==",
   "success": true,
-  "projectFilePath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj",
+  "projectFilePath": "D:\\StinWeb\\StinClasses\\StinClasses.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\wsluh\\.nuget\\packages\\barcodelib\\2.4.0\\barcodelib.2.4.0.nupkg.sha512",
     "C:\\Users\\wsluh\\.nuget\\packages\\humanizer.core\\2.8.26\\humanizer.core.2.8.26.nupkg.sha512",

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "KIhbwoHfMWboYkO23FeTl8bIpccs3vr6zt9T9JU3NrKRrg/Nh+udg6FiA9mfPyUVcvXiyULbCP99tgnmUz7Uww==",
+  "dgSpecHash": "Rq8RFUfu1+tLUeDAIIfMpQ0bGlcWWNBlo6t1byFoTK109Li+QGP3bPKVgABHcci25hLRsdsdMwAustZUz4m35A==",
   "success": true,
-  "projectFilePath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\Test2\\Test2.csproj",
+  "projectFilePath": "D:\\StinWeb\\Test2\\Test2.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\wsluh\\.nuget\\packages\\barcodelib\\2.4.0\\barcodelib.2.4.0.nupkg.sha512",
     "C:\\Users\\wsluh\\.nuget\\packages\\elasticsearch.net\\7.17.5\\elasticsearch.net.7.17.5.nupkg.sha512",

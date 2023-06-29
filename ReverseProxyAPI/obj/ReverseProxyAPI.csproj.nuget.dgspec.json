@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\wsluh\\source\\repos\\StinWeb\\ReverseProxyAPI\\ReverseProxyAPI.csproj": {}
+    "D:\\StinWeb\\ReverseProxyAPI\\ReverseProxyAPI.csproj": {}
   },
   "projects": {
-    "C:\\Users\\wsluh\\source\\repos\\StinWeb\\ReverseProxyAPI\\ReverseProxyAPI.csproj": {
+    "D:\\StinWeb\\ReverseProxyAPI\\ReverseProxyAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\ReverseProxyAPI\\ReverseProxyAPI.csproj",
+        "projectUniqueName": "D:\\StinWeb\\ReverseProxyAPI\\ReverseProxyAPI.csproj",
         "projectName": "ReverseProxyAPI",
-        "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\ReverseProxyAPI\\ReverseProxyAPI.csproj",
+        "projectPath": "D:\\StinWeb\\ReverseProxyAPI\\ReverseProxyAPI.csproj",
         "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\ReverseProxyAPI\\obj\\",
+        "outputPath": "D:\\StinWeb\\ReverseProxyAPI\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "D:\\Visual Studio\\Новая папка\\NuGetPackages"

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\wsluh\\source\\repos\\StinWeb\\ExcelExtensions\\ExcelHelper.csproj": {}
+    "D:\\StinWeb\\ExcelExtensions\\ExcelHelper.csproj": {}
   },
   "projects": {
-    "C:\\Users\\wsluh\\source\\repos\\StinWeb\\ExcelExtensions\\ExcelHelper.csproj": {
+    "D:\\StinWeb\\ExcelExtensions\\ExcelHelper.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\ExcelExtensions\\ExcelHelper.csproj",
+        "projectUniqueName": "D:\\StinWeb\\ExcelExtensions\\ExcelHelper.csproj",
         "projectName": "ExcelHelper",
-        "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\ExcelExtensions\\ExcelHelper.csproj",
+        "projectPath": "D:\\StinWeb\\ExcelExtensions\\ExcelHelper.csproj",
         "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\ExcelExtensions\\obj\\",
+        "outputPath": "D:\\StinWeb\\ExcelExtensions\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "D:\\Visual Studio\\Новая папка\\NuGetPackages"

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "gTHo4hWcY/SuKHo1TkNRUmSMwJPRU+A69RP+Md++ftyjNy0G/OlwcmwArbJ67BN5tmDvR+tCcvFEi4QK2pW2xg==",
+  "dgSpecHash": "+nxGdREOxp545bt3eMbaHkCEm2AcW2Hgg4nqYnpfHWw9z7CsrpkNufZQ2FhtunFqeOoSLTfxG1UXy4Wjf6pfBQ==",
   "success": true,
-  "projectFilePath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj",
+  "projectFilePath": "D:\\StinWeb\\PdfHelper\\PdfHelper.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\wsluh\\.nuget\\packages\\barcodelib\\2.4.0\\barcodelib.2.4.0.nupkg.sha512",
     "C:\\Users\\wsluh\\.nuget\\packages\\microsoft.netcore.platforms\\5.0.0\\microsoft.netcore.platforms.5.0.0.nupkg.sha512",

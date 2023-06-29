@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "SIQShlazA35raQp66mPqrfVpGhNBn4AbzVk7Nwplch5mx4cpLfguFIYsVc5SQczZxhClyWbOjL144xNU/ZMOMw==",
+  "dgSpecHash": "60WSHrNs8RcT8UQvgj6wnvFkH072n3DaSJ1Y6xohfF5QrT48H2iLDxYvhP4Q4w0DO9Ivxl+voGrJqCUMCTG+ew==",
   "success": true,
-  "projectFilePath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\WbClasses\\WbClasses.csproj",
+  "projectFilePath": "D:\\StinWeb\\WbClasses\\WbClasses.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\wsluh\\.nuget\\packages\\microsoft.aspnetcore.webutilities\\2.2.0\\microsoft.aspnetcore.webutilities.2.2.0.nupkg.sha512",
     "C:\\Users\\wsluh\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\6.0.1\\microsoft.extensions.logging.abstractions.6.0.1.nupkg.sha512",

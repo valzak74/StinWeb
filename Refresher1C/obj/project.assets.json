@@ -6714,11 +6714,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\Refresher1C\\Refresher1C.csproj",
+      "projectUniqueName": "D:\\StinWeb\\Refresher1C\\Refresher1C.csproj",
       "projectName": "Refresher1C",
-      "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\Refresher1C\\Refresher1C.csproj",
+      "projectPath": "D:\\StinWeb\\Refresher1C\\Refresher1C.csproj",
       "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\Refresher1C\\obj\\",
+      "outputPath": "D:\\StinWeb\\Refresher1C\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "D:\\Visual Studio\\Новая папка\\NuGetPackages"
@@ -6740,32 +6740,32 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "projectReferences": {
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj"
+            "D:\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj": {
+              "projectPath": "D:\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj"
             },
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj"
+            "D:\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
+              "projectPath": "D:\\StinWeb\\HttpExtensions\\HttpExtensions.csproj"
             },
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
+            "D:\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
+              "projectPath": "D:\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
             },
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj"
+            "D:\\StinWeb\\OzonClasses\\OzonClasses.csproj": {
+              "projectPath": "D:\\StinWeb\\OzonClasses\\OzonClasses.csproj"
             },
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj"
+            "D:\\StinWeb\\PdfHelper\\PdfHelper.csproj": {
+              "projectPath": "D:\\StinWeb\\PdfHelper\\PdfHelper.csproj"
             },
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\SberClasses\\SberClasses.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\SberClasses\\SberClasses.csproj"
+            "D:\\StinWeb\\SberClasses\\SberClasses.csproj": {
+              "projectPath": "D:\\StinWeb\\SberClasses\\SberClasses.csproj"
             },
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj"
+            "D:\\StinWeb\\StinClasses\\StinClasses.csproj": {
+              "projectPath": "D:\\StinWeb\\StinClasses\\StinClasses.csproj"
             },
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\WbClasses\\WbClasses.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\WbClasses\\WbClasses.csproj"
+            "D:\\StinWeb\\WbClasses\\WbClasses.csproj": {
+              "projectPath": "D:\\StinWeb\\WbClasses\\WbClasses.csproj"
             },
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj"
+            "D:\\StinWeb\\YandexClasses\\YandexClasses.csproj": {
+              "projectPath": "D:\\StinWeb\\YandexClasses\\YandexClasses.csproj"
             }
           }
         }

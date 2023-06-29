@@ -3751,11 +3751,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj",
+      "projectUniqueName": "D:\\StinWeb\\StinClasses\\StinClasses.csproj",
       "projectName": "StinClasses",
-      "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj",
+      "projectPath": "D:\\StinWeb\\StinClasses\\StinClasses.csproj",
       "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\StinClasses\\obj\\",
+      "outputPath": "D:\\StinWeb\\StinClasses\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "D:\\Visual Studio\\Новая папка\\NuGetPackages"
@@ -3777,14 +3777,14 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "projectReferences": {
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
+            "D:\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
+              "projectPath": "D:\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
             },
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj"
+            "D:\\StinWeb\\PdfHelper\\PdfHelper.csproj": {
+              "projectPath": "D:\\StinWeb\\PdfHelper\\PdfHelper.csproj"
             },
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj"
+            "D:\\StinWeb\\YandexClasses\\YandexClasses.csproj": {
+              "projectPath": "D:\\StinWeb\\YandexClasses\\YandexClasses.csproj"
             }
           }
         }

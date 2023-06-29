@@ -58,11 +58,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\wsluh\\Source\\Repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj",
+      "projectUniqueName": "D:\\StinWeb\\JsonExtensions\\JsonExtensions.csproj",
       "projectName": "JsonExtensions",
-      "projectPath": "C:\\Users\\wsluh\\Source\\Repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj",
+      "projectPath": "D:\\StinWeb\\JsonExtensions\\JsonExtensions.csproj",
       "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\wsluh\\Source\\Repos\\StinWeb\\JsonExtensions\\obj\\",
+      "outputPath": "D:\\StinWeb\\JsonExtensions\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "D:\\Visual Studio\\Новая папка\\NuGetPackages"

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\wsluh\\source\\repos\\StinWeb\\AtolOnlineClasses\\AtolOnlineClasses.csproj": {}
+    "D:\\StinWeb\\AtolOnlineClasses\\AtolOnlineClasses.csproj": {}
   },
   "projects": {
-    "C:\\Users\\wsluh\\source\\repos\\StinWeb\\AtolOnlineClasses\\AtolOnlineClasses.csproj": {
+    "D:\\StinWeb\\AtolOnlineClasses\\AtolOnlineClasses.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\AtolOnlineClasses\\AtolOnlineClasses.csproj",
+        "projectUniqueName": "D:\\StinWeb\\AtolOnlineClasses\\AtolOnlineClasses.csproj",
         "projectName": "AtolOnlineClasses",
-        "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\AtolOnlineClasses\\AtolOnlineClasses.csproj",
+        "projectPath": "D:\\StinWeb\\AtolOnlineClasses\\AtolOnlineClasses.csproj",
         "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\AtolOnlineClasses\\obj\\",
+        "outputPath": "D:\\StinWeb\\AtolOnlineClasses\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "D:\\Visual Studio\\Новая папка\\NuGetPackages"
@@ -33,8 +33,8 @@
           "net6.0": {
             "targetAlias": "net6.0",
             "projectReferences": {
-              "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
-                "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
+              "D:\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
+                "projectPath": "D:\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
               }
             }
           }
@@ -74,14 +74,14 @@
         }
       }
     },
-    "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
+    "D:\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj",
+        "projectUniqueName": "D:\\StinWeb\\JsonExtensions\\JsonExtensions.csproj",
         "projectName": "JsonExtensions",
-        "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj",
+        "projectPath": "D:\\StinWeb\\JsonExtensions\\JsonExtensions.csproj",
         "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\obj\\",
+        "outputPath": "D:\\StinWeb\\JsonExtensions\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "D:\\Visual Studio\\Новая папка\\NuGetPackages"

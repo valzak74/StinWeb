@@ -506,11 +506,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\wsluh\\Source\\Repos\\StinWeb\\ExcelExtensions\\ExcelHelper.csproj",
+      "projectUniqueName": "D:\\StinWeb\\ExcelExtensions\\ExcelHelper.csproj",
       "projectName": "ExcelHelper",
-      "projectPath": "C:\\Users\\wsluh\\Source\\Repos\\StinWeb\\ExcelExtensions\\ExcelHelper.csproj",
+      "projectPath": "D:\\StinWeb\\ExcelExtensions\\ExcelHelper.csproj",
       "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\wsluh\\Source\\Repos\\StinWeb\\ExcelExtensions\\obj\\",
+      "outputPath": "D:\\StinWeb\\ExcelExtensions\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "D:\\Visual Studio\\Новая папка\\NuGetPackages"

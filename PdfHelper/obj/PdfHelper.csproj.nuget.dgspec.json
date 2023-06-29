@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\wsluh\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj": {}
+    "D:\\StinWeb\\PdfHelper\\PdfHelper.csproj": {}
   },
   "projects": {
-    "C:\\Users\\wsluh\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj": {
+    "D:\\StinWeb\\PdfHelper\\PdfHelper.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj",
+        "projectUniqueName": "D:\\StinWeb\\PdfHelper\\PdfHelper.csproj",
         "projectName": "PdfHelper",
-        "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\PdfHelper\\PdfHelper.csproj",
+        "projectPath": "D:\\StinWeb\\PdfHelper\\PdfHelper.csproj",
         "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\PdfHelper\\obj\\",
+        "outputPath": "D:\\StinWeb\\PdfHelper\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "D:\\Visual Studio\\Новая папка\\NuGetPackages"

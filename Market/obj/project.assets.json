@@ -6175,11 +6175,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\Market\\Market.csproj",
+      "projectUniqueName": "D:\\StinWeb\\Market\\Market.csproj",
       "projectName": "Market",
-      "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\Market\\Market.csproj",
+      "projectPath": "D:\\StinWeb\\Market\\Market.csproj",
       "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\Market\\obj\\",
+      "outputPath": "D:\\StinWeb\\Market\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "D:\\Visual Studio\\Новая папка\\NuGetPackages"
@@ -6201,29 +6201,29 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "projectReferences": {
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\AtolOnlineClasses\\AtolOnlineClasses.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\AtolOnlineClasses\\AtolOnlineClasses.csproj"
+            "D:\\StinWeb\\AtolOnlineClasses\\AtolOnlineClasses.csproj": {
+              "projectPath": "D:\\StinWeb\\AtolOnlineClasses\\AtolOnlineClasses.csproj"
             },
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj"
+            "D:\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
+              "projectPath": "D:\\StinWeb\\HttpExtensions\\HttpExtensions.csproj"
             },
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
+            "D:\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
+              "projectPath": "D:\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
             },
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\OzonClasses\\OzonClasses.csproj"
+            "D:\\StinWeb\\OzonClasses\\OzonClasses.csproj": {
+              "projectPath": "D:\\StinWeb\\OzonClasses\\OzonClasses.csproj"
             },
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\SberClasses\\SberClasses.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\SberClasses\\SberClasses.csproj"
+            "D:\\StinWeb\\SberClasses\\SberClasses.csproj": {
+              "projectPath": "D:\\StinWeb\\SberClasses\\SberClasses.csproj"
             },
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\StinClasses\\StinClasses.csproj"
+            "D:\\StinWeb\\StinClasses\\StinClasses.csproj": {
+              "projectPath": "D:\\StinWeb\\StinClasses\\StinClasses.csproj"
             },
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\WbClasses\\WbClasses.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\WbClasses\\WbClasses.csproj"
+            "D:\\StinWeb\\WbClasses\\WbClasses.csproj": {
+              "projectPath": "D:\\StinWeb\\WbClasses\\WbClasses.csproj"
             },
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\YandexClasses\\YandexClasses.csproj"
+            "D:\\StinWeb\\YandexClasses\\YandexClasses.csproj": {
+              "projectPath": "D:\\StinWeb\\YandexClasses\\YandexClasses.csproj"
             }
           }
         }

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "/ukvcID66lNQ6rZLxGTTm06ii2bEdPpk8MvjaaajhgjpZr8vijjR+nfo+7l5ALNHkfvtcx7ka3t+oyAuYEfJ8g==",
+  "dgSpecHash": "fK4/3Qm5BwNCmkyRR70U1DugiLH0FgJE8VVB+75ZflsfurKGlCYUuO7rGxOTzc1N1R9zrLLy3gIumDX6TuL9Rw==",
   "success": true,
-  "projectFilePath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\AtolOnlineClasses\\AtolOnlineClasses.csproj",
+  "projectFilePath": "D:\\StinWeb\\AtolOnlineClasses\\AtolOnlineClasses.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\wsluh\\.nuget\\packages\\newtonsoft.json\\13.0.1\\newtonsoft.json.13.0.1.nupkg.sha512"
   ],

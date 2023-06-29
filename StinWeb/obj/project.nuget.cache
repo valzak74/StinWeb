@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "HXjSSSlp+gQf12wLpXheR6XI/v1WKM3MR78Bzlce93choFtpWQUY+/SF3a/AZeAS8yLG+d9pQQeDwS0EozYkkA==",
+  "dgSpecHash": "jdOkTs++k0YXQWOh165EsmjGXUHFjhC1YZoTm4HX3bjpzl+07QRIt1iyiJqW6fL7CKt/dxMAeZh5rDty65+6TA==",
   "success": true,
-  "projectFilePath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\StinWeb\\StinWeb.csproj",
+  "projectFilePath": "D:\\StinWeb\\StinWeb\\StinWeb.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\wsluh\\.nuget\\packages\\barcodelib\\2.4.0\\barcodelib.2.4.0.nupkg.sha512",
     "C:\\Users\\wsluh\\.nuget\\packages\\bootstrap\\3.0.0\\bootstrap.3.0.0.nupkg.sha512",

@@ -398,11 +398,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj",
+      "projectUniqueName": "D:\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj",
       "projectName": "AliExpressClasses",
-      "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj",
+      "projectPath": "D:\\StinWeb\\AliExpressClasses\\AliExpressClasses.csproj",
       "packagesPath": "C:\\Users\\wsluh\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\AliExpressClasses\\obj\\",
+      "outputPath": "D:\\StinWeb\\AliExpressClasses\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "D:\\Visual Studio\\Новая папка\\NuGetPackages"
@@ -424,11 +424,11 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "projectReferences": {
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\HttpExtensions\\HttpExtensions.csproj"
+            "D:\\StinWeb\\HttpExtensions\\HttpExtensions.csproj": {
+              "projectPath": "D:\\StinWeb\\HttpExtensions\\HttpExtensions.csproj"
             },
-            "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
-              "projectPath": "C:\\Users\\wsluh\\source\\repos\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
+            "D:\\StinWeb\\JsonExtensions\\JsonExtensions.csproj": {
+              "projectPath": "D:\\StinWeb\\JsonExtensions\\JsonExtensions.csproj"
             }
           }
         }
