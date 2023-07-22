@@ -22,3 +22,15 @@ C:\Users\wsluh\Source\Repos\StinWeb\JsonExtensions\obj\Debug\net6.0\JsonExtensio
 C:\Users\wsluh\Source\Repos\StinWeb\JsonExtensions\obj\Debug\net6.0\refint\JsonExtensions.dll
 C:\Users\wsluh\Source\Repos\StinWeb\JsonExtensions\obj\Debug\net6.0\JsonExtensions.pdb
 C:\Users\wsluh\Source\Repos\StinWeb\JsonExtensions\obj\Debug\net6.0\ref\JsonExtensions.dll
+D:\StinWeb\JsonExtensions\bin\Debug\net6.0\JsonExtensions.deps.json
+D:\StinWeb\JsonExtensions\bin\Debug\net6.0\JsonExtensions.dll
+D:\StinWeb\JsonExtensions\bin\Debug\net6.0\JsonExtensions.pdb
+D:\StinWeb\JsonExtensions\obj\Debug\net6.0\JsonExtensions.csproj.AssemblyReference.cache
+D:\StinWeb\JsonExtensions\obj\Debug\net6.0\JsonExtensions.GeneratedMSBuildEditorConfig.editorconfig
+D:\StinWeb\JsonExtensions\obj\Debug\net6.0\JsonExtensions.AssemblyInfoInputs.cache
+D:\StinWeb\JsonExtensions\obj\Debug\net6.0\JsonExtensions.AssemblyInfo.cs
+D:\StinWeb\JsonExtensions\obj\Debug\net6.0\JsonExtensions.csproj.CoreCompileInputs.cache
+D:\StinWeb\JsonExtensions\obj\Debug\net6.0\JsonExtensions.dll
+D:\StinWeb\JsonExtensions\obj\Debug\net6.0\refint\JsonExtensions.dll
+D:\StinWeb\JsonExtensions\obj\Debug\net6.0\JsonExtensions.pdb
+D:\StinWeb\JsonExtensions\obj\Debug\net6.0\ref\JsonExtensions.dll

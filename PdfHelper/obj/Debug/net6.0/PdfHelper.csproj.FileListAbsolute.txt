@@ -22,3 +22,15 @@ C:\Users\wsluh\Source\Repos\StinWeb\PdfHelper\obj\Debug\net6.0\PdfHelper.dll
 C:\Users\wsluh\Source\Repos\StinWeb\PdfHelper\obj\Debug\net6.0\refint\PdfHelper.dll
 C:\Users\wsluh\Source\Repos\StinWeb\PdfHelper\obj\Debug\net6.0\PdfHelper.pdb
 C:\Users\wsluh\Source\Repos\StinWeb\PdfHelper\obj\Debug\net6.0\ref\PdfHelper.dll
+D:\StinWeb\PdfHelper\bin\Debug\net6.0\PdfHelper.deps.json
+D:\StinWeb\PdfHelper\bin\Debug\net6.0\PdfHelper.dll
+D:\StinWeb\PdfHelper\bin\Debug\net6.0\PdfHelper.pdb
+D:\StinWeb\PdfHelper\obj\Debug\net6.0\PdfHelper.csproj.AssemblyReference.cache
+D:\StinWeb\PdfHelper\obj\Debug\net6.0\PdfHelper.GeneratedMSBuildEditorConfig.editorconfig
+D:\StinWeb\PdfHelper\obj\Debug\net6.0\PdfHelper.AssemblyInfoInputs.cache
+D:\StinWeb\PdfHelper\obj\Debug\net6.0\PdfHelper.AssemblyInfo.cs
+D:\StinWeb\PdfHelper\obj\Debug\net6.0\PdfHelper.csproj.CoreCompileInputs.cache
+D:\StinWeb\PdfHelper\obj\Debug\net6.0\PdfHelper.dll
+D:\StinWeb\PdfHelper\obj\Debug\net6.0\refint\PdfHelper.dll
+D:\StinWeb\PdfHelper\obj\Debug\net6.0\PdfHelper.pdb
+D:\StinWeb\PdfHelper\obj\Debug\net6.0\ref\PdfHelper.dll

@@ -1314,10 +1314,6 @@ namespace Market.Services
                             order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP ? SubStatusYandex.NotFound : SubStatusYandex.SHIPPED,
                             (YandexClasses.DeliveryType)order.DeliveryType,
                             cancellationToken);
-                        //if (yandexResult.Item1)
-                        //    await _order.ОбновитьOrderStatus(order.Id, newStatus);
-                        //else
-                        //    await _order.ОбновитьOrderStatus(order.Id, -newStatus, yandexResult.Item2);
                         result += yandexResult.Item2;
                     }
                     else if (order.Тип == "SBER")
