@@ -711,8 +711,15 @@ namespace StinClasses.Документы
                 }
             }
             var barcodeText = form.Общие.IdDoc13.Replace(' ', '%');
+            var sbMarketAlias = new StringBuilder(form.Order?.Тип ?? "");
+            sbMarketAlias.Append(" ");
+            if (form.Order != null && form.Order.MarketName.EndsWith("FBS") && form.Order.Marketplace.Contains("real"))
+                sbMarketAlias.Append(form.Order.MarketName.Replace("FBS", "realFBS"));
+            else
+                sbMarketAlias.Append(form.Order?.MarketName);
             var data = Enumerable.Repeat(new
             {
+                MarketAlias = sbMarketAlias.ToString(),
                 BarcodeStart = Convert.ToBase64String(PdfHelper.PdfFunctions.Instance.GenerateQRCode(barcodeText, 2)),
                 BarcodeEnd = Convert.ToBase64String(PdfHelper.PdfFunctions.Instance.GenerateQRCode(barcodeText + "0", 2)),
                 Название = form.Завершен ? "Готов" : "Набор",

@@ -36,6 +36,7 @@ namespace StinClasses.Справочники
         public int InternalStatus { get; set; }
         public int Status { get; set; }
         public int SubStatus { get; set; }
+        public string MarketName { get; set; }
         public string Тип { get; set; }
         public string Модель { get; set; }
         public string Marketplace { get; set; }
@@ -178,6 +179,7 @@ namespace StinClasses.Справочники
                                    InternalStatus = (int)x.Sp13982,
                                    //Status = (StatusYandex)((x.Sp13982 / 10) % 10),
                                    //SubStatus = (SubStatusYandex)(x.Sp13982 % 10),
+                                   MarketName = m.Descr.Trim(),
                                    Тип = m.Sp14155.ToUpper().Trim(),
                                    Модель = m.Sp14164.ToUpper().Trim(),
                                    Marketplace = x.Descr.Trim(),
@@ -237,6 +239,7 @@ namespace StinClasses.Справочники
                                {
                                    Id = x.Id,
                                    InternalStatus = (int)x.Sp13982,
+                                   MarketName = m.Descr.Trim(),
                                    Тип = m.Sp14155.ToUpper().Trim(),
                                    Модель = m.Sp14164.ToUpper().Trim(),
                                    Marketplace = x.Descr.Trim(),
