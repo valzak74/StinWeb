@@ -305,7 +305,7 @@ namespace StinClasses.Справочники.Functions
         }
         public async Task<IEnumerable<MarketUseInfoPrice>> GetMarketUseInfoForPriceAsync(Marketplace marketplace, int limit, CancellationToken cancellationToken)
         {
-            DateTime limitDate = DateTime.Today.AddDays(-20);
+            DateTime limitDate = DateTime.Now.AddDays(-1);
             return await (from markUse in _context.Sc14152s
                           join nom in _context.Sc84s on markUse.Parentext equals nom.Id
                           join vzTovar in _context.VzTovars on nom.Id equals vzTovar.Id into _vzTovar

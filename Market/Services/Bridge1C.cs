@@ -722,7 +722,7 @@ namespace Market.Services
                         if (активныеНаборы != null && активныеНаборы.Count > 0)
                         {
                             var формаПредварительнаяЗаявка = await _предварительнаяЗаявка.GetФормаПредварительнаяЗаявкаByOrderId(order.Id);
-                            decimal суммаКОплате = ((формаПредварительнаяЗаявка.Order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP) && (формаПредварительнаяЗаявка.Order.PaymentType == StinPaymentType.POSTPAID)) ? (формаПредварительнаяЗаявка.ТабличнаяЧасть.Sum(x => x.Сумма) - формаПредварительнаяЗаявка.Order.СуммаВозмещения) : 0m;
+                            decimal суммаКОплате = ((формаПредварительнаяЗаявка.Order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP) && (формаПредварительнаяЗаявка.Order.PaymentType == StinPaymentType.POSTPAID)) ? формаПредварительнаяЗаявка.ТабличнаяЧасть.Sum(x => x.Сумма) : 0m;
                             Sno системаНалогооблажения = Sno.osn;
                             if (!string.IsNullOrWhiteSpace(формаПредварительнаяЗаявка.Общие.Фирма.СистемаНалогооблажения))
                             {
@@ -1314,7 +1314,9 @@ namespace Market.Services
                             order.DeliveryPartnerType == StinDeliveryPartnerType.SHOP ? SubStatusYandex.NotFound : SubStatusYandex.SHIPPED,
                             (YandexClasses.DeliveryType)order.DeliveryType,
                             cancellationToken);
-                        result += yandexResult.Item2;
+                        string alreadyDeliveredError = $"STATUS_NOT_ALLOWED : Order {order.MarketplaceId} with status DELIVERED and substatus DELIVERY_SERVICE_DELIVERED is not allowed for status DELIVERED and substatus DELIVERY_SERVICE_DELIVERED";
+                        if (!string.IsNullOrEmpty(yandexResult.Item2) && yandexResult.Item2 != alreadyDeliveredError)
+                            result += yandexResult.Item2;
                     }
                     else if (order.Тип == "SBER")
                     {

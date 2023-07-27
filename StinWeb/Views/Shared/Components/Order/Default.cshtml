@@ -150,7 +150,7 @@
                     <div class="info-area w-100" id="данныеДляЧека" style="margin-top: 0.5em; line-height: 1em;padding: 5px;padding-inline-start: 20px;font-size:larger">
                         <div id="ОшибкиДанныхДляЧека" class="validation float-right text-danger" asp-validation-summary="All"></div>
                         <div class="form-control mb-2">
-                        @Html.LabelWithValue("Сумма к оплате : ", (Model.СоставЗаказа.Sum(x => x.Сумма) - Model.Order.СуммаВозмещения).ToString(StinWeb.Models.DataManager.Common.ФорматЦеныСи), null, new { style = "font-size:larger;font-weight:bold;" })
+                        @Html.LabelWithValue("Сумма к оплате : ", Model.СоставЗаказа.Sum(x => x.Сумма).ToString(StinWeb.Models.DataManager.Common.ФорматЦеныСи), null, new { style = "font-size:larger;font-weight:bold;" })
                         </div>
                         @Html.InputGroup("mb-2", "Тип оплаты :", null, "select", "PaymentTypes", (SelectList)ViewBag.PaymentTypes, new { id = "paymentTypes", @class = "form-control" })
                         @Html.InputGroup("mb-2", "Телефон * :", null, "input", "ReceiverPhone", "", new { id = "receiverPhone", @class = "form-control", data_inputmask="'mask': '+7 999 999 99 99'", autocomplete="off" })
