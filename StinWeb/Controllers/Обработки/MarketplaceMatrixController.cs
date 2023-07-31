@@ -175,6 +175,7 @@ namespace StinWeb.Controllers.Обработки
             columnValues.Add("МинЦена", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("МинЦенаКвант", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("ЦП_МЦ", sheet.CreateColumnWithWidth(column++, 2900));
+            columnValues.Add("ЦПизОБ_МЦ", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("КоррЦены", sheet.CreateColumnWithWidth(column++, 2900));
             foreach (var marketplace in marketplaceData)
             {
@@ -217,6 +218,7 @@ namespace StinWeb.Controllers.Обработки
             sheet.SetValue(styleHeader, row, columnValues["МинЦена"], "Мин. цена");
             sheet.SetValue(styleHeader, row, columnValues["МинЦенаКвант"], "Мин. цена кванта");
             sheet.SetValue(styleHeader, row, columnValues["ЦП_МЦ"], "ЦП/МЦ");
+            sheet.SetValue(styleHeader, row, columnValues["ЦПизОБ_МЦ"], "ЦП из ОБ/МЦ");
             sheet.SetValue(styleHeader, row, columnValues["КоррЦены"], "Корр. Цен, %");
             foreach (var marketplace in marketplaceData)
             {
@@ -390,13 +392,14 @@ namespace StinWeb.Controllers.Обработки
                 sheet.SetValue(styleValueMoney, row, columnValues["Закупочная"], item.ЦенаЗакуп);
                 sheet.SetValue(styleValueMoney, row, columnValues["Розничная"], item.ЦенаРозн);
                 sheet.SetValue(styleValueMoney, row, columnValues["РозничнаяСП"], item.ЦенаСп);
-                var ценаПродажи = item.ЦенаСп > 0 ? Math.Min(item.ЦенаРозн, item.ЦенаСп) : item.ЦенаРозн;
-                ценаПродажи = item.МинЦена > 0 ? Math.Max(item.МинЦена, ценаПродажи) : ценаПродажи;
+                var ценаПродажиОБ = item.ЦенаСп > 0 ? Math.Min(item.ЦенаРозн, item.ЦенаСп) : item.ЦенаРозн;
+                var ценаПродажи = item.МинЦена > 0 ? Math.Max(item.МинЦена, ценаПродажиОБ) : ценаПродажиОБ;
                 sheet.SetValue(styleValueMoney, row, columnValues["ЦенаПродажи"], ценаПродажи);
                 sheet.SetValue(styleValueNum, row, columnValues["ЦП_ЗЦ"], item.ЦенаЗакуп == 0 ? 0 : ценаПродажи / item.ЦенаЗакуп);
                 sheet.SetValue(styleValueMoney, row, columnValues["МинЦена"], item.МинЦена);
                 sheet.SetValue(styleValueMoney, row, columnValues["МинЦенаКвант"], item.МинЦена * (item.Квант == 0 ? 1 : item.Квант));
                 sheet.SetValue(ценаПродажи < item.МинЦена ? styleValueNumRed : styleValueNum, row, columnValues["ЦП_МЦ"], item.МинЦена == 0 ? 0 : ценаПродажи / item.МинЦена);
+                sheet.SetValue(ценаПродажиОБ < item.МинЦена ? styleValueNumRed : styleValueNum, row, columnValues["ЦПизОБ_МЦ"], item.МинЦена == 0 ? 0 : ценаПродажиОБ / item.МинЦена);
                 sheet.SetValue(styleDeltaPrice, row, columnValues["КоррЦены"], item.DeltaPrice);
                 bool marked = false;
                 foreach (var marketplace in marketplaceData)
