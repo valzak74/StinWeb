@@ -11,7 +11,7 @@ namespace StinClasses.MarketCommission
     {
         protected readonly decimal _zakupPrice;
         public virtual IEnumerable<(string name, decimal percent, decimal limMin, decimal limMax)> _tariffWithBorders { get; }
-        public decimal MarkupFactorPercent = 10m;
+        public decimal MarkupFactorPercent = 8m;
         public int Quant = 1;
         public Dictionary<string, decimal> FixCommissions;
         public Dictionary<string, decimal> PercentFactors;

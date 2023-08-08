@@ -3998,7 +3998,7 @@ namespace Refresher1C.Service
                     var komis = komisData.FirstOrDefault(x => x.OfferCode == item.Sku);
                     if ((entity != null) && (komis != null) && (komis.Percent > 0))
                     {
-                        var КоэфМинНаценки = 10; // 
+                        var КоэфМинНаценки = 8; // 
                         var Порог = (double)(item.ЦенаЗакуп * item.Квант) * (100 + КоэфМинНаценки) / 100;
                         var fixSort = 10d; //за сортировку 10 руб
                         var fixProgLoyalnost = 1d; //программа лояльности 1 руб 
@@ -4132,7 +4132,7 @@ namespace Refresher1C.Service
                             .Where(y => y.StartsWith("WB", StringComparison.InvariantCultureIgnoreCase))
                             .Select(z => { decimal.TryParse(z.Substring(2), out decimal p); return p; })
                             .FirstOrDefault();
-                        decimal КоэфМинНаценки = 10; 
+                        decimal КоэфМинНаценки = 8; 
                         var Порог = (dataItem.ЦенаЗакуп * dataItem.Квант) * (100 + КоэфМинНаценки) / 100;
                         var minPrice = Порог / (1 - categoryPercent / 100);
 
@@ -4192,7 +4192,7 @@ namespace Refresher1C.Service
                     var entity = await _context.Sc14152s.FirstOrDefaultAsync(x => x.Id == dataItem.Id, cancellationToken);
                     if (entity != null)
                     {
-                        var КоэфМинНаценки = 10;
+                        var КоэфМинНаценки = 8;
                         var Порог = (double)(dataItem.ЦенаЗакуп * dataItem.Квант) * (100 + КоэфМинНаценки) / 100;
                         double delivery = dataItem.WeightBrutto switch
                         {
