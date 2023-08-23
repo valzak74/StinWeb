@@ -56,6 +56,7 @@ namespace Refresher1C.Service
                 if (marketplace.Тип == "OZON")
                     notReadyIds = await GetOzonNotReadyProducts(marketplace.ФирмаId, marketplace.ClientId, marketplace.TokenKey, data.ToDictionary(k => k.OfferId, v => v.Id), stoppingToken);
                 var validItems = data.Where(x => !notReadyIds.Contains(x.Id));
+                //validItems = validItems.Where(x => x.OfferId == "D00059998"); //tmp
                 var listIds = validItems.Select(x => x.Id).ToList();
                 if (await MarkVzUpdateStock(listIds, notReadyIds, null, null, null, stoppingToken) && (listIds.Count > 0))
                 {

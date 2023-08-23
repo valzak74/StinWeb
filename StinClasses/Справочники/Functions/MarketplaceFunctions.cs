@@ -165,8 +165,8 @@ namespace StinClasses.Справочники.Functions
                             var остатокРегистр = номенклатура.Остатки
                                 .Where(x => x.СкладId == Common.SkladEkran)
                                 .Sum(x => x.СвободныйОстаток);
-                            if (marketplace.Тип == "ЯНДЕКС")
-                                остатокРегистр += резервМаркета;
+                            //if (marketplace.Тип == "ЯНДЕКС")
+                            //    остатокРегистр += резервМаркета;
                             остаток = (int)(((остатокРегистр / номенклатура.Единица.Коэффициент) - (item.DeltaStock + defDeltaStock)) / item.Квант);
                             if (marketplace.Тип == "ЯНДЕКС")
                                 остаток = остаток * (int)item.Квант;
