@@ -4837,7 +4837,7 @@ namespace Refresher1C.Service
                 var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, item.OrderNo);
                 if (order != null)
                 {
-                    if ((order.InternalStatus != item.Status) && (order.InternalStatus != 17) && !((order.InternalStatus == 16) && (item.Status == 15)))
+                    if ((order.InternalStatus != item.Status) && (order.InternalStatus != 5) && (order.InternalStatus != 17) && !((order.InternalStatus == 16) && (item.Status == 15)))
                     {
                         var status = item.Status;
                         if ((order.InternalStatus == 14) && (status == 15))
