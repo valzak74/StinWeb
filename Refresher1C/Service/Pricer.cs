@@ -149,7 +149,7 @@ namespace Refresher1C.Service
                     }
                     if (oldPrice < price)
                         oldPrice = price;
-                    if (price / minPrice >= 2) //если минимальная цена < 50% от розницы
+                    if ((minPrice > 0) && (price / minPrice >= 2))//если минимальная цена < 50% от розницы
                         minPrice = price / 2 + 1; //минимальная цена = 50% + 1 руб.
                     return new OzonClasses.PriceRequest
                     {

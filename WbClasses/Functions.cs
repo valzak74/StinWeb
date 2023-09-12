@@ -76,21 +76,50 @@ namespace WbClasses
                 err = result.Item2;
             return (data: result.Item1?.Data, error: string.IsNullOrEmpty(err) ? "" : "WbGetCatalogInfo: " + err);
         }
+        public static async Task<(PriceRequest[], string?)> GetPrices(IHttpService httpService, string proxyHost, string authToken, CancellationToken cancellationToken)
+        {
+            var result = await httpService.Exchange<PriceRequest[], PriceError>(
+                $"https://{proxyHost}suppliers-api.wildberries.ru/public/api/v1/info",
+                HttpMethod.Get,
+                GetCustomHeaders(authToken),
+                cancellationToken);
+            if (result.Item2 != null)
+            {
+                return (null, "".ParseError(result.Item2.Errors));
+            }
+            return (result.Item1, null);
+
+        }
         public static async Task<(bool, string?)> UpdatePrice(IHttpService httpService, string proxyHost, string authToken,
             List<PriceRequest> priceData,
             CancellationToken cancellationToken)
         {
-            var result = await httpService.Exchange<bool, PriceError>(
-                $"https://{proxyHost}suppliers-api.wildberries.ru/public/api/v1/prices",
-                HttpMethod.Post,
-                GetCustomHeaders(authToken),
-                priceData,
-                cancellationToken);
-            if (result.Item2 != null)
+            //check prices
+            var checkResult = await GetPrices(httpService, proxyHost, authToken, cancellationToken);
+            if (checkResult.Item1 != null)
             {
-                return (false, "".ParseError(result.Item2.Errors));
+                foreach (var priceWb in checkResult.Item1) 
+                { 
+                    var price = priceData.FirstOrDefault(x => x.NmId == priceWb.NmId);
+                    if (price != null && price.Price == priceWb.Price)
+                        priceData.Remove(price);
+                }
             }
-            return (result.Item1, null);
+            if (priceData.Count > 0)
+            {
+                var result = await httpService.Exchange<bool, PriceError>(
+                    $"https://{proxyHost}suppliers-api.wildberries.ru/public/api/v1/prices",
+                    HttpMethod.Post,
+                    GetCustomHeaders(authToken),
+                    priceData,
+                    cancellationToken);
+                if (result.Item2 != null)
+                {
+                    return (false, "".ParseError(result.Item2.Errors));
+                }
+                return (result.Item1, null);
+            }
+            return (true, null);
         }
         public static async Task<(bool success, Dictionary<string, string>? errors)> UpdateStock(IHttpService httpService, string proxyHost, string authToken,
             int warehouseId,
