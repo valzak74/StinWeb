@@ -1067,7 +1067,7 @@ namespace Market.Services
                         else if (order.Тип == "OZON")
                         {
                             result += await OzonClasses.OzonOperators.CancelOrder(_httpService, "", order.ClientId, order.AuthToken,
-                                order.MarketplaceId, 400, "Fall off", null, stoppingToken);
+                                order.MarketplaceId, 352, "Product is out of stock", null, stoppingToken);
                             if (!string.IsNullOrEmpty(result))
                             {
                                 _logger.LogError(result);

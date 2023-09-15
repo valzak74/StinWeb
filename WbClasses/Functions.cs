@@ -82,6 +82,7 @@ namespace WbClasses
                 $"https://{proxyHost}suppliers-api.wildberries.ru/public/api/v1/info",
                 HttpMethod.Get,
                 GetCustomHeaders(authToken),
+                null,
                 cancellationToken);
             if (result.Item2 != null)
             {

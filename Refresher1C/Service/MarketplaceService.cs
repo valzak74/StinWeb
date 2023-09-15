@@ -3881,9 +3881,10 @@ namespace Refresher1C.Service
             {
                 var marketplaceIds = await (from market in _context.Sc14042s
                                             where !market.Ismark
-                                                //&& market.Code.Trim() == "22498162235000" // "23503334320000" //
+                                            //&& market.Code.Trim() == "22498162235000" // "23503334320000" //
                                             //&& market.Sp14155.Trim().ToUpper() == "OZON" 
                                             //&& market.Sp14155.Trim().ToUpper() == "WILDBERRIES"
+                                            //&& market.Sp14155.Trim().ToUpper() == "SBER"
                                             //&& market.Code.Trim() == "23005267" // Yandex DBS
                                             select new
                                             {
@@ -3984,6 +3985,7 @@ namespace Refresher1C.Service
                             where (markUse.Sp14147 == marketplaceId) &&
                               (markUse.Sp14158 == 1) //Есть в каталоге 
                               && offerCodes.Contains(nom.Code)
+                              //&& nom.Code == "K00037057"
                             select new
                             {
                                 Id = markUse.Id,

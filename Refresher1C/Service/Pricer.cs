@@ -137,12 +137,12 @@ namespace Refresher1C.Service
                     var oldPrice = x.priceBeforeDiscount * x.квант;
                     var price = x.price * x.квант;
                     var minPrice = Math.Min(price, x.minPrice * x.квант);
-                    if ((oldPrice > 400) && (oldPrice <= 10000))
+                    if (((oldPrice > 400) && (oldPrice <= 10000)) || ((price > 400) && (price <= 10000)))
                     {
-                        if ((oldPrice - price) <= (oldPrice / 20))
+                        if ((oldPrice - price) <= (Math.Max(price, oldPrice) / 20))
                             oldPrice = price;
                     }
-                    else if (oldPrice > 10000)
+                    else if ((oldPrice > 10000) || (price > 10000))
                     {
                         if ((oldPrice - price) <= 500)
                             oldPrice = price;
