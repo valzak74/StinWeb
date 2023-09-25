@@ -18,6 +18,7 @@ using System.Collections;
 using System.Xml.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using StinClasses.MarketCommission;
+using System.Globalization;
 
 namespace Refresher1C.Service
 {
@@ -2302,26 +2303,33 @@ namespace Refresher1C.Service
                                         .ToListAsync();
                 foreach (var marketplace in marketplaceIds)
                 {
-                    if (marketplace.Тип == "OZON")
+                    try
                     {
-                        await GetOzonNewOrders(marketplace.ClientId, marketplace.AuthToken,
-                            marketplace.Id, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
-                            marketplace.Encoding, stoppingToken);
+                        if (marketplace.Тип == "OZON")
+                        {
+                            await GetOzonNewOrders(marketplace.ClientId, marketplace.AuthToken,
+                                marketplace.Id, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
+                                marketplace.Encoding, stoppingToken);
+                        }
+                        else if (marketplace.Тип == "ЯНДЕКС")
+                        {
+                        }
+                        else if (marketplace.Тип == "ALIEXPRESS")
+                        {
+                        }
+                        else if (marketplace.Тип == "SBER")
+                        {
+                        }
+                        else if (marketplace.Тип == "WILDBERRIES")
+                        {
+                            await GetWbNewOrders(marketplace.AuthToken,
+                                marketplace.Id, marketplace.Authorization, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
+                                marketplace.Encoding, stoppingToken);
+                        }
                     }
-                    else if (marketplace.Тип == "ЯНДЕКС")
+                    catch (Exception e)
                     {
-                    }
-                    else if (marketplace.Тип == "ALIEXPRESS")
-                    {
-                    }
-                    else if (marketplace.Тип == "SBER")
-                    {
-                    }
-                    else if (marketplace.Тип == "WILDBERRIES")
-                    {
-                        await GetWbNewOrders(marketplace.AuthToken,
-                            marketplace.Id, marketplace.Authorization, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
-                            marketplace.Encoding, stoppingToken);
+                        _logger.LogError("RefreshOrders single market : " + e.Message);
                     }
                 }
             }
@@ -2363,45 +2371,52 @@ namespace Refresher1C.Service
                                         .ToListAsync();
                 foreach (var marketplace in marketplaceIds)
                 {
-                    if (marketplace.Тип == "OZON")
+                    try
                     {
-                        await GetOzonCancelOrders(marketplace.FirmaId, marketplace.ClientId, marketplace.AuthToken,
-                            marketplace.Id, stoppingToken);
-                        if (periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                        if (marketplace.Тип == "OZON")
                         {
-                            await GetOzonDeliveringOrders(marketplace.Id, marketplace.FirmaId, marketplace.ClientId, marketplace.AuthToken, stoppingToken);
-                            await GetOzonDeliveredOrders(marketplace.Id, marketplace.FirmaId, marketplace.ClientId, marketplace.AuthToken, stoppingToken);
+                            await GetOzonCancelOrders(marketplace.FirmaId, marketplace.ClientId, marketplace.AuthToken,
+                                marketplace.Id, stoppingToken);
+                            if (periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                            {
+                                await GetOzonDeliveringOrders(marketplace.Id, marketplace.FirmaId, marketplace.ClientId, marketplace.AuthToken, stoppingToken);
+                                await GetOzonDeliveredOrders(marketplace.Id, marketplace.FirmaId, marketplace.ClientId, marketplace.AuthToken, stoppingToken);
+                            }
+                        }
+                        else if (marketplace.Тип == "ЯНДЕКС")
+                        {
+                            await GetYandexNewDeliveringOrders(marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Authorization, marketplace.Id,
+                                marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId, marketplace.Encoding, stoppingToken);
+                            await GetYandexOrders(periodOpened, marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Id,
+                                marketplace.FirmaId, stoppingToken);
+                            //await GetYandexCancelOrders(marketplace.FirmaId, marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Id, stoppingToken);
+                            //if (periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                            //    await GetYandexDeliveredOrders(marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Id, marketplace.FirmaId, stoppingToken);
+                        }
+                        else if (marketplace.Тип == "ALIEXPRESS")
+                        {
+                            //await GetAliExpressOrdersGlobal(marketplace.ClientId, marketplace.AuthSecret, marketplace.Authorization,
+                            //    marketplace.Id,
+                            //    marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId, marketplace.Encoding,
+                            //    stoppingToken);
+                            await GetAliExpressOrders(marketplace.AuthToken, marketplace.Id, marketplace.Authorization,
+                                marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId, marketplace.Encoding,
+                                stoppingToken);
+                        }
+                        else if (marketplace.Тип == "SBER")
+                        {
+                            await GetSberOrders(periodOpened, marketplace.AuthToken, marketplace.Id, marketplace.Authorization,
+                                marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId, marketplace.Encoding,
+                                stoppingToken);
+                        }
+                        else if (marketplace.Тип == "WILDBERRIES")
+                        {
+                            await RefreshWbOrders(marketplace.AuthToken, marketplace.Id, marketplace.FirmaId, stoppingToken);
                         }
                     }
-                    else if (marketplace.Тип == "ЯНДЕКС")
+                    catch (Exception e)
                     {
-                        await GetYandexNewDeliveringOrders(marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Authorization, marketplace.Id,
-                            marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId, marketplace.Encoding, stoppingToken);
-                        await GetYandexOrders(periodOpened, marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Id,
-                            marketplace.FirmaId, stoppingToken);
-                        //await GetYandexCancelOrders(marketplace.FirmaId, marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Id, stoppingToken);
-                        //if (periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
-                        //    await GetYandexDeliveredOrders(marketplace.Code, marketplace.ClientId, marketplace.AuthToken, marketplace.Id, marketplace.FirmaId, stoppingToken);
-                    }
-                    else if (marketplace.Тип == "ALIEXPRESS")
-                    {
-                        //await GetAliExpressOrdersGlobal(marketplace.ClientId, marketplace.AuthSecret, marketplace.Authorization,
-                        //    marketplace.Id,
-                        //    marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId, marketplace.Encoding,
-                        //    stoppingToken);
-                        await GetAliExpressOrders(marketplace.AuthToken, marketplace.Id, marketplace.Authorization,
-                            marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId, marketplace.Encoding,
-                            stoppingToken);
-                    }
-                    else if (marketplace.Тип == "SBER")
-                    {
-                        await GetSberOrders(periodOpened, marketplace.AuthToken, marketplace.Id, marketplace.Authorization,
-                            marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId, marketplace.Encoding,
-                            stoppingToken);
-                    }
-                    else if (marketplace.Тип == "WILDBERRIES")
-                    {
-                        await RefreshWbOrders(marketplace.AuthToken, marketplace.Id, marketplace.FirmaId, stoppingToken);
+                        _logger.LogError("RefreshSlowOrders single market : " + e.Message);
                     }
                 }
             }
@@ -3968,7 +3983,7 @@ namespace Refresher1C.Service
                                 && x.Sp95.Contains("SBER"))
                     .Select(x => new { Code = x.Code.Trim(), Comment = x.Sp95 })
                     .ToListAsync(cancellationToken);
-                var categoryData = dbData.Select(x => new { x.Code, Percent = x.Comment.Split(";", StringSplitOptions.TrimEntries).Where(y => y.StartsWith("SBER", StringComparison.InvariantCultureIgnoreCase)).Select(z => { double.TryParse(z.Substring(4), out double p); return p; }).FirstOrDefault() });
+                var categoryData = dbData.Select(x => new { x.Code, Percent = x.Comment.Split(";", StringSplitOptions.TrimEntries).Where(y => y.StartsWith("SBER", StringComparison.InvariantCultureIgnoreCase)).Select(z => { double.TryParse(z.Substring(4).Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double p); return p; }).FirstOrDefault() });
                 var komisData = from o in offers
                                 join c in categoryData on o.ParentCode equals c.Code
                                 select new
@@ -4132,7 +4147,7 @@ namespace Refresher1C.Service
                         var categoryPercent = dataItem.ParentComment
                             .Split(";", StringSplitOptions.TrimEntries)
                             .Where(y => y.StartsWith("WB", StringComparison.InvariantCultureIgnoreCase))
-                            .Select(z => { decimal.TryParse(z.Substring(2), out decimal p); return p; })
+                            .Select(z => { decimal.TryParse(z.Substring(2).Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out decimal p); return p; })
                             .FirstOrDefault();
                         decimal КоэфМинНаценки = 8; 
                         var Порог = (dataItem.ЦенаЗакуп * dataItem.Квант) * (100 + КоэфМинНаценки) / 100;

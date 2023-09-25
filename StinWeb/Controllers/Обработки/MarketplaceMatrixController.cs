@@ -156,7 +156,9 @@ namespace StinWeb.Controllers.Обработки
             Dictionary<string, int> columnValues = new Dictionary<string, int>();
             int column = 0;
             columnValues.Add("Id", sheet.CreateColumnWithWidth(column++, 0));
-            columnValues.Add("Sku", sheet.CreateColumnWithWidth(column++,4500));
+            columnValues.Add("Sku_1", sheet.CreateColumnWithWidth(column++,4500));
+            columnValues.Add("Sku_2", sheet.CreateColumnWithWidth(column++, 4500));
+            columnValues.Add("Sku_3", sheet.CreateColumnWithWidth(column++, 5000));
             columnValues.Add("Артикул", sheet.CreateColumnWithWidth(column++, 4300));
             columnValues.Add("Наименование", sheet.CreateColumnWithWidth(column++, 8000));
             columnValues.Add("Бренд", sheet.CreateColumnWithWidth(column++, 4000));
@@ -199,7 +201,9 @@ namespace StinWeb.Controllers.Обработки
             int row = 0;
 
             sheet.SetValue(styleHeader, row, columnValues["Id"], "_Id_");
-            sheet.SetValue(styleHeader, row, columnValues["Sku"], "SKU");
+            sheet.SetValue(styleHeader, row, columnValues["Sku_1"], "SKU 1");
+            sheet.SetValue(styleHeader, row, columnValues["Sku_2"], "SKU 2");
+            sheet.SetValue(styleHeader, row, columnValues["Sku_3"], "SKU 3");
             sheet.SetValue(styleHeader, row, columnValues["Артикул"], "Артикул");
             sheet.SetValue(styleHeader, row, columnValues["Наименование"], "Наименование");
             sheet.SetValue(styleHeader, row, columnValues["Бренд"], "Бренд");
@@ -366,7 +370,9 @@ namespace StinWeb.Controllers.Обработки
             {
                 row++;
                 sheet.SetValue(styleValue, row, columnValues["Id"], item.Id.Replace(" ","_"));
-                sheet.SetValue(styleValue, row, columnValues["Sku"], item.NomCode.Encode(campaignData.Encoding));
+                sheet.SetValue(styleValue, row, columnValues["Sku_1"], item.NomCode.Encode(EncodeVersion.None));
+                sheet.SetValue(styleValue, row, columnValues["Sku_2"], item.NomCode.Encode(EncodeVersion.Hex));
+                sheet.SetValue(styleValue, row, columnValues["Sku_3"], item.NomCode.Encode(EncodeVersion.Dec));
                 sheet.SetValue(styleValue, row, columnValues["Артикул"], item.Артикул);
                 sheet.SetValue(styleValue, row, columnValues["Наименование"], item.Наименование);
                 sheet.SetValue(styleValue, row, columnValues["Бренд"], item.Бренд);
