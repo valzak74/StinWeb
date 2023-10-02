@@ -31,7 +31,7 @@ namespace StinClasses.MarketCommission
                 {
                     { "VolumeWeight", _volumeWeightFactor },
                     { "LastMile", 0 },
-                    { "ServiceCentre", _model == ModelTypeOzon.FBS ? 10 : 0 }
+                    { "ServiceCentre", _model == ModelTypeOzon.FBS ? 20 : 0 }
                 };
                 PercentFactors.Add("LastMile", _tariffLastMile.percent);
             }

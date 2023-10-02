@@ -4299,13 +4299,6 @@ namespace Refresher1C.Service
         {
             int requestLimit = 500;
 
-            //double priemPlateg = 0.12;
-            //double perevodPlateg = 1.6;
-            //double c_perevodPlateg = perevodPlateg / 100;
-
-            //double weightLimit = 25;
-            //double dimensionsLimit = 150;
-
             var query = from markUse in _context.Sc14152s
                         join nom in _context.Sc84s on markUse.Parentext equals nom.Id
                         join vzTovar in _context.VzTovars on nom.Id equals vzTovar.Id into _vzTovar
@@ -4372,101 +4365,6 @@ namespace Refresher1C.Service
                                     minPrice = helper.MinPrice();
                                 }
 
-                                //var КоэфМинНаценки = 10; 
-                                //var Порог = (double)(dataItem.ЦенаЗакуп * dataItem.Квант) * (100 + КоэфМинНаценки) / 100;
-
-                                //var sumPercentTariffs = 0d;
-                                //item.Tariffs?.ForEach(x => sumPercentTariffs += x.Percent / 100);
-                                //var c_sumTariffs = sumPercentTariffs / 100;
-
-                                //double feeWeightOutBorder = CommissionValuesVolumeWeightYandex(Math.Max(weight, volumeWeight), model);
-
-                                //switch (model)
-                                //{
-                                //    case "DBS":
-                                //        minPrice = (Порог + priemPlateg) / (1 - c_perevodPlateg - c_sumTariffs);
-                                //        break;
-                                //    case "FBS":
-                                //        double tariffPerOrder = 10;
-                                //        double shipmentFeeLightPercent = 5.5;
-                                //        double shipmentFeeLightMin = 60;
-                                //        double shipmentFeeLightMax = 400;
-                                //        double shipmentFeeHard = 450;
-                                //        if ((item.Price < 500) && (weight < 5) && (dimensions < dimensionsLimit))
-                                //            minPrice = CommissionYandexLightTariff(model, item.Price, Порог, priemPlateg, c_perevodPlateg);
-                                //        else if ((weight > weightLimit) || (dimensions > dimensionsLimit))
-                                //            minPrice = (Порог + priemPlateg + tariffPerOrder + shipmentFeeHard + feeWeightOutBorder) / (1 - c_perevodPlateg - c_sumTariffs);
-                                //        else
-                                //        {
-                                //            var c_feeLight = shipmentFeeLightPercent / 100;
-                                //            minPrice = (Порог + priemPlateg + tariffPerOrder + feeWeightOutBorder) / (1 - c_perevodPlateg - c_sumTariffs - c_feeLight);
-                                //            var minLimit = shipmentFeeLightPercent > 0 ? shipmentFeeLightMin * 100 / shipmentFeeLightPercent : double.MinValue;
-                                //            var maxLimit = shipmentFeeLightPercent > 0 && shipmentFeeLightMax < double.MaxValue ? shipmentFeeLightMax * 100 / shipmentFeeLightPercent : double.MaxValue;
-                                //            if (minPrice > maxLimit)
-                                //                minPrice = (Порог + priemPlateg + tariffPerOrder + feeWeightOutBorder + shipmentFeeLightMax) / (1 - c_perevodPlateg - c_sumTariffs);
-                                //            else if (minPrice < minLimit)
-                                //                minPrice = (Порог + priemPlateg + tariffPerOrder + feeWeightOutBorder + shipmentFeeLightMin) / (1 - c_perevodPlateg - c_sumTariffs);
-                                //        }
-                                //        break;
-                                //    default: //FBY
-                                //        if ((item.Price < 500) && (weight < 5) && (dimensions < dimensionsLimit))
-                                //            minPrice = CommissionYandexLightTariff(model, item.Price, Порог, priemPlateg, c_perevodPlateg);
-                                //        else if ((weight > weightLimit) || (dimensions > dimensionsLimit))
-                                //        {
-                                //            double tariffSkladHard = 350;
-                                //            double shipmentDeliveryHard = 500;
-                                //            minPrice = (Порог + priemPlateg + tariffSkladHard + shipmentDeliveryHard + feeWeightOutBorder) / (1 - c_perevodPlateg - c_sumTariffs);
-                                //        }
-                                //        else
-                                //        {
-                                //            var tariffSklad = (percent: 3.0, limMin: 20.0, limMax: 60.0);
-                                //            var fixSklad = 0d;
-                                //            var c_tariffSklad = tariffSklad.percent / 100;
-                                //            var tariffDelivery = (percent: 5.5, limMin: 13.0, limMax: 300.0);
-                                //            var fixDelivery = 0d;
-                                //            var c_tariffDelivery = tariffDelivery.percent / 100;
-                                //            minPrice = (Порог + priemPlateg + fixSklad + fixDelivery + feeWeightOutBorder) / (1 - c_perevodPlateg - c_sumTariffs - c_tariffSklad - c_tariffDelivery);
-                                //            var limits = LimitValues(tariffSklad, tariffDelivery, minPrice);
-                                //            foreach (var limit in limits)
-                                //            {
-                                //                switch (limit.Key)
-                                //                {
-                                //                    case "MaxWeightLimit":
-                                //                        if (minPrice > limit.Value)
-                                //                        {
-                                //                            fixSklad = tariffSklad.limMax;
-                                //                            c_tariffSklad = 0;
-                                //                        }
-                                //                        break;
-                                //                    case "MaxLastMileLimit":
-                                //                        if (minPrice > limit.Value)
-                                //                        {
-                                //                            fixDelivery = tariffDelivery.limMax;
-                                //                            c_tariffDelivery = 0;
-                                //                        }
-                                //                        break;
-                                //                    case "MinWeightLimit":
-                                //                        if (minPrice < limit.Value)
-                                //                        {
-                                //                            fixSklad = tariffSklad.limMin;
-                                //                            c_tariffSklad = 0;
-                                //                        }
-                                //                        break;
-                                //                    case "MinLastMileLimit":
-                                //                        if (minPrice < limit.Value)
-                                //                        {
-                                //                            fixDelivery = tariffDelivery.limMin;
-                                //                            c_tariffDelivery = 0;
-                                //                        }
-                                //                        break;
-                                //                }
-                                //                minPrice = (Порог + priemPlateg + fixSklad + fixDelivery + feeWeightOutBorder) / (1 - c_perevodPlateg - c_sumTariffs - c_tariffSklad - c_tariffDelivery);
-                                //            }
-                                //        }
-                                //        break;
-                                //}
-
-                                //decimal updateMinPrice = decimal.Round((decimal)minPrice/dataItem.Квант, 2, MidpointRounding.AwayFromZero);
                                 decimal updateMinPrice = decimal.Round(minPrice, 2, MidpointRounding.AwayFromZero);
                                 if (updateMinPrice != entity.Sp14198)
                                 {
@@ -4645,46 +4543,6 @@ namespace Refresher1C.Service
                                 {
                                     minPrice = helper.MinPrice();
                                 }
-                                //var КоэфМинНаценки = 10; // 
-                                //var Порог = (double)(item.ЦенаЗакуп * item.Квант) * (100 + КоэфМинНаценки) / 100;
-                                //var c_saleType = comResult.ComPercent / 100;
-                                //var c_ekvaring = 1.5 / 100; //1.5% эквайринг
-                                //if ((model == "FBS") && (item.realFbs))
-                                //{
-                                //    double base15Kg = 1300;
-                                //    double overKg = 20;
-                                //    minPrice = (Порог + base15Kg + (comResult.VolumeWeight - 15) * overKg) / (1 - c_saleType - c_ekvaring); // - c_premium);
-                                //}
-                                //else //fbs or fbo
-                                //{
-                                //    var tariffLastMile = (percent: 5.5, limMin: 20.0, limMax: 500.0);
-                                //    var c_lastMile = tariffLastMile.percent / 100;
-                                //    var minLimit = tariffLastMile.limMin * 100 / tariffLastMile.percent;
-                                //    var maxLimit = tariffLastMile.limMax * 100 / tariffLastMile.percent;
-                                //    var fixTariffLastMile = 0d;
-                                //    var fixTariffServiceCentre = 0d;
-                                //    var fixTariffWeight = 0d;
-                                //    if (model == "FBS")
-                                //    {
-                                //        fixTariffWeight = CommissionValuesFbsVolumeWeight(comResult.VolumeWeight, false);
-                                //        fixTariffServiceCentre = 10d;
-                                //    }
-                                //    else
-                                //        fixTariffWeight = CommissionValuesFbsVolumeWeightFbo(comResult.VolumeWeight);
-                                //    minPrice = (Порог + fixTariffServiceCentre + fixTariffWeight + fixTariffLastMile) / (1 - c_saleType - c_ekvaring - c_lastMile);
-                                //    if (minPrice > maxLimit)
-                                //    {
-                                //        fixTariffLastMile = tariffLastMile.limMax;
-                                //        c_lastMile = 0;
-                                //        minPrice = (Порог + fixTariffServiceCentre + fixTariffWeight + fixTariffLastMile) / (1 - c_saleType - c_ekvaring - c_lastMile);
-                                //    }
-                                //    else if (minPrice < minLimit)
-                                //    {
-                                //        fixTariffLastMile = tariffLastMile.limMin;
-                                //        c_lastMile = 0;
-                                //        minPrice = (Порог + fixTariffServiceCentre + fixTariffWeight + fixTariffLastMile) / (1 - c_saleType - c_ekvaring - c_lastMile);
-                                //    }
-                                //}
                                 decimal updateMinPrice = decimal.Round(minPrice, 2, MidpointRounding.AwayFromZero);
                                 decimal updateVolumeWeight = decimal.Round((decimal)comResult.VolumeWeight / item.Квант, 3, MidpointRounding.AwayFromZero);
                                 if ((updateMinPrice != entity.Sp14198) || (updateVolumeWeight != entity.Sp14229))

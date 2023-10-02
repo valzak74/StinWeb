@@ -122,8 +122,10 @@ namespace StinClasses.MarketCommission
                     < 10 => 120,
                     < 15 => 225,
                     < 25 => 350,
-                    < 50 => 500,
-                    _ => 600
+                    < 35 => 500,
+                    < 50 => 750,
+                    < 100 => 1500,
+                    _ => 3500
                 },
                 ModelTypeYandex.FBY => _volumeWeight switch
                 {
@@ -135,8 +137,10 @@ namespace StinClasses.MarketCommission
                     < 10 => 100,
                     < 15 => 200,
                     < 25 => 325,
-                    < 50 => 400,
-                    _ => 550
+                    < 35 => 400,
+                    < 50 => 650,
+                    < 100 => 1500,
+                    _ => 3500
                 },
                 _ => 0
             };
