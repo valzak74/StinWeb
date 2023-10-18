@@ -101,6 +101,7 @@ namespace HttpExtensions
         }
         public async Task<Tuple<T, E>> Exchange<T, E>(string url, HttpMethod method, Dictionary<string, string> headers, object? content, CancellationToken stoppingToken, [CallerMemberName] string callerName = "")
         {
+            string rowResponse = "";
             try
             {
                 string queryKey = "QueryParameter";
@@ -148,7 +149,7 @@ namespace HttpExtensions
                     if (response.Content != null)
                     {
                         var bytes = await response.Content.ReadAsByteArrayAsync();
-                        //string r = await response.Content.ReadAsStringAsync();
+                        rowResponse = await response.Content.ReadAsStringAsync();
                         //Console.WriteLine(r);
                         //System.IO.File.WriteAllText(@"f:\\tmp\15\r2.txt", r);
                         if (typeof(T) == typeof(byte[]))
@@ -161,11 +162,11 @@ namespace HttpExtensions
                 {
                     if (response.Content != null)
                     {
-                        string r = await response.Content.ReadAsStringAsync();
+                        rowResponse = await response.Content.ReadAsStringAsync();
                         //Console.WriteLine(r);
                         if (typeof(E) == typeof(string))
-                            return new Tuple<T, E>(default, (E)(object)r);
-                        if (IsValidJson(r))
+                            return new Tuple<T, E>(default, (E)(object)rowResponse);
+                        if (IsValidJson(rowResponse))
                         {
                             var errBytes = await response.Content.ReadAsByteArrayAsync();
                             var obj = errBytes.DeserializeObject<E>();
@@ -177,6 +178,7 @@ namespace HttpExtensions
             catch (Exception ex)
             {
                 _logger.LogError(callerName + " : " + ex.Message);
+                //_logger.LogError(callerName + " : " + rowResponse);
             }
             return new Tuple<T, E>(default, default);
         }

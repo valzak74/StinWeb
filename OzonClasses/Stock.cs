@@ -111,6 +111,7 @@ namespace OzonClasses
     {
         NotFound = 0,
         fbo = 1,
-        fbs = 2
+        fbs = 2,
+        crossborder = 3,
     }
 }
