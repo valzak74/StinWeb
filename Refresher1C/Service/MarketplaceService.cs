@@ -19,6 +19,8 @@ using System.Xml.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using StinClasses.MarketCommission;
 using System.Globalization;
+using AliExpressClasses;
+using Newtonsoft.Json.Linq;
 
 namespace Refresher1C.Service
 {
@@ -2439,7 +2441,7 @@ namespace Refresher1C.Service
                     campaignId,
                     clientId,
                     authToken,
-                    new List<string> { "DELIVERY", "DELIVERED", "CANCELLED_IN_PROCESSING" },
+                    new List<string> { "DELIVERY", "DELIVERED", "CANCELLED_IN_PROCESSING", "PARTIALLY_DELIVERED", "PARTIALLY_RETURNED" },
                     DateTime.Today.AddDays(-60),
                     200,
                     pageToken,
@@ -2468,6 +2470,8 @@ namespace Refresher1C.Service
                                         await _docService.OrderDeliveried(order, true);
                                     break;
                                 case YandexClasses.StatusYandex.DELIVERED:
+                                case YandexClasses.StatusYandex.PARTIALLY_DELIVERED:
+                                case YandexClasses.StatusYandex.PARTIALLY_RETURNED:
                                     if (((order.InternalStatus == 14) || (order.InternalStatus == 16)) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                                         await _docService.OrderFromTransferDeliveried(order);
                                     break;
@@ -2484,6 +2488,7 @@ namespace Refresher1C.Service
             var orderListResult = await SberClasses.Functions.SearchOrders(_httpService, _firmProxy[firmaId], authToken, cancellationToken);
             if (!string.IsNullOrEmpty(orderListResult.error))
                 _logger.LogError(orderListResult.error);
+
             if (orderListResult.orders?.Count > 0)
             {
                 var readyToShipOrders = await ActiveOrders(marketplaceId, cancellationToken);
@@ -2594,6 +2599,35 @@ namespace Refresher1C.Service
                             ((order.InternalStatus == 14) || (order.InternalStatus == 16)) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                         {
                             await _docService.OrderFromTransferDeliveried(order);
+                        }
+                    }
+                }
+            }
+
+            var scannedOrders = orderListResult.orders?.Select(x => x.ShipmentId).ToList() ?? new List<string>();
+
+            var activeOrders_14 = await _context.Sc13994s
+                .Where(x => ((x.Sp13982 == 14) || (x.Sp13982 == 16)) &&
+                    ((StinDeliveryPartnerType)x.Sp13985 == StinDeliveryPartnerType.SBER_MEGA_MARKET) &&
+                    (x.Sp14038 == marketplaceId) &&
+                    !scannedOrders.Contains(x.Code.Trim()))
+                .Select(x => x.Code.Trim())
+                .ToListAsync(cancellationToken);
+            if (activeOrders_14?.Count > 0)
+            {
+                orderListResult = await SberClasses.Functions.GetOrders(_httpService, _firmProxy[firmaId], authToken, activeOrders_14, cancellationToken);
+                if (orderListResult.orders?.Count > 0)
+                {
+                    foreach (var sberOrder in orderListResult.orders)
+                    {
+                        var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, sberOrder.ShipmentId);
+                        if (order != null)
+                        {
+                            if ((sberOrder.Items?.All(x => x.Status == SberClasses.SberStatus.DELIVERED) ?? false) &&
+                            ((order.InternalStatus == 14) || (order.InternalStatus == 16)) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                            {
+                                await _docService.OrderFromTransferDeliveried(order);
+                            }
                         }
                     }
                 }
