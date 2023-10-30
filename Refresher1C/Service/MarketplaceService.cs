@@ -1522,7 +1522,8 @@ namespace Refresher1C.Service
                                     Sp14198 = 0, //Комиссия
                                     Sp14213 = 0, //КоррЦенПроцент
                                     Sp14214 = 0, //КоррОстатков
-                                    Sp14229 = 0 //VolumeWeight
+                                    Sp14229 = 0, //VolumeWeight
+                                    Sp14323 = 0, //FrosenPrice
                                 };
                                 await _context.Sc14152s.AddAsync(entity, stoppingToken);
                                 _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);

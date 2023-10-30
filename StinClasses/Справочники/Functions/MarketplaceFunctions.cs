@@ -315,6 +315,7 @@ namespace StinClasses.Справочники.Functions
                           where !markUse.Ismark &&
                               (markUse.Sp14158 == 1) && //Есть в каталоге
                               (updPrice == null || updPrice.Flag || (updPrice.Updated < limitDate)) &&
+                              (markUse.Sp14323 == 0) &&
                               (markUse.Sp14147 == marketplace.Id)
                           //&& ((vzTovar == null) || (vzTovar.Rozn <= 0))
                           //&& nom.Code == "K00035471"

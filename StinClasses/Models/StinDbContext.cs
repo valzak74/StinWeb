@@ -501,7 +501,7 @@ namespace StinClasses.Models
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer("Server=192.168.229.204;Database=Valentin;User Id=User1C;Password=66826877Server2012;");
+                optionsBuilder.UseSqlServer("Server=192.168.229.204;Database=Centre;User Id=User1C;Password=66826877Server2012;");
             }
         }
 
@@ -6624,6 +6624,10 @@ namespace StinClasses.Models
                     .IsUnicode(false)
                     .HasColumnName("IDDOC")
                     .IsFixedLength();
+
+                entity.Property(e => e.Sp14312)
+                    .HasColumnType("numeric(14, 2)")
+                    .HasColumnName("SP14312");
 
                 entity.Property(e => e.Sp2226)
                     .IsRequired()
@@ -28614,6 +28618,10 @@ namespace StinClasses.Models
                     .HasColumnType("numeric(13, 3)")
                     .HasColumnName("SP14229");
 
+                entity.Property(e => e.Sp14323)
+                    .HasColumnType("numeric(1, 0)")
+                    .HasColumnName("SP14323");
+
                 entity.Property(e => e.Verstamp).HasColumnName("VERSTAMP");
             });
 
@@ -28922,6 +28930,27 @@ namespace StinClasses.Models
                 entity.Property(e => e.Sp13073)
                     .HasColumnType("numeric(1, 0)")
                     .HasColumnName("SP13073");
+
+                entity.Property(e => e.Sp14317)
+                    .IsRequired()
+                    .HasMaxLength(10)
+                    .IsUnicode(false)
+                    .HasColumnName("SP14317")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Sp14318)
+                    .IsRequired()
+                    .HasMaxLength(11)
+                    .IsUnicode(false)
+                    .HasColumnName("SP14318")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Sp14319)
+                    .IsRequired()
+                    .HasMaxLength(11)
+                    .IsUnicode(false)
+                    .HasColumnName("SP14319")
+                    .IsFixedLength();
 
                 entity.Property(e => e.Sp186)
                     .HasColumnType("text")
