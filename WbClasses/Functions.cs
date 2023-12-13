@@ -19,6 +19,8 @@ namespace WbClasses
                 {
                     if (!string.IsNullOrEmpty(errorText))
                         errorText += Environment.NewLine;
+                    else
+                        errorText += "Wb ";
                     errorText += error;
                 }
             }

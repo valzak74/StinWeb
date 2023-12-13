@@ -2,10 +2,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Refresher1C.Service;
+using StinClasses.Справочники.Functions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -34,9 +34,20 @@ namespace Refresher1C
         {
             try
             {
-                using IMarketplaceService MarketplaceScope = _scopeFactory.CreateScope()
-                       .ServiceProvider.GetService<IMarketplaceService>();
-                await MarketplaceScope.RefreshSlowOrders(stoppingToken);
+                IMarketplaceFunctions marketplaceFunctions = _scopeFactory.CreateScope()
+                    .ServiceProvider.GetRequiredService<IMarketplaceFunctions>();
+                var marketplaces = await marketplaceFunctions.GetAllAsync(stoppingToken);
+                var tasks = new List<Task>();
+                foreach (var marketplace in marketplaces)
+                {
+                    var currentMarketplaceId = marketplace.Id;
+                    tasks.Add(Task.Run(async () => { 
+                        using IMarketplaceService MarketplaceScope = _scopeFactory.CreateScope()
+                               .ServiceProvider.GetService<IMarketplaceService>();
+                        await MarketplaceScope.RefreshSlowOrders(currentMarketplaceId, stoppingToken);
+                    }));
+                }
+                await Task.WhenAll(tasks);
             }
             catch
             {

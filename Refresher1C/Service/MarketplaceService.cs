@@ -2157,7 +2157,7 @@ namespace Refresher1C.Service
                                 if (resultWb.errors?.Count > 0)
                                 {
                                     foreach (var item in resultWb.errors)
-                                        _logger.LogError(item.Key + ": " + item.Value);
+                                        _logger.LogError("WILDBERRIES" + item.Key + ": " + item.Value);
                                     var errorOffers = resultWb.errors.Where(x => !commonErrorTags.Contains(x.Key)).Select(x => x.Key);
                                     errorIds = data.Where(x => errorOffers.Contains(x.Barcode)).Select(x => x.Id).ToList();
                                     uploadIds = data.Where(x => !errorOffers.Contains(x.Barcode)).Select(x => x.Id).ToList();
@@ -2341,13 +2341,14 @@ namespace Refresher1C.Service
                 _logger.LogError("RefreshOrders : " + ex.Message);
             }
         }
-        public async Task RefreshSlowOrders(CancellationToken stoppingToken)
+        public async Task RefreshSlowOrders(string marketplaceId, CancellationToken stoppingToken)
         {
             try
             {
                 bool periodOpened = !_заявкаПокупателя.NeedToOpenPeriod();
                 var marketplaceIds = await (from market in _context.Sc14042s
                                             where !market.Ismark
+                                            && string.IsNullOrEmpty(marketplaceId) ? true : market.Id == marketplaceId
                                             //&& (market.Sp14177 == 1)
                                             //&& (market.Sp14155.Trim() == "Яндекс")
                                             //&& (market.Sp14155.Trim() == "AliExpress")
@@ -2442,7 +2443,7 @@ namespace Refresher1C.Service
                     campaignId,
                     clientId,
                     authToken,
-                    new List<string> { "DELIVERY", "DELIVERED", "CANCELLED_IN_PROCESSING", "PARTIALLY_DELIVERED", "PARTIALLY_RETURNED" },
+                    new List<string> { "UNPAID", "PROCESSING", "DELIVERY", "DELIVERED", "CANCELLED_BEFORE_PROCESSING", "CANCELLED_IN_PROCESSING", "PARTIALLY_DELIVERED", "PARTIALLY_RETURNED" },
                     DateTime.Today.AddDays(-60),
                     200,
                     pageToken,
@@ -2459,6 +2460,8 @@ namespace Refresher1C.Service
                         {
                             switch (detailOrder.Status)
                             {
+                                case YandexClasses.StatusYandex.CANCELLED:
+                                case YandexClasses.StatusYandex.CANCELLED_BEFORE_PROCESSING:
                                 case YandexClasses.StatusYandex.CANCELLED_IN_PROCESSING:
                                     if ((order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14) && (order.InternalStatus != 16))
                                         await _docService.OrderCancelled(order);
@@ -2475,6 +2478,10 @@ namespace Refresher1C.Service
                                 case YandexClasses.StatusYandex.PARTIALLY_RETURNED:
                                     if (((order.InternalStatus == 14) || (order.InternalStatus == 16)) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                                         await _docService.OrderFromTransferDeliveried(order);
+                                    break;
+                                case YandexClasses.StatusYandex.PROCESSING:
+                                    if (order.InternalStatus == 0)
+                                        await _order.ОбновитьOrderStatus(order.Id, 8);
                                     break;
                             }
                         }
@@ -3344,14 +3351,23 @@ namespace Refresher1C.Service
         }
         private async Task<List<OrderItem>> OzonMakeOrdersPosting(string proxyHost, string clientId, string authToken, EncodeVersion encoding, OzonClasses.FbsPosting posting, CancellationToken stoppingToken)
         {
+            var resultCreateOrGetExemplar = await OzonClasses.OzonOperators.CreateOrGetExemplar(_httpService, proxyHost, clientId, authToken,
+                posting.Posting_number,
+                stoppingToken);
+            if (!string.IsNullOrEmpty(resultCreateOrGetExemplar.error))
+            {
+                _logger.LogError(resultCreateOrGetExemplar.error);
+            }
             var orderItems = new List<OrderItem>();
             var postingPackageData = new List<OzonClasses.PostingPackage>();
+            var totalPieces = 0;
             foreach (var product in posting.Products)
             {
                 var code = product.Offer_id.Decode(encoding);
                 string nomId = await _номенклатура.GetIdByCode(code);
-                //decimal колМест = await _номенклатура.ПолучитьКоличествоМест(nomId);
-                //колМест = колМест == 0 ? 1 : колМест;
+                decimal колМест = await _номенклатура.ПолучитьКоличествоМест(nomId);
+                колМест = колМест == 0 ? 1 : колМест;
+                totalPieces += (int)колМест;
                 string gtd = "";
                 bool gtdNeeded = false;
                 if (posting.Requirements != null)
@@ -3424,26 +3440,64 @@ namespace Refresher1C.Service
                         }
                     }
                 }
+                if (resultCreateOrGetExemplar.data != null 
+                    && resultCreateOrGetExemplar.data.TryGetValue(product.Sku, out var productExemplarCreateOrGet)
+                    && productExemplarCreateOrGet.Is_gtd_needed)
+                {
+                    var exemplarProducts = productExemplarCreateOrGet.Exemplars.Select(x => new OzonClasses.ProductExemplarRequest
+                    {
+                        Exemplars = new List<OzonClasses.ProductExemplarRequestItem>
+                        {
+                            new OzonClasses.ProductExemplarRequestItem
+                            {
+                                Exemplar_id = x.Exemplar_id,
+                                Gtd = string.IsNullOrWhiteSpace(gtd) ? null : gtd,
+                                Is_gtd_absent = string.IsNullOrWhiteSpace(gtd),
+                                Is_rnpt_absent = true,
+                                Mandatory_mark = null,
+                                Rnpt = null,
+                                Jw_uin = null,
+                            }
+                        },
+                        Is_gtd_needed = string.IsNullOrWhiteSpace(gtd),
+                        Is_mandatory_mark_needed = false,
+                        Is_rnpt_needed = false,
+                        Product_id = product.Sku,
+                        Quantity = product.Quantity,
+                    }).ToList();
+                    if (exemplarProducts.Count > 0)
+                    {
+                        var resultExemplar = await OzonClasses.OzonOperators.SetExemplar(_httpService, proxyHost, clientId, authToken,
+                            posting.Posting_number,
+                            totalPieces,
+                            exemplarProducts,
+                            stoppingToken);
+                        if (!string.IsNullOrEmpty(resultExemplar.error))
+                        {
+                            _logger.LogError(resultExemplar.error);
+                        }
+                    }
+                }
                 for (int i = 0; i < product.Quantity; i++)
                 {
                     postingPackageData.Add(new OzonClasses.PostingPackage
                     {
                         Products = new List<OzonClasses.PostingPackageProduct>
-                                            {
-                                                new OzonClasses.PostingPackageProduct
-                                                {
-                                                    Exemplar_info = new List<OzonClasses.PostingExemplarInfo>
-                                                    {
-                                                        new OzonClasses.PostingExemplarInfo
-                                                        {
-                                                            Gtd = string.IsNullOrWhiteSpace(gtd) ? null : gtd,
-                                                            Is_gtd_absent = string.IsNullOrWhiteSpace(gtd),
-                                                        }
-                                                    },
-                                                    Product_id = product.Sku,
-                                                    Quantity = 1
-                                                }
-                                            }
+                        {
+                            new OzonClasses.PostingPackageProduct
+                            {
+                                //Exemplar_info = new List<OzonClasses.PostingExemplarInfo>
+                                //{
+                                //    new OzonClasses.PostingExemplarInfo
+                                //    {
+                                //        Gtd = string.IsNullOrWhiteSpace(gtd) ? null : gtd,
+                                //        Is_gtd_absent = string.IsNullOrWhiteSpace(gtd),
+                                //    }
+                                //},
+                                Product_id = product.Sku,
+                                Quantity = 1
+                            }
+                        }
                     });
                 }
             }
@@ -3543,8 +3597,153 @@ namespace Refresher1C.Service
         {
             bool periodOpened = !_заявкаПокупателя.NeedToOpenPeriod();
             var readyToShipOrders = await ActiveOrders(marketplaceId, cancellationToken);
+            var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(firmaId);
+            var списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
             int pageNumber = 0;
             bool nextPage = true;
+            while (nextPage)
+            {
+                pageNumber++;
+                nextPage = false;
+                var result = await YandexClasses.YandexOperators.OrdersList(_httpService,
+                    _firmProxy[firmaId],
+                    campaignId,
+                    clientId,
+                    authToken,
+                    "UNPAID",
+                    DateTime.Today.AddDays(-1),
+                    pageNumber,
+                    cancellationToken);
+                nextPage = result.NextPage;
+                if (result.Orders?.Count > 0)
+                {
+                    foreach (var detailOrder in result.Orders)
+                    {
+                        var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, detailOrder.Id.ToString());
+                        if (order == null)
+                        {
+                            var номенклатураCodes = detailOrder.Items.Select(x => x.OfferId.Decode(encoding)).ToList();
+                            var НоменклатураList = await _номенклатура.ПолучитьСвободныеОстатки(
+                                разрешенныеФирмы,
+                                списокСкладов,
+                                номенклатураCodes,
+                                true);
+                            //var nomQuantums = await _номенклатура.ПолучитьКвант(номенклатураCodes, stoppingToken);
+                            bool нетВНаличие = НоменклатураList.Count == 0;
+                            foreach (var номенклатура in НоменклатураList)
+                            {
+                                decimal остаток = номенклатура.Остатки
+                                            .Sum(z => z.СвободныйОстаток) / номенклатура.Единица.Коэффициент;
+                                //var quantum = (int)nomQuantums.Where(q => q.Key == номенклатура.Id).Select(q => q.Value).FirstOrDefault();
+                                //if (quantum == 0)
+                                //    quantum = 1;
+                                var asked = detailOrder.Items
+                                                    .Where(b => b.OfferId.Decode(encoding) == номенклатура.Code)
+                                                    .Select(c => c.Count)
+                                                    .FirstOrDefault();
+                                if (остаток < asked)
+                                {
+                                    нетВНаличие = true;
+                                    break;
+                                }
+                            }
+                            if (нетВНаличие)
+                            {
+                                _logger.LogError("Yandex запуск процедуры отмены");
+                                //запуск процедуры отмены
+
+                                //var cancelResult = await OzonClasses.OzonOperators.CancelOrder(_httpService, clientId, authToken,
+                                //    posting.Posting_number, 352, "Product is out of stock", null, stoppingToken);
+                                //if (!string.IsNullOrEmpty(cancelResult))
+                                //    _logger.LogError(cancelResult);
+                                continue;
+                            }
+                            var orderItems = new List<OrderItem>();
+                            foreach (var item in detailOrder.Items)
+                            {
+                                orderItems.Add(new OrderItem
+                                {
+                                    Id = item.Id.ToString(),
+                                    НоменклатураId = item.OfferId.Decode(encoding),
+                                    Количество = item.Count,
+                                    Цена = (decimal)item.Price,
+                                    ЦенаСоСкидкой = (decimal)item.BuyerPrice,
+                                    Вознаграждение = (decimal)item.Subsidy,
+                                    Доставка = item.Delivery,
+                                    ДопПараметры = item.Params,
+                                    ИдентификаторПоставщика = item.FulfilmentShopId.ToString(),
+                                    ИдентификаторСклада = item.WarehouseId.ToString(),
+                                    ИдентификаторСкладаПартнера = item.PartnerWarehouseId
+                                });
+                            }
+                            string складОтгрузкиId = detailOrder.Delivery?.Outlet?.Code.FormatTo1CId() ?? Common.SkladEkran;
+                            string orderDeliveryShipmentId = "nothing";
+                            DateTime orderShipmentDate = DateTime.MinValue;
+                            if (detailOrder.Delivery.Shipments?.Count > 0)
+                            {
+                                orderDeliveryShipmentId = detailOrder.Delivery.Shipments[0].Id.ToString();
+                                orderShipmentDate = detailOrder.Delivery.Shipments[0].ShipmentDate;
+                            }
+                            if (orderShipmentDate == DateTime.MinValue)
+                            {
+                                if (detailOrder.Delivery.Dates?.FromDate > DateTime.MinValue)
+                                    orderShipmentDate = detailOrder.Delivery.Dates.FromDate;
+                                else
+                                    orderShipmentDate = DateTime.Today.AddDays(await _склад.ЭтоРабочийДень(складОтгрузкиId, 0));
+                            }
+                            OrderRecipientAddress address = detailOrder.Delivery.Address != null ? new OrderRecipientAddress
+                            {
+                                Postcode = detailOrder.Delivery.Address.Postcode ?? "",
+                                Country = detailOrder.Delivery.Address.Country ?? "",
+                                City = detailOrder.Delivery.Address.City ?? "",
+                                Subway = detailOrder.Delivery.Address.Subway ?? "",
+                                Street = detailOrder.Delivery.Address.Street ?? "",
+                                House = detailOrder.Delivery.Address.House ?? "",
+                                Block = detailOrder.Delivery.Address.Block ?? "",
+                                Entrance = detailOrder.Delivery.Address.Entrance ?? "",
+                                Entryphone = detailOrder.Delivery.Address.Entryphone ?? "",
+                                Floor = detailOrder.Delivery.Address.Floor ?? "",
+                                Apartment = detailOrder.Delivery.Address.Apartment ?? ""
+                            } : null;
+                            double deliveryPrice = 0;
+                            double deliverySubsidy = 0;
+                            if ((detailOrder.Delivery?.DeliveryPartnerType == YandexClasses.DeliveryPartnerType.SHOP) &&
+                                (detailOrder.Delivery?.Type != YandexClasses.DeliveryType.PICKUP))
+                            {
+                                deliveryPrice = detailOrder.Delivery?.Price ?? 0 + detailOrder.Delivery?.Subsidy ?? 0;
+                                deliverySubsidy = detailOrder.Delivery?.Subsidy ?? 0;
+                            }
+                            await _docService.NewOrder(
+                                "YANDEX",
+                                firmaId,
+                                customerId,
+                                dogovorId,
+                                authorization,
+                                encoding,
+                                складОтгрузкиId,
+                                detailOrder.Notes ?? "",
+                                detailOrder.Delivery?.DeliveryServiceId ?? "0",
+                                detailOrder.Delivery?.ServiceName ?? "",
+                                (StinDeliveryPartnerType)detailOrder.Delivery?.DeliveryPartnerType,
+                                (StinDeliveryType)detailOrder.Delivery?.Type,
+                                deliveryPrice,
+                                deliverySubsidy,
+                                (StinPaymentType)detailOrder.PaymentType,
+                                (StinPaymentMethod)detailOrder.PaymentMethod,
+                                detailOrder.Delivery?.Region?.Id.ToString(),
+                                detailOrder.Delivery?.Region?.Name ?? "",
+                                address,
+                                orderDeliveryShipmentId,
+                                detailOrder.Id.ToString(),
+                                orderShipmentDate,
+                                orderItems,
+                                cancellationToken);
+                        }
+                    }
+                }
+            }
+            pageNumber = 0;
+            nextPage = true;
             while (nextPage)
             {
                 pageNumber++;
@@ -3555,149 +3754,143 @@ namespace Refresher1C.Service
                     clientId, 
                     authToken,
                     "PROCESSING",
-                    DateTime.Today,
+                    DateTime.Today.AddDays(-1),
                     pageNumber, 
                     cancellationToken);
                 nextPage = result.NextPage;
                 if (result.Orders?.Count > 0)
                 {
-                    var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(firmaId);
-                    var списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
                     foreach (var detailOrder in result.Orders)
                     {
-                        TimeSpan ts = DateTime.Now - detailOrder.CreationDate.AddHours(1);
-                        if (ts.TotalMinutes > 10)
+                        var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, detailOrder.Id.ToString());
+                        if (order == null)
                         {
-                            var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, detailOrder.Id.ToString());
-                            if (order == null)
+                            var номенклатураCodes = detailOrder.Items.Select(x => x.OfferId.Decode(encoding)).ToList();
+                            var НоменклатураList = await _номенклатура.ПолучитьСвободныеОстатки(
+                                разрешенныеФирмы,
+                                списокСкладов,
+                                номенклатураCodes,
+                                true);
+                            //var nomQuantums = await _номенклатура.ПолучитьКвант(номенклатураCodes, stoppingToken);
+                            bool нетВНаличие = НоменклатураList.Count == 0;
+                            foreach (var номенклатура in НоменклатураList)
                             {
-                                var номенклатураCodes = detailOrder.Items.Select(x => x.OfferId.Decode(encoding)).ToList();
-                                var НоменклатураList = await _номенклатура.ПолучитьСвободныеОстатки(
-                                    разрешенныеФирмы,
-                                    списокСкладов,
-                                    номенклатураCodes,
-                                    true);
-                                //var nomQuantums = await _номенклатура.ПолучитьКвант(номенклатураCodes, stoppingToken);
-                                bool нетВНаличие = НоменклатураList.Count == 0;
-                                foreach (var номенклатура in НоменклатураList)
+                                decimal остаток = номенклатура.Остатки
+                                            .Sum(z => z.СвободныйОстаток) / номенклатура.Единица.Коэффициент;
+                                //var quantum = (int)nomQuantums.Where(q => q.Key == номенклатура.Id).Select(q => q.Value).FirstOrDefault();
+                                //if (quantum == 0)
+                                //    quantum = 1;
+                                var asked = detailOrder.Items
+                                                    .Where(b => b.OfferId.Decode(encoding) == номенклатура.Code)
+                                                    .Select(c => c.Count)
+                                                    .FirstOrDefault();
+                                if (остаток < asked)
                                 {
-                                    decimal остаток = номенклатура.Остатки
-                                                .Sum(z => z.СвободныйОстаток) / номенклатура.Единица.Коэффициент;
-                                    //var quantum = (int)nomQuantums.Where(q => q.Key == номенклатура.Id).Select(q => q.Value).FirstOrDefault();
-                                    //if (quantum == 0)
-                                    //    quantum = 1;
-                                    var asked = detailOrder.Items
-                                                        .Where(b => b.OfferId.Decode(encoding) == номенклатура.Code)
-                                                        .Select(c => c.Count)
-                                                        .FirstOrDefault();
-                                    if (остаток < asked)
-                                    {
-                                        нетВНаличие = true;
-                                        break;
-                                    }
+                                    нетВНаличие = true;
+                                    break;
                                 }
-                                if (нетВНаличие)
-                                {
-                                    _logger.LogError("Yandex запуск процедуры отмены");
-                                    //запуск процедуры отмены
-
-                                    //var cancelResult = await OzonClasses.OzonOperators.CancelOrder(_httpService, clientId, authToken,
-                                    //    posting.Posting_number, 352, "Product is out of stock", null, stoppingToken);
-                                    //if (!string.IsNullOrEmpty(cancelResult))
-                                    //    _logger.LogError(cancelResult);
-                                    continue;
-                                }
-                                var orderItems = new List<OrderItem>();
-                                foreach (var item in detailOrder.Items)
-                                {
-                                    orderItems.Add(new OrderItem
-                                    {
-                                        Id = item.Id.ToString(),
-                                        НоменклатураId = item.OfferId.Decode(encoding),
-                                        Количество = item.Count,
-                                        Цена = (decimal)item.Price,
-                                        ЦенаСоСкидкой = (decimal)item.BuyerPrice,
-                                        Вознаграждение = (decimal)item.Subsidy,
-                                        Доставка = item.Delivery,
-                                        ДопПараметры = item.Params,
-                                        ИдентификаторПоставщика = item.FulfilmentShopId.ToString(),
-                                        ИдентификаторСклада = item.WarehouseId.ToString(),
-                                        ИдентификаторСкладаПартнера = item.PartnerWarehouseId
-                                    });
-                                }
-                                string складОтгрузкиId = detailOrder.Delivery?.Outlet?.Code.FormatTo1CId() ?? Common.SkladEkran;
-                                string orderDeliveryShipmentId = "nothing";
-                                DateTime orderShipmentDate = DateTime.MinValue;
-                                if (detailOrder.Delivery.Shipments?.Count > 0)
-                                {
-                                    orderDeliveryShipmentId = detailOrder.Delivery.Shipments[0].Id.ToString();
-                                    orderShipmentDate = detailOrder.Delivery.Shipments[0].ShipmentDate;
-                                }
-                                if (orderShipmentDate == DateTime.MinValue)
-                                {
-                                    if (detailOrder.Delivery.Dates?.FromDate > DateTime.MinValue)
-                                        orderShipmentDate = detailOrder.Delivery.Dates.FromDate;
-                                    else
-                                        orderShipmentDate = DateTime.Today.AddDays(await _склад.ЭтоРабочийДень(складОтгрузкиId, 0));
-                                }
-                                OrderRecipientAddress address = detailOrder.Delivery.Address != null ? new OrderRecipientAddress
-                                {
-                                    Postcode = detailOrder.Delivery.Address.Postcode ?? "",
-                                    Country = detailOrder.Delivery.Address.Country ?? "",
-                                    City = detailOrder.Delivery.Address.City ?? "",
-                                    Subway = detailOrder.Delivery.Address.Subway ?? "",
-                                    Street = detailOrder.Delivery.Address.Street ?? "",
-                                    House = detailOrder.Delivery.Address.House ?? "",
-                                    Block = detailOrder.Delivery.Address.Block ?? "",
-                                    Entrance = detailOrder.Delivery.Address.Entrance ?? "",
-                                    Entryphone = detailOrder.Delivery.Address.Entryphone ?? "",
-                                    Floor = detailOrder.Delivery.Address.Floor ?? "",
-                                    Apartment = detailOrder.Delivery.Address.Apartment ?? ""
-                                } : null;
-                                double deliveryPrice = 0;
-                                double deliverySubsidy = 0;
-                                if ((detailOrder.Delivery?.DeliveryPartnerType == YandexClasses.DeliveryPartnerType.SHOP) &&
-                                    (detailOrder.Delivery?.Type != YandexClasses.DeliveryType.PICKUP))
-                                {
-                                    deliveryPrice = detailOrder.Delivery?.Price ?? 0 + detailOrder.Delivery?.Subsidy ?? 0;
-                                    deliverySubsidy = detailOrder.Delivery?.Subsidy ?? 0;
-                                }
-                                await _docService.NewOrder(
-                                   "YANDEX",
-                                   firmaId,
-                                   customerId,
-                                   dogovorId,
-                                   authorization,
-                                   encoding,
-                                   складОтгрузкиId,
-                                   detailOrder.Notes ?? "",
-                                   detailOrder.Delivery?.DeliveryServiceId ?? "0",
-                                   detailOrder.Delivery?.ServiceName ?? "",
-                                   (StinDeliveryPartnerType)detailOrder.Delivery?.DeliveryPartnerType,
-                                   (StinDeliveryType)detailOrder.Delivery?.Type,
-                                   deliveryPrice,
-                                   deliverySubsidy,
-                                   (StinPaymentType)detailOrder.PaymentType,
-                                   (StinPaymentMethod)detailOrder.PaymentMethod,
-                                   detailOrder.Delivery?.Region?.Id.ToString(),
-                                   detailOrder.Delivery?.Region?.Name ?? "",
-                                   address,
-                                   orderDeliveryShipmentId,
-                                   detailOrder.Id.ToString(),
-                                   orderShipmentDate,
-                                   orderItems,
-                                   cancellationToken);
                             }
-                            else
+                            if (нетВНаличие)
                             {
-                                if ((ts.TotalMinutes > 30) && (order.InternalStatus == 0))
-                                    await _order.ОбновитьOrderStatus(order.Id, 8);
-                                else if (readyToShipOrders.Contains(detailOrder.Id.ToString()) && 
-                                    (detailOrder.Status == YandexClasses.StatusYandex.PROCESSING) && (detailOrder.SubStatus == YandexClasses.SubStatusYandex.SHIPPED) &&
-                                    (order.InternalStatus < 14) && (order.InternalStatus != 6) && (order.InternalStatus != 5) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                                _logger.LogError("Yandex запуск процедуры отмены");
+                                //запуск процедуры отмены
+
+                                //var cancelResult = await OzonClasses.OzonOperators.CancelOrder(_httpService, clientId, authToken,
+                                //    posting.Posting_number, 352, "Product is out of stock", null, stoppingToken);
+                                //if (!string.IsNullOrEmpty(cancelResult))
+                                //    _logger.LogError(cancelResult);
+                                continue;
+                            }
+                            var orderItems = new List<OrderItem>();
+                            foreach (var item in detailOrder.Items)
+                            {
+                                orderItems.Add(new OrderItem
                                 {
-                                    await _docService.OrderDeliveried(order, true);
-                                }
+                                    Id = item.Id.ToString(),
+                                    НоменклатураId = item.OfferId.Decode(encoding),
+                                    Количество = item.Count,
+                                    Цена = (decimal)item.Price,
+                                    ЦенаСоСкидкой = (decimal)item.BuyerPrice,
+                                    Вознаграждение = (decimal)item.Subsidy,
+                                    Доставка = item.Delivery,
+                                    ДопПараметры = item.Params,
+                                    ИдентификаторПоставщика = item.FulfilmentShopId.ToString(),
+                                    ИдентификаторСклада = item.WarehouseId.ToString(),
+                                    ИдентификаторСкладаПартнера = item.PartnerWarehouseId
+                                });
+                            }
+                            string складОтгрузкиId = detailOrder.Delivery?.Outlet?.Code.FormatTo1CId() ?? Common.SkladEkran;
+                            string orderDeliveryShipmentId = "nothing";
+                            DateTime orderShipmentDate = DateTime.MinValue;
+                            if (detailOrder.Delivery.Shipments?.Count > 0)
+                            {
+                                orderDeliveryShipmentId = detailOrder.Delivery.Shipments[0].Id.ToString();
+                                orderShipmentDate = detailOrder.Delivery.Shipments[0].ShipmentDate;
+                            }
+                            if (orderShipmentDate == DateTime.MinValue)
+                            {
+                                if (detailOrder.Delivery.Dates?.FromDate > DateTime.MinValue)
+                                    orderShipmentDate = detailOrder.Delivery.Dates.FromDate;
+                                else
+                                    orderShipmentDate = DateTime.Today.AddDays(await _склад.ЭтоРабочийДень(складОтгрузкиId, 0));
+                            }
+                            OrderRecipientAddress address = detailOrder.Delivery.Address != null ? new OrderRecipientAddress
+                            {
+                                Postcode = detailOrder.Delivery.Address.Postcode ?? "",
+                                Country = detailOrder.Delivery.Address.Country ?? "",
+                                City = detailOrder.Delivery.Address.City ?? "",
+                                Subway = detailOrder.Delivery.Address.Subway ?? "",
+                                Street = detailOrder.Delivery.Address.Street ?? "",
+                                House = detailOrder.Delivery.Address.House ?? "",
+                                Block = detailOrder.Delivery.Address.Block ?? "",
+                                Entrance = detailOrder.Delivery.Address.Entrance ?? "",
+                                Entryphone = detailOrder.Delivery.Address.Entryphone ?? "",
+                                Floor = detailOrder.Delivery.Address.Floor ?? "",
+                                Apartment = detailOrder.Delivery.Address.Apartment ?? ""
+                            } : null;
+                            double deliveryPrice = 0;
+                            double deliverySubsidy = 0;
+                            if ((detailOrder.Delivery?.DeliveryPartnerType == YandexClasses.DeliveryPartnerType.SHOP) &&
+                                (detailOrder.Delivery?.Type != YandexClasses.DeliveryType.PICKUP))
+                            {
+                                deliveryPrice = detailOrder.Delivery?.Price ?? 0 + detailOrder.Delivery?.Subsidy ?? 0;
+                                deliverySubsidy = detailOrder.Delivery?.Subsidy ?? 0;
+                            }
+                            await _docService.NewOrder(
+                                "YANDEX",
+                                firmaId,
+                                customerId,
+                                dogovorId,
+                                authorization,
+                                encoding,
+                                складОтгрузкиId,
+                                detailOrder.Notes ?? "",
+                                detailOrder.Delivery?.DeliveryServiceId ?? "0",
+                                detailOrder.Delivery?.ServiceName ?? "",
+                                (StinDeliveryPartnerType)detailOrder.Delivery?.DeliveryPartnerType,
+                                (StinDeliveryType)detailOrder.Delivery?.Type,
+                                deliveryPrice,
+                                deliverySubsidy,
+                                (StinPaymentType)detailOrder.PaymentType,
+                                (StinPaymentMethod)detailOrder.PaymentMethod,
+                                detailOrder.Delivery?.Region?.Id.ToString(),
+                                detailOrder.Delivery?.Region?.Name ?? "",
+                                address,
+                                orderDeliveryShipmentId,
+                                detailOrder.Id.ToString(),
+                                orderShipmentDate,
+                                orderItems,
+                                cancellationToken);
+                        }
+                        else
+                        {
+                            if (order.InternalStatus == 0)
+                                await _order.ОбновитьOrderStatus(order.Id, 8);
+                            else if (readyToShipOrders.Contains(detailOrder.Id.ToString()) && 
+                                (detailOrder.Status == YandexClasses.StatusYandex.PROCESSING) && (detailOrder.SubStatus == YandexClasses.SubStatusYandex.SHIPPED) &&
+                                (order.InternalStatus < 14) && (order.InternalStatus != 6) && (order.InternalStatus != 5) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                            {
+                                await _docService.OrderDeliveried(order, true);
                             }
                         }
                     }
@@ -4603,10 +4796,11 @@ namespace Refresher1C.Service
                 var marketplaceIds = await (from market in _context.Sc14042s
                                             where !market.Ismark
                                             //&& market.Code.Trim() == "23292582"
-                                            //&& market.Sp14155.Trim().ToUpper() == "OZON" 
+                                            //&& market.Sp14155.Trim().ToUpper() == "OZON"
                                             //&& market.Sp14155.Trim().ToUpper() == "WILDBERRIES"
                                             //&& market.Code.Trim() == "23005267" // Yandex DBS
                                             //&& market.Code.Trim() == "22498162235000" // Ozon ОнлайнМаркет
+                                            //&& market.Code.Trim() == "1020000171757000" // Ozon ХардВоркер
                                             select new
                                             {
                                                 Id = market.Id,
@@ -4691,8 +4885,7 @@ namespace Refresher1C.Service
                 try
                 {
                     await UpdateReturns(result.returns, marketplaceId, cancellationToken);
-                    if (result.count > offset + result.returns?.Count)
-                        await CheckReturnsOzon(marketplaceId, proxyHost, clientId, authToken, offset + result.returns?.Count ?? 0, cancellationToken);
+                    await CheckReturnsOzon(marketplaceId, proxyHost, clientId, authToken, result.count, cancellationToken);
                 }
                 catch (Exception ex)
                 {

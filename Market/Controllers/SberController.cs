@@ -48,23 +48,23 @@ namespace Market.Controllers
                 regionName = singleShipment?.Label?.Region ?? string.Empty;
             string outletId = string.Empty;
             List<OrderItem> orderItems = new List<OrderItem>();
-            foreach (var item in singleShipment?.Items)
-            {
-                orderItems.Add(new OrderItem
-                {
-                    Id = item.ItemIndex,
-                    Sku = item.OfferId,
-                    Количество = item.Quantity ?? 0,
-                    Цена = item.Price ?? 0,
-                    ЦенаСоСкидкой = item.FinalPrice ?? 0,
-                    Вознаграждение = (item.Price ?? 0) - (item.FinalPrice ?? 0),
-                    Доставка = delivery,
-                    //ДопПараметры = x.Params,
-                    ИдентификаторПоставщика = singleShipment?.Label?.MerchantName,
-                    ИдентификаторСклада = singleShipment?.Label?.MerchantId.ToString(),
-                    ИдентификаторСкладаПартнера = singleShipment?.Shipping?.ShippingPoint.ToString()
-                });
-            }
+            //foreach (var item in singleShipment?.Items)
+            //{
+            //    orderItems.Add(new OrderItem
+            //    {
+            //        Id = item.ItemIndex,
+            //        Sku = item.OfferId,
+            //        Количество = item.Quantity ?? 0,
+            //        Цена = item.Price ?? 0,
+            //        ЦенаСоСкидкой = item.FinalPrice ?? 0,
+            //        Вознаграждение = (item.Price ?? 0) - (item.FinalPrice ?? 0),
+            //        Доставка = delivery,
+            //        //ДопПараметры = x.Params,
+            //        ИдентификаторПоставщика = singleShipment?.Label?.MerchantName,
+            //        ИдентификаторСклада = singleShipment?.Label?.MerchantId.ToString(),
+            //        ИдентификаторСкладаПартнера = singleShipment?.Shipping?.ShippingPoint.ToString()
+            //    });
+            //}
             double deliveryPrice = 0;
             double deliverySubsidy = 0;
             OrderRecipientAddress address = new OrderRecipientAddress
@@ -93,6 +93,24 @@ namespace Market.Controllers
             TimeSpan sleepPeriod = TimeSpan.FromSeconds(1);
             while (true)
             {
+                orderItems.Clear();
+                foreach (var item in singleShipment?.Items)
+                {
+                    orderItems.Add(new OrderItem
+                    {
+                        Id = item.ItemIndex,
+                        Sku = item.OfferId,
+                        Количество = item.Quantity ?? 0,
+                        Цена = item.Price ?? 0,
+                        ЦенаСоСкидкой = item.FinalPrice ?? 0,
+                        Вознаграждение = (item.Price ?? 0) - (item.FinalPrice ?? 0),
+                        Доставка = delivery,
+                        //ДопПараметры = x.Params,
+                        ИдентификаторПоставщика = singleShipment?.Label?.MerchantName,
+                        ИдентификаторСклада = singleShipment?.Label?.MerchantId.ToString(),
+                        ИдентификаторСкладаПартнера = singleShipment?.Shipping?.ShippingPoint.ToString()
+                    });
+                }
                 using IBridge1C bridge = _serviceScopeFactory.CreateScope()
                     .ServiceProvider.GetService<IBridge1C>();
                 var orderResult = await bridge.NewOrder(

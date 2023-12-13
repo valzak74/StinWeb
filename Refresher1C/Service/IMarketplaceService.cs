@@ -19,7 +19,7 @@ namespace Refresher1C.Service
         Task CheckCatalog(CancellationToken stoppingToken);
         Task UpdateStock(bool regular, CancellationToken stoppingToken);
         Task RefreshOrders(CancellationToken stoppingToken);
-        Task RefreshSlowOrders(CancellationToken stoppingToken);
+        Task RefreshSlowOrders(string marketplaceId, CancellationToken stoppingToken);
         Task UpdateTariffs(CancellationToken cancellationToken);
         Task CheckReturns(CancellationToken cancellationToken);
     }

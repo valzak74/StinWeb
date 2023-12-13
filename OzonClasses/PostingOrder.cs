@@ -26,7 +26,7 @@
     }
     public class PostingPackageProduct
     {
-        public List<PostingExemplarInfo>? Exemplar_info { get; set; }
+        //public List<PostingExemplarInfo>? Exemplar_info { get; set; }
         public long Product_id { get; set; }
         public int Quantity { get; set; }
     }

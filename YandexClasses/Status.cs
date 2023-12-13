@@ -19,7 +19,8 @@ namespace YandexClasses
         CANCELLED_IN_DELIVERY = 11,
         PARTIALLY_DELIVERED = 12,
         PARTIALLY_RETURNED = 13,
-    }
+        CANCELLED_BEFORE_PROCESSING = 14,
+   }
     [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]
     public enum SubStatusYandex
     {

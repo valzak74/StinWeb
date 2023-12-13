@@ -49,3 +49,4 @@ D:\StinWeb\WbClasses\obj\Release\net6.0\WbClasses.dll
 D:\StinWeb\WbClasses\obj\Release\net6.0\refint\WbClasses.dll
 D:\StinWeb\WbClasses\obj\Release\net6.0\WbClasses.pdb
 D:\StinWeb\WbClasses\obj\Release\net6.0\ref\WbClasses.dll
+D:\StinWeb\WbClasses\obj\Release\net6.0\WbClasses.sourcelink.json

@@ -324,7 +324,10 @@ namespace Refresher1C.Service
                 {
                     string orderNo = формаПредварительнаяЗаявка.Общие.НомерДок + "-" + формаПредварительнаяЗаявка.Общие.ДатаДок.ToString("yyyy");
                     формаПредварительнаяЗаявка.Order.OrderNo = orderNo;
-                    await _order.ОбновитьOrderNoAndStatus(формаПредварительнаяЗаявка.Order.Id, orderNo, 8);
+                    if (тип == "YANDEX")
+                        await _order.ОбновитьOrderNo(формаПредварительнаяЗаявка.Order.Id, orderNo);
+                    else
+                        await _order.ОбновитьOrderNoAndStatus(формаПредварительнаяЗаявка.Order.Id, orderNo, 8);
                     result = await _предварительнаяЗаявка.ПровестиAsync(формаПредварительнаяЗаявка);
                     if (result != null)
                     {

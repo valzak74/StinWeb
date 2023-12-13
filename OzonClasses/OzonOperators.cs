@@ -9,7 +9,7 @@ namespace OzonClasses
         {
             if (response != null)
             {
-                string infoError = response.Code + ": " + response.Message;
+                string infoError = "Ozon " + response.Code + ": " + response.Message;
                 foreach (var responseError in response.Details ?? Enumerable.Empty<Detail>())
                     infoError += ", " + responseError.TypeUrl ?? "" + " : " + responseError.Value ?? "";
                 return infoError;
@@ -243,6 +243,112 @@ namespace OzonClasses
             }
             return new(null,err);
         }
+        public static async Task<(Dictionary<long, ProductExemplarCreateOrGetItem>? data, string error)> CreateOrGetExemplar(IHttpService httpService, string proxyHost, string clientId, string authToken,
+            string postingNumber,
+            CancellationToken cancellationToken
+        )
+        {
+            var request = new ExemplarCreateOrGetRequest();
+            request.Posting_number = postingNumber;
+
+            var result = await httpService.Exchange<ExemplarCreateOrGetResponse, ErrorResponse>(
+                $"https://{proxyHost}api-seller.ozon.ru/v5/fbs/posting/product/exemplar/create-or-get",
+                HttpMethod.Post,
+                GetOzonHeaders(clientId, authToken),
+                request,
+                cancellationToken);
+
+            string err = "";
+            if (result.Item2 != null)
+            {
+                if (!string.IsNullOrEmpty(err))
+                    err += Environment.NewLine;
+                err += "ExemplarCreateOrGetResponse : (" + postingNumber + ") " + ParseOzonError(result.Item2);
+            }
+            if (result.Item1 != null)
+            {
+                return (data: result.Item1.Products.ToDictionary(k => k.Product_id), error: err);
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(err))
+                    err += Environment.NewLine;
+                err += "ExemplarCreateOrGetResponse : Empty response";
+            }
+            return (data: null, error: err);
+        }
+        public static async Task<(Dictionary<long, List<ExemplarStatusItem>>? data, string error)> GetExemplar(IHttpService httpService, string proxyHost, string clientId, string authToken,
+            string postingNumber,
+            CancellationToken cancellationToken
+        )
+        {
+            var request = new ExemplarStatusRequest();
+            request.Posting_number = postingNumber;
+
+            var result = await httpService.Exchange<ExemplarStatusResponse, ErrorResponse>(
+                $"https://{proxyHost}api-seller.ozon.ru/v4/fbs/posting/product/exemplar/status",
+                HttpMethod.Post,
+                GetOzonHeaders(clientId, authToken),
+                request,
+                cancellationToken);
+
+            string err = "";
+            if (result.Item2 != null)
+            {
+                if (!string.IsNullOrEmpty(err))
+                    err += Environment.NewLine;
+                err += "GetExemplarResponse : (" + postingNumber + ") " + ParseOzonError(result.Item2);
+            }
+            if (result.Item1 != null)
+            {
+                return (data: result.Item1.Products.ToDictionary(k => k.Product_id, v => v.Exemplars), error: err);
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(err))
+                    err += Environment.NewLine;
+                err += "GetExemplarResponse : Empty response";
+            }
+            return (data: null, error: err);
+        }
+        public static async Task<(bool? result, string error)> SetExemplar(IHttpService httpService, string proxyHost, string clientId, string authToken,
+            string postingNumber,
+            int multiBoxQty,
+            List<ProductExemplarRequest> requestProducts,
+            CancellationToken cancellationToken
+        )
+        {
+            var request = new ExemplarSetRequest();
+            request.Posting_number = postingNumber;
+            request.Multi_box_qty = multiBoxQty;
+            request.Products = requestProducts;
+
+            var result = await httpService.Exchange<ExemplarSetResponse, ErrorResponse>(
+                $"https://{proxyHost}api-seller.ozon.ru/v5/fbs/posting/product/exemplar/set",
+                HttpMethod.Post,
+                GetOzonHeaders(clientId, authToken),
+                request,
+                cancellationToken);
+
+            string err = "";
+            if (result.Item2 != null)
+            {
+                if (!string.IsNullOrEmpty(err))
+                    err += Environment.NewLine;
+                err += "SetExemplarResponse : (" + postingNumber + ") " + ParseOzonError(result.Item2);
+            }
+            if (result.Item1 != null)
+            {
+                return (result: result.Item1.Result, error: err);
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(err))
+                    err += Environment.NewLine;
+                err += "SetExemplarResponse : No result in response";
+            }
+            return (result: null, error: err);
+        }
         public static async Task<Tuple<List<PostingAdditionalData>?,string>> SetOrderPosting(IHttpService httpService, string proxyHost, string clientId, string authToken,
             string postingNumber,
             List<PostingPackage> packages,
@@ -253,7 +359,7 @@ namespace OzonClasses
             request.With = new PostingWith { additional_data = true };
             request.Packages = packages;
             var result = await httpService.Exchange<PostingOrderResponse, ErrorResponse>(
-                $"https://{proxyHost}api-seller.ozon.ru/v3/posting/fbs/ship",
+                $"https://{proxyHost}api-seller.ozon.ru/v4/posting/fbs/ship",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
@@ -585,17 +691,17 @@ namespace OzonClasses
                 request = new ReturnsRequest();
             else
                 request = new ReturnsRequest(limit);
-            request.Offset = offset;
+            request.Last_id = offset;
             var result = await httpService.Exchange<ReturnsResponse, ErrorResponse>(
-                $"https://{proxyHost}api-seller.ozon.ru/v2/returns/company/fbs",
+                $"https://{proxyHost}api-seller.ozon.ru/v3/returns/company/fbs",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
                 cancellationToken);
             if (result.Item2 != null)
-                return (returns: null, count: 0, error: "ReturnsResponse : " + result.Item2);
-            if (result.Item1?.Result != null)
-                return (returns: result.Item1.Result.Returns, count: result.Item1.Result.Count, error: null);
+                return (returns: null, count: 0, error: "ReturnsResponse : " + result.Item2.Message + " Details: " + string.Join(',', result.Item2.Details.Select(x => x.Value)));
+            if (result.Item1?.Returns != null)
+                return (returns: result.Item1.Returns, count: result.Item1.Last_id, error: null);
             return (returns: null, count: 0, error: null);
         }
     }

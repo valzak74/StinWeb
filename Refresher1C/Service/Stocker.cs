@@ -280,7 +280,7 @@ namespace Refresher1C.Service
             if (result.errors?.Count > 0)
             {
                 foreach (var item in result.errors)
-                    _logger.LogError(item.Key + ": " + item.Value);
+                    _logger.LogError("SetWildberriesData " + item.Key + ": " + item.Value);
                 var errorOffers = result.errors.Where(x => !commonErrorTags.Contains(x.Key)).Select(x => x.Key);
                 errorIds.AddRange(data.Where(x => errorOffers.Contains(x.Barcode)).Select(x => x.Id));
                 uploadIds.AddRange(data.Where(x => !errorOffers.Contains(x.Barcode)).Select(x => x.Id));

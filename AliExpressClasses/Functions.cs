@@ -23,6 +23,8 @@ namespace AliExpressClasses
             {
                 if (!string.IsNullOrEmpty(errorText))
                     errorText += Environment.NewLine;
+                else 
+                    errorText += "Ali ";
                 return errorText + response.Code + ": " + response.Message;
             }
             return errorText;

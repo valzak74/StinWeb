@@ -16,6 +16,8 @@ namespace SberClasses
             {
                 if (!string.IsNullOrEmpty(errorText))
                     errorText += Environment.NewLine;
+                else
+                    errorText += "Sber ";
                 if (!string.IsNullOrEmpty(shipmentId))
                     errorText += "(" + shipmentId + ") ";
                 return errorText + message;

@@ -34,3 +34,4 @@ D:\StinWeb\JsonExtensions\obj\Release\net6.0\JsonExtensions.dll
 D:\StinWeb\JsonExtensions\obj\Release\net6.0\refint\JsonExtensions.dll
 D:\StinWeb\JsonExtensions\obj\Release\net6.0\JsonExtensions.pdb
 D:\StinWeb\JsonExtensions\obj\Release\net6.0\ref\JsonExtensions.dll
+D:\StinWeb\JsonExtensions\obj\Release\net6.0\JsonExtensions.sourcelink.json

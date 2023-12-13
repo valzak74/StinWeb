@@ -49,3 +49,4 @@ D:\StinWeb\AliExpressClasses\obj\Release\net6.0\AliExpressClasses.dll
 D:\StinWeb\AliExpressClasses\obj\Release\net6.0\refint\AliExpressClasses.dll
 D:\StinWeb\AliExpressClasses\obj\Release\net6.0\AliExpressClasses.pdb
 D:\StinWeb\AliExpressClasses\obj\Release\net6.0\ref\AliExpressClasses.dll
+D:\StinWeb\AliExpressClasses\obj\Release\net6.0\AliExpressClasses.sourcelink.json

@@ -49,3 +49,4 @@ D:\StinWeb\YandexClasses\obj\Release\net6.0\YandexClasses.dll
 D:\StinWeb\YandexClasses\obj\Release\net6.0\refint\YandexClasses.dll
 D:\StinWeb\YandexClasses\obj\Release\net6.0\YandexClasses.pdb
 D:\StinWeb\YandexClasses\obj\Release\net6.0\ref\YandexClasses.dll
+D:\StinWeb\YandexClasses\obj\Release\net6.0\YandexClasses.sourcelink.json

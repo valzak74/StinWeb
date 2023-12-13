@@ -174,8 +174,8 @@ namespace StinClasses.Справочники.Functions
                         else
                         {
                             var остатокРегистр = номенклатура.Остатки.Sum(x => x.СвободныйОстаток);
-                            if (marketplace.Тип == "ЯНДЕКС")
-                                остатокРегистр += резервМаркета;
+                            //if (marketplace.Тип == "ЯНДЕКС")
+                            //    остатокРегистр += резервМаркета;
                             остаток = (long)((остатокРегистр - (item.DeltaStock + defDeltaStock)) / номенклатура.Единица.Коэффициент);
                         }
                         остаток = Math.Max(остаток, 0);
@@ -318,7 +318,7 @@ namespace StinClasses.Справочники.Functions
                               (markUse.Sp14323 == 0) &&
                               (markUse.Sp14147 == marketplace.Id)
                           //&& ((vzTovar == null) || (vzTovar.Rozn <= 0))
-                          //&& nom.Code == "K00035471"
+                          //&& nom.Code == "D00071728" 
                           //&& nom.Code == "D00072918"
                           select new MarketUseInfoPrice
                           {

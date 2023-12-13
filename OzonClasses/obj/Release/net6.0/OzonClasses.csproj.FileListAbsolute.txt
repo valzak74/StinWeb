@@ -49,3 +49,4 @@ D:\StinWeb\OzonClasses\obj\Release\net6.0\OzonClasses.dll
 D:\StinWeb\OzonClasses\obj\Release\net6.0\refint\OzonClasses.dll
 D:\StinWeb\OzonClasses\obj\Release\net6.0\OzonClasses.pdb
 D:\StinWeb\OzonClasses\obj\Release\net6.0\ref\OzonClasses.dll
+D:\StinWeb\OzonClasses\obj\Release\net6.0\OzonClasses.sourcelink.json

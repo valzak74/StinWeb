@@ -25,7 +25,7 @@ namespace OzonClasses
     {
         public ReturnsRequestFilter? Filter { get; set; }
         public long Limit { get; set; }
-        public long Offset { get; set; }
+        public long Last_id { get; set; }
         public class ReturnsRequestFilter
         {
             public FilterTimeRange? Accepted_from_customer_moment { get; set; }
@@ -45,7 +45,7 @@ namespace OzonClasses
         }
         public ReturnsRequest() => Limit = 1000;
         public ReturnsRequest(long limit) => Limit = limit;
-        public ReturnsRequest(long limit, long offset) : this(limit) => Offset = offset;
+        public ReturnsRequest(long limit, long offset) : this(limit) => Last_id = offset;
         public bool ShouldSerializeFilter()
         {
             return Filter != null;
@@ -53,12 +53,8 @@ namespace OzonClasses
     }
     public class ReturnsResponse
     {
-        public ReturnsResult? Result { get; set; }
-        public class ReturnsResult
-        {
-            public long Count { get; set; }
-            public List<ReturnItem>? Returns { get; set; }
-        }
+        public long Last_id { get; set; }
+        public List<ReturnItem>? Returns { get; set; }
     }
     public class ReturnItem
     {

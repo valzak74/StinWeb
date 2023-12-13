@@ -289,3 +289,4 @@ D:\StinWeb\Refresher1C\obj\Debug\net6.0\refint\Refresher1C.dll
 D:\StinWeb\Refresher1C\obj\Debug\net6.0\Refresher1C.pdb
 D:\StinWeb\Refresher1C\obj\Debug\net6.0\Refresher1C.genruntimeconfig.cache
 D:\StinWeb\Refresher1C\obj\Debug\net6.0\ref\Refresher1C.dll
+D:\StinWeb\Refresher1C\obj\Debug\net6.0\Refresher1C.sourcelink.json

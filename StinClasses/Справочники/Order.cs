@@ -458,30 +458,6 @@ namespace StinClasses.Справочники
         {
             try
             {
-                var order = new Order
-                {
-                    Id = _context.GenerateId(13994),
-                    Status = (int)StinOrderStatus.RESERVED,
-                    SubStatus = (int)StinOrderSubStatus.STARTED,
-                    Marketplace = marketplaceName,
-                    MarketplaceId = marketplaceId,
-                    OrderNo = "",
-                    PaymentType = paymentType,
-                    PaymentMethod = paymentMethod,
-                    DeliveryPartnerType = deliveryPartnerType,
-                    DeliveryServiceId = deliveryServiceId,
-                    DeliveryServiceName = deliveryServiceName,
-                    DeliveryType = deliveryType,
-                    DeliveryPrice = deliveryPrice,
-                    ShipmentId = shipmentId,
-                    ShipmentDate = shipmentDate,
-                    RegionId = regionId,
-                    RegionName = regionName,
-                    Address = address,
-                    СуммаВозмещения = (decimal)deliverySubsidy + items.Sum(x => x.Вознаграждение),
-                    CustomerComment = string.IsNullOrWhiteSpace(notes) ? "" : notes
-                };
-                order.Items = items;
                 var MarketplaceEntity = await _context.Sc14042s
                     .Where(x => !x.Ismark && x.Parentext == firmaId && x.Sp14077.Trim() == authApi)
                     .OrderBy(x => x.Id)
@@ -517,7 +493,32 @@ namespace StinClasses.Справочники
                     await _context.Sc14042s.AddAsync(MarketplaceEntity);
                     _context.РегистрацияИзмененийРаспределеннойИБ(14042, MarketplaceEntity.Id);
                 }
-                order.Тип = MarketplaceEntity.Sp14155.ToUpper().Trim();
+                var Тип = MarketplaceEntity.Sp14155.ToUpper().Trim();
+                var order = new Order
+                {
+                    Id = _context.GenerateId(13994),
+                    Status = (int)StinOrderStatus.RESERVED,
+                    SubStatus = (int)StinOrderSubStatus.STARTED,
+                    Marketplace = marketplaceName,
+                    MarketplaceId = marketplaceId,
+                    OrderNo = "",
+                    PaymentType = paymentType,
+                    PaymentMethod = paymentMethod,
+                    DeliveryPartnerType = deliveryPartnerType,
+                    DeliveryServiceId = deliveryServiceId,
+                    DeliveryServiceName = deliveryServiceName,
+                    DeliveryType = deliveryType,
+                    DeliveryPrice = deliveryPrice,
+                    ShipmentId = shipmentId,
+                    ShipmentDate = shipmentDate,
+                    RegionId = regionId,
+                    RegionName = regionName,
+                    Address = address,
+                    СуммаВозмещения = (decimal)deliverySubsidy + items.Sum(x => x.Вознаграждение),
+                    CustomerComment = string.IsNullOrWhiteSpace(notes) ? "" : notes
+                };
+                order.Items = items;
+                order.Тип = Тип;
                 order.Модель = MarketplaceEntity.Sp14164.ToUpper().Trim();
                 if ((order.Тип == "OZON") && (order.DeliveryServiceId != MarketplaceEntity.Code.Trim()))
                     order.Marketplace = MarketplaceEntity.Sp14155.Trim() + " realFBS";

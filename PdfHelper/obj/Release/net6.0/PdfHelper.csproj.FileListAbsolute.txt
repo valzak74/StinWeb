@@ -34,3 +34,4 @@ D:\StinWeb\PdfHelper\obj\Release\net6.0\PdfHelper.dll
 D:\StinWeb\PdfHelper\obj\Release\net6.0\refint\PdfHelper.dll
 D:\StinWeb\PdfHelper\obj\Release\net6.0\PdfHelper.pdb
 D:\StinWeb\PdfHelper\obj\Release\net6.0\ref\PdfHelper.dll
+D:\StinWeb\PdfHelper\obj\Release\net6.0\PdfHelper.sourcelink.json

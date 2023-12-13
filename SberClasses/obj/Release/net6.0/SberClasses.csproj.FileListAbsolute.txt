@@ -49,3 +49,4 @@ D:\StinWeb\SberClasses\obj\Release\net6.0\SberClasses.dll
 D:\StinWeb\SberClasses\obj\Release\net6.0\refint\SberClasses.dll
 D:\StinWeb\SberClasses\obj\Release\net6.0\SberClasses.pdb
 D:\StinWeb\SberClasses\obj\Release\net6.0\ref\SberClasses.dll
+D:\StinWeb\SberClasses\obj\Release\net6.0\SberClasses.sourcelink.json

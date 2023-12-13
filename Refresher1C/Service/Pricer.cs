@@ -50,6 +50,7 @@ namespace Refresher1C.Service
         {
             var markerplaces = await _marketplaceFunctions.GetAllAsync(stoppingToken);
             foreach (var marketplace in markerplaces)
+                //if (marketplace.Тип == "OZON") 
                 await UpdatePriceMarketplace(marketplace, stoppingToken);
         }
         async Task UpdatePriceMarketplace(Marketplace marketplace, CancellationToken stoppingToken)
