@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SberClasses")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0b4a33adfa85e217e4d77d923263465a34b260e9")]
 [assembly: System.Reflection.AssemblyProductAttribute("SberClasses")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SberClasses")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

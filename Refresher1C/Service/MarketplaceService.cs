@@ -4196,11 +4196,18 @@ namespace Refresher1C.Service
                     {
                         var weight = x.Elements("param").Where(y => y.Attribute("name").Value == "Weight").Select(z => z.Value).FirstOrDefault();
                         double.TryParse(weight, out double value);
+                        var width = x.Elements("param").Where(y => y.Attribute("name").Value == "Width").Select(z => z.Value).FirstOrDefault();
+                        decimal.TryParse(width, out decimal valueWidth);
+                        var length = x.Elements("param").Where(y => y.Attribute("name").Value == "Length").Select(z => z.Value).FirstOrDefault();
+                        decimal.TryParse(weight, out decimal valueLength);
+                        var height = x.Elements("param").Where(y => y.Attribute("name").Value == "Height").Select(z => z.Value).FirstOrDefault();
+                        decimal.TryParse(weight, out decimal valueHeight);
                         return new
                         {
                             OfferCode = x.Attribute("id").Value.Decode(encoding),
                             ParentCode = x.Element("categoryId").Value.Decode(encoding),
-                            Weight = value
+                            Weight = value,
+                            Volume = (valueWidth * valueLength * valueHeight) / 1000
                         };
                     });
                 var offerCodes = offers.Select(x => x.OfferCode).ToList();
@@ -4211,13 +4218,14 @@ namespace Refresher1C.Service
                                 && x.Sp95.Contains("SBER"))
                     .Select(x => new { Code = x.Code.Trim(), Comment = x.Sp95 })
                     .ToListAsync(cancellationToken);
-                var categoryData = dbData.Select(x => new { x.Code, Percent = x.Comment.Split(";", StringSplitOptions.TrimEntries).Where(y => y.StartsWith("SBER", StringComparison.InvariantCultureIgnoreCase)).Select(z => { double.TryParse(z.Substring(4).Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double p); return p; }).FirstOrDefault() });
+                var categoryData = dbData.Select(x => new { x.Code, Percent = x.Comment.Split(";", StringSplitOptions.TrimEntries).Where(y => y.StartsWith("SBER", StringComparison.InvariantCultureIgnoreCase)).Select(z => { decimal.TryParse(z.Substring(4).Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out decimal p); return p; }).FirstOrDefault() });
                 var komisData = from o in offers
                                 join c in categoryData on o.ParentCode equals c.Code
                                 select new
                                 {
                                     o.OfferCode,
                                     o.Weight,
+                                    o.Volume,
                                     c.Percent
                                 };
                 var query = from markUse in _context.Sc14152s
@@ -4243,77 +4251,62 @@ namespace Refresher1C.Service
                     var komis = komisData.FirstOrDefault(x => x.OfferCode == item.Sku);
                     if ((entity != null) && (komis != null) && (komis.Percent > 0))
                     {
-                        var КоэфМинНаценки = 8; // 
-                        var Порог = (double)(item.ЦенаЗакуп * item.Квант) * (100 + КоэфМинНаценки) / 100;
-                        var fixSort = 10d; //за сортировку 10 руб
-                        var fixProgLoyalnost = 1d; //программа лояльности 1 руб 
-                        var c_category = komis.Percent / 100;
-                        var c_transaction = 1.8 / 100; //1.8% 
-                        var tariffLogistics = (percent: 1.0, limMin: 30.0, limMax: 280.0);
-                        var fixLogistics = 0d;
-                        var c_logistics = tariffLogistics.percent / 100;
-                        var tariffLastMile = (percent: 4.0, limMin: 30.0, limMax: 215.0);
-                        var fixLastMile = 0d;
-                        var c_lastmile = tariffLastMile.percent / 100;
-                        double minPrice = (Порог + fixProgLoyalnost + fixSort + fixLogistics + fixLastMile) / (1 - c_category - c_transaction - c_logistics - c_lastmile);
-                        var limits = LimitValues(tariffLogistics, tariffLastMile, minPrice);
-                        foreach (var limit in limits)
+                        decimal minPrice = 0;
+                        using (var helper = new CommissionHelperSber(item.ЦенаЗакуп, (int)item.Квант, komis.Volume, komis.Percent))
                         {
-                            switch (limit.Key)
-                            {
-                                case "MaxWeightLimit":
-                                    if (minPrice > limit.Value)
-                                    {
-                                        fixLogistics = tariffLogistics.limMax;
-                                        c_logistics = 0;
-                                    }
-                                    break;
-                                case "MaxLastMileLimit":
-                                    if (minPrice > limit.Value)
-                                    {
-                                        fixLastMile = tariffLastMile.limMax;
-                                        c_lastmile = 0;
-                                    }
-                                    break;
-                                case "MinWeightLimit":
-                                    if (minPrice < limit.Value)
-                                    {
-                                        fixLogistics = tariffLogistics.limMin;
-                                        c_logistics = 0;
-                                    }
-                                    break;
-                                case "MinLastMileLimit":
-                                    if (minPrice < limit.Value)
-                                    {
-                                        fixLastMile = tariffLastMile.limMin;
-                                        c_lastmile = 0;
-                                    }
-                                    break;
-                            }
-                            minPrice = (Порог + fixProgLoyalnost + fixSort + fixLogistics + fixLastMile) / (1 - c_category - c_transaction - c_logistics - c_lastmile);
+                            minPrice = helper.MinPrice();
                         }
-                        //double c_weight = 0;
-                        //var tariffLight = (percent: 3.0, limMin: 50.0, limMax: 500.0);
-                        //var tariffHard = (percent: 3.0, limMin: 500.0, limMax: 1000.0);
-                        //var tariff = komis.Weight > 25 ? tariffHard : tariffLight;
-                        //c_weight = tariff.percent / 100;
-                        //var c_delivery = minPrice * c_weight;
-                        //if (c_delivery < tariff.limMin)
-                        //    minPrice += tariff.limMin;
-                        //else if (c_delivery > tariff.limMax)
-                        //    minPrice += tariff.limMax;
-                        //else
-                        //    minPrice += c_delivery;
-                        //minPrice += 10; //за прием заказов в СЦ (фиксированная 10 руб за отправление)
-                        //var c_deliveryLastMile = minPrice * tariffLastMile.percent / 100;
-                        //if (c_deliveryLastMile < tariffLastMile.limMin)
-                        //    minPrice += tariffLastMile.limMin;
-                        //else if (c_deliveryLastMile > tariffLastMile.limMax)
-                        //    minPrice += tariffLastMile.limMax;
-                        //else
-                        //    minPrice += c_deliveryLastMile;
+                        //var КоэфМинНаценки = 8; // 
+                        //var Порог = (double)(item.ЦенаЗакуп * item.Квант) * (100 + КоэфМинНаценки) / 100;
+                        //var fixSort = 10d; //за сортировку 10 руб
+                        //var fixProgLoyalnost = 1d; //программа лояльности 1 руб 
+                        //var c_category = komis.Percent / 100;
+                        //var c_transaction = 1.8 / 100; //1.8% 
+                        //var tariffLogistics = (percent: 1.0, limMin: 30.0, limMax: 280.0);
+                        //var fixLogistics = 0d;
+                        //var c_logistics = tariffLogistics.percent / 100;
+                        //var tariffLastMile = (percent: 4.0, limMin: 30.0, limMax: 215.0);
+                        //var fixLastMile = 0d;
+                        //var c_lastmile = tariffLastMile.percent / 100;
+                        //double minPrice = (Порог + fixProgLoyalnost + fixSort + fixLogistics + fixLastMile) / (1 - c_category - c_transaction - c_logistics - c_lastmile);
+                        //var limits = LimitValues(tariffLogistics, tariffLastMile, minPrice);
+                        //foreach (var limit in limits)
+                        //{
+                        //    switch (limit.Key)
+                        //    {
+                        //        case "MaxWeightLimit":
+                        //            if (minPrice > limit.Value)
+                        //            {
+                        //                fixLogistics = tariffLogistics.limMax;
+                        //                c_logistics = 0;
+                        //            }
+                        //            break;
+                        //        case "MaxLastMileLimit":
+                        //            if (minPrice > limit.Value)
+                        //            {
+                        //                fixLastMile = tariffLastMile.limMax;
+                        //                c_lastmile = 0;
+                        //            }
+                        //            break;
+                        //        case "MinWeightLimit":
+                        //            if (minPrice < limit.Value)
+                        //            {
+                        //                fixLogistics = tariffLogistics.limMin;
+                        //                c_logistics = 0;
+                        //            }
+                        //            break;
+                        //        case "MinLastMileLimit":
+                        //            if (minPrice < limit.Value)
+                        //            {
+                        //                fixLastMile = tariffLastMile.limMin;
+                        //                c_lastmile = 0;
+                        //            }
+                        //            break;
+                        //    }
+                        //    minPrice = (Порог + fixProgLoyalnost + fixSort + fixLogistics + fixLastMile) / (1 - c_category - c_transaction - c_logistics - c_lastmile);
+                        //}
 
-                        decimal updateMinPrice = decimal.Round((decimal)minPrice / item.Квант, 2, MidpointRounding.AwayFromZero);
+                        decimal updateMinPrice = decimal.Round(minPrice / item.Квант, 2, MidpointRounding.AwayFromZero);
                         if (updateMinPrice != entity.Sp14198)
                         {
                             entity.Sp14198 = updateMinPrice;
