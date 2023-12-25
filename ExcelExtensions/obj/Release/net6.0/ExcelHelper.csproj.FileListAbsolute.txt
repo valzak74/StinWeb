@@ -22,3 +22,4 @@ D:\StinWeb\ExcelExtensions\obj\Release\net6.0\ExcelHelper.dll
 D:\StinWeb\ExcelExtensions\obj\Release\net6.0\refint\ExcelHelper.dll
 D:\StinWeb\ExcelExtensions\obj\Release\net6.0\ExcelHelper.pdb
 D:\StinWeb\ExcelExtensions\obj\Release\net6.0\ref\ExcelHelper.dll
+D:\StinWeb\ExcelExtensions\obj\Release\net6.0\ExcelHelper.sourcelink.json

@@ -19,8 +19,6 @@ using System.Xml.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using StinClasses.MarketCommission;
 using System.Globalization;
-using AliExpressClasses;
-using Newtonsoft.Json.Linq;
 
 namespace Refresher1C.Service
 {
@@ -284,6 +282,28 @@ namespace Refresher1C.Service
                                             {
                                                 status = -1;
                                                 err = "Internal : Boxes response ERROR status";
+                                            }
+                                            else
+                                            {
+                                                var fulfilmentIds = result.Item2.Result?.Boxes?
+                                                    .Where(x => !string.IsNullOrEmpty(x.FulfilmentId) && !x.FulfilmentId.Contains('-') && x.FulfilmentId.Length == 20)
+                                                    .Select(x => x.FulfilmentId)
+                                                    .ToList();
+                                                if (fulfilmentIds?.Count > 0)
+                                                {
+                                                    var chunks = fulfilmentIds.Chunk(7); //длина строки 7 * 20 = 140 + 6 запятых. ДопПараметры длина 150
+                                                    var entityItems = await _context.Sc14033s
+                                                        .Where(x => x.Parentext == entity.Id)
+                                                        .Select(x => x)
+                                                        .ToListAsync(stoppingToken);
+                                                    foreach (var chunk in chunks)
+                                                    {
+                                                        var entityItem = entityItems.FirstOrDefault(x => string.IsNullOrWhiteSpace(x.Sp14028));
+                                                        entityItem.Sp14028 = string.Join(',', chunk); //ДопПараметры
+                                                        _context.Update(entityItem);
+                                                        _context.РегистрацияИзмененийРаспределеннойИБ(14033, entityItem.Id);
+                                                    }
+                                                }
                                             }
                                         }
                                         catch (Exception ex)
@@ -3649,7 +3669,7 @@ namespace Refresher1C.Service
                             }
                             if (нетВНаличие)
                             {
-                                _logger.LogError("Yandex запуск процедуры отмены");
+                                _logger.LogError($"Yandex ({detailOrder.Id.ToString()}) запуск процедуры отмены");
                                 //запуск процедуры отмены
 
                                 //var cancelResult = await OzonClasses.OzonOperators.CancelOrder(_httpService, clientId, authToken,
@@ -3792,7 +3812,7 @@ namespace Refresher1C.Service
                             }
                             if (нетВНаличие)
                             {
-                                _logger.LogError("Yandex запуск процедуры отмены");
+                                _logger.LogError($"Yandex ({detailOrder.Id.ToString()}) запуск процедуры отмены");
                                 //запуск процедуры отмены
 
                                 //var cancelResult = await OzonClasses.OzonOperators.CancelOrder(_httpService, clientId, authToken,

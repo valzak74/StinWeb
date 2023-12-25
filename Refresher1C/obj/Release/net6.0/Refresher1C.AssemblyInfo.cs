@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Refresher1C")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0b4a33adfa85e217e4d77d923263465a34b260e9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e06f29687683c51e580afe749b7cc61089b09785")]
 [assembly: System.Reflection.AssemblyProductAttribute("Refresher1C")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Refresher1C")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

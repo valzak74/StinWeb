@@ -660,3 +660,4 @@ D:\StinWeb\StinWeb\obj\Release\net6.0\refint\StinWeb.dll
 D:\StinWeb\StinWeb\obj\Release\net6.0\StinWeb.pdb
 D:\StinWeb\StinWeb\obj\Release\net6.0\StinWeb.genruntimeconfig.cache
 D:\StinWeb\StinWeb\obj\Release\net6.0\ref\StinWeb.dll
+D:\StinWeb\StinWeb\obj\Release\net6.0\StinWeb.sourcelink.json

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace StinClasses.MarketCommission
 {
@@ -41,86 +42,18 @@ namespace StinClasses.MarketCommission
             switch (_model)
             {
                 case ModelTypeOzon.FBS:
-                    if (IsKGT)
-                        return 1100;
                     return volumeWeight switch
                     {
-                        0.1m => 40,
-                        0.2m => 41,
-                        0.3m => 42,
-                        0.4m => 43,
-                        0.5m => 43,
-                        0.6m => 45,
-                        0.7m => 45,
-                        0.8m => 47,
-                        0.9m => 49,
-                        1m => 51,
-                        1.1m => 55,
-                        1.2m => 57,
-                        1.3m => 61,
-                        1.4m => 63,
-                        1.5m => 65,
-                        1.6m => 67,
-                        1.7m => 69,
-                        1.8m => 70,
-                        1.9m => 71,
-                        < 3m => 79,
-                        < 4m => 100,
-                        < 5m => 120,
-                        < 6m => 135,
-                        < 7m => 160,
-                        < 8m => 185,
-                        < 9m => 210,
-                        < 10m => 225,
-                        < 11m => 265,
-                        < 12m => 290,
-                        < 13m => 315,
-                        < 14m => 350,
-                        < 15m => 370,
-                        < 20m => 400,
-                        < 25m => 525,
-                        _ => 700
+                        <= 5m => 76,
+                        <= 175m => 76 + (Math.Ceiling(volumeWeight) - 5) * 9, // 9 руб за каждый дополнительный литр свыше 5
+                        _ => 1615
                     };
                 case ModelTypeOzon.FBO:
                     return volumeWeight switch
                     {
-                        0.1m => 40,
-                        0.2m => 41,
-                        0.3m => 42,
-                        0.4m => 43,
-                        0.5m => 43,
-                        0.6m => 45,
-                        0.7m => 45,
-                        0.8m => 47,
-                        0.9m => 49,
-                        1m => 51,
-                        1.1m => 55,
-                        1.2m => 57,
-                        1.3m => 61,
-                        1.4m => 63,
-                        1.5m => 65,
-                        1.6m => 67,
-                        1.7m => 69,
-                        1.8m => 70,
-                        1.9m => 71,
-                        < 3m => 79,
-                        < 4m => 100,
-                        < 5m => 120,
-                        < 6m => 135,
-                        < 7m => 160,
-                        < 8m => 185,
-                        < 9m => 210,
-                        < 10m => 225,
-                        < 11m => 265,
-                        < 12m => 290,
-                        < 13m => 315,
-                        < 14m => 350,
-                        < 15m => 370,
-                        < 20m => 400,
-                        < 25m => 525,
-                        < 30m => 700,
-                        < 35m => 800,
-                        _ => 1000
+                        <= 5m => 63,
+                        <= 175m => 63 + (Math.Ceiling(volumeWeight) - 5) * 7, // 7 руб за каждый дополнительный литр свыше 5
+                        _ => 1260
                     };
             }
             return 0;

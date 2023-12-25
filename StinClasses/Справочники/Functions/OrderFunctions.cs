@@ -102,7 +102,7 @@ namespace StinClasses.Справочники.Functions
                 var campaignData = campaignInfo.Split('/');
                 var campaignIds = campaignData[0].Split(',').Select(x => x.Replace('_', ' ')).ToList();
 
-                _cache.TryGetValue(_type36 + campaignData[0], out string marketData);
+                _cache.TryGetValue(_type36 + campaignInfo, out string marketData);
                 if (string.IsNullOrEmpty(marketData))
                 {
                     marketData = await _context.Sc14042s
@@ -111,11 +111,11 @@ namespace StinClasses.Справочники.Functions
                         .Select(gr => gr.Key + (campaignData.Length > 1 ? "_REAL" : ""))
                         .SingleOrDefaultAsync(cancellationToken);
                     if (!string.IsNullOrEmpty(marketData))
-                        _cache.Set(_type36 + campaignData[0], marketData, TimeSpan.FromDays(1));
+                        _cache.Set(_type36 + campaignInfo, marketData, TimeSpan.FromDays(1));
                 }
                 int logNumber = 1;
                 string[] barcodeData;
-                string cacheKey = _type36 + campaignData[0] + barcode;
+                string cacheKey = _type36 + campaignInfo + barcode;
                 Sc13994 entity = null;
                 _cache.TryGetValue(cacheKey, out string entityId);
                 if (!string.IsNullOrEmpty(entityId)) 
@@ -137,7 +137,7 @@ namespace StinClasses.Справочники.Functions
                             break;
                         case "ЯНДЕКС":
                             barcodeData = barcode.Split('-');
-                            if (barcodeData.Length == 2)
+                            if (barcodeData.Length == 2) //old version
                             {
                                 if (barcodeData[0].All(x => char.IsDigit(x)))
                                 {
@@ -146,6 +146,14 @@ namespace StinClasses.Справочники.Functions
                                 }
                                 else
                                     return "Отсканируйте другой штрихкод на этикетке";
+                            }
+                            else if (barcodeData.Length == 1 && barcodeData[0].Length == 20) //new version
+                            {
+                                entity = await (from order in _context.Sc13994s
+                                                join item in _context.Sc14033s on order.Id equals item.Parentext
+                                                where item.Sp14028.Contains(barcode)
+                                                select order).FirstOrDefaultAsync(cancellationToken);
+                                logNumber = barcode.GetHashCode();
                             }
                             else
                                 return "Формат штрихкода не распознан";
@@ -159,11 +167,6 @@ namespace StinClasses.Справочники.Functions
                         default:
                             entity = await _context.Sc13994s.FirstOrDefaultAsync(x => x.Code.Trim() == barcode);
                             break;
-                    }
-                    if (entity != null)
-                    {
-                        _cache.Set(cacheKey, entity.Id, TimeSpan.FromMinutes(60));
-                        _cache.Set(_type36 + entity.Id, entity, TimeSpan.FromMinutes(1));
                     }
                 }
 
