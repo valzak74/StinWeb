@@ -319,7 +319,7 @@ namespace StinClasses.Справочники.Functions
                               (markUse.Sp14147 == marketplace.Id)
                           //&& ((vzTovar == null) || (vzTovar.Rozn <= 0))
                           //&& nom.Code == "D00071728" 
-                          //&& nom.Code == "D00072918"
+                          //&& nom.Code == "K00035195"
                           select new MarketUseInfoPrice
                           {
                               Id = markUse.Id,
