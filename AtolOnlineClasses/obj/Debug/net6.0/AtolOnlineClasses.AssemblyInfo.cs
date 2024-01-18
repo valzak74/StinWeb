@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AtolOnlineClasses")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f76e1dba206c8ab0d652f1de3b4e4526e2646651")]
 [assembly: System.Reflection.AssemblyProductAttribute("AtolOnlineClasses")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AtolOnlineClasses")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

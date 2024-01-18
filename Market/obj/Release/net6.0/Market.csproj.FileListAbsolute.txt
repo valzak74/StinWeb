@@ -220,3 +220,4 @@ D:\StinWeb\Market\obj\Release\net6.0\refint\Market.dll
 D:\StinWeb\Market\obj\Release\net6.0\Market.pdb
 D:\StinWeb\Market\obj\Release\net6.0\Market.genruntimeconfig.cache
 D:\StinWeb\Market\obj\Release\net6.0\ref\Market.dll
+D:\StinWeb\Market\obj\Release\net6.0\Market.sourcelink.json

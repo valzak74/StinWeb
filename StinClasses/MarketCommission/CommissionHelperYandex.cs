@@ -34,11 +34,11 @@ namespace StinClasses.MarketCommission
             PercentFactors = new Dictionary<string, decimal>
             {
                 { "AllFactors", sumFactorPercent },
-                { "PerevodPlateg", 1.6m }
+               // { "PerevodPlateg", 1.6m }
             };
             FixCommissions = new Dictionary<string, decimal>
             {
-                { "PriemPlateg", 0.12m }
+               // { "PriemPlateg", 0.12m }
             };
             switch (_model)
             {

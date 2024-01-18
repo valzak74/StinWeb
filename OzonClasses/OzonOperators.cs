@@ -97,7 +97,8 @@ namespace OzonClasses
             {
                 Since = DateTime.Today.AddDays(-checkDays),
                 To = DateTime.Today.AddDays(checkDays),
-                Status = status
+                Status = status,
+                //Order_id = 21805572139
             };
             request.Limit = limit;
             request.Offset = offset;

@@ -28,3 +28,4 @@ D:\StinWeb\AtolOnlineClasses\obj\Release\net6.0\AtolOnlineClasses.dll
 D:\StinWeb\AtolOnlineClasses\obj\Release\net6.0\refint\AtolOnlineClasses.dll
 D:\StinWeb\AtolOnlineClasses\obj\Release\net6.0\AtolOnlineClasses.pdb
 D:\StinWeb\AtolOnlineClasses\obj\Release\net6.0\ref\AtolOnlineClasses.dll
+D:\StinWeb\AtolOnlineClasses\obj\Release\net6.0\AtolOnlineClasses.sourcelink.json

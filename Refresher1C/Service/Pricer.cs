@@ -55,7 +55,16 @@ namespace Refresher1C.Service
         }
         async Task UpdatePriceMarketplace(Marketplace marketplace, CancellationToken stoppingToken)
         {
-            var data = await _marketplaceFunctions.GetMarketUseInfoForPriceAsync(marketplace, _limit, stoppingToken);
+            var currentLimit = marketplace.Тип switch
+            {
+                "ЯНДЕКС" => 500,
+                "OZON" => 1000,
+                "SBER" => 300,
+                "ALIEXPRESS" => 1000,
+                "WILDBERRIES" => 1000,
+                _ => _limit
+            };
+            var data = await _marketplaceFunctions.GetMarketUseInfoForPriceAsync(marketplace, currentLimit, stoppingToken);
             if (data?.Count() > 0)
             {
                 if (long.TryParse(marketplace.FeedId, out long feedId))
