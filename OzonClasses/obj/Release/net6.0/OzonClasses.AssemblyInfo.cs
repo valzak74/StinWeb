@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("OzonClasses")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f76e1dba206c8ab0d652f1de3b4e4526e2646651")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+44330be887db1faafb44527c7e0c85360b23090a")]
 [assembly: System.Reflection.AssemblyProductAttribute("OzonClasses")]
 [assembly: System.Reflection.AssemblyTitleAttribute("OzonClasses")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

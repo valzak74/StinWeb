@@ -3,6 +3,17 @@ using System.Text.Json.Serialization;
 
 namespace YandexClasses
 {
+    public class BoxesRequest_02_2024
+    {
+        public List<OrderBoxLayoutDTO> Boxes { get; set; }
+
+        public bool AllowRemove { get; set; }
+        public BoxesRequest_02_2024()
+        {
+            Boxes = new List<OrderBoxLayoutDTO>();
+            AllowRemove = false;
+        }
+    }
     public class BoxesRequest
     {
         public List<Box> Boxes { get; set; }
@@ -55,5 +66,50 @@ namespace YandexClasses
     {
         public long Id { get; set; }
         public int Count { get; set; }
+    }
+
+    public class OrderBoxLayoutDTO
+    {
+        public List<OrderBoxLayoutItemDTO> Items { get; set; }
+    }
+
+    public class OrderBoxLayoutItemDTO
+    {
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+        public long Id { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+        public int FullCount { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public OrderBoxLayoutPartialCountDTO PartialCount { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<BriefOrderItemInstanceDTO> Instances { get; set; }
+        public bool ShouldSerializeId()
+        {
+            return Id > 0;
+        }
+        public bool ShouldSerializeFullCount()
+        {
+            return FullCount > 0;
+        }
+        public bool ShouldSerializePartialCount()
+        {
+            return PartialCount != null;
+        }
+        public bool ShouldSerializeInstances()
+        {
+            return (Instances != null && Instances.Count > 0);
+        }
+    }
+    public class OrderBoxLayoutPartialCountDTO
+    {
+        public int Current { get; set; }
+        public int Total { get; set; }
+    }
+    public class BriefOrderItemInstanceDTO
+    {
+        public string Cis { get; set; }
+        public string Uin { get; set; }
+        public string Rnpt { get; set; }
+        public string Gtd { get; set; }
     }
 }

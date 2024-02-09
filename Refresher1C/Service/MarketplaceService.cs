@@ -233,36 +233,61 @@ namespace Refresher1C.Service
                             string err = "";
                             if (obj.Key.Тип == "ЯНДЕКС")
                             {
-                                var request = new YandexClasses.BoxesRequest();
-                                int boxCount = 0;
+                                var request2024 = new YandexClasses.BoxesRequest_02_2024();
                                 foreach (var d in obj)
                                 {
-                                    var мест = (int)(d.Количество * d.КолМест);
-                                    if (d.Квант > 1)
+                                    if (d.КолМест > 1)
                                     {
-                                        мест = (int)(d.Количество / d.Квант);
-                                        if ((d.Количество % d.Квант) > 0)
-                                            мест++;
-                                    }
-                                    for (int i = 1; i <= мест; i++)
-                                    {
-                                        boxCount++;
-                                        request.Boxes.Add(new YandexClasses.Box
+                                        var мест = (int)(d.Количество * d.КолМест);
+                                        for (int i = 1; i <= мест; i++)
                                         {
-                                            FulfilmentId = obj.Key.MarketplaceId + "-" + boxCount.ToString(),
-                                        });
+                                            var request2024Items = new List<YandexClasses.OrderBoxLayoutItemDTO>
+                                            {
+                                                new YandexClasses.OrderBoxLayoutItemDTO
+                                                {
+                                                    Id = long.Parse(d.ItemIndex),
+                                                    PartialCount = new YandexClasses.OrderBoxLayoutPartialCountDTO
+                                                    {
+                                                        Current = i,
+                                                        Total = мест,
+                                                    }
+                                                }
+                                            };
+                                            request2024.Boxes.Add(new YandexClasses.OrderBoxLayoutDTO { Items = request2024Items });
+                                        }
+                                    }
+                                    else
+                                    {
+                                        var квант = d.Квант == 0 ? 1 : (int)d.Квант;
+                                        var мест = (int)(d.Количество / квант);
+                                        if ((d.Количество % квант) > 0)
+                                            мест++;
+                                        var нераспредКолво = (int)d.Количество;
+                                        for (int i = 1; i <= мест; i++)
+                                        {
+                                            var fullCount = Math.Min(квант, нераспредКолво);
+                                            var request2024Items = new List<YandexClasses.OrderBoxLayoutItemDTO>
+                                            {
+                                                new YandexClasses.OrderBoxLayoutItemDTO
+                                                {
+                                                    Id = long.Parse(d.ItemIndex),
+                                                    FullCount = fullCount,
+                                                }
+                                            };
+                                            request2024.Boxes.Add(new YandexClasses.OrderBoxLayoutDTO { Items = request2024Items });
+                                            нераспредКолво = нераспредКолво - fullCount;
+                                        }
                                     }
                                 }
                                 var proxy = _firmProxy[obj.Key.FirmaId];
                                 var campaignId = obj.Key.CampaignId;
                                 var orderId = obj.Key.MarketplaceId;
-                                var shipmentId = obj.Key.ShipmentId;
-                                var result = await YandexClasses.YandexOperators.Exchange<YandexClasses.BoxesResponse>(_httpService,
-                                    $"https://{proxy}api.partner.market.yandex.ru/v2/campaigns/{campaignId}/orders/{orderId}/delivery/shipments/{shipmentId}/boxes.json",
+                                var result = await YandexClasses.YandexOperators.Exchange<YandexClasses.BoxesResponse_02_2024>(_httpService,
+                                    $"https://{proxy}api.partner.market.yandex.ru/campaigns/{campaignId}/orders/{orderId}/boxes",
                                     HttpMethod.Put,
                                     obj.Key.ClientId,
                                     obj.Key.AuthToken,
-                                    request,
+                                    request2024,
                                     stoppingToken);
                                 if (result.Item1 == YandexClasses.ResponseStatus.ERROR)
                                 {
@@ -285,18 +310,34 @@ namespace Refresher1C.Service
                                             }
                                             else
                                             {
-                                                var fulfilmentIds = result.Item2.Result?.Boxes?
-                                                    .Where(x => !string.IsNullOrEmpty(x.FulfilmentId) && !x.FulfilmentId.Contains('-') && x.FulfilmentId.Length == 20)
-                                                    .Select(x => x.FulfilmentId)
+                                                var orderDetails = await YandexClasses.YandexOperators.OrderDetailsFull(_httpService, proxy,
+                                                    campaignId, obj.Key.ClientId, obj.Key.AuthToken, orderId, stoppingToken);
+
+                                                var fulfilmentIds = orderDetails?.Order?.Delivery?.Shipments?
+                                                    .SelectMany(x => x.Boxes?.Select(y => y.FulfilmentId))
                                                     .ToList();
+
+                                                var boxIds = result.Item2.Result?.Boxes?
+                                                    .Select(x => x.BoxId)
+                                                    .ToList();
+
+                                                var entityItems = await _context.Sc14033s
+                                                    .Where(x => x.Parentext == entity.Id)
+                                                    .Select(x => x)
+                                                    .ToListAsync(stoppingToken);
                                                 if (fulfilmentIds?.Count > 0)
                                                 {
-                                                    var chunks = fulfilmentIds.Chunk(7); //длина строки 7 * 20 = 140 + 6 запятых. ДопПараметры длина 150
-                                                    var entityItems = await _context.Sc14033s
-                                                        .Where(x => x.Parentext == entity.Id)
-                                                        .Select(x => x)
-                                                        .ToListAsync(stoppingToken);
-                                                    foreach (var chunk in chunks)
+                                                    foreach (var chunk in fulfilmentIds.Chunk(7)) //длина строки 7 * 20 = 140 + 6 запятых. ДопПараметры длина 150
+                                                    {
+                                                        var entityItem = entityItems.FirstOrDefault(x => string.IsNullOrWhiteSpace(x.Sp14028));
+                                                        entityItem.Sp14028 = string.Join(',', chunk); //ДопПараметры
+                                                        _context.Update(entityItem);
+                                                        _context.РегистрацияИзмененийРаспределеннойИБ(14033, entityItem.Id);
+                                                    }
+                                                }
+                                                else if (boxIds?.Count > 0)
+                                                {
+                                                    foreach (var chunk in boxIds.Chunk(7)) //длина строки 7 * 20 = 140 + 6 запятых. ДопПараметры длина 150
                                                     {
                                                         var entityItem = entityItems.FirstOrDefault(x => string.IsNullOrWhiteSpace(x.Sp14028));
                                                         entityItem.Sp14028 = string.Join(',', chunk); //ДопПараметры
