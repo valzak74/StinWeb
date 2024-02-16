@@ -44,9 +44,9 @@ D:\StinWeb\AliExpressClasses\obj\Debug\net6.0\AliExpressClasses.GeneratedMSBuild
 D:\StinWeb\AliExpressClasses\obj\Debug\net6.0\AliExpressClasses.AssemblyInfoInputs.cache
 D:\StinWeb\AliExpressClasses\obj\Debug\net6.0\AliExpressClasses.AssemblyInfo.cs
 D:\StinWeb\AliExpressClasses\obj\Debug\net6.0\AliExpressClasses.csproj.CoreCompileInputs.cache
-D:\StinWeb\AliExpressClasses\obj\Debug\net6.0\AliExpressClasses.csproj.CopyComplete
 D:\StinWeb\AliExpressClasses\obj\Debug\net6.0\AliExpressClasses.dll
 D:\StinWeb\AliExpressClasses\obj\Debug\net6.0\refint\AliExpressClasses.dll
 D:\StinWeb\AliExpressClasses\obj\Debug\net6.0\AliExpressClasses.pdb
 D:\StinWeb\AliExpressClasses\obj\Debug\net6.0\ref\AliExpressClasses.dll
 D:\StinWeb\AliExpressClasses\obj\Debug\net6.0\AliExpressClasses.sourcelink.json
+D:\StinWeb\AliExpressClasses\obj\Debug\net6.0\AliExpre.98A5C8CE.Up2Date

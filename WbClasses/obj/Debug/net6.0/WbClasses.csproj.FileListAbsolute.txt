@@ -44,9 +44,9 @@ D:\StinWeb\WbClasses\obj\Debug\net6.0\WbClasses.GeneratedMSBuildEditorConfig.edi
 D:\StinWeb\WbClasses\obj\Debug\net6.0\WbClasses.AssemblyInfoInputs.cache
 D:\StinWeb\WbClasses\obj\Debug\net6.0\WbClasses.AssemblyInfo.cs
 D:\StinWeb\WbClasses\obj\Debug\net6.0\WbClasses.csproj.CoreCompileInputs.cache
-D:\StinWeb\WbClasses\obj\Debug\net6.0\WbClasses.csproj.CopyComplete
 D:\StinWeb\WbClasses\obj\Debug\net6.0\WbClasses.dll
 D:\StinWeb\WbClasses\obj\Debug\net6.0\refint\WbClasses.dll
 D:\StinWeb\WbClasses\obj\Debug\net6.0\WbClasses.pdb
 D:\StinWeb\WbClasses\obj\Debug\net6.0\ref\WbClasses.dll
 D:\StinWeb\WbClasses\obj\Debug\net6.0\WbClasses.sourcelink.json
+D:\StinWeb\WbClasses\obj\Debug\net6.0\WbClasses.csproj.Up2Date

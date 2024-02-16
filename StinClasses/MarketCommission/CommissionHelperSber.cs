@@ -25,18 +25,18 @@ namespace StinClasses.MarketCommission
         }
         public override decimal MinPrice()
         {
-            decimal calcMinPrice = base.MinPrice();
+            decimal calcMinPrice = base.MinPrice() * Quant;
             if (calcMinPrice > GetLimit(_tariffLastMile.percent, _tariffLastMile.limMax))
             {
                 FixCommissions["LastMile"] = _tariffLastMile.limMax;
                 PercentFactors["LastMile"] = 0;
-                calcMinPrice = base.MinPrice();
+                calcMinPrice = base.MinPrice() * Quant;
             }
             else if (calcMinPrice < GetLimit(_tariffLastMile.percent, _tariffLastMile.limMin))
             {
                 FixCommissions["LastMile"] = _tariffLastMile.limMin;
                 PercentFactors["LastMile"] = 0;
-                calcMinPrice = base.MinPrice();
+                calcMinPrice = base.MinPrice() * Quant;
             }
             return calcMinPrice;
         }

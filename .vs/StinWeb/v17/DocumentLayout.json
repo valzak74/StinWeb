@@ -1,0 +1,749 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\StinWeb\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{319AC94F-45AE-4085-9095-12309BEAC7FA}|Refresher1C\\Refresher1C.csproj|d:\\stinweb\\refresher1c\\service\\marketplaceservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{319AC94F-45AE-4085-9095-12309BEAC7FA}|Refresher1C\\Refresher1C.csproj|solutionrelative:refresher1c\\service\\marketplaceservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{319AC94F-45AE-4085-9095-12309BEAC7FA}|Refresher1C\\Refresher1C.csproj|d:\\stinweb\\refresher1c\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{319AC94F-45AE-4085-9095-12309BEAC7FA}|Refresher1C\\Refresher1C.csproj|solutionrelative:refresher1c\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{71AB8E72-13BC-4796-BBF8-37510140A3DF}|StinClasses\\StinClasses.csproj|d:\\stinweb\\stinclasses\\marketcommission\\commissionhelpersber.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{71AB8E72-13BC-4796-BBF8-37510140A3DF}|StinClasses\\StinClasses.csproj|solutionrelative:stinclasses\\marketcommission\\commissionhelpersber.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{71AB8E72-13BC-4796-BBF8-37510140A3DF}|StinClasses\\StinClasses.csproj|d:\\stinweb\\stinclasses\\marketcommission\\commissionhelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{71AB8E72-13BC-4796-BBF8-37510140A3DF}|StinClasses\\StinClasses.csproj|solutionrelative:stinclasses\\marketcommission\\commissionhelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{319AC94F-45AE-4085-9095-12309BEAC7FA}|Refresher1C\\Refresher1C.csproj|d:\\stinweb\\refresher1c\\workeronceperday.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{319AC94F-45AE-4085-9095-12309BEAC7FA}|Refresher1C\\Refresher1C.csproj|solutionrelative:refresher1c\\workeronceperday.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0F92CC76-72BF-4BD0-9315-AEE0D5C56381}|Market\\Market.csproj|d:\\stinweb\\market\\services\\bridge1c.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0F92CC76-72BF-4BD0-9315-AEE0D5C56381}|Market\\Market.csproj|solutionrelative:market\\services\\bridge1c.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0A14C2D0-A77A-4841-88C9-DC8AB1DB9F3D}|YandexClasses\\YandexClasses.csproj|d:\\stinweb\\yandexclasses\\yandexoperators.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0A14C2D0-A77A-4841-88C9-DC8AB1DB9F3D}|YandexClasses\\YandexClasses.csproj|solutionrelative:yandexclasses\\yandexoperators.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{71AB8E72-13BC-4796-BBF8-37510140A3DF}|StinClasses\\StinClasses.csproj|d:\\stinweb\\stinclasses\\\u0441\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A\u0438\\functions\\orderfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{71AB8E72-13BC-4796-BBF8-37510140A3DF}|StinClasses\\StinClasses.csproj|solutionrelative:stinclasses\\\u0441\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A\u0438\\functions\\orderfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{71AB8E72-13BC-4796-BBF8-37510140A3DF}|StinClasses\\StinClasses.csproj|d:\\stinweb\\stinclasses\\\u0441\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A\u0438\\order.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{71AB8E72-13BC-4796-BBF8-37510140A3DF}|StinClasses\\StinClasses.csproj|solutionrelative:stinclasses\\\u0441\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A\u0438\\order.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0A14C2D0-A77A-4841-88C9-DC8AB1DB9F3D}|YandexClasses\\YandexClasses.csproj|d:\\stinweb\\yandexclasses\\boxesrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0A14C2D0-A77A-4841-88C9-DC8AB1DB9F3D}|YandexClasses\\YandexClasses.csproj|solutionrelative:yandexclasses\\boxesrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{33EC3752-DA4A-4017-82BE-B731C5F99397}|StinWeb\\StinWeb.csproj|d:\\stinweb\\stinweb\\controllers\\\u043E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0438\\marketplacematrixcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{33EC3752-DA4A-4017-82BE-B731C5F99397}|StinWeb\\StinWeb.csproj|solutionrelative:stinweb\\controllers\\\u043E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0438\\marketplacematrixcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{33EC3752-DA4A-4017-82BE-B731C5F99397}|StinWeb\\StinWeb.csproj|d:\\stinweb\\stinweb\\controllers\\\u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u0438\u043D\u0442\u0435\u0440\u043D\u0435\u0442\u0437\u0430\u043A\u0430\u0437\u044B.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{33EC3752-DA4A-4017-82BE-B731C5F99397}|StinWeb\\StinWeb.csproj|solutionrelative:stinweb\\controllers\\\u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u0438\u043D\u0442\u0435\u0440\u043D\u0435\u0442\u0437\u0430\u043A\u0430\u0437\u044B.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{319AC94F-45AE-4085-9095-12309BEAC7FA}|Refresher1C\\Refresher1C.csproj|d:\\stinweb\\refresher1c\\service\\stocker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{319AC94F-45AE-4085-9095-12309BEAC7FA}|Refresher1C\\Refresher1C.csproj|solutionrelative:refresher1c\\service\\stocker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0F92CC76-72BF-4BD0-9315-AEE0D5C56381}|Market\\Market.csproj|d:\\stinweb\\market\\controllers\\yandexcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0F92CC76-72BF-4BD0-9315-AEE0D5C56381}|Market\\Market.csproj|solutionrelative:market\\controllers\\yandexcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0A14C2D0-A77A-4841-88C9-DC8AB1DB9F3D}|YandexClasses\\YandexClasses.csproj|d:\\stinweb\\yandexclasses\\boxesresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0A14C2D0-A77A-4841-88C9-DC8AB1DB9F3D}|YandexClasses\\YandexClasses.csproj|solutionrelative:yandexclasses\\boxesresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{71AB8E72-13BC-4796-BBF8-37510140A3DF}|StinClasses\\StinClasses.csproj|d:\\stinweb\\stinclasses\\\u0441\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A\u0438\\functions\\marketplacefunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{71AB8E72-13BC-4796-BBF8-37510140A3DF}|StinClasses\\StinClasses.csproj|solutionrelative:stinclasses\\\u0441\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A\u0438\\functions\\marketplacefunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{319AC94F-45AE-4085-9095-12309BEAC7FA}|Refresher1C\\Refresher1C.csproj|d:\\stinweb\\refresher1c\\service\\pricer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{319AC94F-45AE-4085-9095-12309BEAC7FA}|Refresher1C\\Refresher1C.csproj|solutionrelative:refresher1c\\service\\pricer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C16DE5DC-F27C-4990-88B6-99017C86D590}|HttpExtensions\\HttpExtensions.csproj|d:\\stinweb\\httpextensions\\httpservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C16DE5DC-F27C-4990-88B6-99017C86D590}|HttpExtensions\\HttpExtensions.csproj|solutionrelative:httpextensions\\httpservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{57F9419D-F639-4AD9-A6AD-7743B9A6D08B}|OzonClasses\\OzonClasses.csproj|d:\\stinweb\\ozonclasses\\ozonoperators.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{57F9419D-F639-4AD9-A6AD-7743B9A6D08B}|OzonClasses\\OzonClasses.csproj|solutionrelative:ozonclasses\\ozonoperators.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{319AC94F-45AE-4085-9095-12309BEAC7FA}|Refresher1C\\Refresher1C.csproj|d:\\stinweb\\refresher1c\\workermarketplaceordererslow.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{319AC94F-45AE-4085-9095-12309BEAC7FA}|Refresher1C\\Refresher1C.csproj|solutionrelative:refresher1c\\workermarketplaceordererslow.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{319AC94F-45AE-4085-9095-12309BEAC7FA}|Refresher1C\\Refresher1C.csproj|d:\\stinweb\\refresher1c\\workermarketplaceorderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{319AC94F-45AE-4085-9095-12309BEAC7FA}|Refresher1C\\Refresher1C.csproj|solutionrelative:refresher1c\\workermarketplaceorderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0A14C2D0-A77A-4841-88C9-DC8AB1DB9F3D}|YandexClasses\\YandexClasses.csproj|d:\\stinweb\\yandexclasses\\status.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0A14C2D0-A77A-4841-88C9-DC8AB1DB9F3D}|YandexClasses\\YandexClasses.csproj|solutionrelative:yandexclasses\\status.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{33EC3752-DA4A-4017-82BE-B731C5F99397}|StinWeb\\StinWeb.csproj|d:\\stinweb\\stinweb\\views\\shared\\components\\order\\default.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{33EC3752-DA4A-4017-82BE-B731C5F99397}|StinWeb\\StinWeb.csproj|solutionrelative:stinweb\\views\\shared\\components\\order\\default.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{33EC3752-DA4A-4017-82BE-B731C5F99397}|StinWeb\\StinWeb.csproj|d:\\stinweb\\stinweb\\views\\shared\\components\\order\\orderviewcomponent.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{33EC3752-DA4A-4017-82BE-B731C5F99397}|StinWeb\\StinWeb.csproj|solutionrelative:stinweb\\views\\shared\\components\\order\\orderviewcomponent.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6C2674DE-235C-4A35-80D4-B74FEE34F84B}|AliExpressClasses\\AliExpressClasses.csproj|d:\\stinweb\\aliexpressclasses\\functions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6C2674DE-235C-4A35-80D4-B74FEE34F84B}|AliExpressClasses\\AliExpressClasses.csproj|solutionrelative:aliexpressclasses\\functions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7E15E09C-8F59-45E8-BA0E-BADDD7B040AE}|WbClasses\\WbClasses.csproj|d:\\stinweb\\wbclasses\\functions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7E15E09C-8F59-45E8-BA0E-BADDD7B040AE}|WbClasses\\WbClasses.csproj|solutionrelative:wbclasses\\functions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{71AB8E72-13BC-4796-BBF8-37510140A3DF}|StinClasses\\StinClasses.csproj|d:\\stinweb\\stinclasses\\\u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u0440\u0435\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u044F.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{71AB8E72-13BC-4796-BBF8-37510140A3DF}|StinClasses\\StinClasses.csproj|solutionrelative:stinclasses\\\u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u0440\u0435\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u044F.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{71AB8E72-13BC-4796-BBF8-37510140A3DF}|StinClasses\\StinClasses.csproj|d:\\stinweb\\stinclasses\\\u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u043E\u0442\u0447\u0435\u0442\u043A\u043E\u043C\u0438\u0441\u0441\u0438\u043E\u043D\u0435\u0440\u0430.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{71AB8E72-13BC-4796-BBF8-37510140A3DF}|StinClasses\\StinClasses.csproj|solutionrelative:stinclasses\\\u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u043E\u0442\u0447\u0435\u0442\u043A\u043E\u043C\u0438\u0441\u0441\u0438\u043E\u043D\u0435\u0440\u0430.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{71AB8E72-13BC-4796-BBF8-37510140A3DF}|StinClasses\\StinClasses.csproj|d:\\stinweb\\stinclasses\\\u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u043E\u0442\u0447\u0435\u0442\u043A\u043A\u043C.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{71AB8E72-13BC-4796-BBF8-37510140A3DF}|StinClasses\\StinClasses.csproj|solutionrelative:stinclasses\\\u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u043E\u0442\u0447\u0435\u0442\u043A\u043A\u043C.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{319AC94F-45AE-4085-9095-12309BEAC7FA}|Refresher1C\\Refresher1C.csproj|d:\\stinweb\\refresher1c\\service\\doccreateorupdate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{319AC94F-45AE-4085-9095-12309BEAC7FA}|Refresher1C\\Refresher1C.csproj|solutionrelative:refresher1c\\service\\doccreateorupdate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{71AB8E72-13BC-4796-BBF8-37510140A3DF}|StinClasses\\StinClasses.csproj|d:\\stinweb\\stinclasses\\marketcommission\\commissionhelperozon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{71AB8E72-13BC-4796-BBF8-37510140A3DF}|StinClasses\\StinClasses.csproj|solutionrelative:stinclasses\\marketcommission\\commissionhelperozon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{33EC3752-DA4A-4017-82BE-B731C5F99397}|StinWeb\\StinWeb.csproj|d:\\stinweb\\stinweb\\views\\\u0438\u043D\u0442\u0435\u0440\u043D\u0435\u0442\u0437\u0430\u043A\u0430\u0437\u044B\\loadinglist.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{33EC3752-DA4A-4017-82BE-B731C5F99397}|StinWeb\\StinWeb.csproj|solutionrelative:stinweb\\views\\\u0438\u043D\u0442\u0435\u0440\u043D\u0435\u0442\u0437\u0430\u043A\u0430\u0437\u044B\\loadinglist.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{319AC94F-45AE-4085-9095-12309BEAC7FA}|Refresher1C\\Refresher1C.csproj|d:\\stinweb\\refresher1c\\workermarketplaces.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{319AC94F-45AE-4085-9095-12309BEAC7FA}|Refresher1C\\Refresher1C.csproj|solutionrelative:refresher1c\\workermarketplaces.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{57F9419D-F639-4AD9-A6AD-7743B9A6D08B}|OzonClasses\\OzonClasses.csproj|d:\\stinweb\\ozonclasses\\exemplarcreateorget.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{57F9419D-F639-4AD9-A6AD-7743B9A6D08B}|OzonClasses\\OzonClasses.csproj|solutionrelative:ozonclasses\\exemplarcreateorget.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{57F9419D-F639-4AD9-A6AD-7743B9A6D08B}|OzonClasses\\OzonClasses.csproj|d:\\stinweb\\ozonclasses\\postingorder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{57F9419D-F639-4AD9-A6AD-7743B9A6D08B}|OzonClasses\\OzonClasses.csproj|solutionrelative:ozonclasses\\postingorder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{57F9419D-F639-4AD9-A6AD-7743B9A6D08B}|OzonClasses\\OzonClasses.csproj|d:\\stinweb\\ozonclasses\\exemplarstatus.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{57F9419D-F639-4AD9-A6AD-7743B9A6D08B}|OzonClasses\\OzonClasses.csproj|solutionrelative:ozonclasses\\exemplarstatus.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{57F9419D-F639-4AD9-A6AD-7743B9A6D08B}|OzonClasses\\OzonClasses.csproj|d:\\stinweb\\ozonclasses\\exemplar.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{57F9419D-F639-4AD9-A6AD-7743B9A6D08B}|OzonClasses\\OzonClasses.csproj|solutionrelative:ozonclasses\\exemplar.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{57F9419D-F639-4AD9-A6AD-7743B9A6D08B}|OzonClasses\\OzonClasses.csproj|d:\\stinweb\\ozonclasses\\returns.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{57F9419D-F639-4AD9-A6AD-7743B9A6D08B}|OzonClasses\\OzonClasses.csproj|solutionrelative:ozonclasses\\returns.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{319AC94F-45AE-4085-9095-12309BEAC7FA}|Refresher1C\\Refresher1C.csproj|d:\\stinweb\\refresher1c\\service\\imarketplaceservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{319AC94F-45AE-4085-9095-12309BEAC7FA}|Refresher1C\\Refresher1C.csproj|solutionrelative:refresher1c\\service\\imarketplaceservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0F92CC76-72BF-4BD0-9315-AEE0D5C56381}|Market\\Market.csproj|d:\\stinweb\\market\\controllers\\sbercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0F92CC76-72BF-4BD0-9315-AEE0D5C56381}|Market\\Market.csproj|solutionrelative:market\\controllers\\sbercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0F92CC76-72BF-4BD0-9315-AEE0D5C56381}|Market\\Market.csproj|d:\\stinweb\\market\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{0F92CC76-72BF-4BD0-9315-AEE0D5C56381}|Market\\Market.csproj|solutionrelative:market\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{33EC3752-DA4A-4017-82BE-B731C5F99397}|StinWeb\\StinWeb.csproj|d:\\stinweb\\stinweb\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{33EC3752-DA4A-4017-82BE-B731C5F99397}|StinWeb\\StinWeb.csproj|solutionrelative:stinweb\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{57F9419D-F639-4AD9-A6AD-7743B9A6D08B}|OzonClasses\\OzonClasses.csproj|d:\\stinweb\\ozonclasses\\stock.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{57F9419D-F639-4AD9-A6AD-7743B9A6D08B}|OzonClasses\\OzonClasses.csproj|solutionrelative:ozonclasses\\stock.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{71AB8E72-13BC-4796-BBF8-37510140A3DF}|StinClasses\\StinClasses.csproj|d:\\stinweb\\stinclasses\\\u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u043D\u0430\u0431\u043E\u0440.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{71AB8E72-13BC-4796-BBF8-37510140A3DF}|StinClasses\\StinClasses.csproj|solutionrelative:stinclasses\\\u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u043D\u0430\u0431\u043E\u0440.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c64b9c2-e352-428e-a56d-0ace190b99a6}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MarketplaceService.cs",
+              "DocumentMoniker": "D:\\StinWeb\\Refresher1C\\Service\\MarketplaceService.cs",
+              "RelativeDocumentMoniker": "Refresher1C\\Service\\MarketplaceService.cs",
+              "ToolTip": "D:\\StinWeb\\Refresher1C\\Service\\MarketplaceService.cs",
+              "RelativeToolTip": "Refresher1C\\Service\\MarketplaceService.cs",
+              "ViewState": "AQIAAGwQAAAAAAAAAAAAAAwQAAAuAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-09-23T01:48:11.622Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Bridge1C.cs",
+              "DocumentMoniker": "D:\\StinWeb\\Market\\Services\\Bridge1C.cs",
+              "RelativeDocumentMoniker": "Market\\Services\\Bridge1C.cs",
+              "ToolTip": "D:\\StinWeb\\Market\\Services\\Bridge1C.cs",
+              "RelativeToolTip": "Market\\Services\\Bridge1C.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABAAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-11-02T12:49:56.831Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "MarketplaceMatrixController.cs",
+              "DocumentMoniker": "D:\\StinWeb\\StinWeb\\Controllers\\\u041E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0438\\MarketplaceMatrixController.cs",
+              "RelativeDocumentMoniker": "StinWeb\\Controllers\\\u041E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0438\\MarketplaceMatrixController.cs",
+              "ToolTip": "D:\\StinWeb\\StinWeb\\Controllers\\\u041E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0438\\MarketplaceMatrixController.cs",
+              "RelativeToolTip": "StinWeb\\Controllers\\\u041E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0438\\MarketplaceMatrixController.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAHQAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-09-25T13:12:45.367Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "BoxesRequest.cs",
+              "DocumentMoniker": "D:\\StinWeb\\YandexClasses\\BoxesRequest.cs",
+              "RelativeDocumentMoniker": "YandexClasses\\BoxesRequest.cs",
+              "ToolTip": "D:\\StinWeb\\YandexClasses\\BoxesRequest.cs",
+              "RelativeToolTip": "YandexClasses\\BoxesRequest.cs",
+              "ViewState": "AQIAAEsAAAAAAAAAAAAIwFMAAABFAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-02-06T13:48:54.957Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "YandexOperators.cs",
+              "DocumentMoniker": "D:\\StinWeb\\YandexClasses\\YandexOperators.cs",
+              "RelativeDocumentMoniker": "YandexClasses\\YandexOperators.cs",
+              "ToolTip": "D:\\StinWeb\\YandexClasses\\YandexOperators.cs",
+              "RelativeToolTip": "YandexClasses\\YandexOperators.cs",
+              "ViewState": "AQIAAGIAAAAAAAAAAAAgwHMAAAByAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-01-18T13:03:51.677Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "CommissionHelperSber.cs",
+              "DocumentMoniker": "D:\\StinWeb\\StinClasses\\MarketCommission\\CommissionHelperSber.cs",
+              "RelativeDocumentMoniker": "StinClasses\\MarketCommission\\CommissionHelperSber.cs",
+              "ToolTip": "D:\\StinWeb\\StinClasses\\MarketCommission\\CommissionHelperSber.cs",
+              "RelativeToolTip": "StinClasses\\MarketCommission\\CommissionHelperSber.cs",
+              "ViewState": "AQIAAA0AAAAAAAAAAAAgwCYAAAA2AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-12-14T12:54:36.381Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "CommissionHelper.cs",
+              "DocumentMoniker": "D:\\StinWeb\\StinClasses\\MarketCommission\\CommissionHelper.cs",
+              "RelativeDocumentMoniker": "StinClasses\\MarketCommission\\CommissionHelper.cs",
+              "ToolTip": "D:\\StinWeb\\StinClasses\\MarketCommission\\CommissionHelper.cs",
+              "RelativeToolTip": "StinClasses\\MarketCommission\\CommissionHelper.cs",
+              "ViewState": "AQIAACoAAAAAAAAAAAAmwD0AAAAMAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-12-27T12:58:11.112Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "appsettings.Development.json",
+              "DocumentMoniker": "D:\\StinWeb\\Refresher1C\\appsettings.Development.json",
+              "RelativeDocumentMoniker": "Refresher1C\\appsettings.Development.json",
+              "ToolTip": "D:\\StinWeb\\Refresher1C\\appsettings.Development.json",
+              "RelativeToolTip": "Refresher1C\\appsettings.Development.json",
+              "ViewState": "AQIAACoAAAAAAAAAAAAAADoAAAAZAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2023-09-23T01:47:07.946Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "WorkerOncePerDay.cs",
+              "DocumentMoniker": "D:\\StinWeb\\Refresher1C\\WorkerOncePerDay.cs",
+              "RelativeDocumentMoniker": "Refresher1C\\WorkerOncePerDay.cs",
+              "ToolTip": "D:\\StinWeb\\Refresher1C\\WorkerOncePerDay.cs",
+              "RelativeToolTip": "Refresher1C\\WorkerOncePerDay.cs",
+              "ViewState": "AQIAADIAAAAAAAAAAAAwwE4AAAA8AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-10-06T13:15:59.383Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "\u0418\u043D\u0442\u0435\u0440\u043D\u0435\u0442\u0417\u0430\u043A\u0430\u0437\u044B.cs",
+              "DocumentMoniker": "D:\\StinWeb\\StinWeb\\Controllers\\\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u0418\u043D\u0442\u0435\u0440\u043D\u0435\u0442\u0417\u0430\u043A\u0430\u0437\u044B.cs",
+              "RelativeDocumentMoniker": "StinWeb\\Controllers\\\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u0418\u043D\u0442\u0435\u0440\u043D\u0435\u0442\u0417\u0430\u043A\u0430\u0437\u044B.cs",
+              "ToolTip": "D:\\StinWeb\\StinWeb\\Controllers\\\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u0418\u043D\u0442\u0435\u0440\u043D\u0435\u0442\u0417\u0430\u043A\u0430\u0437\u044B.cs",
+              "RelativeToolTip": "StinWeb\\Controllers\\\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u0418\u043D\u0442\u0435\u0440\u043D\u0435\u0442\u0417\u0430\u043A\u0430\u0437\u044B.cs",
+              "ViewState": "AQIAANEDAAAAAAAAAAAwwPECAAA0AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-11-02T12:45:28.775Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "Stocker.cs",
+              "DocumentMoniker": "D:\\StinWeb\\Refresher1C\\Service\\Stocker.cs",
+              "RelativeDocumentMoniker": "Refresher1C\\Service\\Stocker.cs",
+              "ToolTip": "D:\\StinWeb\\Refresher1C\\Service\\Stocker.cs",
+              "RelativeToolTip": "Refresher1C\\Service\\Stocker.cs",
+              "ViewState": "AQIAAAgBAAAAAAAAAIAwwBoBAAAmAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-10-18T13:57:45.103Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "YandexController.cs",
+              "DocumentMoniker": "D:\\StinWeb\\Market\\Controllers\\YandexController.cs",
+              "RelativeDocumentMoniker": "Market\\Controllers\\YandexController.cs",
+              "ToolTip": "D:\\StinWeb\\Market\\Controllers\\YandexController.cs",
+              "RelativeToolTip": "Market\\Controllers\\YandexController.cs",
+              "ViewState": "AQIAABMBAAAAAAAAAAArwCYBAAAyAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-11-02T12:49:34.385Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "OrderFunctions.cs",
+              "DocumentMoniker": "D:\\StinWeb\\StinClasses\\\u0421\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A\u0438\\Functions\\OrderFunctions.cs",
+              "RelativeDocumentMoniker": "StinClasses\\\u0421\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A\u0438\\Functions\\OrderFunctions.cs",
+              "ToolTip": "D:\\StinWeb\\StinClasses\\\u0421\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A\u0438\\Functions\\OrderFunctions.cs",
+              "RelativeToolTip": "StinClasses\\\u0421\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A\u0438\\Functions\\OrderFunctions.cs",
+              "ViewState": "AQIAAHUAAAAAAAAAAAAMwIsAAAArAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-12-20T14:44:39.733Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "Pricer.cs",
+              "DocumentMoniker": "D:\\StinWeb\\Refresher1C\\Service\\Pricer.cs",
+              "RelativeDocumentMoniker": "Refresher1C\\Service\\Pricer.cs",
+              "ToolTip": "D:\\StinWeb\\Refresher1C\\Service\\Pricer.cs",
+              "RelativeToolTip": "Refresher1C\\Service\\Pricer.cs",
+              "ViewState": "AQIAACoAAAAAAAAAAAApwEIAAABAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-10-30T13:14:46.504Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "Status.cs",
+              "DocumentMoniker": "D:\\StinWeb\\YandexClasses\\Status.cs",
+              "RelativeDocumentMoniker": "YandexClasses\\Status.cs",
+              "ToolTip": "D:\\StinWeb\\YandexClasses\\Status.cs",
+              "RelativeToolTip": "YandexClasses\\Status.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAYAAAAcAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-10-23T14:17:18.482Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "Order.cs",
+              "DocumentMoniker": "D:\\StinWeb\\StinClasses\\\u0421\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A\u0438\\Order.cs",
+              "RelativeDocumentMoniker": "StinClasses\\\u0421\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A\u0438\\Order.cs",
+              "ToolTip": "D:\\StinWeb\\StinClasses\\\u0421\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A\u0438\\Order.cs",
+              "RelativeToolTip": "StinClasses\\\u0421\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A\u0438\\Order.cs",
+              "ViewState": "AQIAABkBAAAAAAAAAAAgwCQBAAA3AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-11-02T13:06:14.621Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "OzonOperators.cs",
+              "DocumentMoniker": "D:\\StinWeb\\OzonClasses\\OzonOperators.cs",
+              "RelativeDocumentMoniker": "OzonClasses\\OzonOperators.cs",
+              "ToolTip": "D:\\StinWeb\\OzonClasses\\OzonOperators.cs",
+              "RelativeToolTip": "OzonClasses\\OzonOperators.cs",
+              "ViewState": "AQIAAEwAAAAAAAAAAAAUwG0AAAAjAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-10-18T13:24:19.151Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "BoxesResponse.cs",
+              "DocumentMoniker": "D:\\StinWeb\\YandexClasses\\BoxesResponse.cs",
+              "RelativeDocumentMoniker": "YandexClasses\\BoxesResponse.cs",
+              "ToolTip": "D:\\StinWeb\\YandexClasses\\BoxesResponse.cs",
+              "RelativeToolTip": "YandexClasses\\BoxesResponse.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABYAAAAtAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-02-07T13:09:43.954Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "WorkerMarketplaceOrderer.cs",
+              "DocumentMoniker": "D:\\StinWeb\\Refresher1C\\WorkerMarketplaceOrderer.cs",
+              "RelativeDocumentMoniker": "Refresher1C\\WorkerMarketplaceOrderer.cs",
+              "ToolTip": "D:\\StinWeb\\Refresher1C\\WorkerMarketplaceOrderer.cs",
+              "RelativeToolTip": "Refresher1C\\WorkerMarketplaceOrderer.cs",
+              "ViewState": "AQIAAAsAAAAAAAAAAAAQwBkAAAAQAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-11-29T13:16:58.913Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "HttpService.cs",
+              "DocumentMoniker": "D:\\StinWeb\\HttpExtensions\\HttpService.cs",
+              "RelativeDocumentMoniker": "HttpExtensions\\HttpService.cs",
+              "ToolTip": "D:\\StinWeb\\HttpExtensions\\HttpService.cs",
+              "RelativeToolTip": "HttpExtensions\\HttpService.cs",
+              "ViewState": "AQIAAGYAAAAAAAAAAAAowGUAAAAvAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-02-01T11:30:01.25Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "MarketplaceFunctions.cs",
+              "DocumentMoniker": "D:\\StinWeb\\StinClasses\\\u0421\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A\u0438\\Functions\\MarketplaceFunctions.cs",
+              "RelativeDocumentMoniker": "StinClasses\\\u0421\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A\u0438\\Functions\\MarketplaceFunctions.cs",
+              "ToolTip": "D:\\StinWeb\\StinClasses\\\u0421\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A\u0438\\Functions\\MarketplaceFunctions.cs",
+              "RelativeToolTip": "StinClasses\\\u0421\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A\u0438\\Functions\\MarketplaceFunctions.cs",
+              "ViewState": "AQIAADEBAAAAAAAAAAA5wFABAAA2AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-10-06T12:59:02.217Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "WorkerMarketplaceOrdererSlow.cs",
+              "DocumentMoniker": "D:\\StinWeb\\Refresher1C\\WorkerMarketplaceOrdererSlow.cs",
+              "RelativeDocumentMoniker": "Refresher1C\\WorkerMarketplaceOrdererSlow.cs",
+              "ToolTip": "D:\\StinWeb\\Refresher1C\\WorkerMarketplaceOrdererSlow.cs",
+              "RelativeToolTip": "Refresher1C\\WorkerMarketplaceOrdererSlow.cs",
+              "ViewState": "AQIAABoAAAAAAAAAAAArwC4AAAA3AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-11-29T13:18:05.27Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "Functions.cs",
+              "DocumentMoniker": "D:\\StinWeb\\WbClasses\\Functions.cs",
+              "RelativeDocumentMoniker": "WbClasses\\Functions.cs",
+              "ToolTip": "D:\\StinWeb\\WbClasses\\Functions.cs",
+              "RelativeToolTip": "WbClasses\\Functions.cs",
+              "ViewState": "AQIAAE4AAAAAAAAAAAApwF8AAAA9AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-10-11T13:19:34.635Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "Default.cshtml",
+              "DocumentMoniker": "D:\\StinWeb\\StinWeb\\Views\\Shared\\Components\\Order\\Default.cshtml",
+              "RelativeDocumentMoniker": "StinWeb\\Views\\Shared\\Components\\Order\\Default.cshtml",
+              "ToolTip": "D:\\StinWeb\\StinWeb\\Views\\Shared\\Components\\Order\\Default.cshtml",
+              "RelativeToolTip": "StinWeb\\Views\\Shared\\Components\\Order\\Default.cshtml",
+              "ViewState": "AQIAAPQBAAAAAAAAAADgvwUCAAAyAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2023-11-02T12:47:31.685Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "OrderViewComponent.cs",
+              "DocumentMoniker": "D:\\StinWeb\\StinWeb\\Views\\Shared\\Components\\Order\\OrderViewComponent.cs",
+              "RelativeDocumentMoniker": "StinWeb\\Views\\Shared\\Components\\Order\\OrderViewComponent.cs",
+              "ToolTip": "D:\\StinWeb\\StinWeb\\Views\\Shared\\Components\\Order\\OrderViewComponent.cs",
+              "RelativeToolTip": "StinWeb\\Views\\Shared\\Components\\Order\\OrderViewComponent.cs",
+              "ViewState": "AQIAADMAAAAAAAAAAAAwwDwAAABVAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-11-02T13:34:38.124Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "Functions.cs",
+              "DocumentMoniker": "D:\\StinWeb\\AliExpressClasses\\Functions.cs",
+              "RelativeDocumentMoniker": "AliExpressClasses\\Functions.cs",
+              "ToolTip": "D:\\StinWeb\\AliExpressClasses\\Functions.cs",
+              "RelativeToolTip": "AliExpressClasses\\Functions.cs",
+              "ViewState": "AQIAAM4AAAAAAAAAAAApwOkAAABhAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-11-21T14:44:05.261Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "\u041E\u0442\u0447\u0435\u0442\u041A\u041A\u041C.cs",
+              "DocumentMoniker": "D:\\StinWeb\\StinClasses\\\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u041E\u0442\u0447\u0435\u0442\u041A\u041A\u041C.cs",
+              "RelativeDocumentMoniker": "StinClasses\\\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u041E\u0442\u0447\u0435\u0442\u041A\u041A\u041C.cs",
+              "ToolTip": "D:\\StinWeb\\StinClasses\\\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u041E\u0442\u0447\u0435\u0442\u041A\u041A\u041C.cs",
+              "RelativeToolTip": "StinClasses\\\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u041E\u0442\u0447\u0435\u0442\u041A\u041A\u041C.cs",
+              "ViewState": "AQIAAOwCAAAAAAAAAAAgwAoDAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-12-20T14:34:49.239Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "DocCreateOrUpdate.cs",
+              "DocumentMoniker": "D:\\StinWeb\\Refresher1C\\Service\\DocCreateOrUpdate.cs",
+              "RelativeDocumentMoniker": "Refresher1C\\Service\\DocCreateOrUpdate.cs",
+              "ToolTip": "D:\\StinWeb\\Refresher1C\\Service\\DocCreateOrUpdate.cs",
+              "RelativeToolTip": "Refresher1C\\Service\\DocCreateOrUpdate.cs",
+              "ViewState": "AQIAAO8BAAAAAAAAAAApwP0BAAApAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-10-11T13:19:34.838Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 30,
+              "Title": "CommissionHelperOzon.cs",
+              "DocumentMoniker": "D:\\StinWeb\\StinClasses\\MarketCommission\\CommissionHelperOzon.cs",
+              "RelativeDocumentMoniker": "StinClasses\\MarketCommission\\CommissionHelperOzon.cs",
+              "ToolTip": "D:\\StinWeb\\StinClasses\\MarketCommission\\CommissionHelperOzon.cs",
+              "RelativeToolTip": "StinClasses\\MarketCommission\\CommissionHelperOzon.cs",
+              "ViewState": "AQIAACwAAAAAAAAAAAASwD4AAAAMAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-12-14T12:53:40.746Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "\u0420\u0435\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u044F.cs",
+              "DocumentMoniker": "D:\\StinWeb\\StinClasses\\\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u0420\u0435\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u044F.cs",
+              "RelativeDocumentMoniker": "StinClasses\\\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u0420\u0435\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u044F.cs",
+              "ToolTip": "D:\\StinWeb\\StinClasses\\\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u0420\u0435\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u044F.cs",
+              "RelativeToolTip": "StinClasses\\\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u0420\u0435\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u044F.cs",
+              "ViewState": "AQIAAMgCAAAAAAAAAAAQwKACAABTAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-12-01T13:42:50.19Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "\u041E\u0442\u0447\u0435\u0442\u041A\u043E\u043C\u0438\u0441\u0441\u0438\u043E\u043D\u0435\u0440\u0430.cs",
+              "DocumentMoniker": "D:\\StinWeb\\StinClasses\\\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u041E\u0442\u0447\u0435\u0442\u041A\u043E\u043C\u0438\u0441\u0441\u0438\u043E\u043D\u0435\u0440\u0430.cs",
+              "RelativeDocumentMoniker": "StinClasses\\\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u041E\u0442\u0447\u0435\u0442\u041A\u043E\u043C\u0438\u0441\u0441\u0438\u043E\u043D\u0435\u0440\u0430.cs",
+              "ToolTip": "D:\\StinWeb\\StinClasses\\\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u041E\u0442\u0447\u0435\u0442\u041A\u043E\u043C\u0438\u0441\u0441\u0438\u043E\u043D\u0435\u0440\u0430.cs",
+              "RelativeToolTip": "StinClasses\\\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u041E\u0442\u0447\u0435\u0442\u041A\u043E\u043C\u0438\u0441\u0441\u0438\u043E\u043D\u0435\u0440\u0430.cs",
+              "ViewState": "AQIAAKYBAAAAAAAAAAAQwLoBAABYAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-12-30T05:42:41.874Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 32,
+              "Title": "WorkerMarketplaces.cs",
+              "DocumentMoniker": "D:\\StinWeb\\Refresher1C\\WorkerMarketplaces.cs",
+              "RelativeDocumentMoniker": "Refresher1C\\WorkerMarketplaces.cs",
+              "ToolTip": "D:\\StinWeb\\Refresher1C\\WorkerMarketplaces.cs",
+              "RelativeToolTip": "Refresher1C\\WorkerMarketplaces.cs",
+              "ViewState": "AQIAACIAAAAAAAAAAAAAAEEAAAAjAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-11-29T13:05:35.102Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 31,
+              "Title": "LoadingList.cshtml",
+              "DocumentMoniker": "D:\\StinWeb\\StinWeb\\Views\\\u0418\u043D\u0442\u0435\u0440\u043D\u0435\u0442\u0417\u0430\u043A\u0430\u0437\u044B\\LoadingList.cshtml",
+              "RelativeDocumentMoniker": "StinWeb\\Views\\\u0418\u043D\u0442\u0435\u0440\u043D\u0435\u0442\u0417\u0430\u043A\u0430\u0437\u044B\\LoadingList.cshtml",
+              "ToolTip": "D:\\StinWeb\\StinWeb\\Views\\\u0418\u043D\u0442\u0435\u0440\u043D\u0435\u0442\u0417\u0430\u043A\u0430\u0437\u044B\\LoadingList.cshtml",
+              "RelativeToolTip": "StinWeb\\Views\\\u0418\u043D\u0442\u0435\u0440\u043D\u0435\u0442\u0417\u0430\u043A\u0430\u0437\u044B\\LoadingList.cshtml",
+              "ViewState": "AQIAAAAAAAAAAAAAAADgvxQAAADXAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2023-12-20T15:11:20.087Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 37,
+              "Title": "Returns.cs",
+              "DocumentMoniker": "D:\\StinWeb\\OzonClasses\\Returns.cs",
+              "RelativeDocumentMoniker": "OzonClasses\\Returns.cs",
+              "ToolTip": "D:\\StinWeb\\OzonClasses\\Returns.cs",
+              "RelativeToolTip": "OzonClasses\\Returns.cs",
+              "ViewState": "AQIAACYAAAAAAAAAAAApwDoAAAAbAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-12-05T13:09:57.137Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 36,
+              "Title": "Exemplar.cs",
+              "DocumentMoniker": "D:\\StinWeb\\OzonClasses\\Exemplar.cs",
+              "RelativeDocumentMoniker": "OzonClasses\\Exemplar.cs",
+              "ToolTip": "D:\\StinWeb\\OzonClasses\\Exemplar.cs",
+              "RelativeToolTip": "OzonClasses\\Exemplar.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAB0AAAArAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-12-11T13:43:55.826Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 34,
+              "Title": "PostingOrder.cs",
+              "DocumentMoniker": "D:\\StinWeb\\OzonClasses\\PostingOrder.cs",
+              "RelativeDocumentMoniker": "OzonClasses\\PostingOrder.cs",
+              "ToolTip": "D:\\StinWeb\\OzonClasses\\PostingOrder.cs",
+              "RelativeToolTip": "OzonClasses\\PostingOrder.cs",
+              "ViewState": "AQIAAAwAAAAAAAAAAIA7wBwAAAAKAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-12-11T14:32:33.445Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 35,
+              "Title": "ExemplarStatus.cs",
+              "DocumentMoniker": "D:\\StinWeb\\OzonClasses\\ExemplarStatus.cs",
+              "RelativeDocumentMoniker": "OzonClasses\\ExemplarStatus.cs",
+              "ToolTip": "D:\\StinWeb\\OzonClasses\\ExemplarStatus.cs",
+              "RelativeToolTip": "OzonClasses\\ExemplarStatus.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAkAAAAnAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-12-12T13:37:54.296Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 33,
+              "Title": "ExemplarCreateOrGet.cs",
+              "DocumentMoniker": "D:\\StinWeb\\OzonClasses\\ExemplarCreateOrGet.cs",
+              "RelativeDocumentMoniker": "OzonClasses\\ExemplarCreateOrGet.cs",
+              "ToolTip": "D:\\StinWeb\\OzonClasses\\ExemplarCreateOrGet.cs",
+              "RelativeToolTip": "OzonClasses\\ExemplarCreateOrGet.cs",
+              "ViewState": "AQIAAA0AAAAAAAAAAAAcwBgAAAAoAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-12-13T12:54:11.675Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 38,
+              "Title": "IMarketplaceService.cs",
+              "DocumentMoniker": "D:\\StinWeb\\Refresher1C\\Service\\IMarketplaceService.cs",
+              "RelativeDocumentMoniker": "Refresher1C\\Service\\IMarketplaceService.cs",
+              "ToolTip": "D:\\StinWeb\\Refresher1C\\Service\\IMarketplaceService.cs",
+              "RelativeToolTip": "Refresher1C\\Service\\IMarketplaceService.cs",
+              "ViewState": "AQIAAAoAAAAAAAAAAAAEwBUAAAAzAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-11-29T14:36:58.769Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 39,
+              "Title": "SberController.cs",
+              "DocumentMoniker": "D:\\StinWeb\\Market\\Controllers\\SberController.cs",
+              "RelativeDocumentMoniker": "Market\\Controllers\\SberController.cs",
+              "ToolTip": "D:\\StinWeb\\Market\\Controllers\\SberController.cs",
+              "RelativeToolTip": "Market\\Controllers\\SberController.cs",
+              "ViewState": "AQIAAFIAAAAAAAAAAAAgwDEAAAAmAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-11-28T13:21:26.37Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 41,
+              "Title": "appsettings.Development.json",
+              "DocumentMoniker": "D:\\StinWeb\\StinWeb\\appsettings.Development.json",
+              "RelativeDocumentMoniker": "StinWeb\\appsettings.Development.json",
+              "ToolTip": "D:\\StinWeb\\StinWeb\\appsettings.Development.json",
+              "RelativeToolTip": "StinWeb\\appsettings.Development.json",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABUAAAAVAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2023-11-02T13:10:43.033Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 40,
+              "Title": "appsettings.Development.json",
+              "DocumentMoniker": "D:\\StinWeb\\Market\\appsettings.Development.json",
+              "RelativeDocumentMoniker": "Market\\appsettings.Development.json",
+              "ToolTip": "D:\\StinWeb\\Market\\appsettings.Development.json",
+              "RelativeToolTip": "Market\\appsettings.Development.json",
+              "ViewState": "AQIAADMAAAAAAAAAAAAAACUAAAAEAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2023-11-02T13:11:27.22Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 43,
+              "Title": "\u041D\u0430\u0431\u043E\u0440.cs",
+              "DocumentMoniker": "D:\\StinWeb\\StinClasses\\\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u041D\u0430\u0431\u043E\u0440.cs",
+              "RelativeDocumentMoniker": "StinClasses\\\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u041D\u0430\u0431\u043E\u0440.cs",
+              "ToolTip": "D:\\StinWeb\\StinClasses\\\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u041D\u0430\u0431\u043E\u0440.cs",
+              "RelativeToolTip": "StinClasses\\\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B\\\u041D\u0430\u0431\u043E\u0440.cs",
+              "ViewState": "AQIAAKgAAAAAAAAAAAAhwMMAAAAcAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-10-11T13:19:34.87Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 42,
+              "Title": "Stock.cs",
+              "DocumentMoniker": "D:\\StinWeb\\OzonClasses\\Stock.cs",
+              "RelativeDocumentMoniker": "OzonClasses\\Stock.cs",
+              "ToolTip": "D:\\StinWeb\\OzonClasses\\Stock.cs",
+              "RelativeToolTip": "OzonClasses\\Stock.cs",
+              "ViewState": "AQIAAFsAAAAAAAAAAAAewHIAAAAYAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2023-10-18T13:51:28.098Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

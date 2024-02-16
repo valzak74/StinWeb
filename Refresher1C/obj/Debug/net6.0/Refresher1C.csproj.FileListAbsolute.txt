@@ -283,10 +283,10 @@ D:\StinWeb\Refresher1C\obj\Debug\net6.0\Refresher1C.GeneratedMSBuildEditorConfig
 D:\StinWeb\Refresher1C\obj\Debug\net6.0\Refresher1C.AssemblyInfoInputs.cache
 D:\StinWeb\Refresher1C\obj\Debug\net6.0\Refresher1C.AssemblyInfo.cs
 D:\StinWeb\Refresher1C\obj\Debug\net6.0\Refresher1C.csproj.CoreCompileInputs.cache
-D:\StinWeb\Refresher1C\obj\Debug\net6.0\Refresher1C.csproj.CopyComplete
 D:\StinWeb\Refresher1C\obj\Debug\net6.0\Refresher1C.dll
 D:\StinWeb\Refresher1C\obj\Debug\net6.0\refint\Refresher1C.dll
 D:\StinWeb\Refresher1C\obj\Debug\net6.0\Refresher1C.pdb
 D:\StinWeb\Refresher1C\obj\Debug\net6.0\Refresher1C.genruntimeconfig.cache
 D:\StinWeb\Refresher1C\obj\Debug\net6.0\ref\Refresher1C.dll
 D:\StinWeb\Refresher1C\obj\Debug\net6.0\Refresher1C.sourcelink.json
+D:\StinWeb\Refresher1C\obj\Debug\net6.0\Refreshe.161C8FD2.Up2Date

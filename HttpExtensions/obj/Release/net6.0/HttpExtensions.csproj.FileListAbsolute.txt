@@ -38,9 +38,9 @@ D:\StinWeb\HttpExtensions\obj\Release\net6.0\HttpExtensions.GeneratedMSBuildEdit
 D:\StinWeb\HttpExtensions\obj\Release\net6.0\HttpExtensions.AssemblyInfoInputs.cache
 D:\StinWeb\HttpExtensions\obj\Release\net6.0\HttpExtensions.AssemblyInfo.cs
 D:\StinWeb\HttpExtensions\obj\Release\net6.0\HttpExtensions.csproj.CoreCompileInputs.cache
-D:\StinWeb\HttpExtensions\obj\Release\net6.0\HttpExtensions.csproj.CopyComplete
 D:\StinWeb\HttpExtensions\obj\Release\net6.0\HttpExtensions.dll
 D:\StinWeb\HttpExtensions\obj\Release\net6.0\refint\HttpExtensions.dll
 D:\StinWeb\HttpExtensions\obj\Release\net6.0\HttpExtensions.pdb
 D:\StinWeb\HttpExtensions\obj\Release\net6.0\ref\HttpExtensions.dll
 D:\StinWeb\HttpExtensions\obj\Release\net6.0\HttpExtensions.sourcelink.json
+D:\StinWeb\HttpExtensions\obj\Release\net6.0\HttpExte.E31F4001.Up2Date

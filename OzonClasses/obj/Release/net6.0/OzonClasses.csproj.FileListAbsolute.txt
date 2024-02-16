@@ -44,9 +44,9 @@ D:\StinWeb\OzonClasses\obj\Release\net6.0\OzonClasses.GeneratedMSBuildEditorConf
 D:\StinWeb\OzonClasses\obj\Release\net6.0\OzonClasses.AssemblyInfoInputs.cache
 D:\StinWeb\OzonClasses\obj\Release\net6.0\OzonClasses.AssemblyInfo.cs
 D:\StinWeb\OzonClasses\obj\Release\net6.0\OzonClasses.csproj.CoreCompileInputs.cache
-D:\StinWeb\OzonClasses\obj\Release\net6.0\OzonClasses.csproj.CopyComplete
 D:\StinWeb\OzonClasses\obj\Release\net6.0\OzonClasses.dll
 D:\StinWeb\OzonClasses\obj\Release\net6.0\refint\OzonClasses.dll
 D:\StinWeb\OzonClasses\obj\Release\net6.0\OzonClasses.pdb
 D:\StinWeb\OzonClasses\obj\Release\net6.0\ref\OzonClasses.dll
 D:\StinWeb\OzonClasses\obj\Release\net6.0\OzonClasses.sourcelink.json
+D:\StinWeb\OzonClasses\obj\Release\net6.0\OzonClas.2A19D489.Up2Date

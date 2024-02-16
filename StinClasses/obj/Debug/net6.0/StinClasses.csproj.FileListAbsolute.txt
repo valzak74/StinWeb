@@ -61,10 +61,10 @@ D:\StinWeb\StinClasses\obj\Debug\net6.0\StinClasses.GeneratedMSBuildEditorConfig
 D:\StinWeb\StinClasses\obj\Debug\net6.0\StinClasses.AssemblyInfoInputs.cache
 D:\StinWeb\StinClasses\obj\Debug\net6.0\StinClasses.AssemblyInfo.cs
 D:\StinWeb\StinClasses\obj\Debug\net6.0\StinClasses.csproj.CoreCompileInputs.cache
-D:\StinWeb\StinClasses\obj\Debug\net6.0\StinClasses.csproj.CopyComplete
 D:\StinWeb\StinClasses\obj\Debug\net6.0\StinClasses.dll
 D:\StinWeb\StinClasses\obj\Debug\net6.0\refint\StinClasses.dll
 D:\StinWeb\StinClasses\obj\Debug\net6.0\StinClasses.pdb
 D:\StinWeb\StinClasses\obj\Debug\net6.0\StinClasses.genruntimeconfig.cache
 D:\StinWeb\StinClasses\obj\Debug\net6.0\ref\StinClasses.dll
 D:\StinWeb\StinClasses\obj\Debug\net6.0\StinClasses.sourcelink.json
+D:\StinWeb\StinClasses\obj\Debug\net6.0\StinClas.F804E98A.Up2Date
