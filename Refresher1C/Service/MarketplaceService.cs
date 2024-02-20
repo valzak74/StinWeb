@@ -163,7 +163,7 @@ namespace Refresher1C.Service
                                   //from markUse in _markUse.DefaultIfEmpty()
                                   where r.Period == dateRegTA && ((r.Sp14011 == 10) || (r.Sp14011 == 11)) &&
                                     (regular ? (order.Sp13982 == 8) : (order.Sp13982 == -1)) //order статус = 8
-                                    //order.Code.Trim() == "741303769"
+                                    //&& order.Code.Trim() == "408427448"
                                     && (((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.YANDEX_MARKET) ||
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.SBER_MEGA_MARKET) ||
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.ALIEXPRESS_LOGISTIC) ||
@@ -330,9 +330,12 @@ namespace Refresher1C.Service
                                                     foreach (var chunk in fulfilmentIds.Chunk(7)) //длина строки 7 * 20 = 140 + 6 запятых. ДопПараметры длина 150
                                                     {
                                                         var entityItem = entityItems.FirstOrDefault(x => string.IsNullOrWhiteSpace(x.Sp14028));
-                                                        entityItem.Sp14028 = string.Join(',', chunk); //ДопПараметры
-                                                        _context.Update(entityItem);
-                                                        _context.РегистрацияИзмененийРаспределеннойИБ(14033, entityItem.Id);
+                                                        if (entityItem != null)
+                                                        {
+                                                            entityItem.Sp14028 = string.Join(',', chunk); //ДопПараметры
+                                                            _context.Update(entityItem);
+                                                            _context.РегистрацияИзмененийРаспределеннойИБ(14033, entityItem.Id);
+                                                        }
                                                     }
                                                 }
                                                 else if (boxIds?.Count > 0)

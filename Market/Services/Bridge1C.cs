@@ -1223,9 +1223,12 @@ namespace Market.Services
                                     foreach (var chunk in fulfilmentIds.Chunk(7)) //длина строки 7 * 20 = 140 + 6 запятых. ДопПараметры длина 150
                                     {
                                         var entityItem = entityItems.FirstOrDefault(x => string.IsNullOrWhiteSpace(x.Sp14028));
-                                        entityItem.Sp14028 = string.Join(',', chunk); //ДопПараметры
-                                        _context.Update(entityItem);
-                                        _context.РегистрацияИзмененийРаспределеннойИБ(14033, entityItem.Id);
+                                        if (entityItem != null)
+                                        {
+                                            entityItem.Sp14028 = string.Join(',', chunk); //ДопПараметры
+                                            _context.Update(entityItem);
+                                            _context.РегистрацияИзмененийРаспределеннойИБ(14033, entityItem.Id);
+                                        }
                                     }
                                 }
                                 else if (boxIds?.Count > 0)
