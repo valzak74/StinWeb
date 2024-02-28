@@ -4179,11 +4179,11 @@ namespace Refresher1C.Service
                         var weight = x.Elements("param").Where(y => y.Attribute("name").Value == "Weight").Select(z => z.Value).FirstOrDefault();
                         double.TryParse(weight, NumberStyles.Any, CultureInfo.InvariantCulture, out double value);
                         var width = x.Elements("param").Where(y => y.Attribute("name").Value == "Width").Select(z => z.Value).FirstOrDefault();
-                        decimal.TryParse(width, out decimal valueWidth);
+                        decimal.TryParse(width, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal valueWidth);
                         var length = x.Elements("param").Where(y => y.Attribute("name").Value == "Length").Select(z => z.Value).FirstOrDefault();
-                        decimal.TryParse(length, out decimal valueLength);
+                        decimal.TryParse(length, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal valueLength);
                         var height = x.Elements("param").Where(y => y.Attribute("name").Value == "Height").Select(z => z.Value).FirstOrDefault();
-                        decimal.TryParse(height, out decimal valueHeight);
+                        decimal.TryParse(height, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal valueHeight);
                         return new
                         {
                             OfferCode = x.Attribute("id").Value.Decode(encoding),
@@ -4218,7 +4218,7 @@ namespace Refresher1C.Service
                             where (markUse.Sp14147 == marketplaceId) &&
                               (markUse.Sp14158 == 1) //Есть в каталоге 
                               && offerCodes.Contains(nom.Code)
-                              //&& nom.Code == "D00064305"
+                              //&& nom.Code == "D00040383"
                             select new
                             {
                                 Id = markUse.Id,

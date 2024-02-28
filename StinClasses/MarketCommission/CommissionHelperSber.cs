@@ -5,7 +5,7 @@ namespace StinClasses.MarketCommission
     public class CommissionHelperSber : CommissionHelper
     {
         decimal _volumeLogisticsFactor;
-        (decimal percent, decimal limMin, decimal limMax) _tariffLastMile = (percent: 4.0m, limMin: 30.0m, limMax: 215.0m);
+        (decimal percent, decimal limMin, decimal limMax) _tariffLastMile = (percent: 5.0m, limMin: 15.0m, limMax: 300.0m);
         public CommissionHelperSber(decimal zakupPrice, int quant, decimal volume, decimal categoryPercent) : base(zakupPrice, quant)
         {
             _volumeLogisticsFactor = VolumeLogisticsFactor(volume);
