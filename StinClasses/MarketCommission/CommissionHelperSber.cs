@@ -18,8 +18,8 @@ namespace StinClasses.MarketCommission
             };
             PercentFactors = new Dictionary<string, decimal>
             {
-                { "Category", categoryPercent / 100 }, //процент за категорию
-                { "Transaction", 1.8m / 100 }, //процент за транзакцию 1.8%
+                { "Category", categoryPercent }, //процент за категорию
+                { "Transaction", 1.8m }, //процент за транзакцию 1.8%
                 { "LastMile", _tariffLastMile.percent }, //процент за последнюю милю
             };
         }
