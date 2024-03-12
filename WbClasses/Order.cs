@@ -89,6 +89,15 @@ namespace WbClasses
             public WbStatus WbStatus { get; set; }
         }
     }
+    public class ReshipmentOrders
+    {
+        public List<ReshipmentOrder>? Orders { get; set; }
+        public class ReshipmentOrder
+        {
+            public long OrderID { get; set; }
+            public string? SupplyID { get; set; }
+        }
+    }
     [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]
     public enum WbStatus
     {

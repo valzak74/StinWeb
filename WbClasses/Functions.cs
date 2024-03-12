@@ -181,6 +181,20 @@ namespace WbClasses
                 err = result.Item2.LogWbErrors("");
             return (orders: result.Item1?.Orders?.ToDictionary(k => k.Id, v => v.WbStatus), error: string.IsNullOrEmpty(err) ? "" : "WbGetOrderStatuses: " + err);
         }
+        public static async Task<(Dictionary<long, string>? orders, string error)> GetReshipmentOrders(IHttpService httpService, string proxyHost, string authToken,
+            CancellationToken cancellationToken)
+        {
+            var result = await httpService.Exchange<ReshipmentOrders, WbErrorResponse>(
+                $"https://{proxyHost}suppliers-api.wildberries.ru/api/v3/supplies/orders/reshipment",
+                HttpMethod.Get,
+                GetCustomHeaders(authToken),
+                null,
+                cancellationToken);
+            string err = "";
+            if (result.Item2 != null)
+                err = result.Item2.LogWbErrors("");
+            return (orders: result.Item1?.Orders?.ToDictionary(k => k.OrderID, v => v.SupplyID!), error: string.IsNullOrEmpty(err) ? "" : "WbGetReshipmentOrders: " + err);
+        }
         public static async Task<(bool success, string error)> CancelOrder(IHttpService httpService, string proxyHost, string authToken,
             string orderId,
             CancellationToken cancellationToken)

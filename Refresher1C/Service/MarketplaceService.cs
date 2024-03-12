@@ -3253,8 +3253,13 @@ namespace Refresher1C.Service
                     foreach (var wbOrderId in cancelOrderIds) 
                     {
                         var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, wbOrderId.ToString());
-                        if ((order != null) && (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14) && (order.InternalStatus != 16))
-                            await _docService.OrderCancelled(order);
+                        if ((order != null) && (order.InternalStatus != 5) && (order.InternalStatus != 6))
+                        {
+                            if ((order.InternalStatus != 14) && (order.InternalStatus != 16))
+                                await _docService.OrderCancelled(order);
+                            else if (order.InternalStatus == 14)
+                                await _order.ОбновитьOrderStatus(order.Id, 16);
+                        }
                     }
                     if (periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                     {
@@ -3277,6 +3282,10 @@ namespace Refresher1C.Service
                     }
                 }
             }
+            //var resultReshipment = await WbClasses.Functions.GetReshipmentOrders(_httpService, _firmProxy[firmaId], authToken, cancellationToken);
+            //if (!string.IsNullOrEmpty(resultReshipment.error))
+            //    _logger.LogError(resultReshipment.error);
+            //var reshipmentOrderIds = resultReshipment.orders?.Select(x => x.Key);
         }
         private async Task GetOzonNewOrders(string clientId, string authToken, string id, string firmaId, string customerId, string dogovorId, EncodeVersion encoding, CancellationToken stoppingToken)
         {
@@ -4110,6 +4119,7 @@ namespace Refresher1C.Service
                                             //&& market.Sp14155.Trim().ToUpper() == "OZON" 
                                             //&& market.Sp14155.Trim().ToUpper() == "WILDBERRIES"
                                             //&& market.Sp14155.Trim().ToUpper() == "SBER"
+                                            //&& market.Sp14155.Trim().ToUpper() == "ЯНДЕКС"
                                             //&& market.Code.Trim() == "23005267" // Yandex DBS
                                             select new
                                             {
@@ -4460,7 +4470,7 @@ namespace Refresher1C.Service
                         where (markUse.Sp14147 == marketplaceId) &&
                           (markUse.Sp14158 == 1) //Есть в каталоге 
                           //&& nom.Code == "D00028044"
-                          //&& nom.Code == "D00040383"
+                          //&& nom.Code == "D00077698"
                         select new
                         {
                             Id = markUse.Id,
@@ -4503,7 +4513,9 @@ namespace Refresher1C.Service
                             if (entity != null)
                             {
                                 var minPrice = (decimal)item.Price * dataItem.Квант;
-                                var sumPercentTariffs = item.Tariffs?.Sum(x => (decimal)x.Percent) ?? 0;
+                                var feePercent = item.Tariffs?
+                                    .Where(x => x.Type == YandexClasses.TariffType.FEE)
+                                    .Sum(x => (decimal)x.Percent) ?? 0;
                                 var dimensions = ((decimal?)item.WeightDimensions?.Width ?? 0)
                                     + ((decimal?)item.WeightDimensions?.Length ?? 0)
                                     + ((decimal?)item.WeightDimensions?.Height ?? 0);
@@ -4515,7 +4527,7 @@ namespace Refresher1C.Service
                                     "FBY" => ModelTypeYandex.FBY,
                                     _ => ModelTypeYandex.DBS
                                 };
-                                using (var helper = new CommissionHelperYandex(modelType, (int)dataItem.Квант, dataItem.ЦенаЗакуп, volumeWeight, sumPercentTariffs, (decimal)item.Price, weight, dimensions))
+                                using (var helper = new CommissionHelperYandex(modelType, (int)dataItem.Квант, dataItem.ЦенаЗакуп, volumeWeight, feePercent, (decimal)item.Price, weight, dimensions))
                                 {
                                     minPrice = helper.MinPrice();
                                 }

@@ -22,7 +22,7 @@ namespace StinClasses.MarketCommission
         bool _isHard;
         public CommissionHelperYandex(ModelTypeYandex typeYandex, int quant, decimal zakupPrice, 
             decimal volumeWeight, 
-            decimal sumFactorPercent,
+            decimal feePercent,
             decimal price,
             decimal weight,
             decimal dimensions) : base(zakupPrice, quant)
@@ -33,12 +33,13 @@ namespace StinClasses.MarketCommission
             _isHard = (_model != ModelTypeYandex.DBS) && ((weight > _weightLimit) || (dimensions > _dimensionsLimit));
             PercentFactors = new Dictionary<string, decimal>
             {
-                { "AllFactors", sumFactorPercent },
-               // { "PerevodPlateg", 1.6m }
+                //{ "AllFactors", sumFactorPercent },
+                { "PerevodPlateg", 1.6m },
+                { "Fee", feePercent },
             };
             FixCommissions = new Dictionary<string, decimal>
             {
-               // { "PriemPlateg", 0.12m }
+                { "PriemPlateg", 0.12m },
             };
             switch (_model)
             {
