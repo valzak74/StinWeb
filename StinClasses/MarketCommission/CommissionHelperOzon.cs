@@ -12,6 +12,7 @@ namespace StinClasses.MarketCommission
         public CommissionHelperOzon(ModelTypeOzon typeOzon, int quant, decimal zakupPrice, decimal volumeWeight, decimal showcasePercent) : base(zakupPrice, quant)
         {
             _model = typeOzon;
+            _volumeWeightFactor = VolumeWeightFactor(volumeWeight);
             PercentFactors = new Dictionary<string, decimal> 
             {
                 { "Showcase", showcasePercent },
@@ -21,13 +22,12 @@ namespace StinClasses.MarketCommission
             {
                 FixCommissions = new Dictionary<string, decimal>
                 {
-                    { "Base15", 1300 },
-                    { "Over15", (volumeWeight - 15) * 20 },
+                    { "VolumeWeight", _volumeWeightFactor},
+                    { "ServiceCentre", 15 },
                 };
             }
             else // ((_model == ModelTypeOzon.FBS) || (_model == ModelTypeOzon.FBO))
             {
-                _volumeWeightFactor = VolumeWeightFactor(volumeWeight);
                 FixCommissions = new Dictionary<string, decimal>
                 {
                     { "VolumeWeight", _volumeWeightFactor },
@@ -47,6 +47,16 @@ namespace StinClasses.MarketCommission
                         <= 5m => 76,
                         <= 175m => 76 + (Math.Ceiling(volumeWeight) - 5) * 9, // 9 руб за каждый дополнительный литр свыше 5
                         _ => 1615
+                    };
+                case ModelTypeOzon.RealFBS:
+                    return volumeWeight switch
+                    {
+                        <= 14m => 1700,
+                        <= 30m => 2200,
+                        <= 65m => 2800,
+                        <= 120m => 4300,
+                        <= 200m => 5600,
+                        _ => 9900
                     };
                 case ModelTypeOzon.FBO:
                     return volumeWeight switch

@@ -4664,6 +4664,7 @@ namespace Refresher1C.Service
 
             var query = from markUse in _context.Sc14152s
                         join nom in _context.Sc84s on markUse.Parentext equals nom.Id
+                        join ed in _context.Sc75s on nom.Sp94 equals ed.Id
                         join market in _context.Sc14042s on markUse.Sp14147 equals market.Id
                         join vzTovar in _context.VzTovars on nom.Id equals vzTovar.Id into _vzTovar
                         from vzTovar in _vzTovar.DefaultIfEmpty()
@@ -4677,6 +4678,10 @@ namespace Refresher1C.Service
                             realFbs = !string.IsNullOrWhiteSpace(market.Sp14154) && (market.Sp14154.Trim() == markUse.Sp14190.Trim()),
                             ЦенаЗакуп = vzTovar != null ? vzTovar.Zakup ?? 0 : 0,
                             Квант = nom.Sp14188 == 0 ? 1 : nom.Sp14188,
+                            Weight = ed.Sp14056, //кг
+                            Width = ed.Sp14036 * 100, //cм
+                            Length = ed.Sp14037 * 100, //cм
+                            Height = ed.Sp14035 * 100, //cм
                         };
             for (int i = 0; i < query.Count(); i = i + requestLimit)
             {
@@ -4705,8 +4710,16 @@ namespace Refresher1C.Service
                             if (entity != null)
                             {
                                 var minPrice = (decimal)price;
+                                var volumeForFbs = Math.Max(item.Weight, GetVolume(item.Height, item.Width, item.Length));
+                                var volumeWeight = GetVolumeWeight(item.Weight, item.Height, item.Width, item.Length);
                                 ModelTypeOzon typeOzon = model == "FBS" ? (item.realFbs ? ModelTypeOzon.RealFBS : ModelTypeOzon.FBS) : ModelTypeOzon.FBO;
-                                using (var helper = new CommissionHelperOzon(typeOzon, (int)item.Квант, item.ЦенаЗакуп, (decimal)comResult.VolumeWeight, (decimal)comResult.ComPercent))
+                                using (var helper = new CommissionHelperOzon(
+                                    typeOzon, 
+                                    (int)item.Квант, 
+                                    item.ЦенаЗакуп, 
+                                    typeOzon == ModelTypeOzon.RealFBS ? volumeWeight : volumeForFbs, 
+                                    (decimal)comResult.ComPercent
+                                ))
                                 {
                                     minPrice = helper.MinPrice();
                                 }
@@ -4727,6 +4740,16 @@ namespace Refresher1C.Service
                 if (needUpdate)
                     await _context.SaveChangesAsync(cancellationToken);
             }
+        }
+        private decimal GetVolume(decimal height, decimal width, decimal length)
+        {
+            return (height * width * length) / 1000;
+        }
+        private decimal GetVolumeWeight(decimal weight, decimal height, decimal width, decimal length)
+        {
+            var volume = GetVolume(height, width, length);
+
+            return Math.Max(weight, volume / 5);
         }
         public async Task CheckReturns(CancellationToken cancellationToken)
         {
