@@ -54,7 +54,7 @@ namespace WbClasses
             result.Add("Authorization", authToken);
             return result;
         }
-        public static async Task<(CardListData? data, string error)> GetCatalogInfo(IHttpService httpService, string proxyHost, string authToken,
+        public static async Task<(CardListResponse? data, string error)> GetCatalogInfo(IHttpService httpService, string proxyHost, string authToken,
             int limit,
             DateTime updatedAt,
             long nmId,
@@ -66,7 +66,7 @@ namespace WbClasses
             else
                 request = new CardsListRequest(limit);
             var result = await httpService.Exchange<CardListResponse, string>(
-                $"https://{proxyHost}suppliers-api.wildberries.ru/content/v1/cards/cursor/list",
+                $"https://{proxyHost}suppliers-api.wildberries.ru/content/v2/get/cards/list",
                 HttpMethod.Post,
                 GetCustomHeaders(authToken),
                 request,
@@ -76,7 +76,7 @@ namespace WbClasses
                 err = result.Item1.LogWbErrors(result.Item2);
             else if (!string.IsNullOrEmpty(result.Item2))
                 err = result.Item2;
-            return (data: result.Item1?.Data, error: string.IsNullOrEmpty(err) ? "" : "WbGetCatalogInfo: " + err);
+            return (data: result.Item1, error: string.IsNullOrEmpty(err) ? "" : "WbGetCatalogInfo: " + err);
         }
         public static async Task<(PriceRequest[], string?)> GetPrices(IHttpService httpService, string proxyHost, string authToken, CancellationToken cancellationToken)
         {

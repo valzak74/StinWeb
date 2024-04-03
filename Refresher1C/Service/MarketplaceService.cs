@@ -1504,15 +1504,6 @@ namespace Refresher1C.Service
                         skus.Add(nomCode);
                     }
             }
-            //else if (data is IList<AliExpressClasses.Item_display_dto>)
-            //{
-            //    foreach(var item in (data as IList<AliExpressClasses.Item_display_dto>))
-            //    {
-            //        var decodeSku = hexEncoding ? x.Code.DecodeHexString() : item.sk;
-            //        skus.AddRange(decodeSkus);
-            //        productIdToSku.Add(entry.Id, decodeSkus.FirstOrDefault() ?? "");
-            //    }
-            //}
             else if (data is IList<AliExpressClasses.CatalogInfo>)
             {
                 foreach (var entry in (data as IList<AliExpressClasses.CatalogInfo>))
@@ -1532,10 +1523,10 @@ namespace Refresher1C.Service
                         productIdToSku.Add(entry.Id, decodeSkus.FirstOrDefault() ?? "");
                     }
             }
-            else if (data is WbClasses.CardListResponse.CardListData wbData)
+            else if (data is IList<WbClasses.CardListResponse.Card> wbCards)
             {
-                if (wbData.Cards?.Count > 0)
-                    foreach (var entry in wbData.Cards)
+                if (wbCards?.Count > 0)
+                    foreach (var entry in wbCards)
                     {
                         string nmId = entry.NmID.ToString();
                         string nomCode = entry.VendorCode.Decode(encoding);
@@ -1922,7 +1913,7 @@ namespace Refresher1C.Service
             if (result.data != null)
                 try
                 {
-                    await UpdateCatalogInfo(result.data, marketplaceId, encoding, stoppingToken);
+                    await UpdateCatalogInfo(result.data?.Cards, marketplaceId, encoding, stoppingToken);
                     var lastUpdatedAt = result.data.Cursor?.UpdatedAt ?? DateTime.MinValue;
                     var lastNmId = result.data.Cursor?.NmID ?? 0;
                     var total = result.data.Cursor?.Total ?? 0;
@@ -1988,8 +1979,6 @@ namespace Refresher1C.Service
                     }
                     else if (marketplace.Тип == "ALIEXPRESS")
                     {
-                        //await ParseMextPageCatalogAliExpressGlobal(marketplace.ClientId, marketplace.Authorization, marketplace.AuthToken,
-                        //    1, 50, marketplace.Id, marketplace.HexEncoding, stoppingToken);
                         await ParseNextPageCatalogAliExpress(_firmProxy[marketplace.FirmaId],
                             marketplace.AuthToken, "0", 50, marketplace.Id, marketplace.Encoding, stoppingToken);
                     }
@@ -3248,7 +3237,10 @@ namespace Refresher1C.Service
                     var result = await WbClasses.Functions.GetOrderStatuses(_httpService, _firmProxy[firmaId], authToken, data, cancellationToken);
                     if (!string.IsNullOrEmpty(result.error))
                         _logger.LogError(result.error);
-                    var cancelOrderIds = result.orders?.Where(x => (x.Value == WbClasses.WbStatus.canceled) || (x.Value == WbClasses.WbStatus.canceled_by_client))
+                    var cancelOrderIds = result.orders?.Where(x => 
+                        (x.Value == WbClasses.WbStatus.canceled) || 
+                        (x.Value == WbClasses.WbStatus.canceled_by_client) ||
+                        (x.Value == WbClasses.WbStatus.declined_by_client))
                         .Select(x => x.Key);
                     foreach (var wbOrderId in cancelOrderIds) 
                     {

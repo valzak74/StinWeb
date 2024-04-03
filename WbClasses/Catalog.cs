@@ -5,9 +5,9 @@ namespace WbClasses
 {
     public class CardsListRequest
     {
-        public CardsListRequest(int limit) => Sort = new RequestData(limit);
-        public CardsListRequest(int limit, long nmId, DateTime updatedAt) => Sort = new RequestData(limit, nmId, updatedAt);
-        public RequestData? Sort { get; set; }
+        public CardsListRequest(int limit) => Settings = new RequestData(limit);
+        public CardsListRequest(int limit, long nmId, DateTime updatedAt) => Settings = new RequestData(limit, nmId, updatedAt);
+        public RequestData? Settings { get; set; }
         public class RequestData
         {
             public RequestData(int limit)
@@ -25,7 +25,6 @@ namespace WbClasses
             public RequestSort? Sort { get; set;}
             public class RequestSort
             {
-                public string? SortColumn { get; set; }
                 public bool Ascending { get; set; }
                 public RequestSort() => Ascending = true;
             }
@@ -34,6 +33,15 @@ namespace WbClasses
                 [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
                 public string? TextSearch { get; set; }
                 public int WithPhoto { get; set; }
+                [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+                public List<long> TagIDs { get; set; }
+                public bool AllowedCategoriesOnly { get; set; }
+                [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+                public List<long> ObjectIDs { get; set; }
+                [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+                public List<string> Brands { get; set; }
+                [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+                public long ImtID { get; set; }
                 public RequestFilter() => WithPhoto = -1;
             }
             public class RequestCursor
@@ -57,35 +65,78 @@ namespace WbClasses
     }
     public class CardListResponse: Response
     {
-        public CardListData? Data { get; set; }
-        public class CardListData
+        public List<Card>? Cards { get; set; } 
+        public ResponseCursor? Cursor { get; set; }
+        public class Card
         {
-            public List<Card>? Cards { get; set; } 
-            public ResponseCursor? Cursor { get; set; }
-            public class Card
+            public long NmID { get; set; }
+            public long ImtID { get; set; }
+            public long SubjectID { get; set; }
+            public string? VendorCode { get; set; }
+            public string? SubjectName { get; set; }
+            public string? Brand { get; set; }
+            public string? Title { get; set; }
+            public List<Photo>? Photos { get; set; }
+            public string? Video { get; set; }
+            public Dimension? Dimensions { get; set; }
+            public List<Characteristic>? Characteristics { get; set; }
+            public List<Size>? Sizes { get; set; }
+            public List<Tag>? Tags { get; set; }
+            [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
+            public DateTime CreatedAt { get; set; }
+            [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
+            public DateTime UpdatedAt { get; set; }
+            public class Photo
             {
-                public List<Size>? Sizes { get; set; }
-                public List<string>? MediaFiles { get; set; }
-                public List<string>? Colors { get; set; }
-                [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
-                public DateTime UpdatedAt { get; set; }
-                public string? VendorCode { get; set; }
-                public string? Brand { get; set; }
-                public string? Object { get; set; }
-                public long NmID { get; set; }
-                public class Size
-                {
-                    public string? TechSize { get; set; }
-                    public List<string>? Skus { get; set; }
-                }
+                public string? Big { get; set; }
+                public string? Small { get; set; }
             }
-            public class ResponseCursor
+            public class Dimension
             {
-                [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
-                public DateTime UpdatedAt { get; set; }
-                public long? NmID { get; set; }
-                public int Total { get; set; }
+                public long Length { get; set; }
+                public long Width { get; set; }
+                public long Height { get; set; }
+            }
+            public class Characteristic
+            {
+                public long Id { get; set; }
+                public string? Name { get; set; }
+                [JsonConverter(typeof(SingleObjectOrArrayJsonStringConverter))]
+
+                public List<string>? Value { get; set; }
+            }
+            public class Size
+            {
+                public long ChrtID { get; set; }
+                public string? TechSize { get; set; }
+                public string? WbSize { get; set; }
+                public List<string>? Skus { get; set; }
+            }
+            public class Tag
+            {
+                public long Id { get; set; }
+                public string? Name { get; set; }
+                public WbColor Color { get; set; }
             }
         }
+        public class ResponseCursor
+        {
+            [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
+            public DateTime UpdatedAt { get; set; }
+            public long? NmID { get; set; }
+            public int Total { get; set; }
+        }
+    }
+
+    [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]
+    public enum WbColor: byte
+    {
+        NotFound,
+        D1CFD7,
+        FEE0E0,
+        ECDAFF,
+        E4EAFF,
+        DEF1DD,
+        FFECC7,
     }
 }

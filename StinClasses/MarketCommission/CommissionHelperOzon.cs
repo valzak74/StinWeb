@@ -20,9 +20,10 @@ namespace StinClasses.MarketCommission
             };
             if (_model == ModelTypeOzon.RealFBS)
             {
+                var K = 1;
                 FixCommissions = new Dictionary<string, decimal>
                 {
-                    { "VolumeWeight", _volumeWeightFactor},
+                    { "VolumeWeight", _volumeWeightFactor * K },
                     { "ServiceCentre", 15 },
                 };
             }

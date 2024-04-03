@@ -107,6 +107,7 @@ namespace WbClasses
         sold = 2,
         canceled = 3,
         canceled_by_client = 4,
+        declined_by_client = 5,
     }
     [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]
     public enum WbSupplierStatus
