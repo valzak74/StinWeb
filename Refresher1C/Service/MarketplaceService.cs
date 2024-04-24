@@ -2535,9 +2535,10 @@ namespace Refresher1C.Service
             if (!string.IsNullOrEmpty(orderListResult.error))
                 _logger.LogError(orderListResult.error);
 
+            var readyToShipOrders = await ActiveOrders(marketplaceId, cancellationToken);
+
             if (orderListResult.orders?.Count > 0)
             {
-                var readyToShipOrders = await ActiveOrders(marketplaceId, cancellationToken);
 
                 foreach (var sberOrder in orderListResult.orders)
                 {
@@ -2633,7 +2634,7 @@ namespace Refresher1C.Service
                     }
                     else
                     {
-                        if (sberOrder.Items.Any(x => x.Status == SberClasses.SberStatus.CUSTOMER_CANCELED) &&
+                        if (sberOrder.Items.Any(x => x.Status == SberClasses.SberStatus.CUSTOMER_CANCELED || x.Status == SberClasses.SberStatus.MERCHANT_CANCELED) &&
                                 (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14) && (order.InternalStatus != 16))
                             await _docService.OrderCancelled(order);
                         else if (readyToShipOrders.Contains(sberOrder.ShipmentId) && (sberOrder.Items?.All(x => x.Status == SberClasses.SberStatus.SHIPPED) ?? false) &&
@@ -2651,6 +2652,126 @@ namespace Refresher1C.Service
             }
 
             var scannedOrders = orderListResult.orders?.Select(x => x.ShipmentId).ToList() ?? new List<string>();
+
+            var notChackedOrders = readyToShipOrders
+                .Where(x => !scannedOrders.Contains(x))
+                .ToList();
+            if (notChackedOrders?.Count > 0)
+            {
+                var notChackedOrderListResult = await SberClasses.Functions.GetOrders(_httpService, _firmProxy[firmaId], authToken, notChackedOrders, cancellationToken);
+                if (notChackedOrderListResult.orders?.Count > 0)
+                {
+                    foreach (var sberOrder in notChackedOrderListResult.orders)
+                    {
+                        var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, sberOrder.ShipmentId);
+                        if (order == null)
+                        {
+                            //new order
+                            if (sberOrder.Items.Any(x => (x.Status == SberClasses.SberStatus.CONFIRMED)))
+                            {
+                                var номенклатураCodes = sberOrder.Items.Select(x => x.OfferId.Decode(encoding)).ToList();
+                                var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(firmaId);
+                                var списокСкладов = await _склад.ПолучитьСкладIdОстатковMarketplace();
+                                var НоменклатураList = await _номенклатура.ПолучитьСвободныеОстатки(
+                                    разрешенныеФирмы,
+                                    списокСкладов,
+                                    номенклатураCodes,
+                                    true);
+                                var nomQuantums = await _номенклатура.ПолучитьКвант(номенклатураCodes, cancellationToken);
+                                bool нетВНаличие = НоменклатураList.Count == 0;
+                                foreach (var номенклатура in НоменклатураList)
+                                {
+                                    decimal остаток = номенклатура.Остатки
+                                                .Sum(z => z.СвободныйОстаток) / номенклатура.Единица.Коэффициент;
+                                    var quantum = (int)nomQuantums.Where(q => q.Key == номенклатура.Id).Select(q => q.Value).FirstOrDefault();
+                                    if (quantum == 0)
+                                        quantum = 1;
+                                    var asked = sberOrder.Items?
+                                                        .Where(b => b.OfferId.Decode(encoding) == номенклатура.Code)
+                                                        .Select(c => c.Quantity * quantum)
+                                                        .FirstOrDefault();
+                                    if (остаток < asked)
+                                    {
+                                        нетВНаличие = true;
+                                        break;
+                                    }
+                                }
+                                if (нетВНаличие)
+                                {
+                                    _logger.LogError("Sber запуск процедуры отмены");
+                                    var sberResult = await SberClasses.Functions.OrderReject(_httpService, _firmProxy[firmaId], authToken, sberOrder.ShipmentId, SberClasses.SberReason.OUT_OF_STOCK,
+                                        sberOrder.Items.Select(x => new KeyValuePair<string, string>(x.ItemIndex, x.OfferId)).ToList(), cancellationToken);
+                                    if (!string.IsNullOrEmpty(sberResult.error))
+                                        _logger.LogError(sberResult.error);
+                                    continue;
+                                }
+                                bool delivery = !string.IsNullOrEmpty(sberOrder.DeliveryId);
+                                var orderItems = new List<OrderItem>();
+                                foreach (var item in sberOrder.Items)
+                                {
+                                    orderItems.Add(new OrderItem
+                                    {
+                                        Id = item.ItemIndex,
+                                        Sku = item.OfferId.Decode(encoding),
+                                        Количество = item.Quantity ?? 0,
+                                        Цена = item.Price ?? 0,
+                                        ЦенаСоСкидкой = item.FinalPrice ?? 0,
+                                        Вознаграждение = (item.Price ?? 0) - (item.FinalPrice ?? 0),
+                                        Доставка = delivery,
+                                        //ДопПараметры = x.Params,
+                                        ИдентификаторПоставщика = sberOrder.CustomerFullName,
+                                        ИдентификаторСклада = "",
+                                        ИдентификаторСкладаПартнера = sberOrder.ShippingPoint.ToString()
+                                    });
+                                }
+                                double deliveryPrice = 0;
+                                double deliverySubsidy = 0;
+                                await _docService.NewOrder(
+                                   "SBER",
+                                   firmaId,
+                                   customerId,
+                                   dogovorId,
+                                   authorization,
+                                   encoding,
+                                   Common.SkladEkran,
+                                   "",
+                                   sberOrder.DeliveryId,
+                                   sberOrder.DeliveryMethodId,
+                                   StinDeliveryPartnerType.SBER_MEGA_MARKET,
+                                   StinDeliveryType.DELIVERY,
+                                   deliveryPrice,
+                                   deliverySubsidy,
+                                   StinPaymentType.NotFound,
+                                   StinPaymentMethod.NotFound,
+                                   "0",
+                                   "",
+                                   null,
+                                   sberOrder.ShipmentId,
+                                   sberOrder.DeliveryId,
+                                   sberOrder.ShipmentDateFrom,
+                                   orderItems,
+                                   cancellationToken);
+                            }
+                        }
+                        else
+                        {
+                            if (sberOrder.Items.Any(x => x.Status == SberClasses.SberStatus.CUSTOMER_CANCELED) &&
+                                    (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14) && (order.InternalStatus != 16))
+                                await _docService.OrderCancelled(order);
+                            else if (readyToShipOrders.Contains(sberOrder.ShipmentId) && (sberOrder.Items?.All(x => x.Status == SberClasses.SberStatus.SHIPPED) ?? false) &&
+                                (order.InternalStatus < 14) && (order.InternalStatus != 6) && (order.InternalStatus != 5) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                            {
+                                await _docService.OrderDeliveried(order, true);
+                            }
+                            else if ((sberOrder.Items?.All(x => x.Status == SberClasses.SberStatus.DELIVERED) ?? false) &&
+                                ((order.InternalStatus == 14) || (order.InternalStatus == 16)) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                            {
+                                await _docService.OrderFromTransferDeliveried(order);
+                            }
+                        }
+                    }
+                }
+            }
 
             var activeOrders_14 = await _context.Sc13994s
                 .Where(x => ((x.Sp13982 == 14) || (x.Sp13982 == 16)) &&
@@ -3661,7 +3782,7 @@ namespace Refresher1C.Service
                     clientId,
                     authToken,
                     "UNPAID",
-                    DateTime.Today.AddDays(-1),
+                    DateTime.Today.AddDays(-3),
                     pageNumber,
                     cancellationToken);
                 nextPage = result.NextPage;
@@ -3804,7 +3925,7 @@ namespace Refresher1C.Service
                     clientId, 
                     authToken,
                     "PROCESSING",
-                    DateTime.Today.AddDays(-1),
+                    DateTime.Today.AddDays(-5),
                     pageNumber, 
                     cancellationToken);
                 nextPage = result.NextPage;
@@ -3982,6 +4103,7 @@ namespace Refresher1C.Service
             //        }
             //    }
             //}
+            //_logger.LogError("Finished");
         }
         private async Task GetYandexCancelOrders(string firmaId, string campaignId, string clientId, string authToken, string marketplaceId, CancellationToken cancellationToken)
         {
@@ -4894,7 +5016,7 @@ namespace Refresher1C.Service
                 var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, item.OrderNo);
                 if (order != null)
                 {
-                    if ((order.InternalStatus != item.Status) && (order.InternalStatus != 5) && (order.InternalStatus != 17) && !((order.InternalStatus == 16) && (item.Status == 15)))
+                    if ((order.InternalStatus != item.Status) && (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 17) && !((order.InternalStatus == 16) && (item.Status == 15)))
                     {
                         var status = item.Status;
                         if ((order.InternalStatus == 14) && (status == 15))

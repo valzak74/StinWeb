@@ -16,6 +16,7 @@ namespace HttpExtensions
         public HttpService(HttpClient httpClient, ILogger<HttpService> logger)
         {
             _httpClient = httpClient;
+            _httpClient.Timeout = TimeSpan.FromSeconds(300);
             _logger = logger;
         }
         bool IsValidJson(string stringValue)
@@ -128,6 +129,7 @@ namespace HttpExtensions
                         request.Content = new StringContent(contentString, Encoding.UTF8, "application/json");
                     }
                 }
+                //_httpClient.Timeout = TimeSpan.FromSeconds(300);
                 var response = await _httpClient.SendAsync(request, stoppingToken);
                 //var proxy = new WebProxy
                 //{
