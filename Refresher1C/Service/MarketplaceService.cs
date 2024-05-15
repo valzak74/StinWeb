@@ -1988,7 +1988,7 @@ namespace Refresher1C.Service
                     }
                     else if (marketplace.Тип == "WILDBERRIES")
                     {
-                        await ParseNextPageWildberriesCatalog(_firmProxy[marketplace.FirmaId], marketplace.AuthToken, 1000, DateTime.MinValue, 0, marketplace.Id, marketplace.Encoding, stoppingToken);
+                        await ParseNextPageWildberriesCatalog(_firmProxy[marketplace.FirmaId], marketplace.AuthToken, 100, DateTime.MinValue, 0, marketplace.Id, marketplace.Encoding, stoppingToken);
                     }
                 }
             }
