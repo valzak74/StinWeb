@@ -2592,6 +2592,7 @@ namespace Refresher1C.Service
                                 {
                                     Id = item.ItemIndex,
                                     Sku = item.OfferId.Decode(encoding),
+                                    НоменклатураId = item.OfferId.Decode(encoding),
                                     Количество = item.Quantity ?? 0,
                                     Цена = item.Price ?? 0,
                                     ЦенаСоСкидкой = item.FinalPrice ?? 0,
@@ -2626,7 +2627,7 @@ namespace Refresher1C.Service
                                "",
                                null,
                                sberOrder.ShipmentId,
-                               sberOrder.DeliveryId,
+                               sberOrder.ShipmentId,
                                sberOrder.ShipmentDateFrom,
                                orderItems,
                                cancellationToken);
