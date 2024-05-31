@@ -58,7 +58,6 @@
                                 {
                                     <li><a class="dropdown-item" asp-controller="ЖурналОбщий" asp-action="Index">Общий</a></li>
                                     <li><a class="dropdown-item" asp-controller="ЖурналДоставки" asp-action="Index">Доставка</a></li>
-                                    <li><a class="dropdown-item" asp-controller="HistoryReport" asp-action="Index">Test</a></li>
                                 }
                             </ul>
                         </li>
@@ -119,6 +118,10 @@
                                 @if ((new[] { "Любой", "ИнтернетЗаказы" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
                                 {
                                     <li><a class="dropdown-item" asp-controller="NomChanges" asp-action="Index">Изменение справочника номенклатуры</a></li>
+                                }
+                                @if ((new[] { "Любой", "ИнтернетЗаказы" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
+                                {
+                                    <li><a class="dropdown-item" asp-controller="HistoryReport" asp-action="Index">Отчет истории заказов маркетплейс</a></li>
                                 }
                             </ul>
                         </li>

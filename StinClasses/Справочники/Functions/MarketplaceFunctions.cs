@@ -146,7 +146,7 @@ namespace StinClasses.Справочники.Functions
             decimal defDeltaStock = 0;
             if (marketplace.Тип == "WILDBERRIES")
             {
-                fullLock = await stockFunctions.NextBusinessDay(Common.SkladEkran, DateTime.Today, 1, cancellationToken) != 1;
+                //fullLock = await stockFunctions.NextBusinessDay(Common.SkladEkran, DateTime.Today, 1, cancellationToken) != 1;
                 defDeltaStock = 1;
             }
             var списокНоменклатуры = await nomenklaturaFunctions.ПолучитьСвободныеОстатки(разрешенныеФирмы, списокСкладов, validNomIds, false);
@@ -213,7 +213,7 @@ namespace StinClasses.Справочники.Functions
             decimal defDeltaStock = 0;
             if (marketplace.Тип == "WILDBERRIES")
             {
-                fullLock = await stockFunctions.NextBusinessDay(Common.SkladEkran, DateTime.Today, 1, cancellationToken) != 1;
+                //fullLock = await stockFunctions.NextBusinessDay(Common.SkladEkran, DateTime.Today, 1, cancellationToken) != 1;
                 defDeltaStock = 1;
             }
             var списокНоменклатуры = await nomenklaturaFunctions.ПолучитьСвободныеОстатки(разрешенныеФирмы, списокСкладов, validNomIds, false);
