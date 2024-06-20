@@ -98,23 +98,23 @@ namespace WbClasses
             CancellationToken cancellationToken)
         {
             //check prices
-            var checkResult = await GetPrices(httpService, proxyHost, authToken, cancellationToken);
-            if (checkResult.Item1 != null)
-            {
-                foreach (var priceWb in checkResult.Item1) 
-                { 
-                    var price = priceData.FirstOrDefault(x => x.NmId == priceWb.NmId);
-                    if (price != null && price.Price == priceWb.Price)
-                        priceData.Remove(price);
-                }
-            }
+            //var checkResult = await GetPrices(httpService, proxyHost, authToken, cancellationToken);
+            //if (checkResult.Item1 != null)
+            //{
+            //    foreach (var priceWb in checkResult.Item1) 
+            //    { 
+            //        var price = priceData.FirstOrDefault(x => x.NmId == priceWb.NmId);
+            //        if (price != null && price.Price == priceWb.Price)
+            //            priceData.Remove(price);
+            //    }
+            //}
             if (priceData.Count > 0)
             {
                 var result = await httpService.Exchange<bool, PriceError>(
-                    $"https://{proxyHost}suppliers-api.wildberries.ru/public/api/v1/prices",
+                    $"https://{proxyHost}discounts-prices-api.wb.ru/api/v2/upload/task",
                     HttpMethod.Post,
                     GetCustomHeaders(authToken),
-                    priceData,
+                    new PriceRequestV2 { Data = priceData },
                     cancellationToken);
                 if (result.Item2 != null)
                 {

@@ -8,6 +8,10 @@ using System.Threading.Tasks;
 
 namespace WbClasses
 {
+    public class PriceRequestV2
+    {
+        public List<PriceRequest>? Data { get; set; }
+    }
     public class PriceRequest
     {
         public long NmId { get; set; }
