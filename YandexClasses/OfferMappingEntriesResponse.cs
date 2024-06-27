@@ -14,7 +14,7 @@ namespace YandexClasses
     public class OfferMappingResult
     {
         public Paging Paging { get; set; }
-        public List<OfferMappingEntry> OfferMappingEntries { get; set; }
+        public List<OfferMappingEntry> OfferMappings { get; set; }
     }
     public class OfferMappingUpdateRequest
     {
@@ -56,6 +56,7 @@ namespace YandexClasses
     }
     public class Offer
     {
+        public string OfferId { get; set; }
         public string ShopSku { get; set; }
         public string Name { get; set; }
         public string Category { get; set; }
@@ -84,6 +85,7 @@ namespace YandexClasses
         public long GuaranteePeriodDays { get; set; }
         public Availability? Availability { get; set; }
         public ProcessingState? ProcessingState { get; set; }
+        public bool Archived { get; set; }
         public bool ShouldSerializeAvailability()
         {
             return Availability != null;

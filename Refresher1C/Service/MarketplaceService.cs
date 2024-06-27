@@ -1455,17 +1455,17 @@ namespace Refresher1C.Service
             if (data is IList<YandexClasses.OfferMappingEntry>)
             {
                 foreach (var entry in (data as IList<YandexClasses.OfferMappingEntry>))
-                    if ((entry.Offer != null) && (entry.Offer.ProcessingState != null))
+                    if ((entry.Offer != null) && (!entry.Offer.Archived))
                     {
-                        var nomCode = entry.Offer.ShopSku.Decode(encoding);
+                        var nomCode = entry.Offer.OfferId.Decode(encoding);
                         if (string.IsNullOrEmpty(nomCode))
                         {
-                            _logger.LogError("UpdateCatalogInfo : Yandex wrong encoded sku " + entry.Offer.ShopSku);
+                            _logger.LogError("UpdateCatalogInfo : Yandex wrong encoded sku " + entry.Offer.OfferId);
                             continue;
                         }
                         skus.Add(nomCode);
                         string краткоеОписание = "";
-                        if ((entry.Offer.Urls != null) && (entry.Offer.Urls.Count > 0))
+                        if (entry.Offer.Urls?.Count > 0)
                             краткоеОписание = entry.Offer.Urls.FirstOrDefault();
                         string подробноеОписание = entry.Offer.Description;
                         string комментарий = "";
@@ -1602,12 +1602,12 @@ namespace Refresher1C.Service
                 _logger.LogError(ex.Message);
             }
         }
-        private async Task ParseNextPageCatalogRequest(string proxyHost, string campaignId, string clientId, string authToken, int limit, string nextPageToken, string marketplaceId, string marketplaceModel, EncodeVersion encoding, CancellationToken stoppingToken)
+        private async Task ParseNextPageCatalogRequest(string proxyHost, long businessId, string clientId, string authToken, int limit, string nextPageToken, string marketplaceId, string marketplaceModel, EncodeVersion encoding, CancellationToken stoppingToken)
         {
             var result = await YandexClasses.YandexOperators.Exchange<YandexClasses.OfferMappingEntriesResponse>(_httpService,
-                $"https://{proxyHost}api.partner.market.yandex.ru/v2/campaigns/{campaignId}/offer-mapping-entries.json?limit={limit}"
+                $"https://{proxyHost}api.partner.market.yandex.ru/businesses/{businessId}/offer-mappings?limit={limit}"
                 + (string.IsNullOrEmpty(nextPageToken) ? "" : "&page_token=" + nextPageToken),
-                HttpMethod.Get,
+                HttpMethod.Post,
                 clientId,
                 authToken,
                 null,
@@ -1627,10 +1627,10 @@ namespace Refresher1C.Service
                         {
                             //if ((marketplaceModel == "FBY") || (marketplaceModel == "FBS"))
                             //    await UpdateQuantum(campaignId,clientId,authToken, marketplaceId, hexEncoding, catalogResponse.Result.OfferMappingEntries, stoppingToken);
-                            await UpdateCatalogInfo(catalogResponse.Result.OfferMappingEntries, marketplaceId, encoding, stoppingToken);
+                            await UpdateCatalogInfo(catalogResponse.Result.OfferMappings, marketplaceId, encoding, stoppingToken);
                             if ((catalogResponse.Result.Paging != null) && (!string.IsNullOrEmpty(catalogResponse.Result.Paging.NextPageToken)))
                             {
-                                await ParseNextPageCatalogRequest(proxyHost, campaignId, clientId, authToken, limit, catalogResponse.Result.Paging.NextPageToken, marketplaceId, marketplaceModel, encoding, stoppingToken);
+                                await ParseNextPageCatalogRequest(proxyHost, businessId, clientId, authToken, limit, catalogResponse.Result.Paging.NextPageToken, marketplaceId, marketplaceModel, encoding, stoppingToken);
                             }
                         }
                         else
@@ -1937,7 +1937,9 @@ namespace Refresher1C.Service
                                             where !market.Ismark
                                                 //&& (market.Sp14155.Trim() == "Яндекс")
                                                 //&& (market.Sp14155.Trim() == "Wildberries")
-                                                //&& (market.Code.Trim() == "43956")
+                                                //&& (market.Sp14155.Trim() == "Sber")
+                                                //&& (market.Sp14155.Trim() == "Aliexpress")
+                                                //&& (market.Code.Trim() == "22162396")
                                                 //&& (market.Code.Trim() == "D0000000000000000001")
                                             select new
                                             {
@@ -1960,17 +1962,26 @@ namespace Refresher1C.Service
                 foreach (var marketplace in marketplaceIds)
                 {
                     if (marketplace.Тип == "ЯНДЕКС")
-                        await ParseNextPageCatalogRequest(
-                            _firmProxy[marketplace.FirmaId], 
-                            marketplace.CampaignId, 
-                            marketplace.ClientId, 
-                            marketplace.AuthToken, 
-                            maxResponseEntries, 
-                            null,
-                            marketplace.Id, 
-                            marketplace.Модель,
-                            marketplace.Encoding, 
+                    {
+                        var businessId = await YandexClasses.YandexOperators.GetBusinessIdByCampaignId(
+                            _httpService, 
+                            _firmProxy[marketplace.FirmaId],
+                            marketplace.CampaignId,
+                            marketplace.ClientId,
+                            marketplace.AuthToken,
                             stoppingToken);
+                        await ParseNextPageCatalogRequest(
+                            _firmProxy[marketplace.FirmaId],
+                            businessId,
+                            marketplace.ClientId,
+                            marketplace.AuthToken,
+                            maxResponseEntries,
+                            null,
+                            marketplace.Id,
+                            marketplace.Модель,
+                            marketplace.Encoding,
+                            stoppingToken);
+                    }
                     else if (marketplace.Тип == "OZON")
                     {
                         await ParseNextPageCatalogOzon(_firmProxy[marketplace.FirmaId],
@@ -3390,16 +3401,14 @@ namespace Refresher1C.Service
                         foreach (var wbOrderId in deliveredOrderIds)
                         {
                             var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, wbOrderId.ToString());
+                            if ((order != null) && (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14) && (order.InternalStatus != 16))
+                                await _docService.OrderDeliveried(order, true);
                             if ((order != null) && ((order.InternalStatus == 14) || (order.InternalStatus == 16)))
                                 await _docService.OrderFromTransferDeliveried(order);
                         }
                     }
                 }
             }
-            //var resultReshipment = await WbClasses.Functions.GetReshipmentOrders(_httpService, _firmProxy[firmaId], authToken, cancellationToken);
-            //if (!string.IsNullOrEmpty(resultReshipment.error))
-            //    _logger.LogError(resultReshipment.error);
-            //var reshipmentOrderIds = resultReshipment.orders?.Select(x => x.Key);
         }
         private async Task GetOzonNewOrders(string clientId, string authToken, string id, string firmaId, string customerId, string dogovorId, EncodeVersion encoding, CancellationToken stoppingToken)
         {
@@ -4785,7 +4794,7 @@ namespace Refresher1C.Service
                         from vzTovar in _vzTovar.DefaultIfEmpty()
                         where (markUse.Sp14147 == marketplaceId) &&
                           (markUse.Sp14158 == 1) //Есть в каталоге 
-                          //&& nom.Code == "D00040383"
+                          //&& nom.Code == "D00022260"
                         select new
                         {
                             Id = markUse.Id,

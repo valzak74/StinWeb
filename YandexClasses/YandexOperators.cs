@@ -78,6 +78,19 @@ namespace YandexClasses
             }
             return null;
         }
+        public static async Task<long> GetBusinessIdByCampaignId(IHttpService httpService, string proxyHost, string campaignId, string clientId, string authToken, CancellationToken cancellationToken)
+        {
+            var result = await Exchange<CampaignResponse>(httpService,
+                $"https://{proxyHost}api.partner.market.yandex.ru/campaigns",
+                HttpMethod.Get,
+                clientId,
+                authToken,
+                null,
+                cancellationToken);
+            if ((result.Item2 != null) && (result.Item2.Campaigns.Any(x => x.Id == campaignId)))
+                return result.Item2.Campaigns.Where(x => x.Id == campaignId).Select(x => x.Business.Id).FirstOrDefault();
+            return 0;
+        }
         public static async Task<Buyer> BuyerDetails(IHttpService httpService, string proxyHost, string campaignId, string clientId, string authToken, string orderNo, CancellationToken cancellationToken)
         {
             var result = await Exchange<BuyerDetailsResponse>(httpService,
