@@ -164,6 +164,7 @@ namespace StinWeb.Models.DataManager.Отчеты
     {
         public string OrderNo { get; set; }
         public int Scanned { get; set; }
+        public string LogScanInfo { get; set; }
         public decimal КолГрузоМест { get; set; }
         public decimal КолТовара { get; set; }
         public decimal СуммаТовара { get; set; }

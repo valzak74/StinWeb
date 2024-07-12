@@ -187,7 +187,7 @@ namespace StinClasses.Справочники.Functions
                 entity.Sp14254 += scanMark;
                 if (!string.IsNullOrEmpty(logInfo))
                     logInfo += ";";
-                logInfo += logNumberStr;
+                logInfo += logNumberStr + ";" + DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss");
                 entity.Sp14255 = logInfo;
                 _cache.Set(cacheKey, entity.Id, TimeSpan.FromMinutes(60));
                 _cache.Set(_type36 + entity.Id, entity, TimeSpan.FromMinutes(1));

@@ -22,6 +22,7 @@ using StinClasses.Models;
 using JsonExtensions;
 using HttpExtensions;
 using System.Threading;
+using System.Text.RegularExpressions;
 
 namespace StinWeb.Controllers
 {
@@ -281,7 +282,8 @@ namespace StinWeb.Controllers
                                   status = order.Sp13982,
                                   типДоставкиПартнер = order.Sp13985,
                                   типДоставки = order.Sp13988,
-                                  scanned = order.Sp14254
+                                  scanned = order.Sp14254,
+                                  logScanInfo = order.Sp14255.Trim()
                               } into gr
                               select new
                               {
@@ -290,6 +292,7 @@ namespace StinWeb.Controllers
                                   Status = gr.Key.status,
                                   ТипДоставки = (((StinClasses.StinDeliveryPartnerType)gr.Key.типДоставкиПартнер == StinClasses.StinDeliveryPartnerType.SHOP) && ((StinClasses.StinDeliveryType)gr.Key.типДоставки == StinClasses.StinDeliveryType.PICKUP)) ? "Самовывоз" : "Доставка",
                                   Scanned = gr.Key.scanned,
+                                  LogScanInfo = gr.Key.logScanInfo,
                                   КолТовара = gr.Sum(x => x.item.Sp14023),
                                   СуммаТовара = gr.Sum(x => ((x.item.Sp14025 > 0 ? x.item.Sp14025 : x.item.Sp14024) + x.item.Sp14026) * x.item.Sp14023),
                                   КолГрузоМест = gr.Sum(x => ((x.market.Sp14155.ToUpper().Trim() == "ЯНДЕКС") || (x.market.Sp14155.ToUpper().Trim() == "SBER")) ? ((x.ed.Sp14063 == 0 ? 1 : x.ed.Sp14063) * x.item.Sp14023) / (x.nom.Sp14188 == 0 ? 1 : x.nom.Sp14188) : 1)
@@ -298,6 +301,24 @@ namespace StinWeb.Controllers
                 data = data.Where(x => x.Scanned == x.КолГрузоМест).ToList();
             else if (reportType == 2)
                 data = data.Where(x => x.Scanned < x.КолГрузоМест).ToList();
+            var dateTimeRegex = new Regex(@"\d{2}.\d{2}.\d{4} \d{2}:\d{2}:\d{2}");
+            data = data.Select(x => 
+            {
+                var log = string.Join("; ", x.LogScanInfo.Split(';').Where(r => dateTimeRegex.IsMatch(r)));
+
+                return new
+                {
+                    x.OrderId,
+                    x.OrderNo,
+                    x.Status,
+                    x.ТипДоставки,
+                    x.Scanned,
+                    LogScanInfo = log,
+                    x.КолТовара,
+                    x.СуммаТовара,
+                    x.КолГрузоМест,
+                };
+            }).ToList();
             var orderIds = data.Select(x => x.OrderId);
             DateTime dateRegTA = _context.GetRegTA();
             var dataReg = await (
@@ -347,6 +368,7 @@ namespace StinWeb.Controllers
                        d.Status,
                        d.ТипДоставки,
                        d.Scanned,
+                       d.LogScanInfo,
                        d.КолГрузоМест,
                        d.КолТовара,
                        d.СуммаТовара
@@ -358,6 +380,7 @@ namespace StinWeb.Controllers
                        ТипДоставки = gr.Key.ТипДоставки,
                        Status = gr.Key.Status,
                        Scanned = (int)gr.Key.Scanned,
+                       LogScanInfo = gr.Key.LogScanInfo,
                        КолГрузоМест = gr.Key.КолГрузоМест,
                        КолТовара = gr.Key.КолТовара,
                        СуммаТовара = gr.Key.СуммаТовара,

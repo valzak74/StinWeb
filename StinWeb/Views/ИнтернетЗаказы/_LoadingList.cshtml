@@ -13,7 +13,7 @@
         columns.Add(model => model.КолГрузоМест.ToString("0", CultureInfo.InvariantCulture)).Titled("Кол-во грузомест (" + Model.Sum(x => x.КолГрузоМест).ToString("0", CultureInfo.InvariantCulture) + ")");
         columns.Add(model => model.Склады).Titled("Склад");
         columns.Add(model => model.МаршрутНаименование).Titled("Маршрут");
-        //columns.Add(model => model.Остаток).Titled("Остаток").Filterable(false).Sortable(false).Css("text-right  column-10").Formatted(StinWeb.Models.DataManager.Common.ФорматКоличества);
+        columns.Add(model => model.LogScanInfo).Titled("Отсканирован").Filterable(false);
     })
     .Named("gridLoadingList")
     .AppendCss("table-hover")

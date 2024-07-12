@@ -119,7 +119,7 @@
                                 {
                                     <li><a class="dropdown-item" asp-controller="NomChanges" asp-action="Index">Изменение справочника номенклатуры</a></li>
                                 }
-                                @if ((new[] { "Любой", "ИнтернетЗаказы" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
+                                @if ((new[] { "Любой", "ИнтернетЗаказы", "Бухгалтерия" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
                                 {
                                     <li><a class="dropdown-item" asp-controller="HistoryReport" asp-action="Index">Отчет истории заказов маркетплейс</a></li>
                                 }
@@ -134,7 +134,7 @@
                                 {
                                     <li><a class="dropdown-item" asp-controller="ЗагрузкаИзExcel" asp-action="Index">Загрузка из Excel</a></li>
                                 }
-                                @if ((new[] { "Любой", "ИнтернетЗаказы" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
+                                @if ((new[] { "Любой", "ИнтернетЗаказы", "Бухгалтерия" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
                                 {
                                     <li><a class="dropdown-item" asp-controller="MarketplaceMatrix" asp-action="Index">Матрица товаров для маркетплейс</a></li>
                                 }
