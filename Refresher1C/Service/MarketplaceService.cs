@@ -3308,7 +3308,7 @@ namespace Refresher1C.Service
                             var leavingDate = DateTime.Now.TimeOfDay > limitTime ? 1 : 0;
                             shipmentDate = DateTime.Today.AddDays(await _склад.ЭтоРабочийДень(Common.SkladEkran, leavingDate));
                         }
-                        string deliveryServiceName = ""; //wbOrder.ScOfficesNames.FirstOrDefault() ?? string.Empty;
+                        string deliveryServiceName = wbOrder.Rid; 
                         var address = new OrderRecipientAddress
                         {
                             City = wbOrder.Address?.City,
