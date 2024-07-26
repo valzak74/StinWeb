@@ -36,7 +36,6 @@ namespace WbClasses
         public List<string>? PrioritySc { get; set; }
         public List<string>? Offices { get; set; }
         public WbAddressDetails? Address { get; set; }
-        public WbUserInfo? User { get; set; }
         public List<string>? Skus { get; set; }
         decimal _price;
         public decimal Price { get => _price; set { _price = value / 100; } }

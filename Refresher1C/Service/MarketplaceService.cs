@@ -3308,11 +3308,11 @@ namespace Refresher1C.Service
                             var leavingDate = DateTime.Now.TimeOfDay > limitTime ? 1 : 0;
                             shipmentDate = DateTime.Today.AddDays(await _склад.ЭтоРабочийДень(Common.SkladEkran, leavingDate));
                         }
-                        string deliveryServiceName = wbOrder.Rid; 
+                        string deliveryServiceName = ""; 
                         var address = new OrderRecipientAddress
                         {
                             City = wbOrder.Address?.City,
-                            Street = wbOrder.Address?.Street,
+                            Street = wbOrder.Rid, //wbOrder.Address?.Street,
                             House = wbOrder.Address?.Home,
                             Apartment = wbOrder.Address?.Flat,
                             Entrance = wbOrder.Address?.Entrance,
@@ -3321,7 +3321,7 @@ namespace Refresher1C.Service
                             Country = "",
                             Entryphone = "",
                             Floor = "",
-                            Postcode = ""
+                            Postcode = "",
                         };
                         await _docService.NewOrder(
                            "WILDBERRIES",

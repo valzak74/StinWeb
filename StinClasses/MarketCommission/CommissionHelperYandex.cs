@@ -11,8 +11,8 @@ namespace StinClasses.MarketCommission
         readonly ModelTypeYandex _model;
         readonly decimal _dimensionsLimit = 150;
         readonly decimal _weightLimit = 25;
-        (decimal percent, decimal limMin, decimal limMax) _tariffLastMile = (percent: 5.5m, limMin: 60.0m, limMax: 400.0m);
-        public override IEnumerable<(string name, decimal percent, decimal limMin, decimal limMax)> _tariffWithBorders => new List<(string name, decimal percent, decimal limMin, decimal limMax)>
+        (decimal percent, decimal limMin, decimal limMax) _tariffLastMile = (percent: 4.5m, limMin: 0m, limMax: 500.0m);
+        public override List<(string name, decimal percent, decimal limMin, decimal limMax)> _tariffWithBorders => new List<(string name, decimal percent, decimal limMin, decimal limMax)>
         {
             (name: "Stock", percent: 3.0m, limMin: 20.0m, limMax: 60.0m),
             (name: "Delivery", percent: 5.5m, limMin: 13.0m, limMax: 300.0m),
@@ -46,6 +46,8 @@ namespace StinClasses.MarketCommission
                 case ModelTypeYandex.DBS:
                     break;
                 case ModelTypeYandex.FBS:
+                    FixCommissions.Add("LastMile", 0);
+                    PercentFactors.Add("LastMile", _tariffLastMile.percent);
                     if (_isLightFactor)
                     {
                         PercentFactors["AllFactors"] = 0;
@@ -61,9 +63,6 @@ namespace StinClasses.MarketCommission
                     {
                         FixCommissions.Add("PerOrder", 10);
                         FixCommissions.Add("WeightOutBorder", VolumeWeightFactor());
-                        FixCommissions.Add("LastMile", 0);
-
-                        PercentFactors.Add("LastMile", _tariffLastMile.percent);
                     }
                     break;
                 case ModelTypeYandex.FBY:
@@ -87,6 +86,9 @@ namespace StinClasses.MarketCommission
                             PercentFactors.Add(item.name, item.percent);
                         }
                     }
+                    FixCommissions.Add("LastMile", 0);
+                    PercentFactors.Add("LastMile", _tariffLastMile.percent);
+                    _tariffWithBorders.Add(("LastMile", _tariffLastMile.percent, _tariffLastMile.limMin, _tariffLastMile.limMax));
                     break;
             }
         }

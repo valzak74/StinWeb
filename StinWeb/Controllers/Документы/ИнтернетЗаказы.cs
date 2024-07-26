@@ -267,7 +267,7 @@ namespace StinWeb.Controllers
                               join ed in _context.Sc75s on nom.Sp94 equals ed.Id
                               join markUse in _context.Sc14152s on new { nomId = nom.Id, marketId = market.Id } equals new { nomId = markUse.Parentext, marketId = markUse.Sp14147 } into _markUse
                               from markUse in _markUse.DefaultIfEmpty()
-                              where !order.Ismark && (order.Sp13982 != 5) &&
+                              where !order.Ismark && (order.Sp13982 != 5 || order.Sp14254 == 1) &&
                                     (campaignIds != null ? campaignIds.Contains(market.Id) : (market.Code.Trim() == campaignCode)) &&
                                     (order.Sp13990.Date == reportDate) &&
                                     (!string.IsNullOrEmpty(warehouseId) ? markUse.Sp14190.Trim() == warehouseId :
@@ -384,9 +384,9 @@ namespace StinWeb.Controllers
                        КолГрузоМест = gr.Key.КолГрузоМест,
                        КолТовара = gr.Key.КолТовара,
                        СуммаТовара = gr.Key.СуммаТовара,
-                       StatusCode = gr.Min(o => o.reg.statusOrder),
-                       Склады = string.Join(", ", gr.Select(y => y.reg.складName).Distinct()),
-                       МаршрутНаименование = string.Join(", ", gr.Select(y => y.reg.маршрутName).Distinct()),
+                       StatusCode = gr.Min(o => o.reg?.statusOrder) ?? (int)gr.Key.Status,
+                       Склады = string.Join(", ", gr.Select(y => y.reg?.складName).Distinct()),
+                       МаршрутНаименование = string.Join(", ", gr.Select(y => y.reg?.маршрутName).Distinct()),
                    };
         }
         async Task<string> GetSberReestr(string campaignId, TimeSpan limitTime, CancellationToken cancellationToken)

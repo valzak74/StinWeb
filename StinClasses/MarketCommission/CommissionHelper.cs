@@ -7,7 +7,7 @@ namespace StinClasses.MarketCommission
     public abstract class CommissionHelper : IDisposable
     {
         protected readonly decimal _zakupPrice;
-        public virtual IEnumerable<(string name, decimal percent, decimal limMin, decimal limMax)> _tariffWithBorders { get; }
+        public virtual List<(string name, decimal percent, decimal limMin, decimal limMax)> _tariffWithBorders { get; }
         public decimal MarkupFactorPercent = 8m;
         public int Quant = 1;
         public Dictionary<string, decimal> FixCommissions;

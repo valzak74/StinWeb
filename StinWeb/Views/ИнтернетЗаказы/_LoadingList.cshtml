@@ -17,7 +17,7 @@
     })
     .Named("gridLoadingList")
     .AppendCss("table-hover")
-    .RowAttributed(model => new { @class = model.Scanned > 0 ? (model.Scanned == model.КолГрузоМест ? "зеленая" : "желтая") : null })
+    .RowAttributed(model => new { @class = model.Scanned > 0 ? (model.Status == 5 ? "серая" : model.Scanned == model.КолГрузоМест ? "зеленая" : "желтая") : null })
     .Using(GridFilterMode.Header)
     .Empty("Данные не обнаружены",1)
 @*    .Pageable(pager =>
