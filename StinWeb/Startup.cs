@@ -38,7 +38,7 @@ namespace StinWeb
         {
             //services.AddLogging(opt => { opt.AddConsole(); opt.AddDebug(); });
             services.AddMemoryCache();
-            services.AddDbContext<StinDbContext>(opts => opts.UseLoggerFactory(MyLoggerFactory).EnableSensitiveDataLogging().UseSqlServer(Configuration["ConnectionString:DB"], sqlServerOptions => sqlServerOptions.CommandTimeout(300)));
+            services.AddDbContext<StinDbContext>(opts => opts.UseLoggerFactory(MyLoggerFactory).EnableSensitiveDataLogging().UseSqlServer(Configuration["ConnectionString:DB"], sqlServerOptions => sqlServerOptions.CommandTimeout(600)));
             services.AddSession(option => option.IdleTimeout = TimeSpan.FromHours(23));
             services.AddHttpClient<IHttpService, HttpService>()
                 .AddPolicyHandler(GetRetryPolicy());

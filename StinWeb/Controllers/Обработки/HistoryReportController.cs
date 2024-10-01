@@ -84,10 +84,11 @@ namespace StinWeb.Controllers.Обработки
             columnValues.Add("Артикул", sheet.CreateColumnWithWidth(column++, 4200));
             columnValues.Add("Наименование", sheet.CreateColumnWithWidth(column++, 6000));
             columnValues.Add("Количество", sheet.CreateColumnWithWidth(column++, 2900));
-            columnValues.Add("Цена", sheet.CreateColumnWithWidth(column++, 2900));
+            columnValues.Add("Сумма", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("Себестоимость", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("НомерЗаказа", sheet.CreateColumnWithWidth(column++, 4000));
             columnValues.Add("ДатаВозврата", sheet.CreateColumnWithWidth(column++, 3100));
+            columnValues.Add("ВозвратОтмена", sheet.CreateColumnWithWidth(column++, 3100));
             columnValues.Add("Коэффициент", sheet.CreateColumnWithWidth(column++, 2500));
 
             sheet.SetColumnHidden(columnValues["Id"], true);
@@ -106,10 +107,11 @@ namespace StinWeb.Controllers.Обработки
             sheet.SetValue(styleHeader, row, columnValues["Артикул"], "Артикул");
             sheet.SetValue(styleHeader, row, columnValues["Наименование"], "Наименование товара");
             sheet.SetValue(styleHeader, row, columnValues["Количество"], "Кол-во");
-            sheet.SetValue(styleHeader, row, columnValues["Цена"], "Цена продажи");
+            sheet.SetValue(styleHeader, row, columnValues["Сумма"], "Сумма продажи");
             sheet.SetValue(styleHeader, row, columnValues["Себестоимость"], "Себестоимость");
             sheet.SetValue(styleHeader, row, columnValues["НомерЗаказа"], "Номер заказа");
             sheet.SetValue(styleHeader, row, columnValues["ДатаВозврата"], "Дата возврата");
+            sheet.SetValue(styleHeader, row, columnValues["ВозвратОтмена"], "Возврат/Отмена");
             sheet.SetValue(styleHeader, row, columnValues["Коэффициент"], "Коэффициент цп/себ");
 
             string j_startDateTime = startDate == DateTime.MinValue ? "" : startDate.JournalDateTime();
@@ -126,10 +128,55 @@ namespace StinWeb.Controllers.Обработки
                         join превЗаявка in _context.Dh12747s on order.Id equals превЗаявка.Sp14007
                         join j in _context._1sjourns on превЗаявка.Iddoc equals j.Iddoc
 
+                        join счет in (
+                             from crDoc in _context._1scrdocs
+                             join таблЧасть in _context.Dt2457s on crDoc.Childid equals таблЧасть.Iddoc into _таблЧасть
+                             from таблЧасть in _таблЧасть.DefaultIfEmpty()
+                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed } into _j
+                             from j in _j.DefaultIfEmpty()
+                             select new
+                             {
+                                 crDoc,
+                                 таблЧасть,
+                                 j,
+                             }
+                        ) on new { превЗаявка.Iddoc, nom.Id } equals new { Iddoc = счет.crDoc.Parentval.Substring(6, 9), Id = счет.таблЧасть.Sp2446 } into _счет
+                        from счет in _счет.DefaultIfEmpty()
+
+                        join набор in (
+                             from crDoc in _context._1scrdocs
+                             join таблЧасть in _context.Dt11948s on crDoc.Childid equals таблЧасть.Iddoc into _таблЧасть
+                             from таблЧасть in _таблЧасть.DefaultIfEmpty()
+                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed } into _j
+                             from j in _j.DefaultIfEmpty()
+                             select new
+                             {
+                                 crDoc,
+                                 таблЧасть,
+                                 j,
+                             }
+                        ) on new { счет.j.Iddoc, nom.Id } equals new { Iddoc = набор.crDoc.Parentval.Substring(6, 9), Id = набор.таблЧасть.Sp11941 } into _набор
+                        from набор in _набор.DefaultIfEmpty()
+
                         join компПродажа in _context.Dh12542s on order.Id equals компПродажа.Sp14005 into _компПродажа
                         from компПродажа in _компПродажа.DefaultIfEmpty()
                         join j_компПродажа in _context._1sjourns on компПродажа.Iddoc equals j_компПродажа.Iddoc into _j_компПродажа
                         from j_компПродажа in _j_компПродажа.DefaultIfEmpty()
+
+                        join реализация in (
+                             from crDoc in _context._1scrdocs
+                             join таблЧасть in _context.Dt1611s on crDoc.Childid equals таблЧасть.Iddoc into _таблЧасть
+                             from таблЧасть in _таблЧасть.DefaultIfEmpty()
+                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed } into _j
+                             from j in _j.DefaultIfEmpty()
+                             select new
+                             {
+                                 crDoc,
+                                 таблЧасть,
+                                 j,
+                             }
+                        ) on new { компПродажа.Iddoc, nom.Id } equals new { Iddoc = реализация.crDoc.Parentval.Substring(6, 9), Id = реализация.таблЧасть.Sp1599 } into _реализация
+                        from реализация in _реализация.DefaultIfEmpty()
 
                         join отчКомиссионера in (
                             from crDoc in _context._1scrdocs
@@ -152,7 +199,7 @@ namespace StinWeb.Controllers.Обработки
                         ) on new { компПродажа.Iddoc, nom.Id } equals new { Iddoc = отчКомиссионера.crDoc.Parentval.Substring(6, 9), Id = отчКомиссионера.таблЧасть.Sp1764 } into _отчКомиссионера
                         from отчКомиссионера in _отчКомиссионера.DefaultIfEmpty()
 
-                        join возвратКом in (
+                        join возвратКомКомплекс in (
                              from crDoc in _context._1scrdocs
                              join таблЧасть in _context.Dt1656s on crDoc.Childid equals таблЧасть.Iddoc into _таблЧасть
                              from таблЧасть in _таблЧасть.DefaultIfEmpty()
@@ -164,8 +211,23 @@ namespace StinWeb.Controllers.Обработки
                                  таблЧасть,
                                  j,
                              }
-                        ) on new { компПродажа.Iddoc, nom.Id } equals new { Iddoc = возвратКом.crDoc.Parentval.Substring(6, 9), Id = возвратКом.таблЧасть.Sp1644 } into _возвратКом
-                        from возвратКом in _возвратКом.DefaultIfEmpty()
+                        ) on new { компПродажа.Iddoc, nom.Id } equals new { Iddoc = возвратКомКомплекс.crDoc.Parentval.Substring(6, 9), Id = возвратКомКомплекс.таблЧасть.Sp1644 } into _возвратКомКомплекс
+                        from возвратКомКомплекс in _возвратКомКомплекс.DefaultIfEmpty()
+
+                        join возвратКомРеализация in (
+                             from crDoc in _context._1scrdocs
+                             join таблЧасть in _context.Dt1656s on crDoc.Childid equals таблЧасть.Iddoc into _таблЧасть
+                             from таблЧасть in _таблЧасть.DefaultIfEmpty()
+                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed } into _j
+                             from j in _j.DefaultIfEmpty()
+                             select new
+                             {
+                                 crDoc,
+                                 таблЧасть,
+                                 j,
+                             }
+                        ) on new { реализация.j.Iddoc, nom.Id } equals new { Iddoc = возвратКомРеализация.crDoc.Parentval.Substring(6, 9), Id = возвратКомРеализация.таблЧасть.Sp1644 } into _возвратКомРеализация
+                        from возвратКомРеализация in _возвратКомРеализация.DefaultIfEmpty()
 
                         join возвратКуп in (
                              from crDoc in _context._1scrdocs
@@ -181,6 +243,36 @@ namespace StinWeb.Controllers.Обработки
                              }
                         ) on new { отчКомиссионера.таблЧасть.Iddoc, nom.Id } equals new { Iddoc = возвратКуп.crDoc.Parentval.Substring(6, 9), Id = возвратКуп.таблЧасть.Sp1644 } into _возвратКуп
                         from возвратКуп in _возвратКуп.DefaultIfEmpty()
+
+                        join отменаЗаявки in (
+                             from crDoc in _context._1scrdocs
+                             join таблЧасть in _context.Dt6313s on crDoc.Childid equals таблЧасть.Iddoc into _таблЧасть
+                             from таблЧасть in _таблЧасть.DefaultIfEmpty()
+                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed } into _j
+                             from j in _j.DefaultIfEmpty()
+                             select new
+                             {
+                                 crDoc,
+                                 таблЧасть,
+                                 j,
+                             }
+                        ) on счет.j.Iddoc equals отменаЗаявки.crDoc.Parentval.Substring(6, 9) into _отменаЗаявки
+                        from отменаЗаявки in _отменаЗаявки.DefaultIfEmpty()
+
+                        join отменаНабора in (
+                             from crDoc in _context._1scrdocs
+                             join таблЧасть in _context.Dh11964s on crDoc.Childid equals таблЧасть.Iddoc into _таблЧасть
+                             from таблЧасть in _таблЧасть.DefaultIfEmpty()
+                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed } into _j
+                             from j in _j.DefaultIfEmpty()
+                             select new
+                             {
+                                 crDoc,
+                                 таблЧасть,
+                                 j,
+                             }
+                        ) on набор.j.Iddoc equals отменаНабора.crDoc.Parentval.Substring(6, 9) into _отменаНабора
+                        from отменаНабора in _отменаНабора.DefaultIfEmpty()
 
                         where !order.Ismark && j.Closed == 1 &&
                             (j_компПродажа != null ? j_компПродажа.Closed == 1 : true) &&
@@ -202,13 +294,17 @@ namespace StinWeb.Controllers.Обработки
                             Артикул = nom.Sp85.Trim(),
                             Товар = nom.Descr.Trim(),
                             Количество = item.Sp14023,
-                            Цена = item.Sp14024,
-                            Себестоимость = отчКомиссионера.регПартииНаличие != null ? Math.Round(отчКомиссионера.регПартииНаличие.Sp421 / (item.Sp14023 == 0 ? 1 : item.Sp14023), 2, MidpointRounding.AwayFromZero) : 0,
+                            Сумма = Math.Round(item.Sp14024 * item.Sp14023, 2, MidpointRounding.AwayFromZero),
+                            Себестоимость = отчКомиссионера.регПартииНаличие != null ? Math.Round(отчКомиссионера.регПартииНаличие.Sp421, 2, MidpointRounding.AwayFromZero) : 0,
                             НомерЗаказа = order.Code.Trim(),
-                            ДатаВозврата = возвратКом.j != null
-                                ? Common.DateTimeIddoc(возвратКом.j.DateTimeIddoc).ToString("dd-MM-yy")
-                                : возвратКуп.j != null ? Common.DateTimeIddoc(возвратКуп.j.DateTimeIddoc).ToString("dd-MM-yy")
+                            ДатаВозврата = возвратКуп.j != null ? Common.DateTimeIddoc(возвратКуп.j.DateTimeIddoc).ToString("dd-MM-yy") : "",
+                            ДатаОтмены = 
+                                  возвратКомКомплекс.j != null ? Common.DateTimeIddoc(возвратКомКомплекс.j.DateTimeIddoc).ToString("dd-MM-yy")
+                                : возвратКомРеализация.j != null ? Common.DateTimeIddoc(возвратКомРеализация.j.DateTimeIddoc).ToString("dd-MM-yy")
+                                : отменаЗаявки.j != null ? Common.DateTimeIddoc(отменаЗаявки.j.DateTimeIddoc).ToString("dd-MM-yy")
+                                : отменаНабора.j != null ? Common.DateTimeIddoc(отменаНабора.j.DateTimeIddoc).ToString("dd-MM-yy")
                                 : "",
+
                             //Коэффициент = item.Sp14024 / 0,
                         };
             var nativeData = await query.ToListAsync(cancellationToken);
@@ -229,11 +325,12 @@ namespace StinWeb.Controllers.Обработки
                 sheet.SetValue(styleValue, row, columnValues["Артикул"], item.Артикул);
                 sheet.SetValue(styleValue, row, columnValues["Наименование"], item.Товар);
                 sheet.SetValue(styleValueNum0tail, row, columnValues["Количество"], item.Количество);
-                sheet.SetValue(styleValueMoney, row, columnValues["Цена"], item.Цена);
+                sheet.SetValue(styleValueMoney, row, columnValues["Сумма"], item.Сумма);
                 sheet.SetValue(styleValueMoney, row, columnValues["Себестоимость"], item.Себестоимость);
                 sheet.SetValue(styleValue, row, columnValues["НомерЗаказа"], item.НомерЗаказа);
                 sheet.SetValue(styleValue, row, columnValues["ДатаВозврата"], item.ДатаВозврата);
-                sheet.SetValue(styleValueNum, row, columnValues["Коэффициент"], item.Себестоимость == 0 ? 0 : Math.Round(item.Цена / item.Себестоимость, 3, MidpointRounding.AwayFromZero));
+                sheet.SetValue(styleValue, row, columnValues["ВозвратОтмена"], item.ДатаОтмены);
+                sheet.SetValue(styleValueNum, row, columnValues["Коэффициент"], item.Себестоимость == 0 ? 0 : Math.Round(item.Сумма / item.Себестоимость, 3, MidpointRounding.AwayFromZero));
             }
 
             formula.EvaluateAll();

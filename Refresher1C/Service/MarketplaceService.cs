@@ -4210,9 +4210,10 @@ namespace Refresher1C.Service
             if (activeOrders?.Count > 0)
             {
                 var orders = await GetOzonDetailOrders(_firmProxy[firmaId], clientId, authToken, marketplaceId, OzonClasses.OrderStatus.delivered, stoppingToken);
-                var checkedNumbers = orders.Select(x => x.MarketplaceId);
+                //var checkedNumbers = orders.Select(x => x.MarketplaceId);
                 foreach (var order in orders.Where(x => activeOrders.Contains(x.MarketplaceId)))
-                    await _docService.OrderFromTransferDeliveried(order);
+                    if ((order.InternalStatus == 14) || (order.InternalStatus == 16))
+                        await _docService.OrderFromTransferDeliveried(order);
             }
             //_logger.LogError($"GetOzonDeliveredOrders \"{marketplaceId}\" ended");
         }
