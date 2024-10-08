@@ -218,8 +218,11 @@ namespace StinClasses.Документы
                     j.Rf11973 = await _регистрНабор.ВыполнитьДвижениеAsync(doc.Общие.IdDoc, doc.Общие.ДатаДок, КоличествоДвижений, true,
                         r.ФирмаId, r.СкладId, r.ПодСкладId, r.ДоговорId, r.НаборId, r.НоменклатураId, r.Количество);
                     КоличествоДвижений++;
-                    j.Rf405 = await _регистрОстаткиТМЦ.ВыполнитьДвижениеAsync(doc.Общие.IdDoc, doc.Общие.ДатаДок, КоличествоДвижений, false,
-                        r.ФирмаId, r.НоменклатураId, r.СкладId, r.ПодСкладId, 0, r.Количество, 0);
+                    j.Rf405 = doc.Order != null
+                        ? await _регистрОстаткиТМЦ.ВыполнитьДвижениеAsync(doc.Общие.IdDoc, doc.Общие.ДатаДок, КоличествоДвижений, false,
+                            r.ФирмаId, r.НоменклатураId, Common.SkladNekodition, Common.SubSkladOtmenaMarketplace, 0, r.Количество, 0)
+                        : await _регистрОстаткиТМЦ.ВыполнитьДвижениеAsync(doc.Общие.IdDoc, doc.Общие.ДатаДок, КоличествоДвижений, false,
+                            r.ФирмаId, r.НоменклатураId, r.СкладId, r.ПодСкладId, 0, r.Количество, 0);
                     if (doc.Order != null)
                     {
                         var marketОстаток = marketplaceOrders_Остатки.Where(x => x.НоменклатураId == r.НоменклатураId).Sum(x => x.Количество);

@@ -39,6 +39,9 @@ namespace StinClasses
         public static readonly string SkladCenter = "     1   "; //ЦентральныйСклад
         public static readonly string SkladOtstoy = "     6S  "; //Отстой
         public static readonly string SkladDomSad = "     9S  "; //Дом&Сад (Заводское)
+        public static readonly string SkladNekodition = "     ND  "; //Некондиция
+
+        public static readonly string SubSkladOtmenaMarketplace = "  38WJD  "; //Отмены маркетплейс
 
         public static readonly string СтавкаНПбезНалога = "     1   ";
 
