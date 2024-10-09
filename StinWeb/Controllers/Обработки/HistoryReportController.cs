@@ -130,10 +130,8 @@ namespace StinWeb.Controllers.Обработки
 
                         join счет in (
                              from crDoc in _context._1scrdocs
-                             join таблЧасть in _context.Dt2457s on crDoc.Childid equals таблЧасть.Iddoc into _таблЧасть
-                             from таблЧасть in _таблЧасть.DefaultIfEmpty()
-                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed } into _j
-                             from j in _j.DefaultIfEmpty()
+                             join таблЧасть in _context.Dt2457s on crDoc.Childid equals таблЧасть.Iddoc
+                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed }
                              select new
                              {
                                  crDoc,
@@ -145,10 +143,8 @@ namespace StinWeb.Controllers.Обработки
 
                         join набор in (
                              from crDoc in _context._1scrdocs
-                             join таблЧасть in _context.Dt11948s on crDoc.Childid equals таблЧасть.Iddoc into _таблЧасть
-                             from таблЧасть in _таблЧасть.DefaultIfEmpty()
-                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed } into _j
-                             from j in _j.DefaultIfEmpty()
+                             join таблЧасть in _context.Dt11948s on crDoc.Childid equals таблЧасть.Iddoc
+                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed }
                              select new
                              {
                                  crDoc,
@@ -165,10 +161,8 @@ namespace StinWeb.Controllers.Обработки
 
                         join реализация in (
                              from crDoc in _context._1scrdocs
-                             join таблЧасть in _context.Dt1611s on crDoc.Childid equals таблЧасть.Iddoc into _таблЧасть
-                             from таблЧасть in _таблЧасть.DefaultIfEmpty()
-                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed } into _j
-                             from j in _j.DefaultIfEmpty()
+                             join таблЧасть in _context.Dt1611s on crDoc.Childid equals таблЧасть.Iddoc
+                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed } 
                              select new
                              {
                                  crDoc,
@@ -180,14 +174,10 @@ namespace StinWeb.Controllers.Обработки
 
                         join отчКомиссионера in (
                             from crDoc in _context._1scrdocs
-                            join таблЧасть in _context.Dt1774s on crDoc.Childid equals таблЧасть.Iddoc into _таблЧасть
-                            from таблЧасть in _таблЧасть.DefaultIfEmpty()
-                            join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed } into _j
-                            from j in _j.DefaultIfEmpty()
-                            join пользователи in _context.Sc30s on j.Sp74 equals пользователи.Id into _пользователи
-                            from пользователи in _пользователи.DefaultIfEmpty()
-                            join регПартииНаличие in _context.Ra328s on new { таблЧасть.Iddoc, nomId = таблЧасть.Sp1764 } equals new { регПартииНаличие.Iddoc, nomId = регПартииНаличие.Sp331 } into _регПартииНаличие
-                            from регПартииНаличие in _регПартииНаличие.DefaultIfEmpty()
+                            join таблЧасть in _context.Dt1774s on crDoc.Childid equals таблЧасть.Iddoc
+                            join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed }
+                            join пользователи in _context.Sc30s on j.Sp74 equals пользователи.Id 
+                            join регПартииНаличие in _context.Ra328s on new { таблЧасть.Iddoc, nomId = таблЧасть.Sp1764 } equals new { регПартииНаличие.Iddoc, nomId = регПартииНаличие.Sp331 }
                             select new
                             {
                                 crDoc,
@@ -201,10 +191,8 @@ namespace StinWeb.Controllers.Обработки
 
                         join возвратКомКомплекс in (
                              from crDoc in _context._1scrdocs
-                             join таблЧасть in _context.Dt1656s on crDoc.Childid equals таблЧасть.Iddoc into _таблЧасть
-                             from таблЧасть in _таблЧасть.DefaultIfEmpty()
-                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed } into _j
-                             from j in _j.DefaultIfEmpty()
+                             join таблЧасть in _context.Dt1656s on crDoc.Childid equals таблЧасть.Iddoc
+                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed }
                              select new
                              {
                                  crDoc,
@@ -216,10 +204,8 @@ namespace StinWeb.Controllers.Обработки
 
                         join возвратКомРеализация in (
                              from crDoc in _context._1scrdocs
-                             join таблЧасть in _context.Dt1656s on crDoc.Childid equals таблЧасть.Iddoc into _таблЧасть
-                             from таблЧасть in _таблЧасть.DefaultIfEmpty()
-                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed } into _j
-                             from j in _j.DefaultIfEmpty()
+                             join таблЧасть in _context.Dt1656s on crDoc.Childid equals таблЧасть.Iddoc
+                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed }
                              select new
                              {
                                  crDoc,
@@ -231,10 +217,8 @@ namespace StinWeb.Controllers.Обработки
 
                         join возвратКуп in (
                              from crDoc in _context._1scrdocs
-                             join таблЧасть in _context.Dt1656s on crDoc.Childid equals таблЧасть.Iddoc into _таблЧасть
-                             from таблЧасть in _таблЧасть.DefaultIfEmpty()
-                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed } into _j
-                             from j in _j.DefaultIfEmpty()
+                             join таблЧасть in _context.Dt1656s on crDoc.Childid equals таблЧасть.Iddoc
+                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed }
                              select new
                              {
                                  crDoc,
@@ -246,10 +230,8 @@ namespace StinWeb.Controllers.Обработки
 
                         join отменаЗаявки in (
                              from crDoc in _context._1scrdocs
-                             join таблЧасть in _context.Dt6313s on crDoc.Childid equals таблЧасть.Iddoc into _таблЧасть
-                             from таблЧасть in _таблЧасть.DefaultIfEmpty()
-                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed } into _j
-                             from j in _j.DefaultIfEmpty()
+                             join таблЧасть in _context.Dt6313s on crDoc.Childid equals таблЧасть.Iddoc 
+                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed }
                              select new
                              {
                                  crDoc,
@@ -261,10 +243,8 @@ namespace StinWeb.Controllers.Обработки
 
                         join отменаНабора in (
                              from crDoc in _context._1scrdocs
-                             join таблЧасть in _context.Dh11964s on crDoc.Childid equals таблЧасть.Iddoc into _таблЧасть
-                             from таблЧасть in _таблЧасть.DefaultIfEmpty()
-                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed } into _j
-                             from j in _j.DefaultIfEmpty()
+                             join таблЧасть in _context.Dh11964s on crDoc.Childid equals таблЧасть.Iddoc
+                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed }
                              select new
                              {
                                  crDoc,
