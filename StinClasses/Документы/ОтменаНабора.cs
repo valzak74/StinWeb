@@ -17,6 +17,7 @@ namespace StinClasses.Документы
         public Договор Договор { get; set; }
         public Маршрут Маршрут { get; set; }
         public Order Order { get; set; }
+        public bool Завершен { get; set; }
         public List<Номенклатура> НоменклатураОснования { get; set; }
         public ФормаОтменаНабора()
         {
@@ -90,6 +91,7 @@ namespace StinClasses.Документы
                 doc.Order = await ПолучитьOrderНабора(doc.Общие.ДокОснование.IdDoc);
                 doc.Договор = await ПолучитьДоговорНабора(doc.Общие.ДокОснование.IdDoc);
                 doc.Склад = await ПолучитьСкладНабора(doc.Общие.ДокОснование.IdDoc);
+                doc.Завершен = await ПолучитьЗавершенНабора(doc.Общие.ДокОснование.IdDoc);
 
                 var номенклатураОснования = await _context.Dt11948s
                     .Where(x => x.Iddoc == doc.Общие.ДокОснование.IdDoc)
@@ -142,6 +144,7 @@ namespace StinClasses.Документы
             doc.Договор = докОснование.Договор;
             doc.Маршрут = докОснование.Маршрут;
             doc.Order = докОснование.Order;
+            doc.Завершен = докОснование.Завершен;
             doc.НоменклатураОснования = докОснование.ТабличнаяЧасть.Select(x => x.Номенклатура).ToList();
 
             return doc;
@@ -218,7 +221,7 @@ namespace StinClasses.Документы
                     j.Rf11973 = await _регистрНабор.ВыполнитьДвижениеAsync(doc.Общие.IdDoc, doc.Общие.ДатаДок, КоличествоДвижений, true,
                         r.ФирмаId, r.СкладId, r.ПодСкладId, r.ДоговорId, r.НаборId, r.НоменклатураId, r.Количество);
                     КоличествоДвижений++;
-                    j.Rf405 = doc.Order != null
+                    j.Rf405 = doc.Order != null && doc.Завершен
                         ? await _регистрОстаткиТМЦ.ВыполнитьДвижениеAsync(doc.Общие.IdDoc, doc.Общие.ДатаДок, КоличествоДвижений, false,
                             r.ФирмаId, r.НоменклатураId, Common.SkladNekodition, Common.SubSkladOtmenaMarketplace, 0, r.Количество, 0)
                         : await _регистрОстаткиТМЦ.ВыполнитьДвижениеAsync(doc.Общие.IdDoc, doc.Общие.ДатаДок, КоличествоДвижений, false,

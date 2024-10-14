@@ -525,6 +525,11 @@ namespace StinClasses.Документы
                 return await _order.ПолучитьOrderWithItems(orderId);
             return null;
         }
+        public async Task<bool> ПолучитьЗавершенНабора(string idDoc)
+        {
+            var completed = await _context.Dh11948s.Where(x => x.Iddoc == idDoc).Select(x => x.Sp11938).SingleOrDefaultAsync();
+            return completed == 1;
+        }
         public async Task<ФормаОплатаЧерезЮКасса> GetФормаОплатаЧерезЮКассаById(string idDoc)
         {
             var d = await (from dh in _context.Dh13849s
