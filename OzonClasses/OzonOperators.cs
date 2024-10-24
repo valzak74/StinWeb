@@ -637,7 +637,7 @@ namespace OzonClasses
             {
                 var request = new ActCheckGetRequest { Id = taskId };
                 ActStatus status = ActStatus.NotFound;
-                int tryCount = 5;
+                int tryCount = 10;
                 TimeSpan sleepPeriod = TimeSpan.FromSeconds(1);
                 while (true)
                 {

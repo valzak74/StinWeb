@@ -176,7 +176,7 @@ namespace StinWeb.Controllers.Обработки
                             from crDoc in _context._1scrdocs
                             join таблЧасть in _context.Dt1774s on crDoc.Childid equals таблЧасть.Iddoc
                             join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed }
-                            join пользователи in _context.Sc30s on j.Sp74 equals пользователи.Id 
+                            join пользователи in _context.Sc30s on j.Sp74 equals пользователи.Id
                             join регПартииНаличие in _context.Ra328s on new { таблЧасть.Iddoc, nomId = таблЧасть.Sp1764 } equals new { регПартииНаличие.Iddoc, nomId = регПартииНаличие.Sp331 }
                             select new
                             {
@@ -188,6 +188,23 @@ namespace StinWeb.Controllers.Обработки
                             }
                         ) on new { компПродажа.Iddoc, nom.Id } equals new { Iddoc = отчКомиссионера.crDoc.Parentval.Substring(6, 9), Id = отчКомиссионера.таблЧасть.Sp1764 } into _отчКомиссионера
                         from отчКомиссионера in _отчКомиссионера.DefaultIfEmpty()
+
+                        join отчКомиссионераРучной in (
+                            from crDoc in _context._1scrdocs
+                            join таблЧасть in _context.Dt1774s on crDoc.Childid equals таблЧасть.Iddoc
+                            join j in _context._1sjourns on new { таблЧасть.Iddoc, DateTimeIdDoc = crDoc.ChildDateTimeIddoc, Closed = (byte)1 } equals new { j.Iddoc, DateTimeIdDoc = j.DateTimeIddoc, j.Closed }
+                            join пользователи in _context.Sc30s on j.Sp74 equals пользователи.Id 
+                            join регПартииНаличие in _context.Ra328s on new { таблЧасть.Iddoc, nomId = таблЧасть.Sp1764 } equals new { регПартииНаличие.Iddoc, nomId = регПартииНаличие.Sp331 }
+                            select new
+                            {
+                                crDoc,
+                                таблЧасть,
+                                j,
+                                пользователи,
+                                регПартииНаличие,
+                            }
+                        ) on new { реализация.j.Iddoc, nom.Id } equals new { Iddoc = отчКомиссионераРучной.crDoc.Parentval.Substring(6, 9), Id = отчКомиссионераРучной.таблЧасть.Sp1764 } into _отчКомиссионераРучной
+                        from отчКомиссионераРучной in _отчКомиссионераРучной.DefaultIfEmpty()
 
                         join возвратКомКомплекс in (
                              from crDoc in _context._1scrdocs
@@ -260,22 +277,27 @@ namespace StinWeb.Controllers.Обработки
                             (string.IsNullOrEmpty(j_endDateTime) ? true : j.DateTimeIddoc.CompareTo(j_endDateTime) <= 0) &&
                             (string.IsNullOrEmpty(marketId) ? true : market.Id == marketId)
                         orderby j.DateTimeIddoc
+                        let отчетКомиссионера = отчКомиссионера.j != null
+                            ? отчКомиссионера
+                            : отчКомиссионераРучной.j != null
+                                ? отчКомиссионераРучной
+                                : null
                         select new
                         {
                             Id = item.Id,
                             ПредвЗаявкаДатаДок = Common.DateTimeIddoc(j.DateTimeIddoc).ToString("dd-MM-yy"),
-                            Проведен = отчКомиссионера.j != null ? "Проведен" : "",
+                            Проведен = отчетКомиссионера.j != null ? "Проведен" : "",
                             КомпПродажаДатаДок = j_компПродажа != null ? Common.DateTimeIddoc(j_компПродажа.DateTimeIddoc).ToString("dd-MM-yy") : "",
-                            ОтчКомиссионераДатаДок = отчКомиссионера.j != null ? Common.DateTimeIddoc(отчКомиссионера.j.DateTimeIddoc).ToString("dd-MM-yy") : "",
-                            ОтчКомиссионераВремяДок = отчКомиссионера.j != null ? Common.DateTimeIddoc(отчКомиссионера.j.DateTimeIddoc).ToString("HH:mm:ss") : "",
-                            ОтчКомиссионераНомер = отчКомиссионера.j != null ? отчКомиссионера.j.Docno : "",
-                            ОтчКомиссионераАвтор = отчКомиссионера.пользователи != null ? отчКомиссионера.пользователи.Descr.Trim() : "",
+                            ОтчКомиссионераДатаДок = отчетКомиссионера.j != null ? Common.DateTimeIddoc(отчетКомиссионера.j.DateTimeIddoc).ToString("dd-MM-yy") : "",
+                            ОтчКомиссионераВремяДок = отчетКомиссионера.j != null ? Common.DateTimeIddoc(отчетКомиссионера.j.DateTimeIddoc).ToString("HH:mm:ss") : "",
+                            ОтчКомиссионераНомер = отчетКомиссионера.j != null ? отчетКомиссионера.j.Docno : "",
+                            ОтчКомиссионераАвтор = отчетКомиссионера.пользователи != null ? отчетКомиссионера.пользователи.Descr.Trim() : "",
 
                             Артикул = nom.Sp85.Trim(),
                             Товар = nom.Descr.Trim(),
                             Количество = item.Sp14023,
                             Сумма = Math.Round(item.Sp14024 * item.Sp14023, 2, MidpointRounding.AwayFromZero),
-                            Себестоимость = отчКомиссионера.регПартииНаличие != null ? Math.Round(отчКомиссионера.регПартииНаличие.Sp421, 2, MidpointRounding.AwayFromZero) : 0,
+                            Себестоимость = отчетКомиссионера.регПартииНаличие != null ? Math.Round(отчетКомиссионера.регПартииНаличие.Sp421, 2, MidpointRounding.AwayFromZero) : 0,
                             НомерЗаказа = order.Code.Trim(),
                             ДатаВозврата = возвратКуп.j != null ? Common.DateTimeIddoc(возвратКуп.j.DateTimeIddoc).ToString("dd-MM-yy") : "",
                             ДатаОтмены = 
@@ -284,8 +306,6 @@ namespace StinWeb.Controllers.Обработки
                                 : отменаЗаявки.j != null ? Common.DateTimeIddoc(отменаЗаявки.j.DateTimeIddoc).ToString("dd-MM-yy")
                                 : отменаНабора.j != null ? Common.DateTimeIddoc(отменаНабора.j.DateTimeIddoc).ToString("dd-MM-yy")
                                 : "",
-
-                            //Коэффициент = item.Sp14024 / 0,
                         };
             var nativeData = await query.ToListAsync(cancellationToken);
 

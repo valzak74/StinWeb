@@ -19,6 +19,7 @@ using System.Xml.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using StinClasses.MarketCommission;
 using System.Globalization;
+using OzonClasses;
 
 namespace Refresher1C.Service
 {
@@ -4245,6 +4246,7 @@ namespace Refresher1C.Service
                                             where !market.Ismark
                                             //&& market.Code.Trim() == "22498162235000" // "23503334320000" //
                                             //&& market.Code.Trim() == "22162396"
+                                            //&& market.Code.Trim() == "652932"
                                             //&& market.Sp14155.Trim().ToUpper() == "OZON" 
                                             //&& market.Sp14155.Trim().ToUpper() == "WILDBERRIES"
                                             //&& market.Sp14155.Trim().ToUpper() == "SBER"
@@ -4394,14 +4396,6 @@ namespace Refresher1C.Service
         }
         private async Task UpdateTariffsWildberries(string marketplaceId, CancellationToken cancellationToken)
         {
-            decimal baseLogistics = 55;
-            decimal addPerLiter = 5.5m;
-            decimal includeLiters = 5;
-            decimal minHard = 1000;
-            decimal maxSize = 1.2m;
-            decimal maxSumSize = 2;
-            decimal maxWeight = 25;
-
             int requestLimit = 500;
             var query = from markUse in _context.Sc14152s
                         join nom in _context.Sc84s on markUse.Parentext equals nom.Id
@@ -4413,15 +4407,17 @@ namespace Refresher1C.Service
                           (markUse.Sp14158 == 1) //Есть в каталоге 
                           && !string.IsNullOrEmpty(nomParent.Sp95)
                           && nomParent.Sp95.Contains("WB")
+                          //&& nom.Code == "D00041321"
                         orderby nom.Code
                         select new
                         {
                             Id = markUse.Id,
                             ParentComment = nomParent.Sp95,
-                            WeightBrutto = ed.Sp14056,
-                            Height = ed.Sp14035,
-                            Width = ed.Sp14036,
-                            Lenght = ed.Sp14037,
+                            WeightBrutto = ed.Sp14056, //кг
+                            Weight = ed.Sp14056, //кг
+                            Width = ed.Sp14036 * 100, //cм
+                            Length = ed.Sp14037 * 100, //cм
+                            Height = ed.Sp14035 * 100, //cм
                             ЦенаЗакуп = vzTovar != null ? vzTovar.Zakup ?? 0 : 0,
                             Квант = nom.Sp14188 == 0 ? 1 : nom.Sp14188,
                         };
@@ -4442,20 +4438,13 @@ namespace Refresher1C.Service
                             .Where(y => y.StartsWith("WB", StringComparison.InvariantCultureIgnoreCase))
                             .Select(z => { decimal.TryParse(z.Substring(2).Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out decimal p); return p; })
                             .FirstOrDefault();
-                        decimal КоэфМинНаценки = 8; 
-                        var Порог = (dataItem.ЦенаЗакуп * dataItem.Квант) * (100 + КоэфМинНаценки) / 100;
-                        var minPrice = Порог / (1 - categoryPercent / 100);
+                        var minPrice = 0m;
+                        using (var helper = new CommissionHelperWB(dataItem.ЦенаЗакуп, (int)dataItem.Квант, categoryPercent, dataItem.Length, dataItem.Width, dataItem.Height, dataItem.WeightBrutto))
+                        {
+                            minPrice = helper.MinPrice();
+                        }
 
-                        decimal liters = dataItem.Lenght * dataItem.Width * dataItem.Height * 1000;
-                        decimal oversizeLiters = Math.Max(liters - includeLiters, 0);
-                        bool isHard = (dataItem.WeightBrutto > maxWeight)
-                            || ((dataItem.Lenght > maxSize) || (dataItem.Width > maxSize) || (dataItem.Height > maxSize))
-                            || (dataItem.Lenght + dataItem.Width + dataItem.Height > maxSumSize);
-                        decimal sumLogistics = baseLogistics + (oversizeLiters * addPerLiter);
-                        if (isHard)
-                            sumLogistics = Math.Max(sumLogistics, minHard);
-                        minPrice += sumLogistics;
-                        decimal updateMinPrice = decimal.Round(minPrice / dataItem.Квант, 2, MidpointRounding.AwayFromZero);
+                        decimal updateMinPrice = decimal.Round(minPrice, 2, MidpointRounding.AwayFromZero);
                         if (updateMinPrice != entity.Sp14198)
                         {
                             entity.Sp14198 = updateMinPrice;
