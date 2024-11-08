@@ -712,10 +712,10 @@ namespace StinWeb.Controllers
                 else if (data.тип == "WILDBERRIES")
                 {
                     DateTime departureDate = limitTime <= DateTime.Now.TimeOfDay ? DateTime.Today.AddDays(1) : DateTime.Today;
-                    if (departureDate.DayOfWeek == DayOfWeek.Saturday)
-                        departureDate = departureDate.AddDays(2);
-                    if (departureDate.DayOfWeek == DayOfWeek.Sunday)
-                        departureDate = departureDate.AddDays(1);
+                    //if (departureDate.DayOfWeek == DayOfWeek.Saturday)
+                    //    departureDate = departureDate.AddDays(2);
+                    //if (departureDate.DayOfWeek == DayOfWeek.Sunday)
+                    //    departureDate = departureDate.AddDays(1);
                     var deliveryServiceNames = await (from o in _context.Sc13994s
                                                       join m in _context.Sc14042s on o.Sp14038 equals m.Id
                                                       where !o.Ismark && (m.Code.Trim() == campaignId) &&

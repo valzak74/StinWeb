@@ -111,7 +111,7 @@
                                 Отчеты
                             </a>
                             <ul class="dropdown-menu">
-                                @if ((new[] { "Любой", "Продажи", "Закупки", "Бухгалтерия" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
+                                @if ((new[] { "Любой", "Продажи", "Закупки", "ИнтернетЗаказы", "Бухгалтерия" }).Contains(User.FindFirstValue("Отдел"), StringComparer.OrdinalIgnoreCase))
                                 {
                                     <li><a class="dropdown-item" asp-controller="ДолгиКонтрагентов" asp-action="Index">Долги контрагентов</a></li>
                                 }

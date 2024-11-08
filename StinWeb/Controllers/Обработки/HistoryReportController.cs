@@ -87,6 +87,7 @@ namespace StinWeb.Controllers.Обработки
             columnValues.Add("Сумма", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("Себестоимость", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("НомерЗаказа", sheet.CreateColumnWithWidth(column++, 4000));
+            columnValues.Add("Стикер", sheet.CreateColumnWithWidth(column++, 4000));
             columnValues.Add("ДатаВозврата", sheet.CreateColumnWithWidth(column++, 3100));
             columnValues.Add("ВозвратОтмена", sheet.CreateColumnWithWidth(column++, 3100));
             columnValues.Add("Коэффициент", sheet.CreateColumnWithWidth(column++, 2500));
@@ -110,6 +111,7 @@ namespace StinWeb.Controllers.Обработки
             sheet.SetValue(styleHeader, row, columnValues["Сумма"], "Сумма продажи");
             sheet.SetValue(styleHeader, row, columnValues["Себестоимость"], "Себестоимость");
             sheet.SetValue(styleHeader, row, columnValues["НомерЗаказа"], "Номер заказа");
+            sheet.SetValue(styleHeader, row, columnValues["Стикер"], "Стикер заказа");
             sheet.SetValue(styleHeader, row, columnValues["ДатаВозврата"], "Дата возврата");
             sheet.SetValue(styleHeader, row, columnValues["ВозвратОтмена"], "Возврат/Отмена");
             sheet.SetValue(styleHeader, row, columnValues["Коэффициент"], "Коэффициент цп/себ");
@@ -299,6 +301,7 @@ namespace StinWeb.Controllers.Обработки
                             Сумма = Math.Round(item.Sp14024 * item.Sp14023, 2, MidpointRounding.AwayFromZero),
                             Себестоимость = отчетКомиссионера.регПартииНаличие != null ? Math.Round(отчетКомиссионера.регПартииНаличие.Sp421, 2, MidpointRounding.AwayFromZero) : 0,
                             НомерЗаказа = order.Code.Trim(),
+                            СтикерЗаказа = market.Sp14155.ToUpper().Trim() == "WILDBERRIES" ? order.Sp13986.ToString() + order.Sp13991.ToString() : "",
                             ДатаВозврата = возвратКуп.j != null ? Common.DateTimeIddoc(возвратКуп.j.DateTimeIddoc).ToString("dd-MM-yy") : "",
                             ДатаОтмены = 
                                   возвратКомКомплекс.j != null ? Common.DateTimeIddoc(возвратКомКомплекс.j.DateTimeIddoc).ToString("dd-MM-yy")
@@ -328,6 +331,7 @@ namespace StinWeb.Controllers.Обработки
                 sheet.SetValue(styleValueMoney, row, columnValues["Сумма"], item.Сумма);
                 sheet.SetValue(styleValueMoney, row, columnValues["Себестоимость"], item.Себестоимость);
                 sheet.SetValue(styleValue, row, columnValues["НомерЗаказа"], item.НомерЗаказа);
+                sheet.SetValue(styleValue, row, columnValues["Стикер"], item.СтикерЗаказа);
                 sheet.SetValue(styleValue, row, columnValues["ДатаВозврата"], item.ДатаВозврата);
                 sheet.SetValue(styleValue, row, columnValues["ВозвратОтмена"], item.ДатаОтмены);
                 sheet.SetValue(styleValueNum, row, columnValues["Коэффициент"], item.Себестоимость == 0 ? 0 : Math.Round(item.Сумма / item.Себестоимость, 3, MidpointRounding.AwayFromZero));

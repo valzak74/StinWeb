@@ -3361,7 +3361,7 @@ namespace Refresher1C.Service
         {
             bool periodOpened = !_заявкаПокупателя.NeedToOpenPeriod();
             var activeOrders = _context.Sc13994s
-                .Where(x => (x.Sp13982 > 0) && (x.Sp13982 < 15) && (x.Sp13982 != 5) && (x.Sp13982 != 6) && 
+                .Where(x => (x.Sp13982 < 0 || (x.Sp13982 > 0 && x.Sp13982 < 15)) && (x.Sp13982 != 5) && (x.Sp13982 != 6) && 
                     ((StinDeliveryPartnerType)x.Sp13985 == StinDeliveryPartnerType.WILDBERRIES) &&
                     (x.Sp14038 == marketplaceId))
                 .Select(x => Convert.ToInt64(x.Code.Trim()))
