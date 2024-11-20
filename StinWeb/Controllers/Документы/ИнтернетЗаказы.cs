@@ -719,7 +719,8 @@ namespace StinWeb.Controllers
                     var deliveryServiceNames = await (from o in _context.Sc13994s
                                                       join m in _context.Sc14042s on o.Sp14038 equals m.Id
                                                       where !o.Ismark && (m.Code.Trim() == campaignId) &&
-                                                            (o.Sp13990.Date == departureDate)
+                                                            (o.Sp13990.Date == departureDate) &&
+                                                            o.Sp13987.Trim() != ""
                                                       select o.Sp13987.Trim())
                                                     .Distinct()
                                                     .ToListAsync(cancellationToken);
