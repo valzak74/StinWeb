@@ -227,7 +227,14 @@ namespace StinClasses.Справочники.Functions
         }
         public DateTime GetShipmentDateByServiceName(string marketplaceId, string serviceName)
         {
-            return _context.Sc13994s.Where(x => (x.Sp14038 == marketplaceId) && (x.Sp13987.Trim() == serviceName)).Select(x => x.Sp13990).Max();
+            var validDateTimes = _context.Sc13994s
+                .Where(x => (x.Sp14038 == marketplaceId) && (x.Sp13987.Trim() == serviceName))
+                .Select(x => x.Sp13990)
+                .ToList();
+
+            return validDateTimes.Count > 0
+                ? validDateTimes.Max()
+                : DateTime.Today;
         }
     }
 }
