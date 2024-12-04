@@ -234,7 +234,7 @@ namespace StinClasses.Справочники.Functions
 
             return validDateTimes.Count > 0
                 ? validDateTimes.Max()
-                : DateTime.Today;
+                : DateTime.MinValue;
         }
     }
 }
