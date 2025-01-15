@@ -62,6 +62,7 @@ namespace StinWeb.Models.DataManager
         public static readonly string FirmaStPlus = "     1   ";
         public static readonly string FirmaIP = "     3S  ";
         public static readonly string FirmaSS = "     4S  ";
+        public static readonly string FirmaPartner = "  38WJD  ";
         public static readonly string FirmaInst = "     2S  ";
 
         public static readonly string UserRobot = "    20D  ";
@@ -436,7 +437,7 @@ namespace StinWeb.Models.DataManager
         {
             string docNo = "";
             if (string.IsNullOrEmpty(FirmaId))
-                FirmaId = FirmaSS;
+                FirmaId = FirmaPartner;
             if (string.IsNullOrEmpty(Год))
                 Год = DateTime.Now.ToString("yyyy");
 

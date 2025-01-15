@@ -460,7 +460,7 @@ namespace OzonClasses
             var result = new List<(string OfferId, int Present, int Reserved)>();
             var request = new StockInfoRequest(offerIds);
             var response = await httpService.Exchange<StockInfoResponse, ErrorResponse>(
-                $"https://{proxyHost}api-seller.ozon.ru/v3/product/info/stocks",
+                $"https://{proxyHost}api-seller.ozon.ru/v4/product/info/stocks",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
@@ -472,8 +472,8 @@ namespace OzonClasses
                     err += Environment.NewLine;
                 err += ParseOzonError(response.Item2);
             }
-            if (response.Item1?.Result?.Items?.Count > 0)
-                foreach (var item in response.Item1.Result.Items)
+            if (response.Item1?.Items?.Count > 0)
+                foreach (var item in response.Item1.Items)
                 {
                     if (item.Stocks?.Count > 0)
                         result.Add((
@@ -560,49 +560,62 @@ namespace OzonClasses
                 return new(null, ParseOzonError(result.Item2));
             return new(result.Item1, null);
         }
-        public static async Task<(double ComPercent, double ComAmount, double VolumeWeight, string Price, string? Error)> ProductComission(IHttpService httpService, 
+        public static async Task<(Dictionary<string, (double ComPercent, double ComAmount, double VolumeWeight, string Price)>, string? Error)> ProductComission(IHttpService httpService, 
             string proxyHost, string clientId, string authToken,
-            string offerId,
-            string searchTag,
+            IReadOnlyDictionary<string, string> saleSchemaByOfferId,
             CancellationToken cancellationToken)
         {
-            var request = new ProductInfoRequest { Offer_id = offerId };
+            var request = new ProductInfoRequest { Offer_id = saleSchemaByOfferId.Keys.ToList() };
             var result = await httpService.Exchange<ProductInfoResponse, ErrorResponse>(
-                $"https://{proxyHost}api-seller.ozon.ru/v2/product/info",
+                $"https://{proxyHost}api-seller.ozon.ru/v3/product/info/list",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
                 cancellationToken);
             if (result.Item2 != null)
-                return (ComPercent: 0, ComAmount: 0, VolumeWeight: 0, Price: "", Error: "ProductInfoResponse : (" + offerId + ") " + ParseOzonError(result.Item2));
-            if ((result.Item1 != null) && (result.Item1.Result != null) && 
-                (result.Item1.Result.Commissions != null))
+                return (null, Error: "ozon v3/product/info/list " + ParseOzonError(result.Item2));
+            if (result.Item1 != null && result.Item1.Items?.Count > 0)
             {
-                var comData = result.Item1.Result.Commissions
-                    .Where(x => x.SaleSchema?.ToLower().Trim() == searchTag)
-                    .Select(x => new { x.Percent, x.Value })
-                    .FirstOrDefault();
-                return (ComPercent: comData?.Percent ?? 0, ComAmount: comData?.Value ?? 0, VolumeWeight: result.Item1.Result.Volume_weight, Price: result.Item1.Result.Price ?? "", Error: null);
+                return (result.Item1.Items
+                    .Select(x =>
+                    {
+                        var saleSchema = saleSchemaByOfferId.GetValueOrDefault(x.Offer_id);
+                        var commissions = x.Commissions?.FirstOrDefault(y => y.SaleSchema?.ToLower().Trim() == saleSchema);
+                        return new
+                        {
+                            x.Offer_id,
+                            x.Volume_weight,
+                            x.Price,
+                            commissions?.Percent,
+                            commissions?.Value
+                        };
+                    })
+                    .ToDictionary(
+                        k => k.Offer_id,
+                        v => (ComPercent: v.Percent ?? 0, ComAmount: v.Value ?? 0, VolumeWeight: v.Volume_weight, Price: v.Price)
+                    ),
+                    Error: null
+                );
             }
-            return (ComPercent: 0, ComAmount: 0, VolumeWeight: 0, Price: "", Error: null);
+            return default;
         }
         public static async Task<Tuple<List<string>?,string?>> ProductNotReady(IHttpService httpService, string proxyHost, string clientId, string authToken,
             List<string> offers,
             CancellationToken cancellationToken)
         {
-            var request = new ProductInfoListRequest { Offer_id = offers };
-            var result = await httpService.Exchange<ProductInfoListResponse, ErrorResponse>(
-                $"https://{proxyHost}api-seller.ozon.ru/v2/product/info/list",
+            var request = new ProductInfoRequest { Offer_id = offers };
+            var result = await httpService.Exchange<ProductInfoResponse, ErrorResponse>(
+                $"https://{proxyHost}api-seller.ozon.ru/v3/product/info/list",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
                 cancellationToken);
             if (result.Item2 != null)
-                return new(null, "ProductInfoListResponse : " + ParseOzonError(result.Item2));
-            if ((result.Item1 != null) && (result.Item1.Result != null) && (result.Item1.Result.Items != null))
+                return new(null, "ozon v3/product/info/list :" + ParseOzonError(result.Item2));
+            if ((result.Item1 != null) && (result.Item1.Items != null) && (result.Item1.Items.Count > 0))
             {
-                var items = result.Item1.Result.Items
-                    .Where(x => (x.Status == null) || (x.Status.Is_failed) || ((x.Status.Item_errors != null) && (x.Status.Item_errors.Count > 0) && (x.Status.Item_errors.Any(e => e.Level != "warning"))))
+                var items = result.Item1.Items
+                    .Where(x => (x.Statuses == null) || (!x.Statuses.Is_created))
                     .Select(x => x.Offer_id == null ? "" : x.Offer_id)
                     .ToList();
                 return new(items,null);

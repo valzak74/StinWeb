@@ -66,7 +66,7 @@ namespace WbClasses
             else
                 request = new CardsListRequest(limit);
             var result = await httpService.Exchange<CardListResponse, string>(
-                $"https://{proxyHost}suppliers-api.wildberries.ru/content/v2/get/cards/list",
+                $"https://{proxyHost}marketplace-api.wildberries.ru/content/v2/get/cards/list",
                 HttpMethod.Post,
                 GetCustomHeaders(authToken),
                 request,
@@ -81,7 +81,7 @@ namespace WbClasses
         public static async Task<(PriceRequest[], string?)> GetPrices(IHttpService httpService, string proxyHost, string authToken, CancellationToken cancellationToken)
         {
             var result = await httpService.Exchange<PriceRequest[], PriceError>(
-                $"https://{proxyHost}suppliers-api.wildberries.ru/public/api/v1/info",
+                $"https://{proxyHost}marketplace-api.wildberries.ru/public/api/v1/info",
                 HttpMethod.Get,
                 GetCustomHeaders(authToken),
                 null,
@@ -131,7 +131,7 @@ namespace WbClasses
         {
             var request = new StocksRequestV3(data);
             var result = await httpService.ExchangeErrorList<bool, StockError>(
-                $"https://{proxyHost}suppliers-api.wildberries.ru/api/v3/stocks/{warehouseId}",
+                $"https://{proxyHost}marketplace-api.wildberries.ru/api/v3/stocks/{warehouseId}",
                 HttpMethod.Put,
                 GetCustomHeaders(authToken),
                 request,
@@ -155,7 +155,7 @@ namespace WbClasses
             CancellationToken cancellationToken)
         {
             var result = await httpService.Exchange<OrderList, string>(
-                $"https://{proxyHost}suppliers-api.wildberries.ru/api/v3/orders/new",
+                $"https://{proxyHost}marketplace-api.wildberries.ru/api/v3/orders/new",
                 HttpMethod.Get,
                 GetCustomHeaders(authToken),
                 null,
@@ -171,7 +171,7 @@ namespace WbClasses
         {
             var request = new StickerRequest(orderIds);
             var result = await httpService.Exchange<OrderStatusResponse, WbErrorResponse>(
-                $"https://{proxyHost}suppliers-api.wildberries.ru/api/v3/orders/status",
+                $"https://{proxyHost}marketplace-api.wildberries.ru/api/v3/orders/status",
                 HttpMethod.Post,
                 GetCustomHeaders(authToken),
                 request,
@@ -185,7 +185,7 @@ namespace WbClasses
             CancellationToken cancellationToken)
         {
             var result = await httpService.Exchange<ReshipmentOrders, WbErrorResponse>(
-                $"https://{proxyHost}suppliers-api.wildberries.ru/api/v3/supplies/orders/reshipment",
+                $"https://{proxyHost}marketplace-api.wildberries.ru/api/v3/supplies/orders/reshipment",
                 HttpMethod.Get,
                 GetCustomHeaders(authToken),
                 null,
@@ -200,7 +200,7 @@ namespace WbClasses
             CancellationToken cancellationToken)
         {
             var result = await httpService.Exchange<bool, WbErrorResponse>(
-                $"https://{proxyHost}suppliers-api.wildberries.ru/api/v3/orders/{orderId}/cancel",
+                $"https://{proxyHost}marketplace-api.wildberries.ru/api/v3/orders/{orderId}/cancel",
                 HttpMethod.Patch,
                 GetCustomHeaders(authToken),
                 null,
@@ -218,7 +218,7 @@ namespace WbClasses
             headers.Add(queryKey + "width", "58");
             headers.Add(queryKey + "height", "40");
             var result = await httpService.Exchange<StickerResponse, WbErrorResponse>(
-                $"https://{proxyHost}suppliers-api.wildberries.ru/api/v3/orders/stickers",
+                $"https://{proxyHost}marketplace-api.wildberries.ru/api/v3/orders/stickers",
                 HttpMethod.Post,
                 headers,
                 new StickerRequest(orders),
@@ -239,7 +239,7 @@ namespace WbClasses
             headers.Add(queryKey + "height", "40");
 
             var result = await httpService.Exchange<WbBarcode, WbErrorResponse>(
-                $"https://suppliers-api.wildberries.ru/api/v3/supplies/{supplyId}/barcode",
+                $"https://marketplace-api.wildberries.ru/api/v3/supplies/{supplyId}/barcode",
                 HttpMethod.Get,
                 headers,
                 null,
@@ -265,7 +265,7 @@ namespace WbClasses
             {
                 nextPage = false;
                 var result = await httpService.Exchange<SuppliesList, WbErrorResponse>(
-                    $"https://{proxyHost}suppliers-api.wildberries.ru/api/v3/supplies",
+                    $"https://{proxyHost}marketplace-api.wildberries.ru/api/v3/supplies",
                     HttpMethod.Get,
                     headers,
                     null,
@@ -287,7 +287,7 @@ namespace WbClasses
         public static async Task<(List<Order>? orders, string error)> GetSupplyOrders(IHttpService httpService, string proxyHost, string authToken, string supplyId, CancellationToken cancellationToken)
         {
             var result = await httpService.Exchange<OrderList, WbErrorResponse>(
-                $"https://{proxyHost}suppliers-api.wildberries.ru/api/v3/supplies/{supplyId}/orders",
+                $"https://{proxyHost}marketplace-api.wildberries.ru/api/v3/supplies/{supplyId}/orders",
                 HttpMethod.Get,
                 GetCustomHeaders(authToken),
                 null,
@@ -300,7 +300,7 @@ namespace WbClasses
         public static async Task<(string? supplyId, string error)> CreateSupply(IHttpService httpService, string proxyHost, string authToken, CancellationToken cancellationToken)
         {
             var result = await httpService.Exchange<Supply, WbErrorResponse>(
-                $"https://{proxyHost}suppliers-api.wildberries.ru/api/v3/supplies",
+                $"https://{proxyHost}marketplace-api.wildberries.ru/api/v3/supplies",
                 HttpMethod.Post,
                 GetCustomHeaders(authToken),
                 new SupplyName { Name = DateTime.Today.ToString("ddMMyyyymmss") },
@@ -315,7 +315,7 @@ namespace WbClasses
             CancellationToken cancellationToken)
         {
             var result = await httpService.Exchange<bool, WbErrorResponse>(
-                $"https://{proxyHost}suppliers-api.wildberries.ru/api/v3/supplies/{supplyId}/orders/{orderId}",
+                $"https://{proxyHost}marketplace-api.wildberries.ru/api/v3/supplies/{supplyId}/orders/{orderId}",
                 HttpMethod.Patch,
                 GetCustomHeaders(authToken),
                 null,
@@ -328,7 +328,7 @@ namespace WbClasses
         public static async Task<(Supply? supply, string error)> GetSupplyInfo(IHttpService httpService, string authToken, string supplyId, CancellationToken cancellationToken)
         {
             var result = await httpService.Exchange<Supply, WbErrorResponse>(
-                $"https://suppliers-api.wildberries.ru/api/v3/supplies/{supplyId}",
+                $"https://marketplace-api.wildberries.ru/api/v3/supplies/{supplyId}",
                 HttpMethod.Get,
                 GetCustomHeaders(authToken),
                 null,
@@ -343,7 +343,7 @@ namespace WbClasses
             CancellationToken cancellationToken)
         {
             var result = await httpService.Exchange<bool, WbErrorResponse>(
-                $"https://suppliers-api.wildberries.ru/api/v3/supplies/{supplyId}/deliver",
+                $"https://marketplace-api.wildberries.ru/api/v3/supplies/{supplyId}/deliver",
                 HttpMethod.Patch,
                 GetCustomHeaders(authToken),
                 null,

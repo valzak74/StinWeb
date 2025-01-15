@@ -9,8 +9,8 @@ namespace StinClasses.MarketCommission;
 
 public class CommissionHelperWB : CommissionHelper
 {
-    decimal _baseLogistics = 33;
-    decimal _addPerLiter = 8.0m;
+    decimal _baseLogistics = 35;
+    decimal _addPerLiter = 8.5m;
     decimal _includeLiters = 1;
     decimal _minHard = 1000;
     decimal _maxSize = 120.0m;

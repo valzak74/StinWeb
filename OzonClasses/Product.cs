@@ -5,25 +5,25 @@ namespace OzonClasses
 {
     public class ProductInfoRequest
     {
-        public string? Offer_id { get; set; }
-        public long? Product_id { get; set; }
-        public long? Sku { get; set; }
+        public List<string>? Offer_id { get; set; }
+        public List<long>? Product_id { get; set; }
+        public List<long>? Sku { get; set; }
         public bool ShouldSerializeOffer_id()
         {
-            return !string.IsNullOrEmpty(Offer_id);
+            return Offer_id?.Count > 0;
         }
         public bool ShouldSerializeProduct_id()
         {
-            return Product_id.HasValue && Product_id.Value > 0;
+            return Product_id?.Count > 0;
         }
         public bool ShouldSerializeSku()
         {
-            return Sku.HasValue && Sku.Value > 0;
+            return Sku?.Count > 0;
         }
     }
     public class ProductInfoResponse
     {
-        public ProductInfoResult? Result { get; set; }
+        public List<ProductInfoResult>? Items { get; set; }
     }
     public class ProductInfoResult : ProductInfoItem
     {
@@ -64,14 +64,14 @@ namespace OzonClasses
         public string? Barcode { get; set; }
         public string? Buybox_price { get; set; }
         public long? Category_id { get; set; }
-        public string? Color_image { get; set; }
+        public List<string>? Color_image { get; set; }
         [JsonProperty("Created_at", NullValueHandling = NullValueHandling.Ignore)]
         public DateTime Created_at { get; set; }
         public long? Fbo_sku { get; set; }
         public long? Fbs_sku { get; set; }
         public long? Id { get; set; }
         public List<string>? Images { get; set; }
-        public string? Primary_image { get; set; }
+        public List<string>? Primary_image { get; set; }
         public List<string>? Images360 { get; set; }
         public bool Is_kgt { get; set; }
         public string? Marketing_price { get; set; }
@@ -84,7 +84,7 @@ namespace OzonClasses
         public string? Price { get; set; }
         public string? Price_index { get; set; }
         public string? Recommended_price { get; set; }
-        public ProductStatus? Status { get; set; }
+        public ProductStatus? Statuses { get; set; }
         public List<ProductSource>? Sources { get; set; }
         public ProductStock? Stocks { get; set; }
         public string? Vat { get; set; }

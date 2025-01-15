@@ -19,7 +19,6 @@ using System.Xml.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using StinClasses.MarketCommission;
 using System.Globalization;
-using OzonClasses;
 
 namespace Refresher1C.Service
 {
@@ -263,20 +262,20 @@ namespace Refresher1C.Service
                                         var мест = (int)(d.Количество / квант);
                                         if ((d.Количество % квант) > 0)
                                             мест++;
-                                        var нераспредКолво = (int)d.Количество;
+                                        //var нераспредКолво = (int)d.Количество;
                                         for (int i = 1; i <= мест; i++)
                                         {
-                                            var fullCount = Math.Min(квант, нераспредКолво);
+                                            //var fullCount = Math.Min(квант, нераспредКолво);
                                             var request2024Items = new List<YandexClasses.OrderBoxLayoutItemDTO>
                                             {
                                                 new YandexClasses.OrderBoxLayoutItemDTO
                                                 {
                                                     Id = long.Parse(d.ItemIndex),
-                                                    FullCount = fullCount,
+                                                    FullCount = 1, // fullCount,
                                                 }
                                             };
                                             request2024.Boxes.Add(new YandexClasses.OrderBoxLayoutDTO { Items = request2024Items });
-                                            нераспредКолво = нераспредКолво - fullCount;
+                                            //нераспредКолво = нераспредКолво - fullCount;
                                         }
                                     }
                                 }
@@ -468,8 +467,9 @@ namespace Refresher1C.Service
                                 var proxyHost = _firmProxy[order.FirmaId];
                                 var campaignId = order.CampaignId;
                                 var orderId = order.MarketplaceId;
+                                var labelFormat = "A9";
                                 var result = await YandexClasses.YandexOperators.Exchange<byte[]>(_httpService,
-                                    $"https://{proxyHost}api.partner.market.yandex.ru/v2/campaigns/{campaignId}/orders/{orderId}/delivery/labels.json",
+                                    $"https://{proxyHost}api.partner.market.yandex.ru/v2/campaigns/{campaignId}/orders/{orderId}/delivery/labels.json?format={labelFormat}",
                                     HttpMethod.Get,
                                     order.ClientId,
                                     order.AuthToken,
@@ -1851,7 +1851,7 @@ namespace Refresher1C.Service
                     .Take(limit)
                     .ToListAsync(cancellationToken);
                 bool needUpdate = false;
-                foreach (var r in data)
+                foreach (var r in data.Where(x => !x.Deleted))
                 {
                     if ((r.GroupLevel1 != null) && (!categories.Contains(r.GroupLevel1)))
                         categories.Add(r.GroupLevel1);
@@ -3814,18 +3814,19 @@ namespace Refresher1C.Service
                                 списокСкладов,
                                 номенклатураCodes,
                                 true);
-                            //var nomQuantums = await _номенклатура.ПолучитьКвант(номенклатураCodes, stoppingToken);
+                            var nomQuantums = await _номенклатура.ПолучитьКвант(номенклатураCodes, cancellationToken);
                             bool нетВНаличие = НоменклатураList.Count == 0;
                             foreach (var номенклатура in НоменклатураList)
                             {
                                 decimal остаток = номенклатура.Остатки
                                             .Sum(z => z.СвободныйОстаток) / номенклатура.Единица.Коэффициент;
-                                //var quantum = (int)nomQuantums.Where(q => q.Key == номенклатура.Id).Select(q => q.Value).FirstOrDefault();
-                                //if (quantum == 0)
-                                //    quantum = 1;
+                                var quantum = (int)nomQuantums.Where(q => q.Key == номенклатура.Id).Select(q => q.Value).FirstOrDefault();
+                                if (quantum == 0)
+                                    quantum = 1;
+
                                 var asked = detailOrder.Items
                                                     .Where(b => b.OfferId.Decode(encoding) == номенклатура.Code)
-                                                    .Select(c => c.Count)
+                                                    .Select(c => c.Count * quantum)
                                                     .FirstOrDefault();
                                 if (остаток < asked)
                                 {
@@ -4212,13 +4213,19 @@ namespace Refresher1C.Service
                     (x.Sp14038 == marketplaceId))
                 .Select(x => x.Code.Trim())
                 .ToListAsync(stoppingToken);
+            var activeOrdersInNabor = await ActiveOrders(marketplaceId, stoppingToken);
+            activeOrders.AddRange(activeOrdersInNabor);
             if (activeOrders?.Count > 0)
             {
                 var orders = await GetOzonDetailOrders(_firmProxy[firmaId], clientId, authToken, marketplaceId, OzonClasses.OrderStatus.delivered, stoppingToken);
                 //var checkedNumbers = orders.Select(x => x.MarketplaceId);
                 foreach (var order in orders.Where(x => activeOrders.Contains(x.MarketplaceId)))
+                {
+                    if (order.InternalStatus == 3 || order.InternalStatus == -3)
+                        await _docService.OrderDeliveried(order, true);
                     if ((order.InternalStatus == 14) || (order.InternalStatus == 16) || (order.InternalStatus == -14) || (order.InternalStatus == -16))
                         await _docService.OrderFromTransferDeliveried(order);
+                }
             }
             //_logger.LogError($"GetOzonDeliveredOrders \"{marketplaceId}\" ended");
         }
@@ -4630,7 +4637,7 @@ namespace Refresher1C.Service
                                 entity = await _context.Sc14152s.FirstOrDefaultAsync(x => x.Id == dataItem.Id, cancellationToken);
                             if (entity != null)
                             {
-                                var minPrice = (decimal)item.Price * dataItem.Квант;
+                                var minPrice = (decimal)item.Price / dataItem.Квант; //* dataItem.Квант;
                                 var feePercent = item.Tariffs?
                                     .Where(x => x.Type == YandexClasses.TariffType.FEE)
                                     .Sum(x => (decimal)x.Percent) ?? 0;
@@ -4778,7 +4785,7 @@ namespace Refresher1C.Service
             string model,
             CancellationToken cancellationToken)
         {
-            int requestLimit = 100;
+            int requestLimit = 1000;
 
             var query = from markUse in _context.Sc14152s
                         join nom in _context.Sc84s on markUse.Parentext equals nom.Id
@@ -4788,7 +4795,7 @@ namespace Refresher1C.Service
                         from vzTovar in _vzTovar.DefaultIfEmpty()
                         where (markUse.Sp14147 == marketplaceId) &&
                           (markUse.Sp14158 == 1) //Есть в каталоге 
-                          //&& nom.Code == "D00022260"
+                          //&& nom.Code == "D00071547"
                         select new
                         {
                             Id = markUse.Id,
@@ -4809,19 +4816,25 @@ namespace Refresher1C.Service
                     .Take(requestLimit)
                     .ToListAsync(cancellationToken);
                 bool needUpdate = false;
+                var comResult = await OzonClasses.OzonOperators.ProductComission(_httpService, _firmProxy[firmaId], clientId, authToken,
+                    data.Select(x => new
+                    {
+                        OfferId = x.Sku.Encode(encoding),
+                        SaleSchema = model == "FBS" ? (x.realFbs ? "rfbs" : "fbs") : "fbo"
+                    })
+                    .ToDictionary(x => x.OfferId, x => x.SaleSchema),
+                    cancellationToken);
+                if (comResult.Error != null && !string.IsNullOrEmpty(comResult.Error))
+                {
+                    _logger.LogError(comResult.Error);
+                }
                 foreach (var item in data)
                 {
-                    var comResult = await OzonClasses.OzonOperators.ProductComission(_httpService, _firmProxy[firmaId], clientId, authToken,
-                        item.Sku.Encode(encoding),
-                        model == "FBS" ? (item.realFbs ? "rfbs" : "fbs") : "fbo",
-                        cancellationToken);
-                    if (comResult.Error != null && !string.IsNullOrEmpty(comResult.Error))
+                    var offerId = item.Sku.Encode(encoding);
+                    var (comPercent, comAmount, ozonVolumeWeight, ozonPrice) = comResult.Item1.GetValueOrDefault(offerId);
+                    if ((comPercent > 0) && (comAmount > 0) && (ozonVolumeWeight > 0))
                     {
-                        _logger.LogError(comResult.Error);
-                    }
-                    if ((comResult.ComPercent > 0) && (comResult.ComAmount > 0) && (comResult.VolumeWeight > 0))
-                    {
-                        double.TryParse(comResult.Price ?? "", System.Globalization.NumberStyles.Number, new System.Globalization.NumberFormatInfo { NumberDecimalSeparator = "." }, out double price);
+                        double.TryParse(ozonPrice ?? "", System.Globalization.NumberStyles.Number, new System.Globalization.NumberFormatInfo { NumberDecimalSeparator = "." }, out double price);
                         if (price > 0)
                         {
                             Sc14152 entity = await _context.Sc14152s.FirstOrDefaultAsync(x => x.Id == item.Id, cancellationToken);
@@ -4836,13 +4849,13 @@ namespace Refresher1C.Service
                                     (int)item.Квант, 
                                     item.ЦенаЗакуп, 
                                     typeOzon == ModelTypeOzon.RealFBS ? volumeWeight : volumeForFbs, 
-                                    (decimal)comResult.ComPercent
+                                    (decimal)comPercent
                                 ))
                                 {
                                     minPrice = helper.MinPrice();
                                 }
                                 decimal updateMinPrice = decimal.Round(minPrice, 2, MidpointRounding.AwayFromZero);
-                                decimal updateVolumeWeight = decimal.Round((decimal)comResult.VolumeWeight / item.Квант, 3, MidpointRounding.AwayFromZero);
+                                decimal updateVolumeWeight = decimal.Round((decimal)ozonVolumeWeight / item.Квант, 3, MidpointRounding.AwayFromZero);
                                 if ((updateMinPrice != entity.Sp14198) || (updateVolumeWeight != entity.Sp14229))
                                 {
                                     entity.Sp14198 = updateMinPrice;

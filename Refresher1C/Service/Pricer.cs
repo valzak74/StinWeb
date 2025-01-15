@@ -50,7 +50,7 @@ namespace Refresher1C.Service
         {
             var markerplaces = await _marketplaceFunctions.GetAllAsync(stoppingToken);
             foreach (var marketplace in markerplaces)
-                //if (marketplace.Тип == "OZON") 
+                //if (marketplace.Тип == "ЯНДЕКС" && marketplace.Code == "23292582") 
                 await UpdatePriceMarketplace(marketplace, stoppingToken);
         }
         async Task UpdatePriceMarketplace(Marketplace marketplace, CancellationToken stoppingToken)
@@ -115,7 +115,7 @@ namespace Refresher1C.Service
                     Price = new YandexClasses.PriceElement
                     {
                         CurrencyId = YandexClasses.CurrencyType.RUR,
-                        Value = item.price,
+                        Value = item.price * item.квант,
                         Vat = YandexClasses.PriceVatType.vat_not_valid
                     }
                 });

@@ -254,8 +254,8 @@ namespace Refresher1C.Service
                 var quantum = (int)nomQuantums.Where(q => q.Key == x.НоменклатураId).Select(q => q.Value).FirstOrDefault();
                 if (quantum == 0)
                     quantum = 1;
-                if (тип == "YANDEX")
-                    quantum = 1;
+                //if (тип == "YANDEX")
+                //    quantum = 1;
                 x.Количество = x.Количество * quantum;
                 x.Цена = x.Цена / quantum;
                 x.ЦенаСоСкидкой = x.ЦенаСоСкидкой / quantum;

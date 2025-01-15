@@ -86,7 +86,8 @@ namespace OzonClasses
     }
     public class StockInfoResponse
     {
-        public StockInfoResult? Result { get; set; }
+        public string? Cursor { get; set; }
+        public List<StockInfoItem>? Items { get; set; }
     }
     public class StockInfoResult
     {
