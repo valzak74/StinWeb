@@ -53,7 +53,7 @@ namespace OzonClasses
     }
     public class ReturnsResponse
     {
-        public long Last_id { get; set; }
+        public bool Has_next { get; set; }
         public List<ReturnItem>? Returns { get; set; }
     }
     public class ReturnItem
@@ -93,5 +93,18 @@ namespace OzonClasses
         public double? Returns_keeping_cost { get; set; }
         public long Sku { get; set; }
         public ReturnStatus Status { get; set; }
+        public OzonVisual? Visual { get; set; }
+    }
+
+    public class OzonVisual
+    {
+        public Status? Status { get; set; }
+    }
+
+    public class Status
+    {
+        public int Id { get; set; }
+        public string? Display_name { get; set; }
+        public ReturnStatus Sys_name { get; set; }
     }
 }

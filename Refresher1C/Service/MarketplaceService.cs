@@ -1943,7 +1943,7 @@ namespace Refresher1C.Service
                                             //&& (market.Code.Trim() == "22498162235000")
                                             //&& (market.Code.Trim() == "22162396")
                                             //&& (market.Code.Trim() == "D0000000000000000001")
-                                            //&& (market.Code.Trim() == "652932")
+                                            //&& (market.Code.Trim() == "428280")
                                             select new
                                             {
                                                 Id = market.Id,
@@ -4969,7 +4969,7 @@ namespace Refresher1C.Service
             long offset,
             CancellationToken cancellationToken)
         {
-            int requestLimit = 1000;
+            int requestLimit = 500;
 
             var result = await OzonClasses.OzonOperators.ReturnOrders(_httpService, proxyHost, clientId, authToken, requestLimit, offset, cancellationToken);
             if (!string.IsNullOrEmpty(result.error))
@@ -4978,7 +4978,8 @@ namespace Refresher1C.Service
                 try
                 {
                     await UpdateReturns(result.returns, marketplaceId, cancellationToken);
-                    await CheckReturnsOzon(marketplaceId, proxyHost, clientId, authToken, result.count, cancellationToken);
+                    if (result.hasNext)
+                        await CheckReturnsOzon(marketplaceId, proxyHost, clientId, authToken, result.count, cancellationToken);
                 }
                 catch (Exception ex)
                 {
@@ -4987,7 +4988,6 @@ namespace Refresher1C.Service
         }
         private async Task UpdateReturns(object data, string marketplaceId, CancellationToken cancellationToken)
         {
-            //var updatingOrders = new Dictionary<string, int>();
             var returningOrders = Enumerable.Repeat(new 
             {
                 OrderNo = "",
@@ -4999,7 +4999,7 @@ namespace Refresher1C.Service
                 foreach (var item in ozonReturns)
                     if (!string.IsNullOrWhiteSpace(item.Posting_number) && (item.Posting_number != "0"))
                     {
-                        int status = item.Status switch
+                        int status = item.Visual?.Status?.Sys_name switch
                         {
                             //OzonClasses.ReturnStatus.returned_to_seller => 17,
                             OzonClasses.ReturnStatus.cancelled_with_compensation => 18,

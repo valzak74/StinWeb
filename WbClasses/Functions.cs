@@ -66,7 +66,7 @@ namespace WbClasses
             else
                 request = new CardsListRequest(limit);
             var result = await httpService.Exchange<CardListResponse, string>(
-                $"https://{proxyHost}marketplace-api.wildberries.ru/content/v2/get/cards/list",
+                $"https://{proxyHost}content-api.wildberries.ru/content/v2/get/cards/list",
                 HttpMethod.Post,
                 GetCustomHeaders(authToken),
                 request,

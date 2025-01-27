@@ -391,9 +391,10 @@ namespace OzonClasses
         {
             var request = new ProductListRequest {
                 //Filter = new ProductFilter { Offer_id = new List<string> { "443030303533313935" }, Visibility = RequestFilterVisibility.ALL },
+                Filter = new ProductFilter(),
                 Last_id = string.IsNullOrEmpty(nextPageToken) ? "" : nextPageToken, Limit = limit };
             var result = await httpService.Exchange<ProductListResponse, ErrorResponse>(
-                $"https://{proxyHost}api-seller.ozon.ru/v2/product/list",
+                $"https://{proxyHost}api-seller.ozon.ru/v3/product/list",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
@@ -695,7 +696,7 @@ namespace OzonClasses
             }
             return new(null, null);
         }
-        public static async Task<(List<ReturnItem>? returns, long count, string? error)> ReturnOrders(IHttpService httpService, string proxyHost, string clientId, string authToken,
+        public static async Task<(List<ReturnItem>? returns, long count, bool hasNext, string? error)> ReturnOrders(IHttpService httpService, string proxyHost, string clientId, string authToken,
             long limit,
             long offset,
             CancellationToken cancellationToken)
@@ -707,16 +708,16 @@ namespace OzonClasses
                 request = new ReturnsRequest(limit);
             request.Last_id = offset;
             var result = await httpService.Exchange<ReturnsResponse, ErrorResponse>(
-                $"https://{proxyHost}api-seller.ozon.ru/v3/returns/company/fbs",
+                $"https://{proxyHost}api-seller.ozon.ru/v1/returns/list",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
                 cancellationToken);
             if (result.Item2 != null)
-                return (returns: null, count: 0, error: "ReturnsResponse : " + result.Item2.Message + " Details: " + string.Join(',', result.Item2.Details.Select(x => x.Value)));
-            if (result.Item1?.Returns != null)
-                return (returns: result.Item1.Returns, count: result.Item1.Last_id, error: null);
-            return (returns: null, count: 0, error: null);
+                return (returns: null, count: 0, hasNext: false, error: "ReturnsResponse : " + result.Item2.Message + " Details: " + string.Join(',', result.Item2.Details.Select(x => x.Value)));
+            if (result.Item1?.Returns?.Count > 0)
+                return (returns: result.Item1.Returns, count: result.Item1.Returns.Max(x => x.Id), hasNext: result.Item1.Has_next, error: null);
+            return (returns: null, count: 0, hasNext: false, error: null);
         }
     }
 }
