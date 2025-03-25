@@ -458,13 +458,13 @@ namespace StinClasses.Справочники
         {
             try
             {
-                var MarketplaceEntity = await _context.Sc14042s
+                var marketplaceEntity = await _context.Sc14042s
                     .Where(x => !x.Ismark && x.Parentext == firmaId && x.Sp14077.Trim() == authApi)
                     .OrderBy(x => x.Id)
                     .FirstOrDefaultAsync();
-                if (MarketplaceEntity == null)
+                if (marketplaceEntity == null)
                 {
-                    MarketplaceEntity = new Sc14042
+                    marketplaceEntity = new Sc14042
                     {
                         Id = _context.GenerateId(14042),
                         Code = new string(marketplaceName.ToCharArray().Where(c => !Char.IsWhiteSpace(c)).ToArray()),
@@ -490,10 +490,10 @@ namespace StinClasses.Справочники
                         Sp14177 = 0, //StockRefresh
                         Sp14216 = 0 //StockOriginal
                     };
-                    await _context.Sc14042s.AddAsync(MarketplaceEntity);
-                    _context.РегистрацияИзмененийРаспределеннойИБ(14042, MarketplaceEntity.Id);
+                    await _context.Sc14042s.AddAsync(marketplaceEntity);
+                    _context.РегистрацияИзмененийРаспределеннойИБ(14042, marketplaceEntity.Id);
                 }
-                var Тип = MarketplaceEntity.Sp14155.ToUpper().Trim();
+                var Тип = marketplaceEntity.Sp14155.ToUpper().Trim();
                 var order = new Order
                 {
                     Id = _context.GenerateId(13994),
@@ -519,9 +519,13 @@ namespace StinClasses.Справочники
                 };
                 order.Items = items;
                 order.Тип = Тип;
-                order.Модель = MarketplaceEntity.Sp14164.ToUpper().Trim();
-                if ((order.Тип == "OZON") && (order.DeliveryServiceId != MarketplaceEntity.Code.Trim()))
-                    order.Marketplace = MarketplaceEntity.Sp14155.Trim() + " realFBS";
+                order.Модель = marketplaceEntity.Sp14164.ToUpper().Trim();
+                if (order.Тип == "OZON" && order.DeliveryServiceId != marketplaceEntity.Code.Trim())
+                {
+                    order.Marketplace = order.DeliveryServiceId == marketplaceEntity.Sp14154.Trim()
+                        ? marketplaceEntity.Sp14155.Trim() + " realFBS"
+                        : "КГТ " + marketplaceEntity.Sp14155.Trim();
+                }
                 else if ((order.Тип == "ЯНДЕКС") && (order.Модель == "EXPRESS"))
                     order.Marketplace = "Yandex " + order.Модель;
                 Sc13994 entity = new Sc13994
@@ -531,7 +535,7 @@ namespace StinClasses.Справочники
                     Descr = order.Marketplace,
                     Ismark = false,
                     Verstamp = 0,
-                    Sp14038 = MarketplaceEntity.Id,
+                    Sp14038 = marketplaceEntity.Id,
                     Sp13981 = order.OrderNo.StringLimit(20),//ПредварительнаяЗаявкаId
                     Sp13982 = 0, //(decimal)order.Status * 10 + (decimal)order.SubStatus,//Статус
                     Sp13983 = (decimal)order.PaymentType,

@@ -14,6 +14,7 @@
                .Css("text-center column-10")
                .Encoded(false);
     columns.Add(model => model.MarketplaceType).Named("Тип").Titled("Тип");
+    columns.Add(model => model.MarketplaceName).Named("Имя маркета").Titled("Имя маркета").Css("column-20p");
     columns.Add(model => model.MarketplaceId).Named("#").Titled("#");
     columns.Add(model => model.ПредварительнаяЗаявкаНомер).Named("№").Titled("№");
     columns.Add(model => model.Сумма).Named("Сумма").Titled("Сумма").Css("column-10p").Css("text-right").Formatted(StinWeb.Models.DataManager.Common.ФорматЦены);

@@ -279,11 +279,16 @@ namespace Refresher1C.Service
             var commonErrorTags = new List<string> { "common", "errorText", "additionalError" };
             if (result.errors?.Count > 0)
             {
-                foreach (var item in result.errors)
-                    _logger.LogError("SetWildberriesData " + item.Key + ": " + item.Value);
                 var errorOffers = result.errors.Where(x => !commonErrorTags.Contains(x.Key)).Select(x => x.Key);
+                errorOffers = errorOffers
+                    .Except(
+                        data.Where(x => x.Locked).Select(x => x.Barcode)
+                    )
+                    .ToList();
                 errorIds.AddRange(data.Where(x => errorOffers.Contains(x.Barcode)).Select(x => x.Id));
                 uploadIds.AddRange(data.Where(x => !errorOffers.Contains(x.Barcode)).Select(x => x.Id));
+                foreach (var item in result.errors.Where(x => errorOffers.Contains(x.Key)))
+                    _logger.LogError("SetWildberriesData " + item.Key + ": " + item.Value);
             }
             else
                 uploadIds.AddRange(data.Where(x => stockData.Select(y => y.barcode).Contains(x.Barcode)).Select(x => x.Id));

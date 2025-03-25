@@ -73,6 +73,7 @@ namespace StinWeb.Models.DataManager.Отчеты
         public string Id { get; set; }
         public string Тип { get; set; }
         public string MarketplaceType { get; set; }
+        public string MarketplaceName { get; set; }
         public string MarketplaceId { get; set; }
         public string ПредварительнаяЗаявкаНомер { get; set; }
         public string СкладIds { get; set; }

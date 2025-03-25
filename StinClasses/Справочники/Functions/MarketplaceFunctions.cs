@@ -65,7 +65,7 @@ namespace StinClasses.Справочники.Functions
         {
             if (!_cache.TryGetValue("Marketplaces", out List<Marketplace> markerplaces))
             {
-                var entities = await _context.Sc14042s.ToListAsync(cancellationToken);
+                var entities = await _context.Sc14042s.Where(x => !x.Ismark).ToListAsync(cancellationToken);
                 markerplaces = new();
                 entities.ForEach(x => markerplaces.Add(x.Map()));
                 if (markerplaces.Count > 0)
@@ -95,7 +95,7 @@ namespace StinClasses.Справочники.Functions
                        join nom in _context.Sc84s on markUse.Parentext equals nom.Id
                        join sc75 in _context.Sc75s on nom.Sp94 equals sc75.Id
                        join updStock in _context.VzUpdatingStocks on markUse.Id equals updStock.MuId
-                       where (markUse.Sp14147 == marketplace.Id) &&
+                       where (markUse.Sp14147 == marketplace.Id) && 
                             ((nomCodes != null && (nomCodes.Count() > 0)) ? nomCodes.Contains(nom.Code) : 
                                 (markUse.Sp14158 == 1) && //Есть в каталоге 
                                 (((regular ? updStock.Flag : updStock.IsError) &&
