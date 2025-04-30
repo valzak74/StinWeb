@@ -272,26 +272,55 @@ namespace Refresher1C.Service
             Marketplace marketplace,
             CancellationToken cancellationToken)
         {
-            int.TryParse(marketplace.Code, out int warehouseId);
-            var result = await WbClasses.Functions.UpdateStock(_httpService, _firmProxy[marketplace.ФирмаId], marketplace.TokenKey, warehouseId,
-                stockData.ToDictionary(k => k.barcode, v => v.stock),
-                cancellationToken);
-            var commonErrorTags = new List<string> { "common", "errorText", "additionalError" };
-            if (result.errors?.Count > 0)
+            var warehouseIdByProductId = data
+                .GroupBy(x => x.ProductId)
+                .ToDictionary(
+                    k => k.Key,
+                    v => v.Select(x => x.WarehouseId).First()
+                );
+            var stockDataByWarehouseIds = stockData
+                .Select(x =>
+                {
+                    var warehouseId = warehouseIdByProductId.GetValueOrDefault(x.productId);
+                    if (!int.TryParse(string.IsNullOrWhiteSpace(warehouseId) ? marketplace.Code : warehouseId, out var intWarehouseId))
+                        intWarehouseId = 0;
+                    return new
+                    {
+                        Barcode = x.barcode,
+                        Stock = x.stock,
+                        WarehouseId = intWarehouseId
+                    };
+                })
+                .GroupBy(x => x.WarehouseId)
+                .Select(x => new
+                {
+                    WarehouseId = x.Key,
+                    StockData = x.ToDictionary(k => k.Barcode, v => v.Stock)
+                })
+                .ToList();
+
+            foreach (var stockDataByWarehouseId in stockDataByWarehouseIds)
             {
-                var errorOffers = result.errors.Where(x => !commonErrorTags.Contains(x.Key)).Select(x => x.Key);
-                errorOffers = errorOffers
-                    .Except(
-                        data.Where(x => x.Locked).Select(x => x.Barcode)
-                    )
-                    .ToList();
-                errorIds.AddRange(data.Where(x => errorOffers.Contains(x.Barcode)).Select(x => x.Id));
-                uploadIds.AddRange(data.Where(x => !errorOffers.Contains(x.Barcode)).Select(x => x.Id));
-                foreach (var item in result.errors.Where(x => errorOffers.Contains(x.Key)))
-                    _logger.LogError("SetWildberriesData " + item.Key + ": " + item.Value);
+                var result = await WbClasses.Functions.UpdateStock(_httpService, _firmProxy[marketplace.ФирмаId], marketplace.TokenKey, stockDataByWarehouseId.WarehouseId,
+                    stockDataByWarehouseId.StockData,
+                    cancellationToken);
+                var commonErrorTags = new List<string> { "common", "errorText", "additionalError" };
+                if (result.errors?.Count > 0)
+                {
+                    var errorOffers = result.errors.Where(x => !commonErrorTags.Contains(x.Key)).Select(x => x.Key);
+                    errorOffers = errorOffers
+                        .Except(
+                            data.Where(x => x.Locked).Select(x => x.Barcode)
+                        )
+                        .ToList();
+                    errorIds.AddRange(data.Where(x => errorOffers.Contains(x.Barcode)).Select(x => x.Id));
+                    uploadIds.AddRange(data.Where(x => !errorOffers.Contains(x.Barcode)).Select(x => x.Id));
+                    foreach (var item in result.errors.Where(x => errorOffers.Contains(x.Key)))
+                        _logger.LogError("SetWildberriesData " + item.Key + ": " + item.Value);
+                }
+                else
+                    uploadIds.AddRange(data.Where(x => stockDataByWarehouseId.StockData.Select(y => y.Key).Contains(x.Barcode)).Select(x => x.Id));
             }
-            else
-                uploadIds.AddRange(data.Where(x => stockData.Select(y => y.barcode).Contains(x.Barcode)).Select(x => x.Id));
         }
         async Task SetYandexData(List<string> uploadIds,
             IEnumerable<(string productId, string offerId, string barcode, int stock)> stockData,

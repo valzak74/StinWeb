@@ -177,6 +177,7 @@ namespace Refresher1C.Service
                                       MarketplaceId = order.Code,
                                       OrderOurId = order.Sp13981,
                                       ShipmentId = order.Sp13989,
+                                      DeliveryServiceId = order.Sp13986,
                                       FirmaId = market.Parentext,
                                       Тип = market.Sp14155,
                                       CampaignId = market.Code,
@@ -188,7 +189,7 @@ namespace Refresher1C.Service
                                       Квант = nom.Sp14188,
                                       Encode = market.Sp14153,
                                       ItemIndex = item.Code,
-                                      Sku = nom.Code
+                                      Sku = nom.Code,
                                   } into gr
                                   where (gr.Sum(x => x.r.Sp14017) != 0)
                                   select new
@@ -197,6 +198,7 @@ namespace Refresher1C.Service
                                       MarketplaceId = gr.Key.MarketplaceId.Trim(),
                                       OrderOurId = gr.Key.OrderOurId.Trim(),
                                       ShipmentId = gr.Key.ShipmentId.Trim(),
+                                      DeliveryServiceId = gr.Key.DeliveryServiceId.ToString().Trim(),
                                       FirmaId = gr.Key.FirmaId,
                                       Тип = gr.Key.Тип.ToUpper().Trim(),
                                       CampaignId = gr.Key.CampaignId.Trim(),
@@ -207,7 +209,7 @@ namespace Refresher1C.Service
                                       Количество = gr.Sum(x => x.r.Sp14017) / gr.Key.КоэффициентЕдиницы,
                                       Квант = gr.Key.Квант,
                                       ItemIndex = gr.Key.ItemIndex.Trim(),
-                                      Sku = gr.Key.Sku.Encode((EncodeVersion)gr.Key.Encode)
+                                      Sku = gr.Key.Sku.Encode((EncodeVersion)gr.Key.Encode),
                                   })
                        .ToListAsync(stoppingToken);
                 if ((data != null) && (data.Count > 0))
@@ -218,6 +220,7 @@ namespace Refresher1C.Service
                         x.MarketplaceId,
                         x.OrderOurId,
                         x.ShipmentId,
+                        x.DeliveryServiceId,
                         x.FirmaId,
                         x.Тип,
                         x.CampaignId,
@@ -378,7 +381,7 @@ namespace Refresher1C.Service
                             }
                             else if (obj.Key.Тип == "WILDBERRIES")
                             {
-                                var supplyIdResult = await GetWbActiveSupplyId(_firmProxy[obj.Key.FirmaId], obj.Key.AuthToken, stoppingToken);
+                                var supplyIdResult = await GetWbActiveSupplyId(_firmProxy[obj.Key.FirmaId], obj.Key.AuthToken, obj.Key.DeliveryServiceId, stoppingToken);
                                 if (!supplyIdResult.success)
                                     status = -1;
                                 else if (!string.IsNullOrEmpty(supplyIdResult.supplyId)) 
@@ -574,7 +577,7 @@ namespace Refresher1C.Service
                                     entity.Sp13992 = result.barcode;
                                 if (result.partA.HasValue && result.partB.HasValue)
                                 {
-                                    entity.Sp13986 = result.partA.Value;
+                                    entity.Sp14123 = result.partA.Value.ToString();
                                     entity.Sp13991 = result.partB.Value;
                                 }
                             }
@@ -2839,7 +2842,7 @@ namespace Refresher1C.Service
                 return true;
             }
         }
-        async Task<(bool success, string supplyId)> GetWbActiveSupplyId(string proxyHost, string authToken, CancellationToken cancellationToken)
+        async Task<(bool success, string supplyId)> GetWbActiveSupplyId(string proxyHost, string authToken, string warehouseId, CancellationToken cancellationToken)
         {
             var supplyListResult = await WbClasses.Functions.GetSuppliesList(_httpService, proxyHost, authToken, cancellationToken);
             if (!string.IsNullOrEmpty(supplyListResult.error))
@@ -2847,22 +2850,21 @@ namespace Refresher1C.Service
                 _logger.LogError(supplyListResult.error);
                 return (success: false, supplyId: "");
             }
-            var supplyId = supplyListResult.supplyIds.FirstOrDefault();
+            var supplyId = supplyListResult.supplyIds
+                .FirstOrDefault(x => x.StartsWith(warehouseId, StringComparison.OrdinalIgnoreCase));
+            if (string.IsNullOrEmpty(supplyId))
+            {
+                supplyId = supplyListResult.supplyIds
+                    .Where(x => !x.Contains('|'))
+                    .FirstOrDefault();
+            }
             if (!string.IsNullOrEmpty(supplyId))
             {
-                //var supplyOrdersResult = await WbClasses.Functions.GetSupplyOrders(_httpService, proxyHost, authToken, supplyId, cancellationToken);
-                //if (!string.IsNullOrEmpty(supplyOrdersResult.error))
-                //{
-                //    _logger.LogError(supplyOrdersResult.error);
-                //    return (success: false, supplyId: "");
-                //}
-                //DateTime? lastOrderCreated = supplyOrdersResult.orders?.Max(x => x.CreatedAt);
-                //if (!lastOrderCreated.HasValue || (lastOrderCreated.HasValue && await SameWorkingDay(lastOrderCreated.Value)))
-                    return (success: true, supplyId);
+                return (success: true, supplyId);
             }
             else
             {
-                var supplyCreateResult = await WbClasses.Functions.CreateSupply(_httpService, proxyHost, authToken, cancellationToken);
+                var supplyCreateResult = await WbClasses.Functions.CreateSupply(_httpService, proxyHost, authToken, warehouseId, cancellationToken);
                 if (!string.IsNullOrEmpty(supplyCreateResult.error))
                 {
                     _logger.LogError(supplyCreateResult.error);
@@ -2870,7 +2872,6 @@ namespace Refresher1C.Service
                 }
                 return (success: true, supplyId: supplyCreateResult.supplyId ?? "");
             }
-            //return (success: true, supplyId: "");
         }
         private async Task CreateLogisticsOrder(string firmaId, string orderId, AliExpressClasses.AliOrder aliOrder, string authToken, CancellationToken cancellationToken)
         {
@@ -3313,6 +3314,7 @@ namespace Refresher1C.Service
                             var leavingDate = DateTime.Now.TimeOfDay > limitTime ? 1 : 0;
                             shipmentDate = DateTime.Today.AddDays(await _склад.ЭтоРабочийДень(Common.SkladEkran, leavingDate));
                         }
+                        var deliveryServiceId = wbOrder.WarehouseId.ToString();
                         string deliveryServiceName = ""; 
                         var address = new OrderRecipientAddress
                         {
@@ -3337,7 +3339,7 @@ namespace Refresher1C.Service
                            encoding,
                            Common.SkladEkran,
                            "",
-                           "0",
+                           deliveryServiceId,
                            deliveryServiceName,
                            StinDeliveryPartnerType.WILDBERRIES,
                            StinDeliveryType.DELIVERY,

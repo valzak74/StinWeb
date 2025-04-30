@@ -301,7 +301,7 @@ namespace StinWeb.Controllers.Обработки
                             Сумма = Math.Round(item.Sp14024 * item.Sp14023, 2, MidpointRounding.AwayFromZero),
                             Себестоимость = отчетКомиссионера.регПартииНаличие != null ? Math.Round(отчетКомиссионера.регПартииНаличие.Sp421, 2, MidpointRounding.AwayFromZero) : 0,
                             НомерЗаказа = order.Code.Trim(),
-                            СтикерЗаказа = market.Sp14155.ToUpper().Trim() == "WILDBERRIES" ? order.Sp13986.ToString() + order.Sp13991.ToString() : "",
+                            СтикерЗаказа = market.Sp14155.ToUpper().Trim() == "WILDBERRIES" ? order.Sp14123.Trim() + order.Sp13991.ToString() : "",
                             ДатаВозврата = возвратКуп.j != null ? Common.DateTimeIddoc(возвратКуп.j.DateTimeIddoc).ToString("dd-MM-yy") : "",
                             ДатаОтмены = 
                                   возвратКомКомплекс.j != null ? Common.DateTimeIddoc(возвратКомКомплекс.j.DateTimeIddoc).ToString("dd-MM-yy")

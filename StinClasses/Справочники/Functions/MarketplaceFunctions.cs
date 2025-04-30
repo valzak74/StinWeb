@@ -114,7 +114,8 @@ namespace StinClasses.Справочники.Functions
                            Квант = nom.Sp14188,
                            DeltaStock = marketplace.StockOriginal ? 0 : nom.Sp14215, //markUse.Sp14214,
                            UpdatedAt = updStock.Updated,
-                           UpdatedFlag = updStock.Flag
+                           UpdatedFlag = updStock.Flag,
+                           WarehouseId = markUse.Sp14179 == 1 ? marketplace.FeedId : marketplace.CampaignId,
                        };
             if (limit > 0)
                 data = data.Take(limit);

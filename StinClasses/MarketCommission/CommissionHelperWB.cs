@@ -9,9 +9,10 @@ namespace StinClasses.MarketCommission;
 
 public class CommissionHelperWB : CommissionHelper
 {
-    decimal _baseLogistics = 35;
-    decimal _addPerLiter = 8.5m;
+    decimal _baseLogistics = 38;
+    decimal _addPerLiter = 9.5m;
     decimal _includeLiters = 1;
+    decimal _skladFactor = 1.25m;
     decimal _minHard = 1000;
     decimal _maxSize = 120.0m;
     decimal _maxSumSize = 200.0m;
@@ -30,7 +31,7 @@ public class CommissionHelperWB : CommissionHelper
     {
         decimal liters = length * width * height / 1000;
         decimal oversizeLiters = Math.Max(liters - _includeLiters, 0);
-        decimal sumLogistics = _baseLogistics + (oversizeLiters * _addPerLiter);
+        decimal sumLogistics = _baseLogistics * _skladFactor + (oversizeLiters * _addPerLiter * _skladFactor);
         bool isHard = (weightBrutto > _maxWeight)
             || ((length > _maxSize) || (width > _maxSize) || (height > _maxSize))
             || (length + width + height > _maxSumSize);
@@ -43,7 +44,7 @@ public class CommissionHelperWB : CommissionHelper
         PercentFactors = new Dictionary<string, decimal>
         {
             { "Category", categoryPercent }, //процент за категорию
-            { "Transaction", 1.5m }, //процент за транзакцию 1.8%
+            { "Transaction", _ekvaring }, //процент за транзакцию 1.5%
         };
     }
     public override decimal MinPrice()

@@ -58,6 +58,7 @@ namespace StinClasses.Справочники
         public decimal DeltaStock { get; set; }
         public DateTime UpdatedAt { get; set; }
         public bool UpdatedFlag { get; set; }
+        public string WarehouseId { get; set; }
     }
     public class MarketUseInfoPrice : MarketUseInfo
     {

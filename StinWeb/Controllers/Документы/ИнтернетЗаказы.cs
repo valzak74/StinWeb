@@ -118,6 +118,11 @@ namespace StinWeb.Controllers
                 .Where(x => !x.Ismark && (x.Sp14155.Trim().ToUpper() == "OZON") && (x.Sp14164.Trim().ToUpper() == "FBS") && !string.IsNullOrWhiteSpace(x.Sp14154))
                 .Select(x => new { CampaignId = x.Code.Trim() + "/" + x.Sp14154.Trim(), Description = x.Sp14155.Trim() + " " + x.Sp14195.Trim() })
                 )
+                .Concat(
+                _context.Sc14042s
+                .Where(x => !x.Ismark && (x.Sp14155.Trim().ToUpper() == "WILDBERRIES") && (x.Sp14164.Trim().ToUpper() == "FBS") && !string.IsNullOrWhiteSpace(x.Sp14154))
+                .Select(x => new { CampaignId = x.Code.Trim() + "/" + x.Sp14154.Trim(), Description = x.Sp14155.Trim() + " " + x.Sp14195.Trim() })
+                )
                 .OrderBy(x => x.Description);
             ViewBag.CampaignIds = new SelectList(CampaignIds, "CampaignId", "Description");
 
@@ -174,6 +179,12 @@ namespace StinWeb.Controllers
                 .Concat(
                 _context.Sc14042s
                 .Where(x => !x.Ismark && (x.Sp14155.Trim().ToUpper() == "OZON") && (x.Sp14164.Trim().ToUpper() == "FBS") && !string.IsNullOrWhiteSpace(x.Sp14154))
+                .Select(x => new { CampaignId = x.Id.Replace(" ", "_") + "/" + x.Sp14154.Trim(), Description = x.Sp14155.Trim() + " " + x.Sp14195.Trim() })
+                .AsEnumerable()
+                )
+                .Concat(
+                _context.Sc14042s
+                .Where(x => !x.Ismark && (x.Sp14155.Trim().ToUpper() == "WILDBERRIES") && (x.Sp14164.Trim().ToUpper() == "FBS") && !string.IsNullOrWhiteSpace(x.Sp14154))
                 .Select(x => new { CampaignId = x.Id.Replace(" ", "_") + "/" + x.Sp14154.Trim(), Description = x.Sp14155.Trim() + " " + x.Sp14195.Trim() })
                 .AsEnumerable()
                 )
@@ -278,7 +289,7 @@ namespace StinWeb.Controllers
                                   orderId = order.Id,
                                   orderNo = order.Code + 
                                     (market.Sp14155.ToUpper().Trim() == "ALIEXPRESS" ? " / " + order.Sp13987.Trim() :
-                                     market.Sp14155.ToUpper().Trim() == "WILDBERRIES" ? " / " + order.Sp13986.ToString() + " / " + order.Sp13991.ToString() : ""),
+                                     market.Sp14155.ToUpper().Trim() == "WILDBERRIES" ? " / " + order.Sp14123.Trim() + " / " + order.Sp13991.ToString() : ""),
                                   status = order.Sp13982,
                                   типДоставкиПартнер = order.Sp13985,
                                   типДоставки = order.Sp13988,
@@ -716,10 +727,18 @@ namespace StinWeb.Controllers
                     //    departureDate = departureDate.AddDays(2);
                     //if (departureDate.DayOfWeek == DayOfWeek.Sunday)
                     //    departureDate = departureDate.AddDays(1);
+                    long.TryParse(campaignId, out long searchWarehouseId);
+                    if (!string.IsNullOrEmpty(warehouseId))
+                    {
+                        if (long.TryParse(warehouseId, out long altWarehouseId))
+                            searchWarehouseId = altWarehouseId;
+                    }
+
                     var deliveryServiceNames = await (from o in _context.Sc13994s
                                                       join m in _context.Sc14042s on o.Sp14038 equals m.Id
                                                       where !o.Ismark && (m.Code.Trim() == campaignId) &&
                                                             (o.Sp13990.Date == departureDate) &&
+                                                            (searchWarehouseId > 0 ? o.Sp13986 == searchWarehouseId : true) &&
                                                             o.Sp13987.Trim() != ""
                                                       select o.Sp13987.Trim())
                                                     .Distinct()

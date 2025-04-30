@@ -522,9 +522,11 @@ namespace StinClasses.Справочники
                 order.Модель = marketplaceEntity.Sp14164.ToUpper().Trim();
                 if (order.Тип == "OZON" && order.DeliveryServiceId != marketplaceEntity.Code.Trim())
                 {
-                    order.Marketplace = order.DeliveryServiceId == marketplaceEntity.Sp14154.Trim()
-                        ? marketplaceEntity.Sp14155.Trim() + " realFBS"
-                        : "КГТ " + marketplaceEntity.Sp14155.Trim();
+                    order.Marketplace = marketplaceEntity.Sp14155.Trim() + " realFBS";
+                }
+                else if (order.Тип == "WILDBERRIES" && order.DeliveryServiceId != marketplaceEntity.Code.Trim())
+                {
+                    order.Marketplace = marketplaceEntity.Sp14155.Trim() + " KGT";
                 }
                 else if ((order.Тип == "ЯНДЕКС") && (order.Модель == "EXPRESS"))
                     order.Marketplace = "Yandex " + order.Модель;

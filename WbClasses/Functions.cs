@@ -297,13 +297,13 @@ namespace WbClasses
                 err = result.Item2.LogWbErrors("");
             return (orders: result.Item1?.Orders, error: string.IsNullOrEmpty(err) ? "" : "WbGetSupplyOrders: " + err);
         }
-        public static async Task<(string? supplyId, string error)> CreateSupply(IHttpService httpService, string proxyHost, string authToken, CancellationToken cancellationToken)
+        public static async Task<(string? supplyId, string error)> CreateSupply(IHttpService httpService, string proxyHost, string authToken, string warehouseId, CancellationToken cancellationToken)
         {
             var result = await httpService.Exchange<Supply, WbErrorResponse>(
                 $"https://{proxyHost}marketplace-api.wildberries.ru/api/v3/supplies",
                 HttpMethod.Post,
                 GetCustomHeaders(authToken),
-                new SupplyName { Name = DateTime.Today.ToString("ddMMyyyymmss") },
+                new SupplyName { Name = warehouseId + '|' + DateTime.Today.ToString("ddMMyyyymmss") },
                 cancellationToken);
             string err = "";
             if (result.Item2 != null)
