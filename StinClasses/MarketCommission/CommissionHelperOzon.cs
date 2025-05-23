@@ -32,10 +32,10 @@ namespace StinClasses.MarketCommission
                 FixCommissions = new Dictionary<string, decimal>
                 {
                     { "VolumeWeight", _volumeWeightFactor },
-                    { "LastMile", 0 },
+                    { "LastMile", 25 },
                     { "ServiceCentre", _model == ModelTypeOzon.FBS ? 20 : 0 }
                 };
-                PercentFactors.Add("LastMile", _tariffLastMile.percent);
+                //PercentFactors.Add("LastMile", _tariffLastMile.percent);
             }
         }
         decimal VolumeWeightFactor(decimal volumeWeight)
@@ -47,8 +47,8 @@ namespace StinClasses.MarketCommission
                     {
                         <= 0.4m => 43,
                         <= 1m => 76,
-                        <= 190m => 76 + (Math.Ceiling(volumeWeight) - 1) * 12, // 12 руб за каждый дополнительный литр свыше 1
-                        _ => 2344
+                        <= 190m => 76 + (Math.Ceiling(volumeWeight) - 1) * 18, // 18 руб за каждый дополнительный литр свыше 1
+                        _ => 3478
                     };
                 case ModelTypeOzon.RealFBS:
                     return volumeWeight switch
@@ -61,12 +61,11 @@ namespace StinClasses.MarketCommission
                         _ => 9900
                     };
                 case ModelTypeOzon.FBO:
-                    return 1.2m * volumeWeight switch
+                    return volumeWeight switch
                     {
-                        <= 0.1m => 43,
-                        <= 1m => 63,
-                        <= 190m => 63 + (Math.Ceiling(volumeWeight) - 1) * 10, // 10 руб за каждый дополнительный литр свыше 1
-                        _ => 1953
+                        <= 1m => 43,
+                        <= 190m => 43 + (Math.Ceiling(volumeWeight) - 1) * 10, // 10 руб за каждый дополнительный литр свыше 1
+                        _ => 1933
                     };
             }
             return 0;

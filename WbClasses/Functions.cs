@@ -111,7 +111,7 @@ namespace WbClasses
             if (priceData.Count > 0)
             {
                 var result = await httpService.Exchange<bool, PriceError>(
-                    $"https://{proxyHost}discounts-prices-api.wb.ru/api/v2/upload/task",
+                    $"https://{proxyHost}discounts-prices-api.wildberries.ru/api/v2/upload/task",
                     HttpMethod.Post,
                     GetCustomHeaders(authToken),
                     new PriceRequestV2 { Data = priceData },

@@ -4797,7 +4797,7 @@ namespace Refresher1C.Service
                         from vzTovar in _vzTovar.DefaultIfEmpty()
                         where (markUse.Sp14147 == marketplaceId) &&
                           (markUse.Sp14158 == 1) //Есть в каталоге 
-                          //&& nom.Code == "D00071547"
+                          //&& nom.Code == "D00084241"
                         select new
                         {
                             Id = markUse.Id,

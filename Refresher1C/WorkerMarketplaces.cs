@@ -54,16 +54,16 @@ namespace Refresher1C
                     using var _service = _scopeFactory.CreateScope().ServiceProvider.GetService<IMarketplaceService>();
                     await _service.PrepareFbsLabels(regular, stoppingToken);
                 });
-                var buyerInfo = Task.Run(async () => {
-                    using var _service = _scopeFactory.CreateScope().ServiceProvider.GetService<IMarketplaceService>();
-                    await _service.RefreshBuyerInfo(stoppingToken);
-                });
+                //var buyerInfo = Task.Run(async () => {
+                //    using var _service = _scopeFactory.CreateScope().ServiceProvider.GetService<IMarketplaceService>();
+                //    await _service.RefreshBuyerInfo(stoppingToken);
+                //});
                 var orderStatus = Task.Run(async () => {
                     using var _service = _scopeFactory.CreateScope().ServiceProvider.GetService<IMarketplaceService>();
                     await _service.ChangeOrderStatus(stoppingToken);
                 });
 
-                await Task.WhenAll(checkNabor, yandexBoxes, fbsLabels, buyerInfo, orderStatus);
+                await Task.WhenAll(checkNabor, yandexBoxes, fbsLabels, orderStatus);
             }
             catch
             {
