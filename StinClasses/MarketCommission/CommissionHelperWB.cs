@@ -17,7 +17,7 @@ public class CommissionHelperWB : CommissionHelper
     decimal _maxSize = 120.0m;
     decimal _maxSumSize = 200.0m;
     decimal _maxWeight = 25;
-    decimal _ekvaring = 1.5m;
+    decimal _ekvaring = 2.0m;
 
     public CommissionHelperWB(
         decimal zakupPrice, 
@@ -44,7 +44,7 @@ public class CommissionHelperWB : CommissionHelper
         PercentFactors = new Dictionary<string, decimal>
         {
             { "Category", categoryPercent }, //процент за категорию
-            { "Transaction", _ekvaring }, //процент за транзакцию 1.5%
+            { "Transaction", _ekvaring }, //процент за транзакцию 2.0%
         };
     }
     public override decimal MinPrice()
