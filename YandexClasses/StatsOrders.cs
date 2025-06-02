@@ -20,7 +20,7 @@ namespace YandexClasses
         [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd")]
         public DateTime? UpdateTo { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public List<int> Orders { get; set; }
+        public List<long> Orders { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public List<StatusYandex> Statuses { get; set; }
         public bool HasCis { get; set; }
