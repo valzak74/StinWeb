@@ -302,6 +302,8 @@ namespace StinWeb.Controllers.Обработки
                             Себестоимость = отчетКомиссионера.регПартииНаличие != null ? Math.Round(отчетКомиссионера.регПартииНаличие.Sp421, 2, MidpointRounding.AwayFromZero) : 0,
                             НомерЗаказа = order.Code.Trim(),
                             СтикерЗаказа = market.Sp14155.ToUpper().Trim() == "WILDBERRIES" ? order.Sp14123.Trim() + order.Sp13991.ToString() : "",
+                            СтикерЗаказаСтарый = market.Sp14155.ToUpper().Trim() == "WILDBERRIES" ? order.Sp13986.ToString() + order.Sp13991.ToString() : "",
+                            НуженСтарыйСтикерЗаказа = order.Sp14123.Trim() == "",
                             ДатаВозврата = возвратКуп.j != null ? Common.DateTimeIddoc(возвратКуп.j.DateTimeIddoc).ToString("dd-MM-yy") : "",
                             ДатаОтмены = 
                                   возвратКомКомплекс.j != null ? Common.DateTimeIddoc(возвратКомКомплекс.j.DateTimeIddoc).ToString("dd-MM-yy")
@@ -331,7 +333,7 @@ namespace StinWeb.Controllers.Обработки
                 sheet.SetValue(styleValueMoney, row, columnValues["Сумма"], item.Сумма);
                 sheet.SetValue(styleValueMoney, row, columnValues["Себестоимость"], item.Себестоимость);
                 sheet.SetValue(styleValue, row, columnValues["НомерЗаказа"], item.НомерЗаказа);
-                sheet.SetValue(styleValue, row, columnValues["Стикер"], item.СтикерЗаказа);
+                sheet.SetValue(styleValue, row, columnValues["Стикер"], item.НуженСтарыйСтикерЗаказа ? item.СтикерЗаказаСтарый : item.СтикерЗаказа);
                 sheet.SetValue(styleValue, row, columnValues["ДатаВозврата"], item.ДатаВозврата);
                 sheet.SetValue(styleValue, row, columnValues["ВозвратОтмена"], item.ДатаОтмены);
                 sheet.SetValue(styleValueNum, row, columnValues["Коэффициент"], item.Себестоимость == 0 ? 0 : Math.Round(item.Сумма / item.Себестоимость, 3, MidpointRounding.AwayFromZero));
