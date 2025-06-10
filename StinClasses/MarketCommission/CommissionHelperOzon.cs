@@ -45,9 +45,8 @@ namespace StinClasses.MarketCommission
                 case ModelTypeOzon.FBS:
                     return volumeWeight switch
                     {
-                        <= 0.4m => 43,
-                        <= 1m => 76,
-                        <= 190m => 76 + (Math.Ceiling(volumeWeight) - 1) * 18, // 18 руб за каждый дополнительный литр свыше 1
+                        <= 1m => 80,
+                        <= 190m => 80 + (Math.Ceiling(volumeWeight) - 1) * 18, // 18 руб за каждый дополнительный литр свыше 1
                         _ => 3478
                     };
                 case ModelTypeOzon.RealFBS:
@@ -63,8 +62,8 @@ namespace StinClasses.MarketCommission
                 case ModelTypeOzon.FBO:
                     return volumeWeight switch
                     {
-                        <= 1m => 43,
-                        <= 190m => 43 + (Math.Ceiling(volumeWeight) - 1) * 10, // 10 руб за каждый дополнительный литр свыше 1
+                        <= 1m => 46,
+                        <= 190m => 46 + (Math.Ceiling(volumeWeight) - 1) * 10, // 10 руб за каждый дополнительный литр свыше 1
                         _ => 1933
                     };
             }

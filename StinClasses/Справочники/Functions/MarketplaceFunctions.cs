@@ -347,7 +347,8 @@ namespace StinClasses.Справочники.Functions
             var priceData = new List<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount, decimal minPrice)>();
             foreach (var item in data)
             {
-                var Цена = item.RoznSp > 0 ? Math.Min(item.RoznSp, item.Rozn) : item.Rozn;
+                //var Цена = item.RoznSp > 0 ? Math.Min(item.RoznSp, item.Rozn) : item.Rozn;
+                var Цена = item.Rozn;
                 if (item.Fix > 0)
                 {
                     if (item.Fix >= Цена)
