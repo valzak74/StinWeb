@@ -185,19 +185,27 @@ namespace StinWeb.Controllers.Обработки
             {
                 columnValues.Add(marketplace.ShortName, sheet.CreateColumnWithWidth(column++, 2900));
             }
+            foreach (var marketplace in marketplaceData)
+            {
+                columnValues.Add(marketplace.ShortName + "MinPrice", sheet.CreateColumnWithWidth(column++, 2900));
+            }
             columnValues.Add("Квант", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("КоррОстатков", sheet.CreateColumnWithWidth(column++, 2900));
-            columnValues.Add("КраткоеОписание", sheet.CreateColumnWithWidth(column++, 9000));
+            //columnValues.Add("КраткоеОписание", sheet.CreateColumnWithWidth(column++, 9000));
             columnValues.Add("Страна", sheet.CreateColumnWithWidth(column++, 3500));
             columnValues.Add("Категория", sheet.CreateColumnWithWidth(column++, 8000));
             columnValues.Add("Штрихкод", sheet.CreateColumnWithWidth(column++, 4300));
-            columnValues.Add("Длина", sheet.CreateColumnWithWidth(column++, 2900));
-            columnValues.Add("Ширина", sheet.CreateColumnWithWidth(column++, 2900));
-            columnValues.Add("Высота", sheet.CreateColumnWithWidth(column++, 2900));
-            columnValues.Add("ГабаритыСумма", sheet.CreateColumnWithWidth(column++, 2900));
+            //columnValues.Add("Длина", sheet.CreateColumnWithWidth(column++, 2900));
+            //columnValues.Add("Ширина", sheet.CreateColumnWithWidth(column++, 2900));
+            //columnValues.Add("Высота", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("Габариты", sheet.CreateColumnWithWidth(column++, 2900));
+            columnValues.Add("ГабаритыСумма", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("Брутто", sheet.CreateColumnWithWidth(column++, 2900));
+            columnValues.Add("VolumeWeight", sheet.CreateColumnWithWidth(column++, 2900));
+            columnValues.Add("VolumeWeightOzon", sheet.CreateColumnWithWidth(column++, 2900));
+            columnValues.Add("VolumeWeightCompare", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("КолМест", sheet.CreateColumnWithWidth(column++, 2900));
+            columnValues.Add("IsRealFBS", sheet.CreateColumnWithWidth(column++, 2900));
 
             sheet.SetColumnHidden(columnValues["Id"], true);
             int row = 0;
@@ -232,19 +240,27 @@ namespace StinWeb.Controllers.Обработки
             {
                 sheet.SetValue(styleHeader, row, columnValues[marketplace.ShortName], marketplace.ShortName + " " + marketplace.DefMultiplyer.ToString() );
             }
+            foreach (var marketplace in marketplaceData)
+            {
+                sheet.SetValue(styleHeader, row, columnValues[marketplace.ShortName +"MinPrice"], marketplace.ShortName + " мин. цена");
+            }
             sheet.SetValue(styleHeader, row, columnValues["Квант"], "Квант");
             sheet.SetValue(styleHeader, row, columnValues["КоррОстатков"], "Корр. остатков");
-            sheet.SetValue(styleHeader, row, columnValues["КраткоеОписание"], "Краткое описание");
+            //sheet.SetValue(styleHeader, row, columnValues["КраткоеОписание"], "Краткое описание");
             sheet.SetValue(styleHeader, row, columnValues["Страна"], "Страна происхождения");
             sheet.SetValue(styleHeader, row, columnValues["Категория"], "Категория конечная");
             sheet.SetValue(styleHeader, row, columnValues["Штрихкод"], "Штрихкод");
-            sheet.SetValue(styleHeader, row, columnValues["Длина"], "Длина, см.");
-            sheet.SetValue(styleHeader, row, columnValues["Ширина"], "Ширина, см.");
-            sheet.SetValue(styleHeader, row, columnValues["Высота"], "Высота, см.");
-            sheet.SetValue(styleHeader, row, columnValues["ГабаритыСумма"], "Сумма габаритов, см.");
+            //sheet.SetValue(styleHeader, row, columnValues["Длина"], "Длина, см.");
+            //sheet.SetValue(styleHeader, row, columnValues["Ширина"], "Ширина, см.");
+            //sheet.SetValue(styleHeader, row, columnValues["Высота"], "Высота, см.");
             sheet.SetValue(styleHeader, row, columnValues["Габариты"], "Длина/ Ширина/ Высота");
+            sheet.SetValue(styleHeader, row, columnValues["ГабаритыСумма"], "Сумма габаритов, см.");
             sheet.SetValue(styleHeader, row, columnValues["Брутто"], "Вес брутто, кг.");
+            sheet.SetValue(styleHeader, row, columnValues["VolumeWeight"], "Вес объемный из ОБ, л.");
+            sheet.SetValue(styleHeader, row, columnValues["VolumeWeightOzon"], "Вес объемный из Озон, л.");
+            sheet.SetValue(styleHeader, row, columnValues["VolumeWeightCompare"], "Сравнение объемного веса");
             sheet.SetValue(styleHeader, row, columnValues["КолМест"], "Кол-во мест");
+            sheet.SetValue(styleHeader, row, columnValues["IsRealFBS"], "realFBS");
 
             var nativeData = from marketUsing in _context.Sc14152s
                              join market in _context.Sc14042s on marketUsing.Sp14147 equals market.Id
@@ -273,6 +289,7 @@ namespace StinWeb.Controllers.Обработки
                                  ЦенаСп = vzTovar != null ? vzTovar.RoznSp ?? 0 : 0,
                                  ЦенаЗакуп = vzTovar != null ? vzTovar.Zakup ?? 0 : 0,
                                  МинЦена = marketUsing.Sp14198,
+                                 VolumeWeight = marketUsing.Sp14229,
                                  Квант = nom.Sp14188,
                                  DeltaStock = nom.Sp14215, //marketUsing.Sp14214,
                                  DeltaPrice = marketUsing.Sp14213,
@@ -285,7 +302,12 @@ namespace StinWeb.Controllers.Обработки
                                  Ширина = sc75.Sp14036 * 100,
                                  Высота = sc75.Sp14035 * 100,
                                  Брутто = sc75.Sp14056,
-                                 КолМест = sc75.Sp14063
+                                 КолМест = sc75.Sp14063,
+                                 IsRealFBS = market.Sp14155.Trim().ToUpper() == "OZON" && market.Sp14154.Trim() != ""
+                                    ? market.Sp14154.Trim() == marketUsing.Sp14190.Trim()
+                                    : market.Sp14155.Trim().ToUpper() == "WILDBERRIES" && market.Sp14154.Trim() != ""
+                                        ? marketUsing.Sp14179 == 1
+                                        : false,
                              };
             var usedMarketIds = marketplaceData.Select(x => x.Id).ToList();
             var otherData = await (from marketUsing in _context.Sc14152s
@@ -297,6 +319,7 @@ namespace StinWeb.Controllers.Обработки
                                 MarketId = market.Id,
                                 Deleted = marketUsing.Ismark,
                                 NomId = nom.Id,
+                                МинЦена = marketUsing.Sp14198,
                                 ЦенаФикс = marketUsing.Sp14148,
                                 Коэф = marketUsing.Sp14149,
                                 ЕстьВКаталоге = marketUsing.Sp14158 == 1,
@@ -463,9 +486,14 @@ namespace StinWeb.Controllers.Обработки
                         sheet.SetValue(marked ? styleValue : styleValueMark, row, columnValues[marketplace.ShortName], "");
                     marked = true;
                 }
+                foreach (var marketplace in marketplaceData)
+                {
+                    var m_data = otherData.Where(x => (x.MarketId == marketplace.Id) && (x.NomId == item.NomId)).FirstOrDefault();
+                    sheet.SetValue(styleValueMoney, row, columnValues[marketplace.ShortName + "MinPrice"], m_data?.МинЦена ?? 0);
+                }
                 sheet.SetValue(styleValueNum, row, columnValues["Квант"], item.Квант);
                 sheet.SetValue(styleValueNum, row, columnValues["КоррОстатков"], item.DeltaStock);
-                sheet.SetValue(styleValue, row, columnValues["КраткоеОписание"], item.Характеристики);
+                //sheet.SetValue(styleValue, row, columnValues["КраткоеОписание"], item.Характеристики);
                 var странаId = await _context.ПолучитьЗначениеПериодическогоРеквизита(item.NomId, 5012);
                 string страна = "";
                 if (!string.IsNullOrWhiteSpace(странаId))
@@ -473,10 +501,9 @@ namespace StinWeb.Controllers.Обработки
                 sheet.SetValue(styleValue, row, columnValues["Страна"], страна);
                 sheet.SetValue(styleValue, row, columnValues["Категория"], item.Категория);
                 sheet.SetValue(styleValue, row, columnValues["Штрихкод"], item.Штрихкод);
-                sheet.SetValue(styleValueNum1tail, row, columnValues["Длина"], item.Длина);
-                sheet.SetValue(styleValueNum1tail, row, columnValues["Ширина"], item.Ширина);
-                sheet.SetValue(styleValueNum1tail, row, columnValues["Высота"], item.Высота);
-                sheet.SetValue(styleValueNum1tail, row, columnValues["ГабаритыСумма"], item.Длина + item.Ширина + item.Высота);
+                //sheet.SetValue(styleValueNum1tail, row, columnValues["Длина"], item.Длина);
+                //sheet.SetValue(styleValueNum1tail, row, columnValues["Ширина"], item.Ширина);
+                //sheet.SetValue(styleValueNum1tail, row, columnValues["Высота"], item.Высота);
                 sheet.SetValue(styleValue, row, columnValues["Габариты"], (item.Длина + item.Ширина + item.Высота) > 0 ? 
                     item.Длина.ToString("# ##0.0;-# ##0.0;;@", System.Globalization.CultureInfo.InvariantCulture) + 
                     "/" + 
@@ -484,8 +511,14 @@ namespace StinWeb.Controllers.Обработки
                     "/" + 
                     item.Высота.ToString("# ##0.0;-# ##0.0;;@", System.Globalization.CultureInfo.InvariantCulture) 
                     : "");
+                sheet.SetValue(styleValueNum1tail, row, columnValues["ГабаритыСумма"], item.Длина + item.Ширина + item.Высота);
                 sheet.SetValue(styleValueNum1tail, row, columnValues["Брутто"], item.Брутто);
+                var volumeWeight = Math.Max(item.Брутто, (item.Длина * item.Ширина * item.Высота) / 5000);
+                sheet.SetValue(styleValueNum1tail, row, columnValues["VolumeWeight"], volumeWeight);
+                sheet.SetValue(styleValueNum1tail, row, columnValues["VolumeWeightOzon"], item.VolumeWeight);
+                sheet.SetValue(styleValueNum1tail, row, columnValues["VolumeWeightCompare"], item.VolumeWeight == 0 ? 0 : volumeWeight / item.VolumeWeight);
                 sheet.SetValue(styleValueNum0tail, row, columnValues["КолМест"], item.КолМест < 1 ? 1 : item.КолМест);
+                sheet.SetValue(styleValueNum0tail, row, columnValues["IsRealFBS"], item.IsRealFBS ? 1 : 0);
             }
 
             formula.EvaluateAll();
