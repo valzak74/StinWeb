@@ -2511,7 +2511,8 @@ namespace Refresher1C.Service
                     var readyToShipOrders = await ActiveOrders(marketplaceId, cancellationToken);
                     foreach (var detailOrder in result.Orders)
                     {
-                        var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, detailOrder.Id.ToString());
+                       TimeSpan ts = DateTime.Now - (detailOrder.StatusUpdateDate ?? DateTime.MinValue);
+                       var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, detailOrder.Id.ToString());
                         if (order != null)
                         {
                             switch (detailOrder.Status)
@@ -2524,7 +2525,6 @@ namespace Refresher1C.Service
                                         await _docService.OrderCancelled(order);
                                     break;
                                 case YandexClasses.StatusYandex.DELIVERY:
-                                    TimeSpan ts = DateTime.Now - (detailOrder.StatusUpdateDate ?? DateTime.MinValue);
                                     if ((ts.TotalMinutes > 10) && readyToShipOrders.Contains(detailOrder.Id.ToString()) && 
                                         (order.DeliveryPartnerType != StinDeliveryPartnerType.SHOP) &&
                                         (order.InternalStatus < 14) && (order.InternalStatus != 6) && (order.InternalStatus != 5) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
@@ -2535,6 +2535,13 @@ namespace Refresher1C.Service
                                 case YandexClasses.StatusYandex.PARTIALLY_RETURNED:
                                     if (((order.InternalStatus == 14) || (order.InternalStatus == 16)) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                                         await _docService.OrderFromTransferDeliveried(order);
+                                    else if ((order.InternalStatus == 3) || (order.InternalStatus == -3))
+                                    {
+                                        if ((ts.TotalMinutes > 10) && readyToShipOrders.Contains(detailOrder.Id.ToString()) &&
+                                            (order.DeliveryPartnerType != StinDeliveryPartnerType.SHOP) &&
+                                            (order.InternalStatus < 14) && (order.InternalStatus != 6) && (order.InternalStatus != 5) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                                            await _docService.OrderDeliveried(order, true);
+                                    }
                                     break;
                                 case YandexClasses.StatusYandex.PROCESSING:
                                     if (order.InternalStatus == 0)
@@ -4797,7 +4804,7 @@ namespace Refresher1C.Service
                         from vzTovar in _vzTovar.DefaultIfEmpty()
                         where (markUse.Sp14147 == marketplaceId) &&
                           (markUse.Sp14158 == 1) //Есть в каталоге 
-                          //&& nom.Code == "D00084241"
+                          //&& nom.Code == "D00080126"
                         select new
                         {
                             Id = markUse.Id,

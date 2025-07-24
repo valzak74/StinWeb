@@ -34,7 +34,7 @@ namespace StinClasses.MarketCommission
             PercentFactors = new Dictionary<string, decimal>
             {
                 //{ "AllFactors", sumFactorPercent },
-                { "PerevodPlateg", 2.3m },
+                { "PerevodPlateg", 2.5m },
                 { "Fee", feePercent },
             };
             FixCommissions = new Dictionary<string, decimal>
@@ -117,22 +117,22 @@ namespace StinClasses.MarketCommission
             {
                 ModelTypeYandex.FBS => _volumeWeight switch
                 {
-                    < 0.2m => 55,
-                    < 0.5m => 60,
-                    < 1 => 65,
-                    < 2 => 70,
-                    < 4 => 100,
-                    < 6 => 180,
-                    < 8 => 250,
-                    < 10 => 300,
-                    < 12 => 400,
-                    < 15 => 500,
-                    < 20 => 600,
-                    < 25 => 800,
-                    < 30 => 1000,
-                    < 35 => 1200,
-                    < 50 => 1400,
-                    < 150 => 1600,
+                    < 0.2m => 80,
+                    < 0.5m => 95,
+                    < 1 => 115,
+                    < 2 => 150,
+                    < 4 => 210,
+                    < 6 => 320,
+                    < 8 => 430,
+                    < 10 => 520,
+                    < 12 => 640,
+                    < 15 => 760,
+                    < 20 => 1000,
+                    < 25 => 1250,
+                    < 30 => 1500,
+                    < 35 => 1750,
+                    < 50 => 2250,
+                    < 150 => 3000,
                     _ => 3500
                 },
                 ModelTypeYandex.FBY => _volumeWeight switch

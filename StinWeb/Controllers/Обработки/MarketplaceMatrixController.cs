@@ -513,7 +513,7 @@ namespace StinWeb.Controllers.Обработки
                     : "");
                 sheet.SetValue(styleValueNum1tail, row, columnValues["ГабаритыСумма"], item.Длина + item.Ширина + item.Высота);
                 sheet.SetValue(styleValueNum1tail, row, columnValues["Брутто"], item.Брутто);
-                var volumeWeight = Math.Max(item.Брутто, (item.Длина * item.Ширина * item.Высота) / 5000);
+                var volumeWeight = Math.Round(Math.Max(item.Брутто, (item.Длина * item.Ширина * item.Высота) / 5000), 1, MidpointRounding.AwayFromZero);
                 sheet.SetValue(styleValueNum1tail, row, columnValues["VolumeWeight"], volumeWeight);
                 sheet.SetValue(styleValueNum1tail, row, columnValues["VolumeWeightOzon"], item.VolumeWeight);
                 sheet.SetValue(styleValueNum1tail, row, columnValues["VolumeWeightCompare"], item.VolumeWeight == 0 ? 0 : volumeWeight / item.VolumeWeight);

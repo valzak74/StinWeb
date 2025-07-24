@@ -74,17 +74,20 @@ namespace StinClasses.MarketCommission
             decimal calcMinPrice = base.MinPrice();
             if (_model == ModelTypeOzon.RealFBS)
                 return calcMinPrice;
-            if (calcMinPrice > GetLimit(_tariffLastMile.percent, _tariffLastMile.limMax))
+            if (PercentFactors.ContainsKey("LastMile"))
             {
-                FixCommissions["LastMile"] = _tariffLastMile.limMax;
-                PercentFactors["LastMile"] = 0;
-                calcMinPrice = base.MinPrice();
-            }
-            else if (calcMinPrice < GetLimit(_tariffLastMile.percent, _tariffLastMile.limMin))
-            {
-                FixCommissions["LastMile"] = _tariffLastMile.limMin;
-                PercentFactors["LastMile"] = 0;
-                calcMinPrice = base.MinPrice();
+                if (calcMinPrice > GetLimit(_tariffLastMile.percent, _tariffLastMile.limMax))
+                {
+                    FixCommissions["LastMile"] = _tariffLastMile.limMax;
+                    PercentFactors["LastMile"] = 0;
+                    calcMinPrice = base.MinPrice();
+                }
+                else if (calcMinPrice < GetLimit(_tariffLastMile.percent, _tariffLastMile.limMin))
+                {
+                    FixCommissions["LastMile"] = _tariffLastMile.limMin;
+                    PercentFactors["LastMile"] = 0;
+                    calcMinPrice = base.MinPrice();
+                }
             }
             return calcMinPrice;
         }
