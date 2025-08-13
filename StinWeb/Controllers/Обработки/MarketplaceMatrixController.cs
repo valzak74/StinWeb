@@ -20,6 +20,7 @@ using StinClasses;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Threading;
+using StinClasses.MarketCommission;
 
 namespace StinWeb.Controllers.Обработки
 {
@@ -27,11 +28,17 @@ namespace StinWeb.Controllers.Обработки
     {
         private StinDbContext _context;
         private readonly ILogger<MarketplaceMatrixController> _logger;
+        private readonly IMarkupFactorPercentDictionary _markupFactorPercentDictionary;
 
-        public MarketplaceMatrixController(StinDbContext context, ILogger<MarketplaceMatrixController> logger)
+        public MarketplaceMatrixController(
+            StinDbContext context, 
+            ILogger<MarketplaceMatrixController> logger,
+            IMarkupFactorPercentDictionary markupFactorPercentDictionary
+        )
         {
             _context = context;
             _logger = logger;
+            _markupFactorPercentDictionary = markupFactorPercentDictionary;
         }
         [Authorize]
         public IActionResult Index()
@@ -175,6 +182,7 @@ namespace StinWeb.Controllers.Обработки
             columnValues.Add("РозничнаяСП", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("ЦенаПродажи", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("ЦП_ЗЦ", sheet.CreateColumnWithWidth(column++, 2900));
+            columnValues.Add("ПроцентМинНаценки", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("МинЦена", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("МинЦенаКвант", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("ЦП_МЦ", sheet.CreateColumnWithWidth(column++, 2900));
@@ -230,6 +238,7 @@ namespace StinWeb.Controllers.Обработки
             sheet.SetValue(styleHeader, row, columnValues["РозничнаяСП"], "Розничная спец");
             sheet.SetValue(styleHeader, row, columnValues["ЦенаПродажи"], "Цена продажи");
             sheet.SetValue(styleHeader, row, columnValues["ЦП_ЗЦ"], "ЦП/ЗЦ");
+            sheet.SetValue(styleHeader, row, columnValues["ПроцентМинНаценки"], "% Мин. наценки");
             sheet.SetValue(styleHeader, row, columnValues["МинЦена"], "Мин. цена");
             sheet.SetValue(styleHeader, row, columnValues["МинЦенаКвант"], "Мин. цена кванта");
             sheet.SetValue(styleHeader, row, columnValues["ЦП_МЦ"], "ЦП/МЦ");
@@ -434,6 +443,7 @@ namespace StinWeb.Controllers.Обработки
                 var ценаПродажи = item.МинЦена > 0 ? Math.Max(item.МинЦена, ценаПродажиОБ) : ценаПродажиОБ;
                 sheet.SetValue(styleValueMoney, row, columnValues["ЦенаПродажи"], ценаПродажи);
                 sheet.SetValue(styleValueNum, row, columnValues["ЦП_ЗЦ"], item.ЦенаЗакуп == 0 ? 0 : ценаПродажи / item.ЦенаЗакуп);
+                sheet.SetValue(styleValueNum, row, columnValues["ПроцентМинНаценки"], _markupFactorPercentDictionary.GetPercent(item.ЦенаЗакуп));
                 sheet.SetValue(styleValueMoney, row, columnValues["МинЦена"], item.МинЦена);
                 sheet.SetValue(styleValueMoney, row, columnValues["МинЦенаКвант"], item.МинЦена * (item.Квант == 0 ? 1 : item.Квант));
                 sheet.SetValue(ценаПродажи < item.МинЦена ? styleValueNumRed : styleValueNum, row, columnValues["ЦП_МЦ"], item.МинЦена == 0 ? 0 : ценаПродажи / item.МинЦена);

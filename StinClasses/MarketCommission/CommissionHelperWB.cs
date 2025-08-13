@@ -12,7 +12,7 @@ public class CommissionHelperWB : CommissionHelper
     decimal _baseLogistics = 38;
     decimal _addPerLiter = 9.5m;
     decimal _includeLiters = 1;
-    decimal _skladFactor = 1.25m;
+    decimal _skladFactor = 2.0m;
     decimal _minHard = 1000;
     decimal _maxSize = 120.0m;
     decimal _maxSumSize = 200.0m;
@@ -20,6 +20,7 @@ public class CommissionHelperWB : CommissionHelper
     decimal _ekvaring = 2.0m;
 
     public CommissionHelperWB(
+        IMarkupFactorPercentDictionary markupFactorPercentDictionary,
         decimal zakupPrice, 
         int quant, 
         decimal categoryPercent,
@@ -27,7 +28,7 @@ public class CommissionHelperWB : CommissionHelper
         decimal width,
         decimal height,
         decimal weightBrutto
-    ) : base(zakupPrice, quant)
+    ) : base(markupFactorPercentDictionary, zakupPrice, quant)
     {
         decimal liters = length * width * height / 1000;
         decimal oversizeLiters = Math.Max(liters - _includeLiters, 0);

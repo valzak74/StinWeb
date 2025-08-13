@@ -18,6 +18,7 @@ using StinClasses.Справочники.Functions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http.Extensions;
+using StinClasses.MarketCommission;
 
 namespace StinWeb
 {
@@ -45,6 +46,7 @@ namespace StinWeb
             services.AddScoped<IEmailSender,EmailSender>();
             services.AddScoped<IFileDownloader, FileDownloader>();
             services.AddScoped<IOrderFunctions, OrderFunctions>();
+            services.AddScoped<IMarkupFactorPercentDictionary, MarkupFactorPercentDictionary>();
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
                 {

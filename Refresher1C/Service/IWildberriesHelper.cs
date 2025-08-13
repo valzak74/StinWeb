@@ -7,6 +7,6 @@ namespace Refresher1C.Service
 {
     public interface IWildberriesHelper
     {
-        Task<DateTime> GetActiveSupplyShipmentDate(string proxyHost, string authToken, string marketplaceId, CancellationToken cancellationToken);
+        Task<DateTime> GetActiveSupplyShipmentDate(string proxyHost, string authToken, string marketplaceId, string officeId, CancellationToken cancellationToken);
     }
 }

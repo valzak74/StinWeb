@@ -6,7 +6,13 @@ namespace StinClasses.MarketCommission
     {
         decimal _volumeLogisticsFactor;
         (decimal percent, decimal limMin, decimal limMax) _tariffLastMile = (percent: 5.0m, limMin: 10.0m, limMax: 500.0m);
-        public CommissionHelperSber(decimal zakupPrice, int quant, decimal volume, decimal categoryPercent) : base(zakupPrice, quant)
+        public CommissionHelperSber(
+            IMarkupFactorPercentDictionary markupFactorPercentDictionary, 
+            decimal zakupPrice, 
+            int quant, 
+            decimal volume, 
+            decimal categoryPercent
+            ) : base(markupFactorPercentDictionary, zakupPrice, quant)
         {
             _volumeLogisticsFactor = VolumeLogisticsFactor(volume);
             FixCommissions = new Dictionary<string, decimal>

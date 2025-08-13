@@ -35,6 +35,7 @@ namespace WbClasses
         public string? SupplyId { get; set; }
         public List<string>? PrioritySc { get; set; }
         public List<string>? Offices { get; set; }
+        public long OfficeId { get; set; }
         public WbAddressDetails? Address { get; set; }
         public List<string>? Skus { get; set; }
         decimal _price;

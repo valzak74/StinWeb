@@ -27,7 +27,7 @@ namespace Refresher1C.Service
             _logger = logger;
         }
 
-        public async Task<DateTime> GetActiveSupplyShipmentDate(string proxyHost, string authToken, string marketplaceId, CancellationToken cancellationToken)
+        public async Task<DateTime> GetActiveSupplyShipmentDate(string proxyHost, string authToken, string marketplaceId, string officeId, CancellationToken cancellationToken)
         {
             var supplyListResult = await Functions.GetSuppliesList(_httpService, proxyHost, authToken, cancellationToken);
             if (!string.IsNullOrEmpty(supplyListResult.error))
@@ -36,7 +36,14 @@ namespace Refresher1C.Service
                 return DateTime.MinValue;
             }
             DateTime shipmentDate = DateTime.MinValue;
-            var supplyId = supplyListResult.supplyIds.FirstOrDefault();
+
+            var supplyId = string.IsNullOrEmpty(officeId)
+                ? supplyListResult.supplyInfos.Select(x => x.SupplyId).FirstOrDefault()
+                : supplyListResult.supplyInfos
+                    .Where(x => string.IsNullOrEmpty(x.DestinationOfficeID) || x.DestinationOfficeID == officeId)
+                    .Select(x => x.SupplyId)
+                    .FirstOrDefault();
+
             if (!string.IsNullOrEmpty(supplyId))
             {
                 if (!_cache.TryGetValue(supplyId, out shipmentDate))

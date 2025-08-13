@@ -29,6 +29,7 @@ namespace Refresher1C.Service
         private readonly ILogger<MarketplaceService> _logger;
         private IHttpService _httpService;
         private IDocCreateOrUpdate _docService;
+        private IMarkupFactorPercentDictionary _markupFactorPercentDictionary;
         IServiceProvider _serviceProvider;
 
         private readonly Dictionary<string, string> _firmProxy;
@@ -70,11 +71,19 @@ namespace Refresher1C.Service
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-        public MarketplaceService(IConfiguration configuration, ILogger<MarketplaceService> logger, IDocCreateOrUpdate docService, StinDbContext context, IHttpService httpService,
-            IServiceProvider serviceProvider)
+        public MarketplaceService(
+            IConfiguration configuration, 
+            ILogger<MarketplaceService> logger,
+            IDocCreateOrUpdate docService, 
+            IMarkupFactorPercentDictionary markupFactorPercentDictionary,
+            StinDbContext context, 
+            IHttpService httpService,
+            IServiceProvider serviceProvider
+        )
         {
             _logger = logger;
             _docService = docService;
+            _markupFactorPercentDictionary = markupFactorPercentDictionary;
             _serviceProvider = serviceProvider;
             _httpService = httpService;
             _context = context;
@@ -381,7 +390,7 @@ namespace Refresher1C.Service
                             }
                             else if (obj.Key.Тип == "WILDBERRIES")
                             {
-                                var supplyIdResult = await GetWbActiveSupplyId(_firmProxy[obj.Key.FirmaId], obj.Key.AuthToken, obj.Key.DeliveryServiceId, stoppingToken);
+                                var supplyIdResult = await GetWbActiveSupplyId(_firmProxy[obj.Key.FirmaId], obj.Key.AuthToken, obj.Key.DeliveryServiceId, entity.Sp14124.Trim(), stoppingToken);
                                 if (!supplyIdResult.success)
                                     status = -1;
                                 else if (!string.IsNullOrEmpty(supplyIdResult.supplyId)) 
@@ -2849,7 +2858,7 @@ namespace Refresher1C.Service
                 return true;
             }
         }
-        async Task<(bool success, string supplyId)> GetWbActiveSupplyId(string proxyHost, string authToken, string warehouseId, CancellationToken cancellationToken)
+        async Task<(bool success, string supplyId)> GetWbActiveSupplyId(string proxyHost, string authToken, string warehouseId, string officeId, CancellationToken cancellationToken)
         {
             var supplyListResult = await WbClasses.Functions.GetSuppliesList(_httpService, proxyHost, authToken, cancellationToken);
             if (!string.IsNullOrEmpty(supplyListResult.error))
@@ -2857,12 +2866,18 @@ namespace Refresher1C.Service
                 _logger.LogError(supplyListResult.error);
                 return (success: false, supplyId: "");
             }
-            var supplyId = supplyListResult.supplyIds
-                .FirstOrDefault(x => x.StartsWith(warehouseId, StringComparison.OrdinalIgnoreCase));
+            var supplyId = string.IsNullOrEmpty(officeId)
+                ? supplyListResult.supplyInfos.Select(x => x.SupplyId).FirstOrDefault(x => x.StartsWith(warehouseId, StringComparison.OrdinalIgnoreCase))
+                : supplyListResult.supplyInfos
+                    .Where(x => string.IsNullOrEmpty(x.DestinationOfficeID) || x.DestinationOfficeID == officeId)
+                    .Select(x => x.SupplyId)
+                    .FirstOrDefault();
+
             if (string.IsNullOrEmpty(supplyId))
             {
-                supplyId = supplyListResult.supplyIds
-                    .Where(x => !x.Contains('|'))
+                supplyId = supplyListResult.supplyInfos
+                    .Where(x => !x.SupplyId.Contains('|'))
+                    .Select(x => x.SupplyId)
                     .FirstOrDefault();
             }
             if (!string.IsNullOrEmpty(supplyId))
@@ -2871,7 +2886,7 @@ namespace Refresher1C.Service
             }
             else
             {
-                var supplyCreateResult = await WbClasses.Functions.CreateSupply(_httpService, proxyHost, authToken, warehouseId, cancellationToken);
+                var supplyCreateResult = await WbClasses.Functions.CreateSupply(_httpService, proxyHost, authToken, warehouseId, officeId, cancellationToken);
                 if (!string.IsNullOrEmpty(supplyCreateResult.error))
                 {
                     _logger.LogError(supplyCreateResult.error);
@@ -3313,7 +3328,7 @@ namespace Refresher1C.Service
                                 _logger.LogError("Wb order: " + wbOrder.Id.ToString() + " can't be cancelled");
                             continue;
                         }
-                        DateTime shipmentDate = await wbHelper.GetActiveSupplyShipmentDate(_firmProxy[firmaId], authToken, id, stoppingToken);
+                        DateTime shipmentDate = await wbHelper.GetActiveSupplyShipmentDate(_firmProxy[firmaId], authToken, id, order.Address.Country, stoppingToken);
                         if (shipmentDate <= Common.min1cDate)
                         {
                             if (!TimeSpan.TryParse("09:00", out TimeSpan limitTime))
@@ -3332,7 +3347,7 @@ namespace Refresher1C.Service
                             Entrance = wbOrder.Address?.Entrance,
                             Subway = "",
                             Block = "",
-                            Country = "",
+                            Country = wbOrder.OfficeId.ToString(),
                             Entryphone = "",
                             Floor = "",
                             Postcode = "",
@@ -4391,7 +4406,7 @@ namespace Refresher1C.Service
                     if ((entity != null) && (komis != null) && (komis.Percent > 0))
                     {
                         decimal minPrice = 0;
-                        using (var helper = new CommissionHelperSber(item.ЦенаЗакуп, (int)item.Квант, komis.Volume, komis.Percent))
+                        using (var helper = new CommissionHelperSber(_markupFactorPercentDictionary, item.ЦенаЗакуп, (int)item.Квант, komis.Volume, komis.Percent))
                         {
                             minPrice = helper.MinPrice();
                         }
@@ -4455,7 +4470,7 @@ namespace Refresher1C.Service
                             .Select(z => { decimal.TryParse(z.Substring(2).Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out decimal p); return p; })
                             .FirstOrDefault();
                         var minPrice = 0m;
-                        using (var helper = new CommissionHelperWB(dataItem.ЦенаЗакуп, (int)dataItem.Квант, categoryPercent, dataItem.Length, dataItem.Width, dataItem.Height, dataItem.WeightBrutto))
+                        using (var helper = new CommissionHelperWB(_markupFactorPercentDictionary, dataItem.ЦенаЗакуп, (int)dataItem.Квант, categoryPercent, dataItem.Length, dataItem.Width, dataItem.Height, dataItem.WeightBrutto))
                         {
                             minPrice = helper.MinPrice();
                         }
@@ -4661,7 +4676,7 @@ namespace Refresher1C.Service
                                     "FBY" => ModelTypeYandex.FBY,
                                     _ => ModelTypeYandex.DBS
                                 };
-                                using (var helper = new CommissionHelperYandex(modelType, (int)dataItem.Квант, dataItem.ЦенаЗакуп, volumeWeight, feePercent, (decimal)item.Price, weight, dimensions))
+                                using (var helper = new CommissionHelperYandex(modelType, (int)dataItem.Квант, _markupFactorPercentDictionary, dataItem.ЦенаЗакуп, volumeWeight, feePercent, (decimal)item.Price, weight, dimensions))
                                 {
                                     minPrice = helper.MinPrice();
                                 }
@@ -4804,7 +4819,7 @@ namespace Refresher1C.Service
                         from vzTovar in _vzTovar.DefaultIfEmpty()
                         where (markUse.Sp14147 == marketplaceId) &&
                           (markUse.Sp14158 == 1) //Есть в каталоге 
-                          //&& nom.Code == "D00080126"
+                          //&& nom.Code == "D00072625"
                         select new
                         {
                             Id = markUse.Id,
@@ -4855,7 +4870,8 @@ namespace Refresher1C.Service
                                 ModelTypeOzon typeOzon = model == "FBS" ? (item.realFbs ? ModelTypeOzon.RealFBS : ModelTypeOzon.FBS) : ModelTypeOzon.FBO;
                                 using (var helper = new CommissionHelperOzon(
                                     typeOzon, 
-                                    (int)item.Квант, 
+                                    (int)item.Квант,
+                                    _markupFactorPercentDictionary,
                                     item.ЦенаЗакуп, 
                                     typeOzon == ModelTypeOzon.RealFBS ? volumeWeight : volumeForFbs, 
                                     (decimal)comPercent

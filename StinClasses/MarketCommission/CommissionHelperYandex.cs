@@ -20,12 +20,12 @@ namespace StinClasses.MarketCommission
         decimal _volumeWeight;
         bool _isLightFactor;
         bool _isHard;
-        public CommissionHelperYandex(ModelTypeYandex typeYandex, int quant, decimal zakupPrice, 
+        public CommissionHelperYandex(ModelTypeYandex typeYandex, int quant, IMarkupFactorPercentDictionary markupFactorPercentDictionary, decimal zakupPrice, 
             decimal volumeWeight, 
             decimal feePercent,
             decimal price,
             decimal weight,
-            decimal dimensions) : base(zakupPrice, quant)
+            decimal dimensions) : base(markupFactorPercentDictionary, zakupPrice, quant)
         {
             _model = typeYandex;
             _volumeWeight = Math.Max(weight, volumeWeight);

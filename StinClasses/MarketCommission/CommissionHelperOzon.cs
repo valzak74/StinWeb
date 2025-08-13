@@ -9,7 +9,14 @@ namespace StinClasses.MarketCommission
         public bool IsKGT = false;
         (decimal percent, decimal limMin, decimal limMax) _tariffLastMile = (percent: 5.5m, limMin: 20.0m, limMax: 500.0m);
         decimal _volumeWeightFactor;
-        public CommissionHelperOzon(ModelTypeOzon typeOzon, int quant, decimal zakupPrice, decimal volumeWeight, decimal showcasePercent) : base(zakupPrice, quant)
+        public CommissionHelperOzon(
+            ModelTypeOzon typeOzon, 
+            int quant, 
+            IMarkupFactorPercentDictionary markupFactorPercentDictionary, 
+            decimal zakupPrice, 
+            decimal volumeWeight, 
+            decimal showcasePercent
+            ) : base(markupFactorPercentDictionary, zakupPrice, quant)
         {
             _model = typeOzon;
             _volumeWeightFactor = VolumeWeightFactor(volumeWeight);

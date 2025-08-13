@@ -12,6 +12,7 @@ using Polly.Extensions.Http;
 using HttpExtensions;
 using StinClasses.—правочники.Functions;
 using StinClasses.–егистры;
+using StinClasses.MarketCommission;
 
 namespace Refresher1C
 {
@@ -56,6 +57,8 @@ namespace Refresher1C
                 services.AddScoped<I–егистр–езервы“ћ÷, –егистр_–езервы“ћ÷>();
                 services.AddScoped<I–егистр—топЋист«„, –егистр_—топЋист«„>();
                 services.AddScoped<I–егистрЌаборЌа—кладе, –егистр_ЌаборЌа—кладе>();
+
+                services.AddScoped<IMarkupFactorPercentDictionary, MarkupFactorPercentDictionary>();
 
                 if (configuration.GetSection("YouKassa:enable").Get<bool>())
                 {

@@ -27,6 +27,7 @@ namespace WbClasses
         public DateTime? ScanDt { get; set; }
         public string? Name { get; set; }
         public bool? IsLargeCargo { get; set; }
+        public long? DestinationOfficeId { get; set; }
     }
     public class AddToSupply
     {

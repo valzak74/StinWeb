@@ -249,9 +249,9 @@ namespace WbClasses
                 err = result.Item2.LogWbErrors("");
             return (png: result.Item1?.Data, error: string.IsNullOrEmpty(err) ? "" : "WbGetSupplyBarcode: " + err);
         }
-        public static async Task<(List<string> supplyIds, string error)> GetSuppliesList(IHttpService httpService, string proxyHost, string authToken, CancellationToken cancellationToken)
+        public static async Task<(List<(string SupplyId, string DestinationOfficeID)> supplyInfos, string error)> GetSuppliesList(IHttpService httpService, string proxyHost, string authToken, CancellationToken cancellationToken)
         {
-            List<string> data = new List<string>();
+            var data = new List<(string SupplyId, string DestinationOfficeID)>();
             int limit = 1000;
             long next = 0;
 
@@ -280,9 +280,9 @@ namespace WbClasses
                 }
                 if (result.Item1?.Supplies?.Count > 0)
                     foreach (var supply in result.Item1.Supplies.Where(x => !x.ClosedAt.HasValue || x.ClosedAt.Value == DateTime.MinValue))
-                        data.Add(supply.Id ?? "");
+                        data.Add((supply.Id ?? "", supply.DestinationOfficeId?.ToString() ?? ""));
             }
-            return (supplyIds: data, error: string.IsNullOrEmpty(err) ? "" : "WbGetSuppliesList: " + err);
+            return (supplyInfos: data, error: string.IsNullOrEmpty(err) ? "" : "WbGetSuppliesList: " + err);
         }
         public static async Task<(List<Order>? orders, string error)> GetSupplyOrders(IHttpService httpService, string proxyHost, string authToken, string supplyId, CancellationToken cancellationToken)
         {
@@ -297,13 +297,22 @@ namespace WbClasses
                 err = result.Item2.LogWbErrors("");
             return (orders: result.Item1?.Orders, error: string.IsNullOrEmpty(err) ? "" : "WbGetSupplyOrders: " + err);
         }
-        public static async Task<(string? supplyId, string error)> CreateSupply(IHttpService httpService, string proxyHost, string authToken, string warehouseId, CancellationToken cancellationToken)
+        public static async Task<(string? supplyId, string error)> CreateSupply(IHttpService httpService, string proxyHost, string authToken, string warehouseId, string officeId, CancellationToken cancellationToken)
         {
+            var sbSupplyName = new StringBuilder(warehouseId);
+            if (!string.IsNullOrEmpty(officeId))
+            {
+                sbSupplyName.Append("|");
+                sbSupplyName.Append(officeId);
+            }
+            sbSupplyName.Append("|");
+            sbSupplyName.Append(DateTime.Today.ToString("ddMMyyyymmss"));
+
             var result = await httpService.Exchange<Supply, WbErrorResponse>(
                 $"https://{proxyHost}marketplace-api.wildberries.ru/api/v3/supplies",
                 HttpMethod.Post,
                 GetCustomHeaders(authToken),
-                new SupplyName { Name = warehouseId + '|' + DateTime.Today.ToString("ddMMyyyymmss") },
+                new SupplyName { Name = sbSupplyName.ToString() },
                 cancellationToken);
             string err = "";
             if (result.Item2 != null)

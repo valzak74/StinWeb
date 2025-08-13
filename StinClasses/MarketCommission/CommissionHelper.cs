@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace StinClasses.MarketCommission
@@ -7,14 +9,24 @@ namespace StinClasses.MarketCommission
     public abstract class CommissionHelper : IDisposable
     {
         protected readonly decimal _zakupPrice;
+        protected readonly decimal _minMarkupFactorPercent = 8m;
+        public readonly decimal MarkupFactorPercent;
         public virtual List<(string name, decimal percent, decimal limMin, decimal limMax)> _tariffWithBorders { get; }
-        public decimal MarkupFactorPercent = 10m;
         public int Quant = 1;
         public Dictionary<string, decimal> FixCommissions;
         public Dictionary<string, decimal> PercentFactors;
 
-        public CommissionHelper(decimal zakupPrice) => _zakupPrice = zakupPrice;
-        public CommissionHelper(decimal zakupPrice, int quant) : this(zakupPrice) => Quant = quant;
+        public CommissionHelper(IMarkupFactorPercentDictionary markupFactorPercentDictionary, decimal zakupPrice)
+        {
+            _zakupPrice = zakupPrice;
+            MarkupFactorPercent = markupFactorPercentDictionary.GetPercent(zakupPrice);
+            if (MarkupFactorPercent < _minMarkupFactorPercent)
+            {
+                MarkupFactorPercent = _minMarkupFactorPercent;
+            }
+        }
+        public CommissionHelper(IMarkupFactorPercentDictionary markupFactorPercentDictionary, decimal zakupPrice, int quant) 
+            : this(markupFactorPercentDictionary, zakupPrice) => Quant = quant;
         protected decimal GetLimit(decimal percent, decimal borderLimit) => (borderLimit * 100 / percent) / Quant;
         protected Dictionary<string, decimal> LimitValues(decimal price, IEnumerable<(string name, decimal percent, decimal limMin, decimal limMax)> tariffs)
         {
