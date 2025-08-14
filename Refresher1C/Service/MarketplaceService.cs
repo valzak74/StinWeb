@@ -3328,7 +3328,7 @@ namespace Refresher1C.Service
                                 _logger.LogError("Wb order: " + wbOrder.Id.ToString() + " can't be cancelled");
                             continue;
                         }
-                        DateTime shipmentDate = await wbHelper.GetActiveSupplyShipmentDate(_firmProxy[firmaId], authToken, id, order.Address.Country, stoppingToken);
+                        DateTime shipmentDate = await wbHelper.GetActiveSupplyShipmentDate(_firmProxy[firmaId], authToken, id, wbOrder.OfficeId.ToString(), stoppingToken);
                         if (shipmentDate <= Common.min1cDate)
                         {
                             if (!TimeSpan.TryParse("09:00", out TimeSpan limitTime))
