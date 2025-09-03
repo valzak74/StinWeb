@@ -295,7 +295,7 @@ namespace Refresher1C.Service
                 .Select(x => new
                 {
                     WarehouseId = x.Key,
-                    StockData = x.ToDictionary(k => k.Barcode, v => v.Stock)
+                    StockData = x.GroupBy(y => y.Barcode).ToDictionary(k => k.Key, v => v.Sum(y => y.Stock))
                 })
                 .ToList();
 
