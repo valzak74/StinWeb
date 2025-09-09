@@ -42,7 +42,8 @@ namespace Refresher1C
         {
             try
             {
-                var checkNabor = Task.Run(async () => {
+                var checkNabor = Task.Run(async () =>
+                {
                     using var _service = _scopeFactory.CreateScope().ServiceProvider.GetService<IMarketplaceService>();
                     await _service.CheckNaborNeeded(stoppingToken);
                 });
@@ -50,7 +51,8 @@ namespace Refresher1C
                     using var _service = _scopeFactory.CreateScope().ServiceProvider.GetService<IMarketplaceService>();
                     await _service.PrepareYandexFbsBoxes(regular, stoppingToken);
                 });
-                var fbsLabels = Task.Run(async () => {
+                var fbsLabels = Task.Run(async () =>
+                {
                     using var _service = _scopeFactory.CreateScope().ServiceProvider.GetService<IMarketplaceService>();
                     await _service.PrepareFbsLabels(regular, stoppingToken);
                 });
@@ -58,7 +60,8 @@ namespace Refresher1C
                 //    using var _service = _scopeFactory.CreateScope().ServiceProvider.GetService<IMarketplaceService>();
                 //    await _service.RefreshBuyerInfo(stoppingToken);
                 //});
-                var orderStatus = Task.Run(async () => {
+                var orderStatus = Task.Run(async () =>
+                {
                     using var _service = _scopeFactory.CreateScope().ServiceProvider.GetService<IMarketplaceService>();
                     await _service.ChangeOrderStatus(stoppingToken);
                 });

@@ -172,7 +172,7 @@ namespace Refresher1C.Service
                                   //from markUse in _markUse.DefaultIfEmpty()
                                   where r.Period == dateRegTA && ((r.Sp14011 == 10) || (r.Sp14011 == 11)) &&
                                     (regular ? (order.Sp13982 == 8) : (order.Sp13982 == -1)) //order статус = 8
-                                    //&& order.Code.Trim() == "408427448"
+                                    //&& order.Code.Trim() == "3843351795"
                                     && (((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.YANDEX_MARKET) ||
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.SBER_MEGA_MARKET) ||
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.ALIEXPRESS_LOGISTIC) ||
@@ -2873,13 +2873,13 @@ namespace Refresher1C.Service
                     .Select(x => x.SupplyId)
                     .FirstOrDefault();
 
-            if (string.IsNullOrEmpty(supplyId))
-            {
-                supplyId = supplyListResult.supplyInfos
-                    .Where(x => !x.SupplyId.Contains('|'))
-                    .Select(x => x.SupplyId)
-                    .FirstOrDefault();
-            }
+            //if (string.IsNullOrEmpty(supplyId))
+            //{
+            //    supplyId = supplyListResult.supplyInfos
+            //        .Where(x => !x.SupplyId.Contains('|'))
+            //        .Select(x => x.SupplyId)
+            //        .FirstOrDefault();
+            //}
             if (!string.IsNullOrEmpty(supplyId))
             {
                 return (success: true, supplyId);
