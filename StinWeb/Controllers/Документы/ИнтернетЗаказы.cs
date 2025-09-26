@@ -281,9 +281,17 @@ namespace StinWeb.Controllers
                               where !order.Ismark && (order.Sp13982 != 5 || order.Sp14254 == 1) &&
                                     (campaignIds != null ? campaignIds.Contains(market.Id) : (market.Code.Trim() == campaignCode)) &&
                                     (order.Sp13990.Date == reportDate) &&
-                                    (!string.IsNullOrEmpty(warehouseId) ? markUse.Sp14190.Trim() == warehouseId :
-                                        (!string.IsNullOrWhiteSpace(market.Sp14154) ? markUse.Sp14190.Trim() != market.Sp14154.Trim() :
-                                            true))
+                                    (!string.IsNullOrEmpty(warehouseId) 
+                                        ? (market.Sp14155.ToUpper().Trim() == "WILDBERRIES" && markUse.Sp14179 == 1
+                                            ? market.Sp14154.Trim() == warehouseId
+                                            : markUse.Sp14190.Trim() == warehouseId
+                                          )
+                                        : !string.IsNullOrWhiteSpace(market.Sp14154) 
+                                            ? market.Sp14155.ToUpper().Trim() == "WILDBERRIES"
+                                                ? markUse.Sp14179 == 0
+                                                : markUse.Sp14190.Trim() != market.Sp14154.Trim() 
+                                            : true
+                                    )
                               group new { order, market, item, nom, ed } by new
                               {
                                   orderId = order.Id,
