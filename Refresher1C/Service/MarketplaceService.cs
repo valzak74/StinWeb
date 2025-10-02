@@ -3884,7 +3884,7 @@ namespace Refresher1C.Service
                                     ДопПараметры = item.Params,
                                     ИдентификаторПоставщика = item.FulfilmentShopId.ToString(),
                                     ИдентификаторСклада = item.WarehouseId.ToString(),
-                                    ИдентификаторСкладаПартнера = item.PartnerWarehouseId
+                                    ИдентификаторСкладаПартнера = item.PartnerWarehouseId ?? string.Empty
                                 });
                             }
                             string складОтгрузкиId = detailOrder.Delivery?.Outlet?.Code.FormatTo1CId() ?? Common.SkladEkran;

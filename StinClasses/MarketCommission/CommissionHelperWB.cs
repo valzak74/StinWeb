@@ -31,8 +31,7 @@ public class CommissionHelperWB : CommissionHelper
     ) : base(markupFactorPercentDictionary, zakupPrice, quant)
     {
         decimal liters = length * width * height / 1000;
-        decimal oversizeLiters = Math.Max(liters - _includeLiters, 0);
-        decimal sumLogistics = _baseLogistics * _skladFactor + (oversizeLiters * _addPerLiter * _skladFactor);
+        decimal sumLogistics = VolumeWeightFactor(liters);
         bool isHard = (weightBrutto > _maxWeight)
             || ((length > _maxSize) || (width > _maxSize) || (height > _maxSize))
             || (length + width + height > _maxSumSize);
@@ -47,6 +46,20 @@ public class CommissionHelperWB : CommissionHelper
             { "Category", categoryPercent }, //процент за категорию
             { "Transaction", _ekvaring }, //процент за транзакцию 2.0%
         };
+    }
+    decimal VolumeWeightFactor(decimal liters)
+    {
+        var baseLogistics = liters switch
+        {
+            <= 0.2m => 23,
+            <= 0.4m => 26,
+            <= 0.6m => 29,
+            <= 0.8m => 30,
+            <= 1m => 32,
+            _ => _baseLogistics
+        };
+
+        return (baseLogistics + Math.Max(Math.Ceiling(liters) - _includeLiters, 0) * _addPerLiter) * _skladFactor;
     }
     public override decimal MinPrice()
     {
