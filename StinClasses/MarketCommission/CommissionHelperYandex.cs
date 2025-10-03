@@ -8,18 +8,17 @@ namespace StinClasses.MarketCommission
 {
     public class CommissionHelperYandex : CommissionHelper
     {
-        readonly ModelTypeYandex _model;
-        readonly decimal _dimensionsLimit = 150;
-        readonly decimal _weightLimit = 25;
-        (decimal percent, decimal limMin, decimal limMax) _tariffLastMile = (percent: 4.5m, limMin: 0m, limMax: 500.0m);
+        //readonly ModelTypeYandex _model;
+        //readonly decimal _dimensionsLimit = 150;
+        //readonly decimal _weightLimit = 25;
+        //(decimal percent, decimal limMin, decimal limMax) _tariffLastMile = (percent: 4.5m, limMin: 0m, limMax: 500.0m);
         public override List<(string name, decimal percent, decimal limMin, decimal limMax)> _tariffWithBorders => new List<(string name, decimal percent, decimal limMin, decimal limMax)>
         {
-            (name: "Stock", percent: 3.0m, limMin: 20.0m, limMax: 60.0m),
-            (name: "Delivery", percent: 5.5m, limMin: 13.0m, limMax: 300.0m),
+            (name: "Delivery", percent: 4.5m, limMin: 0m, limMax: 1000.0m),
         };
         decimal _volumeWeight;
-        bool _isLightFactor;
-        bool _isHard;
+        //bool _isLightFactor;
+        //bool _isHard;
         public CommissionHelperYandex(ModelTypeYandex typeYandex, int quant, IMarkupFactorPercentDictionary markupFactorPercentDictionary, decimal zakupPrice, 
             decimal volumeWeight, 
             decimal feePercent,
@@ -27,10 +26,11 @@ namespace StinClasses.MarketCommission
             decimal weight,
             decimal dimensions) : base(markupFactorPercentDictionary, zakupPrice, quant)
         {
-            _model = typeYandex;
+            //_model = typeYandex;
             _volumeWeight = Math.Max(weight, volumeWeight);
-            _isLightFactor = (_model != ModelTypeYandex.DBS) && (price < 500) && (weight < 5) && (dimensions < _dimensionsLimit);
-            _isHard = (_model != ModelTypeYandex.DBS) && ((weight > _weightLimit) || (dimensions > _dimensionsLimit));
+            var averageMile = VolumeWeightFactor();
+            //_isLightFactor = (_model != ModelTypeYandex.DBS) && (price < 500) && (weight < 5) && (dimensions < _dimensionsLimit);
+            //_isHard = (_model != ModelTypeYandex.DBS) && ((weight > _weightLimit) || (dimensions > _dimensionsLimit));
             PercentFactors = new Dictionary<string, decimal>
             {
                 //{ "AllFactors", sumFactorPercent },
@@ -40,146 +40,167 @@ namespace StinClasses.MarketCommission
             FixCommissions = new Dictionary<string, decimal>
             {
                 { "PriemPlateg", 0.12m },
+                { "AverageMile", averageMile },
             };
-            switch (_model)
-            {
-                case ModelTypeYandex.DBS:
-                    break;
-                case ModelTypeYandex.FBS:
-                    FixCommissions.Add("LastMile", 0);
-                    PercentFactors.Add("LastMile", _tariffLastMile.percent);
-                    if (_isLightFactor)
-                    {
-                        PercentFactors["AllFactors"] = 0;
-                        FixCommissions.Add("LightFactor", GetLightFactor(price));
-                    }
-                    else if (_isHard)
-                    {
-                        FixCommissions.Add("PerOrder", 10);
-                        FixCommissions.Add("Hard", 450);
-                        FixCommissions.Add("WeightOutBorder", VolumeWeightFactor());
-                    }
-                    else
-                    {
-                        FixCommissions.Add("PerOrder", 10);
-                        FixCommissions.Add("WeightOutBorder", VolumeWeightFactor());
-                    }
-                    break;
-                case ModelTypeYandex.FBY:
-                    if (_isLightFactor)
-                    {
-                        PercentFactors["AllFactors"] = 0;
-                        FixCommissions.Add("LightFactor", GetLightFactor(price));
-                    }
-                    else if (_isHard)
-                    {
-                        FixCommissions.Add("Stock", 350);
-                        FixCommissions.Add("Delivery", 500);
-                        FixCommissions.Add("WeightOutBorder", VolumeWeightFactor());
-                    }
-                    else
-                    {
-                        FixCommissions.Add("WeightOutBorder", VolumeWeightFactor());
-                        foreach (var item in _tariffWithBorders)
-                        {
-                            FixCommissions.Add(item.name, 0);
-                            PercentFactors.Add(item.name, item.percent);
-                        }
-                    }
-                    FixCommissions.Add("LastMile", 0);
-                    PercentFactors.Add("LastMile", _tariffLastMile.percent);
-                    _tariffWithBorders.Add(("LastMile", _tariffLastMile.percent, _tariffLastMile.limMin, _tariffLastMile.limMax));
-                    break;
-            }
+            //switch (_model)
+            //{
+            //    case ModelTypeYandex.DBS:
+            //        break;
+            //    case ModelTypeYandex.FBS:
+            //        FixCommissions.Add("LastMile", 0);
+            //        PercentFactors.Add("LastMile", _tariffLastMile.percent);
+            //        if (_isLightFactor)
+            //        {
+            //            PercentFactors["AllFactors"] = 0;
+            //            FixCommissions.Add("LightFactor", GetLightFactor(price));
+            //        }
+            //        else if (_isHard)
+            //        {
+            //            FixCommissions.Add("PerOrder", 10);
+            //            FixCommissions.Add("Hard", 450);
+            //            FixCommissions.Add("WeightOutBorder", VolumeWeightFactor());
+            //        }
+            //        else
+            //        {
+            //            FixCommissions.Add("PerOrder", 10);
+            //            FixCommissions.Add("WeightOutBorder", VolumeWeightFactor());
+            //        }
+            //        break;
+            //    case ModelTypeYandex.FBY:
+            //        if (_isLightFactor)
+            //        {
+            //            PercentFactors["AllFactors"] = 0;
+            //            FixCommissions.Add("LightFactor", GetLightFactor(price));
+            //        }
+            //        else if (_isHard)
+            //        {
+            //            FixCommissions.Add("Stock", 350);
+            //            FixCommissions.Add("Delivery", 500);
+            //            FixCommissions.Add("WeightOutBorder", VolumeWeightFactor());
+            //        }
+            //        else
+            //        {
+            //            FixCommissions.Add("WeightOutBorder", VolumeWeightFactor());
+            //            foreach (var item in _tariffWithBorders)
+            //            {
+            //                FixCommissions.Add(item.name, 0);
+            //                PercentFactors.Add(item.name, item.percent);
+            //            }
+            //        }
+            //        FixCommissions.Add("LastMile", 0);
+            //        PercentFactors.Add("LastMile", _tariffLastMile.percent);
+            //        _tariffWithBorders.Add(("LastMile", _tariffLastMile.percent, _tariffLastMile.limMin, _tariffLastMile.limMax));
+            //        break;
+            //}
         }
-        decimal GetLightFactor(decimal price)
-        {
-            return _model switch
-            {
-                ModelTypeYandex.FBS => price switch
-                {
-                    < 100 => 80,
-                    < 300 => 95,
-                    _ => 115
-                },
-                ModelTypeYandex.FBY => price switch
-                {
-                    < 100 => 30,
-                    < 300 => 40,
-                    _ => 55
-                },
-                _ => 0
-            };
-        }
+        //decimal GetLightFactor(decimal price)
+        //{
+        //    return _model switch
+        //    {
+        //        ModelTypeYandex.FBS => price switch
+        //        {
+        //            < 100 => 80,
+        //            < 300 => 95,
+        //            _ => 115
+        //        },
+        //        ModelTypeYandex.FBY => price switch
+        //        {
+        //            < 100 => 30,
+        //            < 300 => 40,
+        //            _ => 55
+        //        },
+        //        _ => 0
+        //    };
+        //}
         decimal VolumeWeightFactor()
         {
-            return _model switch
+            return _volumeWeight switch
             {
-                ModelTypeYandex.FBS => _volumeWeight switch
-                {
-                    < 0.2m => 80,
-                    < 0.5m => 95,
-                    < 1 => 115,
-                    < 2 => 150,
-                    < 4 => 210,
-                    < 6 => 320,
-                    < 8 => 430,
-                    < 10 => 520,
-                    < 12 => 640,
-                    < 15 => 760,
-                    < 20 => 1000,
-                    < 25 => 1250,
-                    < 30 => 1500,
-                    < 35 => 1750,
-                    < 50 => 2250,
-                    < 150 => 3000,
-                    _ => 3500
-                },
-                ModelTypeYandex.FBY => _volumeWeight switch
-                {
-                    < 0.2m => 10,
-                    < 0.5m => 20,
-                    < 1 => 30,
-                    < 2 => 40,
-                    < 5 => 60,
-                    < 10 => 100,
-                    < 15 => 200,
-                    < 25 => 325,
-                    < 35 => 400,
-                    < 50 => 650,
-                    < 100 => 1500,
-                    _ => 3500
-                },
-                _ => 0
+                < 0.2m => 100,
+                < 0.5m => 115,
+                < 1 => 135,
+                < 2 => 180,
+                < 4 => 270,
+                < 6 => 410,
+                < 8 => 550,
+                < 10 => 680,
+                < 12 => 820,
+                < 15 => 1000,
+                < 20 => 1250,
+                < 25 => 1600,
+                < 30 => 1950,
+                < 35 => 2250,
+                < 50 => 2750,
+                < 100 => 3500,
+                _ => 4000
             };
+            //return _model switch
+            //{
+            //    ModelTypeYandex.FBS => _volumeWeight switch
+            //    {
+            //        < 0.2m => 80,
+            //        < 0.5m => 95,
+            //        < 1 => 115,
+            //        < 2 => 150,
+            //        < 4 => 210,
+            //        < 6 => 320,
+            //        < 8 => 430,
+            //        < 10 => 520,
+            //        < 12 => 640,
+            //        < 15 => 760,
+            //        < 20 => 1000,
+            //        < 25 => 1250,
+            //        < 30 => 1500,
+            //        < 35 => 1750,
+            //        < 50 => 2250,
+            //        < 150 => 3000,
+            //        _ => 3500
+            //    },
+            //    ModelTypeYandex.FBY => _volumeWeight switch
+            //    {
+            //        < 0.2m => 10,
+            //        < 0.5m => 20,
+            //        < 1 => 30,
+            //        < 2 => 40,
+            //        < 5 => 60,
+            //        < 10 => 100,
+            //        < 15 => 200,
+            //        < 25 => 325,
+            //        < 35 => 400,
+            //        < 50 => 650,
+            //        < 100 => 1500,
+            //        _ => 3500
+            //    },
+            //    _ => 0
+            //};
         }
         public override decimal MinPrice()
         {
             decimal calcMinPrice = base.MinPrice();
-            if ((_model == ModelTypeYandex.DBS) ||
-                _isLightFactor ||
-                _isHard)
-                return calcMinPrice;
-            switch (_model)
-            {
-                case ModelTypeYandex.FBS:
-                    if (calcMinPrice > GetLimit(_tariffLastMile.percent, _tariffLastMile.limMax))
-                    {
-                        FixCommissions["LastMile"] = _tariffLastMile.limMax;
-                        PercentFactors["LastMile"] = 0;
-                        calcMinPrice = base.MinPrice();
-                    }
-                    else if (calcMinPrice < GetLimit(_tariffLastMile.percent, _tariffLastMile.limMin))
-                    {
-                        FixCommissions["LastMile"] = _tariffLastMile.limMin;
-                        PercentFactors["LastMile"] = 0;
-                        calcMinPrice = base.MinPrice();
-                    }
-                    break;
-                case ModelTypeYandex.FBY:
-                    calcMinPrice = GetMinPriceWithBorder(calcMinPrice);
-                    break;
-            }
+            //if ((_model == ModelTypeYandex.DBS) ||
+            //    _isLightFactor ||
+            //    _isHard)
+            //    return calcMinPrice;
+            //switch (_model)
+            //{
+            //    case ModelTypeYandex.FBS:
+            //        if (calcMinPrice > GetLimit(_tariffLastMile.percent, _tariffLastMile.limMax))
+            //        {
+            //            FixCommissions["LastMile"] = _tariffLastMile.limMax;
+            //            PercentFactors["LastMile"] = 0;
+            //            calcMinPrice = base.MinPrice();
+            //        }
+            //        else if (calcMinPrice < GetLimit(_tariffLastMile.percent, _tariffLastMile.limMin))
+            //        {
+            //            FixCommissions["LastMile"] = _tariffLastMile.limMin;
+            //            PercentFactors["LastMile"] = 0;
+            //            calcMinPrice = base.MinPrice();
+            //        }
+            //        break;
+            //    case ModelTypeYandex.FBY:
+            //        calcMinPrice = GetMinPriceWithBorder(calcMinPrice);
+            //        break;
+            //}
             return calcMinPrice;
         }
     }
