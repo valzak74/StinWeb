@@ -4279,7 +4279,7 @@ namespace Refresher1C.Service
                                             //&& market.Code.Trim() == "22162396"
                                             //&& market.Code.Trim() == "652932"
                                             //&& market.Sp14155.Trim().ToUpper() == "OZON" 
-                                            && market.Sp14155.Trim().ToUpper() == "WILDBERRIES"
+                                            //&& market.Sp14155.Trim().ToUpper() == "WILDBERRIES"
                                             //&& market.Sp14155.Trim().ToUpper() == "SBER"
                                             //&& market.Sp14155.Trim().ToUpper() == "ЯНДЕКС"
                                             //&& market.Code.Trim() == "23005267" // Yandex DBS
@@ -4438,7 +4438,7 @@ namespace Refresher1C.Service
                           (markUse.Sp14158 == 1) //Есть в каталоге 
                           && !string.IsNullOrEmpty(nomParent.Sp95)
                           && nomParent.Sp95.Contains("WB")
-                          && nom.Code == "D00079369"
+                          //&& nom.Code == "D00079369"
                         orderby nom.Code
                         select new
                         {
