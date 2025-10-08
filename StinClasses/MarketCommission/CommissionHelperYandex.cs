@@ -42,6 +42,11 @@ namespace StinClasses.MarketCommission
                 { "PriemPlateg", 0.12m },
                 { "AverageMile", averageMile },
             };
+            foreach (var item in _tariffWithBorders)
+            {
+                FixCommissions.Add(item.name, 0);
+                PercentFactors.Add(item.name, item.percent);
+            }
             //switch (_model)
             //{
             //    case ModelTypeYandex.DBS:
@@ -177,6 +182,7 @@ namespace StinClasses.MarketCommission
         public override decimal MinPrice()
         {
             decimal calcMinPrice = base.MinPrice();
+            calcMinPrice = GetMinPriceWithBorder(calcMinPrice);
             //if ((_model == ModelTypeYandex.DBS) ||
             //    _isLightFactor ||
             //    _isHard)

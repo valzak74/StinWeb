@@ -59,7 +59,7 @@ public class CommissionHelperWB : CommissionHelper
             _ => _baseLogistics
         };
 
-        return (baseLogistics + Math.Max(Math.Ceiling(liters) - _includeLiters, 0) * _addPerLiter) * _skladFactor;
+        return (baseLogistics + Math.Max(liters - _includeLiters, 0) * _addPerLiter) * _skladFactor;
     }
     public override decimal MinPrice()
     {
