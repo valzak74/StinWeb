@@ -14,7 +14,7 @@ namespace StinClasses.MarketCommission
         //(decimal percent, decimal limMin, decimal limMax) _tariffLastMile = (percent: 4.5m, limMin: 0m, limMax: 500.0m);
         public override List<(string name, decimal percent, decimal limMin, decimal limMax)> _tariffWithBorders => new List<(string name, decimal percent, decimal limMin, decimal limMax)>
         {
-            (name: "Delivery", percent: 4.5m, limMin: 0m, limMax: 1000.0m),
+            (name: "Delivery", percent: 5.0m, limMin: 0m, limMax: 1000.0m),
         };
         decimal _volumeWeight;
         //bool _isLightFactor;

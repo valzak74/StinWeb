@@ -23,7 +23,7 @@ namespace StinClasses.MarketCommission
             PercentFactors = new Dictionary<string, decimal> 
             {
                 { "Showcase", showcasePercent },
-                { "Ekvaring", 1.5m }
+                { "Ekvaring", 2.0m }
             };
             if (_model == ModelTypeOzon.RealFBS)
             {
