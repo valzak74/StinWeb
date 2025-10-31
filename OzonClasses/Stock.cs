@@ -114,5 +114,6 @@ namespace OzonClasses
         fbo = 1,
         fbs = 2,
         crossborder = 3,
+        rfbs = 4,
     }
 }

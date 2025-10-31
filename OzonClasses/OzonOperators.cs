@@ -479,8 +479,8 @@ namespace OzonClasses
                     if (item.Stocks?.Count > 0)
                         result.Add((
                             OfferId: item.Offer_id ?? "",
-                            Present: item.Stocks.Where(x => x.Type == StockType.fbs).Sum(x => x.Present),
-                            Reserved: item.Stocks.Where(x => x.Type == StockType.fbs).Sum(x => x.Reserved)
+                            Present: item.Stocks.Where(x => x.Type is StockType.fbs or StockType.rfbs).Sum(x => x.Present),
+                            Reserved: item.Stocks.Where(x => x.Type is StockType.fbs or StockType.rfbs).Sum(x => x.Reserved)
                         ));
                 }
             return result;
