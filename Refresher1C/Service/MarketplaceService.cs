@@ -1152,7 +1152,7 @@ namespace Refresher1C.Service
                                 Квант = d.Квант == 0 ? 1 : d.Квант,
                                 Id = d.Id,
                                 Код = Код,
-                                ProductId = d.ProductId,
+                                ProductId = d.ProductId.Split(';').FirstOrDefault(),
                                 Цена = Цена,
                                 ЦенаДоСкидки = Цена < d.ЦенаРозн ? d.ЦенаРозн : 0.00m,
                             });
@@ -1465,6 +1465,7 @@ namespace Refresher1C.Service
         {
             var skus = new List<string>();
             var productIdToSku = new Dictionary<string, string>();
+            var categoryIdbySku = new Dictionary<string, string>();
             if (data is IList<YandexClasses.OfferMappingEntry>)
             {
                 foreach (var entry in (data as IList<YandexClasses.OfferMappingEntry>))
@@ -1542,6 +1543,7 @@ namespace Refresher1C.Service
                     foreach (var entry in wbCards)
                     {
                         string nmId = entry.NmID.ToString();
+                        string categoryId = entry.SubjectID.ToString();
                         string nomCode = entry.VendorCode.Decode(encoding);
                         if (string.IsNullOrEmpty(nomCode))
                         {
@@ -1550,6 +1552,7 @@ namespace Refresher1C.Service
                         }
                         skus.Add(nomCode);
                         productIdToSku.Add(nmId, nomCode);
+                        categoryIdbySku.Add(nomCode, categoryId);
                     }
             }
             try
@@ -1562,7 +1565,11 @@ namespace Refresher1C.Service
                                               join nom in _context.Sc84s on markUse.Parentext equals nom.Id
                                               where nom.Code == sku && markUse.Sp14147 == marketplaceId
                                               select markUse).ToListAsync(stoppingToken);
-                        var productId = productIdToSku.Where(v => v.Value == sku).Select(k => k.Key).FirstOrDefault() ?? String.Empty;
+                        var productId = productIdToSku.Where(v => v.Value == sku).Select(k => k.Key).FirstOrDefault() ?? string.Empty;
+                        var categoryId = categoryIdbySku.GetValueOrDefault(sku) ?? string.Empty;
+                        var marketProductIdAndCategoryId = string.IsNullOrEmpty(categoryId)
+                            ? productId
+                            : $"{productId};{categoryId}";
                         if ((entities == null) || (entities.Count == 0))
                         {
                             var parentId = await _context.Sc84s
@@ -1586,7 +1593,7 @@ namespace Refresher1C.Service
                                     Sp14178 = Common.min1cDate, //StockUpdatedAt
                                     Sp14179 = 0, //StockUpdated - пусть stock обновится
                                     Sp14187 = 0, //Quantum = 0
-                                    Sp14190 = productId,
+                                    Sp14190 = marketProductIdAndCategoryId,
                                     Sp14198 = 0, //Комиссия
                                     Sp14213 = 0, //КоррЦенПроцент
                                     Sp14214 = 0, //КоррОстатков
@@ -1598,11 +1605,11 @@ namespace Refresher1C.Service
                             }
                         }
                         else
-                            foreach (var entity in entities.Where(x => (x.Sp14158 != 1) || ((productIdToSku.Count > 0) && (x.Sp14190.Trim() != productId)))) 
+                            foreach (var entity in entities.Where(x => (x.Sp14158 != 1) || ((productIdToSku.Count > 0) && (x.Sp14190.Trim() != marketProductIdAndCategoryId)))) 
                             {
                                 entity.Sp14158 = 1;
                                 if (productIdToSku.Count > 0)
-                                    entity.Sp14190 = productId;
+                                    entity.Sp14190 = marketProductIdAndCategoryId;
                                 _context.Update(entity);
                                 _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
                             }
@@ -2161,7 +2168,7 @@ namespace Refresher1C.Service
                                 остаток = Math.Max(остаток, 0);
                             }
                         }
-                        stockData.Add((productId: item.ProductId, offerId: item.OfferId, barcode: item.Barcode, stock: (item.Locked ? 0 : (int)остаток)));
+                        stockData.Add((productId: item.ProductId.Split(';').FirstOrDefault(), offerId: item.OfferId, barcode: item.Barcode, stock: (item.Locked ? 0 : (int)остаток)));
                     }
                     if (stockData.Count > 0)
                     {
@@ -2221,11 +2228,11 @@ namespace Refresher1C.Service
                                     _logger.LogError(resultAli.ErrorMessage);
                                 if (resultAli.UpdatedIds?.Count > 0)
                                     uploadIds.AddRange(data
-                                        .Where(x => resultAli.UpdatedIds.Contains(x.ProductId))
+                                        .Where(x => resultAli.UpdatedIds.Contains(x.ProductId.Split(';').FirstOrDefault()))
                                         .Select(x => x.Id));
                                 if (resultAli.ErrorIds?.Count > 0)
                                     errorIds = data
-                                        .Where(x => resultAli.ErrorIds.Contains(x.ProductId))
+                                        .Where(x => resultAli.ErrorIds.Contains(x.ProductId.Split(';').FirstOrDefault()))
                                         .Select(x => x.Id)
                                         .ToList();
                                 break;
@@ -4317,7 +4324,7 @@ namespace Refresher1C.Service
                     }
                     else if (marketplace.Тип == "WILDBERRIES")
                     {
-                        await UpdateTariffsWildberries(marketplace.Id, cancellationToken);
+                        await UpdateTariffsWildberries(marketplace.Id, marketplace.FirmaId, marketplace.AuthToken, cancellationToken);
                     }
                 }
             }
@@ -4425,8 +4432,19 @@ namespace Refresher1C.Service
                     await _context.SaveChangesAsync(cancellationToken);
             }
         }
-        private async Task UpdateTariffsWildberries(string marketplaceId, CancellationToken cancellationToken)
+        private async Task UpdateTariffsWildberries(string marketplaceId, string firmaId, string authToken, CancellationToken cancellationToken)
         {
+            var tariffResult = await WbClasses.Functions.GetTariffs(_httpService, _firmProxy[firmaId], authToken, cancellationToken);
+            if (tariffResult.Error != null && !string.IsNullOrEmpty(tariffResult.Error))
+            {
+                _logger.LogError(tariffResult.Error);
+            }
+            var tariffBySubjectIds = tariffResult.Data.Report
+                .ToDictionary(
+                    k => k.SubjectID,
+                    v => v.KgvpMarketplace
+                );
+
             int requestLimit = 500;
             var query = from markUse in _context.Sc14152s
                         join nom in _context.Sc84s on markUse.Parentext equals nom.Id
@@ -4443,6 +4461,7 @@ namespace Refresher1C.Service
                         select new
                         {
                             Id = markUse.Id,
+                            ProductId = markUse.Sp14190.Trim(),
                             ParentComment = nomParent.Sp95,
                             WeightBrutto = ed.Sp14056, //кг
                             Weight = ed.Sp14056, //кг
@@ -4464,11 +4483,18 @@ namespace Refresher1C.Service
                     var entity = await _context.Sc14152s.FirstOrDefaultAsync(x => x.Id == dataItem.Id, cancellationToken);
                     if (entity != null)
                     {
-                        var categoryPercent = dataItem.ParentComment
-                            .Split(";", StringSplitOptions.TrimEntries)
-                            .Where(y => y.StartsWith("WB", StringComparison.InvariantCultureIgnoreCase))
-                            .Select(z => { decimal.TryParse(z.Substring(2).Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out decimal p); return p; })
-                            .FirstOrDefault();
+                        var categoryId = dataItem.ProductId.Contains(';')
+                            ? dataItem.ProductId.Split(';').LastOrDefault()
+                            : string.Empty;
+                        var categoryPercent = tariffBySubjectIds.GetValueOrDefault(categoryId);
+                        if (categoryPercent == default)
+                        {
+                            categoryPercent = dataItem.ParentComment
+                                .Split(";", StringSplitOptions.TrimEntries)
+                                .Where(y => y.StartsWith("WB", StringComparison.InvariantCultureIgnoreCase))
+                                .Select(z => { decimal.TryParse(z.Substring(2).Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out decimal p); return p; })
+                                .FirstOrDefault();
+                        }
                         var minPrice = 0m;
                         using (var helper = new CommissionHelperWB(_markupFactorPercentDictionary, dataItem.ЦенаЗакуп, (int)dataItem.Квант, categoryPercent, dataItem.Length, dataItem.Width, dataItem.Height, dataItem.WeightBrutto))
                         {

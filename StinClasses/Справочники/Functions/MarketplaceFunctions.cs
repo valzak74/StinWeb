@@ -119,7 +119,23 @@ namespace StinClasses.Справочники.Functions
                        };
             if (limit > 0)
                 data = data.Take(limit);
-            return await data.ToListAsync(cancellationToken);
+            var result = await data.ToListAsync(cancellationToken);
+            return result
+                .Select(x => new MarketUseInfoStock
+                {
+                    Id = x.Id,
+                    Locked = x.Locked,
+                    NomId = x.NomId,
+                    OfferId = x.OfferId,
+                    ProductId = x.ProductId.Split(';').FirstOrDefault(),
+                    Barcode = x.Barcode,
+                    Квант = x.Квант,
+                    DeltaStock = x.DeltaStock,
+                    UpdatedAt = x.UpdatedAt,
+                    UpdatedFlag = x.UpdatedFlag,
+                    WarehouseId = x.WarehouseId,
+                })
+                .ToList();
         }
         public async Task<IEnumerable<(string productId, string offerId, string barcode, int stock)>> GetStockData(IEnumerable<MarketUseInfoStock> data,
             Marketplace marketplace,
@@ -307,7 +323,7 @@ namespace StinClasses.Справочники.Functions
         public async Task<IEnumerable<MarketUseInfoPrice>> GetMarketUseInfoForPriceAsync(Marketplace marketplace, int limit, CancellationToken cancellationToken)
         {
             DateTime limitDate = DateTime.Now.AddDays(-1);
-            return await (from markUse in _context.Sc14152s
+            var result = await (from markUse in _context.Sc14152s
                           join nom in _context.Sc84s on markUse.Parentext equals nom.Id
                           join vzTovar in _context.VzTovars on nom.Id equals vzTovar.Id into _vzTovar
                           from vzTovar in _vzTovar.DefaultIfEmpty()
@@ -340,6 +356,24 @@ namespace StinClasses.Справочники.Functions
                         .OrderBy(x => x.NomId)
                         .Take(limit)
                         .ToListAsync(cancellationToken);
+            return result
+                .Select(x => new MarketUseInfoPrice
+                {
+                    Id = x.Id,
+                    Locked = x.Locked,
+                    NomId = x.NomId,
+                    OfferId = x.OfferId,
+                    ProductId = x.ProductId.Split(';').FirstOrDefault(),
+                    Квант = x.Квант,
+                    DeltaPrice = x.DeltaPrice,
+                    Rozn = x.Rozn,
+                    RoznSp = x.RoznSp,
+                    Zakup = x.Zakup,
+                    Fix = x.Fix,
+                    Multiply = x.Multiply,
+                    MinPrice = x.MinPrice,
+                })
+                .ToList();
         }
         public IEnumerable<(string id, string productId, string offerId, decimal квант, decimal price, decimal priceBeforeDiscount, decimal minPrice)> GetPriceData(IEnumerable<MarketUseInfoPrice> data,
             Marketplace marketplace, decimal checkCoeff)

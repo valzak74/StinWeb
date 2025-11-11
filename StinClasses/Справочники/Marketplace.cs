@@ -309,7 +309,7 @@ namespace StinClasses.Справочники
                     coeff = x.Sp14149
                 })
                 .AsEnumerable()
-                .Select(c => (c.id, c.productId, c.deltaPrice, c.fixPrice, c.coeff))
+                .Select(c => (c.id, c.productId.Split(';').FirstOrDefault(), c.deltaPrice, c.fixPrice, c.coeff))
                 .FirstOrDefault();
         }
     }

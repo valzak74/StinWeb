@@ -78,6 +78,16 @@ namespace WbClasses
                 err = result.Item2;
             return (data: result.Item1, error: string.IsNullOrEmpty(err) ? "" : "WbGetCatalogInfo: " + err);
         }
+        public static async Task<(WbTariffResponse? Data, string Error)> GetTariffs(IHttpService httpService, string proxyHost, string authToken, CancellationToken cancellationToken)
+        {
+            var (data, err) = await httpService.Exchange<WbTariffResponse, string>(
+                $"https://{proxyHost}common-api.wildberries.ru/api/v1/tariffs/commission",
+                HttpMethod.Get,
+                GetCustomHeaders(authToken),
+                null,
+                cancellationToken);
+            return (data, Error: string.IsNullOrEmpty(err) ? "" : "WbGetTariffs: " + err);
+        }
         public static async Task<(PriceRequest[], string?)> GetPrices(IHttpService httpService, string proxyHost, string authToken, CancellationToken cancellationToken)
         {
             var result = await httpService.Exchange<PriceRequest[], PriceError>(

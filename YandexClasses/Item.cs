@@ -15,7 +15,6 @@ namespace YandexClasses
         public long WarehouseId { get; set; }
         public string PartnerWarehouseId { get; set; }
         public double Price { get; set; }
-        [JsonProperty("buyer-price")]
         public double BuyerPrice { get; set; }
         public double Subsidy { get; set; }
         public bool Delivery { get; set; }
