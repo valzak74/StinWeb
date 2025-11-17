@@ -4282,7 +4282,7 @@ namespace Refresher1C.Service
             {
                 var marketplaceIds = await (from market in _context.Sc14042s
                                             where !market.Ismark
-                                            //&& market.Code.Trim() == "22498162235000" // "23503334320000" //
+                                            //&& market.Code.Trim() == "1271527" //"22498162235000" // "23503334320000" //
                                             //&& market.Code.Trim() == "22162396"
                                             //&& market.Code.Trim() == "652932"
                                             //&& market.Sp14155.Trim().ToUpper() == "OZON" 
@@ -4454,9 +4454,9 @@ namespace Refresher1C.Service
                         from vzTovar in _vzTovar.DefaultIfEmpty()
                         where (markUse.Sp14147 == marketplaceId) &&
                           (markUse.Sp14158 == 1) //Есть в каталоге 
-                          && !string.IsNullOrEmpty(nomParent.Sp95)
-                          && nomParent.Sp95.Contains("WB")
-                          //&& nom.Code == "D00079369"
+                          //&& !string.IsNullOrEmpty(nomParent.Sp95)
+                          //&& nomParent.Sp95.Contains("WB")
+                          //&& nom.Code == "D00078947"
                         orderby nom.Code
                         select new
                         {
