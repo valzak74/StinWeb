@@ -49,6 +49,8 @@ namespace StinClasses.Справочники
         public string NomId { get; set; }
         public string OfferId { get; set;}
         public string ProductId { get; set; }
+        public string CategoryId { get; set; }
+        public string ChrtId { get; set; }
         public string Barcode { get; set; }
         decimal _квант;
         public decimal Квант { get => _квант; set => _квант = Math.Max(value, 1); }

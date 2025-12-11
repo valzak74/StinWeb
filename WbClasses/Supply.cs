@@ -31,9 +31,15 @@ namespace WbClasses
     }
     public class AddToSupply
     {
-        public List<string>? Orders { get; set; }
-        public AddToSupply() => Orders = new List<string>();
-        public AddToSupply(List<string> orders) => Orders = orders;
+        public List<long>? Orders { get; set; }
+        public AddToSupply() => Orders = new List<long>();
+        public AddToSupply(string order)
+        {
+            if (long.TryParse(order, out var result))
+                Orders = new List<long> { result };
+            else 
+                Orders = new List<long>();
+        }
     }
     [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]
     public enum WbSupplyStatus

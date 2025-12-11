@@ -136,7 +136,7 @@ namespace WbClasses
         }
         public static async Task<(bool success, Dictionary<string, string>? errors)> UpdateStock(IHttpService httpService, string proxyHost, string authToken,
             int warehouseId,
-            Dictionary<string, int> data,
+            Dictionary<(string Barcode, long ChrtId), int> data,
             CancellationToken cancellationToken)
         {
             var request = new StocksRequestV3(data);
@@ -334,10 +334,10 @@ namespace WbClasses
             CancellationToken cancellationToken)
         {
             var result = await httpService.Exchange<bool, WbErrorResponse>(
-                $"https://{proxyHost}marketplace-api.wildberries.ru/api/v3/supplies/{supplyId}/orders/{orderId}",
+                $"https://{proxyHost}marketplace-api.wildberries.ru/api/marketplace/v3/supplies/{supplyId}/orders",
                 HttpMethod.Patch,
                 GetCustomHeaders(authToken),
-                null,
+                new AddToSupply(orderId),
                 cancellationToken);
             string err = "";
             if (result.Item2 != null)

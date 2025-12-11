@@ -52,11 +52,11 @@ namespace StinClasses.MarketCommission
                 case ModelTypeOzon.FBS:
                     return volumeWeight switch
                     {
-                        <= 1m => 80,
-                        <= 3m => 80 + (Math.Ceiling(volumeWeight) - 1) * 18, // 18 руб за каждый дополнительный литр свыше 1 до 3
-                        <= 190m => 80 + 2 * 18 + (Math.Ceiling(volumeWeight) - 3) * 23, // 23 руб за каждый дополнительный литр свыше 3
-                        <= 1000m => 80 + 2 * 18 + 187 * 23 + (Math.Ceiling(volumeWeight) - 190) * 6, // 6 руб за каждый доп. литр свыше 190
-                        _ => 9277
+                        <= 1m => 81.34m,
+                        <= 3m => 81.34m + (Math.Ceiling(volumeWeight) - 1) * 18.3m, // 18 руб за каждый дополнительный литр свыше 1 до 3
+                        <= 190m => 81.34m + 2 * 18.3m + (Math.Ceiling(volumeWeight) - 3) * 23.39m, // 23 руб за каждый дополнительный литр свыше 3
+                        <= 1000m => 81.34m + 2 * 18.3m + 187 * 23.39m + (Math.Ceiling(volumeWeight) - 190) * 6.1m, // 6 руб за каждый доп. литр свыше 190
+                        _ => 9432.87m
                     };
                 case ModelTypeOzon.RealFBS:
                     return volumeWeight switch
@@ -71,11 +71,11 @@ namespace StinClasses.MarketCommission
                 case ModelTypeOzon.FBO:
                     return volumeWeight switch
                     {
-                        <= 1m => 46,
-                        <= 3m => 46 + (Math.Ceiling(volumeWeight) - 1) * 10, // 10 руб за каждый дополнительный литр свыше 1 до 3
-                        <= 190m => 46 + 2 * 10 + (Math.Ceiling(volumeWeight) - 3) * 15, // 15 руб за каждый дополнительный литр свыше 3
-                        <= 1000m => 46 + 2 * 10 + 187 * 15 + (Math.Ceiling(volumeWeight) - 190) * 6, // 6 руб за каждый доп. литр свыше 190
-                        _ => 7791
+                        <= 1m => 46.77m,
+                        <= 3m => 46.77m + (Math.Ceiling(volumeWeight) - 1) * 10.17m, // 10 руб за каждый дополнительный литр свыше 1 до 3
+                        <= 190m => 46.77m + 2 * 10.17m + (Math.Ceiling(volumeWeight) - 3) * 15.25m, // 15 руб за каждый дополнительный литр свыше 3
+                        <= 1000m => 46.77m + 2 * 10.17m + 187 * 15.25m + (Math.Ceiling(volumeWeight) - 190) * 6.1m, // 6 руб за каждый доп. литр свыше 190
+                        _ => 7859.86m
                     };
             }
             return 0;

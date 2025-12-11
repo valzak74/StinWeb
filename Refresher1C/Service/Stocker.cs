@@ -278,16 +278,26 @@ namespace Refresher1C.Service
                     k => k.Key,
                     v => v.Select(x => x.WarehouseId).First()
                 );
+            var chrtIdByProductId = data
+                .GroupBy(x => x.ProductId)
+                .ToDictionary(
+                    k => k.Key,
+                    v => v.Select(x => x.ChrtId).First()
+                );
             var stockDataByWarehouseIds = stockData
                 .Select(x =>
                 {
                     var warehouseId = warehouseIdByProductId.GetValueOrDefault(x.productId);
                     if (!int.TryParse(string.IsNullOrWhiteSpace(warehouseId) ? marketplace.Code : warehouseId, out var intWarehouseId))
                         intWarehouseId = 0;
+                    var chrtId = chrtIdByProductId.GetValueOrDefault(x.productId) ?? string.Empty;
+                    if (!long.TryParse(chrtId, out var longChrtId))
+                        longChrtId = 0;
                     return new
                     {
                         Barcode = x.barcode,
                         Stock = x.stock,
+                        ChrtId = longChrtId,
                         WarehouseId = intWarehouseId
                     };
                 })
@@ -295,7 +305,7 @@ namespace Refresher1C.Service
                 .Select(x => new
                 {
                     WarehouseId = x.Key,
-                    StockData = x.GroupBy(y => y.Barcode).ToDictionary(k => k.Key, v => v.Sum(y => y.Stock))
+                    StockData = x.GroupBy(y => new { y.Barcode, y.ChrtId }).ToDictionary(k => (k.Key.Barcode, k.Key.ChrtId), v => v.Sum(y => y.Stock))
                 })
                 .ToList();
 
@@ -319,7 +329,7 @@ namespace Refresher1C.Service
                         _logger.LogError("SetWildberriesData " + item.Key + ": " + item.Value);
                 }
                 else
-                    uploadIds.AddRange(data.Where(x => stockDataByWarehouseId.StockData.Select(y => y.Key).Contains(x.Barcode)).Select(x => x.Id));
+                    uploadIds.AddRange(data.Where(x => stockDataByWarehouseId.StockData.Select(y => y.Key.Barcode).Contains(x.Barcode)).Select(x => x.Id));
             }
         }
         async Task SetYandexData(List<string> uploadIds,

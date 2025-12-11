@@ -12,18 +12,20 @@ namespace WbClasses
     {
         public List<StocksEntryV3> Stocks { get; set; }
         public StocksRequestV3() => Stocks = new List<StocksEntryV3>();
-        public StocksRequestV3(Dictionary<string, int> items) : this()
+        public StocksRequestV3(Dictionary<(string Barcode, long ChrtId), int> items) : this()
         {
             foreach (var item in items)
-                Stocks.Add(new StocksEntryV3(item.Key, item.Value));
+                Stocks.Add(new StocksEntryV3(item.Key.Barcode, item.Key.ChrtId, item.Value));
         }
         public class StocksEntryV3
         {
+            public long ChrtId { get; set; }
             public string? Sku { get; set; }
             public int Amount { get; set; }
-            public StocksEntryV3(string barcode, int amount)
+            public StocksEntryV3(string barcode, long chrtId, int amount)
             {
                 Sku = barcode;
+                ChrtId = chrtId;
                 Amount = amount;
             }
         }

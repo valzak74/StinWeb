@@ -172,7 +172,7 @@ namespace Refresher1C.Service
                                   //from markUse in _markUse.DefaultIfEmpty()
                                   where r.Period == dateRegTA && ((r.Sp14011 == 10) || (r.Sp14011 == 11)) &&
                                     (regular ? (order.Sp13982 == 8) : (order.Sp13982 == -1)) //order статус = 8
-                                    //&& order.Code.Trim() == "3843351795"
+                                    //&& order.Code.Trim() == "4313022892"
                                     && (((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.YANDEX_MARKET) ||
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.SBER_MEGA_MARKET) ||
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.ALIEXPRESS_LOGISTIC) ||
@@ -1466,6 +1466,7 @@ namespace Refresher1C.Service
             var skus = new List<string>();
             var productIdToSku = new Dictionary<string, string>();
             var categoryIdbySku = new Dictionary<string, string>();
+            var chrtIdbySku = new Dictionary<string, string>();
             if (data is IList<YandexClasses.OfferMappingEntry>)
             {
                 foreach (var entry in (data as IList<YandexClasses.OfferMappingEntry>))
@@ -1545,6 +1546,7 @@ namespace Refresher1C.Service
                         string nmId = entry.NmID.ToString();
                         string categoryId = entry.SubjectID.ToString();
                         string nomCode = entry.VendorCode.Decode(encoding);
+                        string chrtId = entry.Sizes?.Select(x => x.ChrtID.ToString()).FirstOrDefault();
                         if (string.IsNullOrEmpty(nomCode))
                         {
                             _logger.LogError("UpdateCatalogInfo : Wildberries wrong encoded sku " + entry.VendorCode);
@@ -1553,6 +1555,7 @@ namespace Refresher1C.Service
                         skus.Add(nomCode);
                         productIdToSku.Add(nmId, nomCode);
                         categoryIdbySku.Add(nomCode, categoryId);
+                        chrtIdbySku.Add(nomCode, chrtId);
                     }
             }
             try
@@ -1567,9 +1570,11 @@ namespace Refresher1C.Service
                                               select markUse).ToListAsync(stoppingToken);
                         var productId = productIdToSku.Where(v => v.Value == sku).Select(k => k.Key).FirstOrDefault() ?? string.Empty;
                         var categoryId = categoryIdbySku.GetValueOrDefault(sku) ?? string.Empty;
-                        var marketProductIdAndCategoryId = string.IsNullOrEmpty(categoryId)
+                        var chrtId = chrtIdbySku.GetValueOrDefault(sku) ?? string.Empty;
+                        var marketProductIdAndCategoryIdAndChrtId = string.IsNullOrEmpty(categoryId) && string.IsNullOrEmpty(chrtId)
                             ? productId
-                            : $"{productId};{categoryId}";
+                            : $"{productId};{categoryId};{chrtId}";
+                        
                         if ((entities == null) || (entities.Count == 0))
                         {
                             var parentId = await _context.Sc84s
@@ -1593,7 +1598,7 @@ namespace Refresher1C.Service
                                     Sp14178 = Common.min1cDate, //StockUpdatedAt
                                     Sp14179 = 0, //StockUpdated - пусть stock обновится
                                     Sp14187 = 0, //Quantum = 0
-                                    Sp14190 = marketProductIdAndCategoryId,
+                                    Sp14190 = marketProductIdAndCategoryIdAndChrtId,
                                     Sp14198 = 0, //Комиссия
                                     Sp14213 = 0, //КоррЦенПроцент
                                     Sp14214 = 0, //КоррОстатков
@@ -1605,11 +1610,11 @@ namespace Refresher1C.Service
                             }
                         }
                         else
-                            foreach (var entity in entities.Where(x => (x.Sp14158 != 1) || ((productIdToSku.Count > 0) && (x.Sp14190.Trim() != marketProductIdAndCategoryId)))) 
+                            foreach (var entity in entities.Where(x => (x.Sp14158 != 1) || ((productIdToSku.Count > 0) && (x.Sp14190.Trim() != marketProductIdAndCategoryIdAndChrtId)))) 
                             {
                                 entity.Sp14158 = 1;
                                 if (productIdToSku.Count > 0)
-                                    entity.Sp14190 = marketProductIdAndCategoryId;
+                                    entity.Sp14190 = marketProductIdAndCategoryIdAndChrtId;
                                 _context.Update(entity);
                                 _context.РегистрацияИзмененийРаспределеннойИБ(14152, entity.Id);
                             }
@@ -2237,21 +2242,21 @@ namespace Refresher1C.Service
                                         .ToList();
                                 break;
                             case "WILDBERRIES":
-                                int.TryParse(marketplaceCode, out int warehouseId);
-                                var resultWb = await WbClasses.Functions.UpdateStock(_httpService, _firmProxy[firmaId], authToken, warehouseId,
-                                    stockData.ToDictionary(k => k.barcode, v => v.stock),
-                                    cancellationToken);
-                                var commonErrorTags = new List<string> { "common", "errorText", "additionalError" };
-                                if (resultWb.errors?.Count > 0)
-                                {
-                                    foreach (var item in resultWb.errors)
-                                        _logger.LogError("WILDBERRIES" + item.Key + ": " + item.Value);
-                                    var errorOffers = resultWb.errors.Where(x => !commonErrorTags.Contains(x.Key)).Select(x => x.Key);
-                                    errorIds = data.Where(x => errorOffers.Contains(x.Barcode)).Select(x => x.Id).ToList();
-                                    uploadIds = data.Where(x => !errorOffers.Contains(x.Barcode)).Select(x => x.Id).ToList();
-                                }
-                                else
-                                    uploadIds = data.Where(x => stockData.Select(y => y.barcode).Contains(x.Barcode)).Select(x => x.Id).ToList();
+                                //int.TryParse(marketplaceCode, out int warehouseId);
+                                //var resultWb = await WbClasses.Functions.UpdateStock(_httpService, _firmProxy[firmaId], authToken, warehouseId,
+                                //    stockData.ToDictionary(k => k.barcode, v => v.stock),
+                                //    cancellationToken);
+                                //var commonErrorTags = new List<string> { "common", "errorText", "additionalError" };
+                                //if (resultWb.errors?.Count > 0)
+                                //{
+                                //    foreach (var item in resultWb.errors)
+                                //        _logger.LogError("WILDBERRIES" + item.Key + ": " + item.Value);
+                                //    var errorOffers = resultWb.errors.Where(x => !commonErrorTags.Contains(x.Key)).Select(x => x.Key);
+                                //    errorIds = data.Where(x => errorOffers.Contains(x.Barcode)).Select(x => x.Id).ToList();
+                                //    uploadIds = data.Where(x => !errorOffers.Contains(x.Barcode)).Select(x => x.Id).ToList();
+                                //}
+                                //else
+                                //    uploadIds = data.Where(x => stockData.Select(y => y.barcode).Contains(x.Barcode)).Select(x => x.Id).ToList();
                                 break;
                             case "ЯНДЕКС":
                                 var resultYandex = await YandexClasses.YandexOperators.UpdateStock(_httpService, _firmProxy[firmaId], marketplaceCode, clientId, authToken, authSecret,
@@ -4484,7 +4489,7 @@ namespace Refresher1C.Service
                     if (entity != null)
                     {
                         var categoryId = dataItem.ProductId.Contains(';')
-                            ? dataItem.ProductId.Split(';').LastOrDefault()
+                            ? dataItem.ProductId.Split(';').Skip(1).FirstOrDefault()
                             : string.Empty;
                         var categoryPercent = tariffBySubjectIds.GetValueOrDefault(categoryId);
                         if (categoryPercent == default)

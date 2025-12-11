@@ -128,6 +128,8 @@ namespace StinClasses.Справочники.Functions
                     NomId = x.NomId,
                     OfferId = x.OfferId,
                     ProductId = x.ProductId.Split(';').FirstOrDefault(),
+                    CategoryId = x.ProductId.Split(';').Skip(1).FirstOrDefault(),
+                    ChrtId = x.ProductId.Split(';').Skip(2).FirstOrDefault(),
                     Barcode = x.Barcode,
                     Квант = x.Квант,
                     DeltaStock = x.DeltaStock,

@@ -47,7 +47,8 @@ namespace Refresher1C
                     using var _service = _scopeFactory.CreateScope().ServiceProvider.GetService<IMarketplaceService>();
                     await _service.CheckNaborNeeded(stoppingToken);
                 });
-                var yandexBoxes = Task.Run(async () => {
+                var yandexBoxes = Task.Run(async () =>
+                {
                     using var _service = _scopeFactory.CreateScope().ServiceProvider.GetService<IMarketplaceService>();
                     await _service.PrepareYandexFbsBoxes(regular, stoppingToken);
                 });
