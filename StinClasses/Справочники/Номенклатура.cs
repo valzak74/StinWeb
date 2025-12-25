@@ -377,6 +377,9 @@ namespace StinClasses.Справочники
                 case "20%":
                     Процент = 20;
                     break;
+                case "22%":
+                    Процент = 22;
+                    break;
                 case "18%":
                     Процент = 18;
                     break;

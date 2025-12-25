@@ -253,7 +253,7 @@ namespace OzonClasses
             request.Posting_number = postingNumber;
 
             var result = await httpService.Exchange<ExemplarCreateOrGetResponse, ErrorResponse>(
-                $"https://{proxyHost}api-seller.ozon.ru/v5/fbs/posting/product/exemplar/create-or-get",
+                $"https://{proxyHost}api-seller.ozon.ru/v6/fbs/posting/product/exemplar/create-or-get",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
@@ -287,7 +287,7 @@ namespace OzonClasses
             request.Posting_number = postingNumber;
 
             var result = await httpService.Exchange<ExemplarStatusResponse, ErrorResponse>(
-                $"https://{proxyHost}api-seller.ozon.ru/v4/fbs/posting/product/exemplar/status",
+                $"https://{proxyHost}api-seller.ozon.ru/v5/fbs/posting/product/exemplar/status",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
@@ -325,7 +325,7 @@ namespace OzonClasses
             request.Products = requestProducts;
 
             var result = await httpService.Exchange<ExemplarSetResponse, ErrorResponse>(
-                $"https://{proxyHost}api-seller.ozon.ru/v5/fbs/posting/product/exemplar/set",
+                $"https://{proxyHost}api-seller.ozon.ru/v6/fbs/posting/product/exemplar/set",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
