@@ -62,7 +62,7 @@ namespace StinClasses
             {"    I7   ","20%" },
             {"   6F2   ","18%" },
             {"   9YV   ","0%" },
-            {"   B3D   ","22%" },
+            {"   B3I   ","22%" },
         };
         public static readonly Dictionary<string, string> КодОперации = new Dictionary<string, string>()
         {
