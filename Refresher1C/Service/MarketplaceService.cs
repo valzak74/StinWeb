@@ -3666,27 +3666,30 @@ namespace Refresher1C.Service
                     && resultCreateOrGetExemplar.data.TryGetValue(product.Sku, out var productExemplarCreateOrGet)
                     && productExemplarCreateOrGet.Is_gtd_needed)
                 {
-                    var exemplarProducts = productExemplarCreateOrGet.Exemplars.Select(x => new OzonClasses.ProductExemplarRequest
-                    {
-                        Exemplars = new List<OzonClasses.ProductExemplarRequestItem>
+                    var exemplarProducts = productExemplarCreateOrGet.Exemplars
+                        .Select(x => new OzonClasses.ProductExemplarRequest
                         {
-                            new OzonClasses.ProductExemplarRequestItem
+                            Exemplars = new List<OzonClasses.ProductExemplarRequestItem>
                             {
-                                Exemplar_id = x.Exemplar_id,
-                                Gtd = string.IsNullOrWhiteSpace(gtd) ? null : gtd,
-                                Is_gtd_absent = string.IsNullOrWhiteSpace(gtd),
-                                Is_rnpt_absent = true,
-                                Mandatory_mark = null,
-                                Rnpt = null,
-                                Jw_uin = null,
-                            }
-                        },
-                        Is_gtd_needed = string.IsNullOrWhiteSpace(gtd),
-                        Is_mandatory_mark_needed = false,
-                        Is_rnpt_needed = false,
-                        Product_id = product.Sku,
-                        Quantity = product.Quantity,
-                    }).ToList();
+                                new OzonClasses.ProductExemplarRequestItem
+                                {
+                                    Exemplar_id = x.Exemplar_id,
+                                    Gtd = string.IsNullOrWhiteSpace(gtd) ? null : gtd,
+                                    Is_gtd_absent = string.IsNullOrWhiteSpace(gtd),
+                                    Is_rnpt_absent = true,
+                                    Mandatory_mark = null,
+                                    Rnpt = null,
+                                    Jw_uin = null,
+                                }
+                            },
+                            Is_gtd_needed = string.IsNullOrWhiteSpace(gtd),
+                            Is_mandatory_mark_needed = false,
+                            Is_rnpt_needed = false,
+                            Product_id = product.Sku,
+                            Quantity = product.Quantity,
+                        })
+                        .DistinctBy(x => x.Product_id)
+                        .ToList();
                     if (exemplarProducts.Count > 0)
                     {
                         var resultExemplar = await OzonClasses.OzonOperators.SetExemplar(_httpService, proxyHost, clientId, authToken,

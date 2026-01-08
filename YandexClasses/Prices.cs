@@ -63,6 +63,7 @@ namespace YandexClasses
         vat_10 = 2,
         vat_0 = 5,
         vat_not_used = 6,
-        vat_20 = 7
+        vat_20 = 7,
+        vat_22 = 8,
     }
 }

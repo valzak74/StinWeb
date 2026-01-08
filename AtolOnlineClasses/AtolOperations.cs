@@ -20,6 +20,7 @@ namespace AtolOnlineClasses
             {"20%", SellVatType.vat20 },
             {"18%", SellVatType.vat18 },
             {"0%", SellVatType.vat0 },
+            {"22%", SellVatType.vat22 },
         };
         private static string SerializeObject(this object request)
         {

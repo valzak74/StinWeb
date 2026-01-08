@@ -162,7 +162,9 @@ namespace AtolOnlineClasses
         vat110 = 4,
         vat118 = 5,
         vat20 = 6,
-        vat120 = 7
+        vat120 = 7,
+        vat22 = 8,
+        vat122 = 9,
     }
     public class SellPaymentItem
     {

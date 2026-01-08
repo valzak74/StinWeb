@@ -13,6 +13,8 @@ namespace YandexClasses
         VAT_18 = 5,
         VAT_18_118 = 6,
         VAT_20 = 7,
-        VAT_20_120 = 8
+        VAT_20_120 = 8,
+        VAT_22 = 9,
+        VAT_22_122 = 10,
     }
 }
