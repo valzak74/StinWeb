@@ -3664,14 +3664,21 @@ namespace Refresher1C.Service
                 }
                 if (resultCreateOrGetExemplar.data != null 
                     && resultCreateOrGetExemplar.data.TryGetValue(product.Sku, out var productExemplarCreateOrGet)
-                    && productExemplarCreateOrGet.Is_gtd_needed)
+                    && productExemplarCreateOrGet.Is_gtd_needed
+                    && productExemplarCreateOrGet?.Exemplars?.Count > 0
+                )
                 {
-                    var exemplarProducts = productExemplarCreateOrGet.Exemplars
-                        .Select(x => new OzonClasses.ProductExemplarRequest
+                    var exemplarProducts = new List<OzonClasses.ProductExemplarRequest>
+                    {
+                        new OzonClasses.ProductExemplarRequest
                         {
-                            Exemplars = new List<OzonClasses.ProductExemplarRequestItem>
-                            {
-                                new OzonClasses.ProductExemplarRequestItem
+                            Is_gtd_needed = string.IsNullOrWhiteSpace(gtd),
+                            Is_mandatory_mark_needed = false,
+                            Is_rnpt_needed = false,
+                            Product_id = product.Sku,
+                            Quantity = product.Quantity,
+                            Exemplars = productExemplarCreateOrGet.Exemplars
+                                .Select(x => new OzonClasses.ProductExemplarRequestItem
                                 {
                                     Exemplar_id = x.Exemplar_id,
                                     Gtd = string.IsNullOrWhiteSpace(gtd) ? null : gtd,
@@ -3680,27 +3687,19 @@ namespace Refresher1C.Service
                                     Mandatory_mark = null,
                                     Rnpt = null,
                                     Jw_uin = null,
-                                }
-                            },
-                            Is_gtd_needed = string.IsNullOrWhiteSpace(gtd),
-                            Is_mandatory_mark_needed = false,
-                            Is_rnpt_needed = false,
-                            Product_id = product.Sku,
-                            Quantity = product.Quantity,
-                        })
-                        .DistinctBy(x => x.Product_id)
-                        .ToList();
-                    if (exemplarProducts.Count > 0)
-                    {
-                        var resultExemplar = await OzonClasses.OzonOperators.SetExemplar(_httpService, proxyHost, clientId, authToken,
-                            posting.Posting_number,
-                            totalPieces,
-                            exemplarProducts,
-                            stoppingToken);
-                        if (!string.IsNullOrEmpty(resultExemplar.error))
-                        {
-                            _logger.LogError(resultExemplar.error);
+                                })
+                                .ToList()
                         }
+                    };
+
+                    var resultExemplar = await OzonClasses.OzonOperators.SetExemplar(_httpService, proxyHost, clientId, authToken,
+                        posting.Posting_number,
+                        totalPieces,
+                        exemplarProducts,
+                        stoppingToken);
+                    if (!string.IsNullOrEmpty(resultExemplar.error))
+                    {
+                        _logger.LogError(resultExemplar.error);
                     }
                 }
                 for (int i = 0; i < product.Quantity; i++)
