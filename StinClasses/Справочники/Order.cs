@@ -36,6 +36,7 @@ namespace StinClasses.Справочники
         public int InternalStatus { get; set; }
         public int Status { get; set; }
         public int SubStatus { get; set; }
+        public int Scanned { get; set; }
         public string MarketName { get; set; }
         public string Тип { get; set; }
         public string Модель { get; set; }
@@ -239,6 +240,7 @@ namespace StinClasses.Справочники
                                {
                                    Id = x.Id,
                                    InternalStatus = (int)x.Sp13982,
+                                   Scanned = (int)x.Sp14254,
                                    MarketName = m.Descr.Trim(),
                                    Тип = m.Sp14155.ToUpper().Trim(),
                                    Модель = m.Sp14164.ToUpper().Trim(),

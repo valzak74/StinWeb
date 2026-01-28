@@ -2542,8 +2542,22 @@ namespace Refresher1C.Service
                                 case YandexClasses.StatusYandex.CANCELLED_IN_DELIVERY:
                                 case YandexClasses.StatusYandex.CANCELLED_BEFORE_PROCESSING:
                                 case YandexClasses.StatusYandex.CANCELLED_IN_PROCESSING:
-                                    if ((order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14) && (order.InternalStatus != 16))
+                                    if ((order.InternalStatus != 5) && 
+                                        (order.InternalStatus != 6) && 
+                                        (order.InternalStatus != 14) && 
+                                        (order.InternalStatus != 16) &&
+                                        (order.Scanned == 0)
+                                    )
                                         await _docService.OrderCancelled(order);
+                                    if ((ts.TotalMinutes > 10) && readyToShipOrders.Contains(detailOrder.Id.ToString()) &&
+                                        (order.DeliveryPartnerType != StinDeliveryPartnerType.SHOP) &&
+                                        (order.InternalStatus < 14) && 
+                                        (order.InternalStatus != 6) && 
+                                        (order.InternalStatus != 5) && 
+                                        (order.Scanned > 0) &&
+                                        periodOpened && !_sleepPeriods.Any(x => x.IsSleeping())
+                                    )
+                                        await _docService.OrderDeliveried(order, true);
                                     break;
                                 case YandexClasses.StatusYandex.DELIVERY:
                                     if ((ts.TotalMinutes > 10) && readyToShipOrders.Contains(detailOrder.Id.ToString()) && 
@@ -2684,7 +2698,12 @@ namespace Refresher1C.Service
                     {
                         if (sberOrder.Items.Any(x => x.Status == SberClasses.SberStatus.CUSTOMER_CANCELED || x.Status == SberClasses.SberStatus.MERCHANT_CANCELED) &&
                                 (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14) && (order.InternalStatus != 16))
-                            await _docService.OrderCancelled(order);
+                        {
+                            if (order.Scanned > 0 && order.InternalStatus < 14 && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                                await _docService.OrderDeliveried(order, true);
+                            else
+                                await _docService.OrderCancelled(order);
+                        }
                         else if (readyToShipOrders.Contains(sberOrder.ShipmentId) && (sberOrder.Items?.All(x => x.Status == SberClasses.SberStatus.SHIPPED) ?? false) &&
                             (order.InternalStatus < 14) && (order.InternalStatus != 6) && (order.InternalStatus != 5) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                         {
@@ -2805,7 +2824,12 @@ namespace Refresher1C.Service
                         {
                             if (sberOrder.Items.Any(x => x.Status == SberClasses.SberStatus.CUSTOMER_CANCELED) &&
                                     (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14) && (order.InternalStatus != 16))
-                                await _docService.OrderCancelled(order);
+                            {
+                                if (order.Scanned > 0 && order.InternalStatus < 14 && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                                    await _docService.OrderDeliveried(order, true);
+                                else
+                                    await _docService.OrderCancelled(order);
+                            }
                             else if (readyToShipOrders.Contains(sberOrder.ShipmentId) && (sberOrder.Items?.All(x => x.Status == SberClasses.SberStatus.SHIPPED) ?? false) &&
                                 (order.InternalStatus < 14) && (order.InternalStatus != 6) && (order.InternalStatus != 5) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                             {
@@ -3093,9 +3117,13 @@ namespace Refresher1C.Service
                                 (aliOrder.Finish_reason == "BuyerChangeLogistic") || (aliOrder.Finish_reason == "BuyerCannotPayment") ||
                                 (aliOrder.Finish_reason == "BuyerOtherReasons") || (aliOrder.Finish_reason == "BuyerCannotContactSeller") ||
                                 (aliOrder.Finish_reason == "BuyerChangeCoupon") || (aliOrder.Finish_reason == "BuyerChangeMailAddress")) &&
-                                (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14) && (order.InternalStatus != 16))
+                                (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14) && (order.InternalStatus != 16)
+                            )
                             {
-                                await _docService.OrderCancelled(order);
+                                if (order.Scanned > 0 && order.InternalStatus < 14 && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                                    await _docService.OrderDeliveried(order, true);
+                                else
+                                    await _docService.OrderCancelled(order);
                             }
                         }
                     }
@@ -3422,7 +3450,12 @@ namespace Refresher1C.Service
                         if ((order != null) && (order.InternalStatus != 5) && (order.InternalStatus != 6))
                         {
                             if ((order.InternalStatus != 14) && (order.InternalStatus != 16))
-                                await _docService.OrderCancelled(order);
+                            {
+                                if (order.Scanned > 0 && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                                    await _docService.OrderDeliveried(order, true);
+                                else
+                                    await _docService.OrderCancelled(order);
+                            }
                             else if (order.InternalStatus == 14)
                                 await _order.ОбновитьOrderStatus(order.Id, 16);
                         }
@@ -4218,7 +4251,12 @@ namespace Refresher1C.Service
             var orders = await GetOzonDetailOrders(_firmProxy[firmaId], clientId, authToken, id, OzonClasses.OrderStatus.cancelled, stoppingToken);
             foreach (var order in orders)
             {
-                if ((order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14) && (order.InternalStatus != 16))
+                if ((order.InternalStatus != 5) && 
+                    (order.InternalStatus != 6) && 
+                    (order.InternalStatus != 14) && 
+                    (order.InternalStatus != 16) &&
+                    (order.Scanned == 0)
+                )
                 {
                     await _docService.OrderCancelled(order);
                 }
@@ -4231,13 +4269,17 @@ namespace Refresher1C.Service
             {
                 var orders = await GetOzonDetailOrders(_firmProxy[firmaId], clientId, authToken, marketplaceId, OzonClasses.OrderStatus.delivering, stoppingToken);
                 orders.AddRange(await GetOzonDetailOrders(_firmProxy[firmaId], clientId, authToken, marketplaceId, OzonClasses.OrderStatus.driver_pickup, stoppingToken));
-                var checkedNumbers = orders.Select(x => x.MarketplaceId).ToList();
                 foreach (var order in orders.Where(x => activeOrders.Contains(x.MarketplaceId)))
                     await _docService.OrderDeliveried(order, true);
 
+                orders = await GetOzonDetailOrders(_firmProxy[firmaId], clientId, authToken, marketplaceId, OzonClasses.OrderStatus.cancelled, stoppingToken);
+                foreach (var order in orders.Where(x => activeOrders.Contains(x.MarketplaceId) && x.Scanned > 0))
+                {
+                    await _docService.OrderDeliveried(order, true);
+                }
+
                 orders = await GetOzonDetailOrders(_firmProxy[firmaId], clientId, authToken, marketplaceId, OzonClasses.OrderStatus.arbitration, stoppingToken);
                 orders.AddRange(await GetOzonDetailOrders(_firmProxy[firmaId], clientId, authToken, marketplaceId, OzonClasses.OrderStatus.client_arbitration, stoppingToken));
-                checkedNumbers.AddRange(orders.Select(x => x.MarketplaceId));
                 foreach (var order in orders.Where(x => activeOrders.Contains(x.MarketplaceId)))
                     await _order.ОбновитьOrderStatus(order.Id, (int)StinOrderStatus.ARBITRATION);
             }
