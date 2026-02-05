@@ -31,6 +31,10 @@ namespace WbClasses
         public string? Rid { get; set; }
         [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
         public DateTime CreatedAt { get; set; }
+        [JsonConverter(typeof(DateFormatConverter), "dd.MM.yyyy")]
+        public DateTime? Ddate { get; set; }
+        [JsonConverter(typeof(DateFormatConverter), "dd.MM.yyyy")]
+        public DateTime? SellerDate { get; set; }
         public long WarehouseId { get; set; }
         public string? SupplyId { get; set; }
         public List<string>? PrioritySc { get; set; }

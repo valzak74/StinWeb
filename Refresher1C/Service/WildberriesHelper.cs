@@ -37,21 +37,16 @@ namespace Refresher1C.Service
             }
             DateTime shipmentDate = DateTime.MinValue;
 
-            var supplyId = string.IsNullOrEmpty(officeId)
-                ? supplyListResult.supplyInfos.Select(x => x.SupplyId).FirstOrDefault()
+            var supplyIds = string.IsNullOrEmpty(officeId)
+                ? supplyListResult.supplyInfos.Select(x => x.SupplyId).ToList()
                 : supplyListResult.supplyInfos
                     .Where(x => string.IsNullOrEmpty(x.DestinationOfficeID) || x.DestinationOfficeID == officeId)
                     .Select(x => x.SupplyId)
-                    .FirstOrDefault();
+                    .ToList();
 
-            if (!string.IsNullOrEmpty(supplyId))
+            if (supplyIds.Count > 0)
             {
-                if (!_cache.TryGetValue(supplyId, out shipmentDate))
-                {
-                    shipmentDate = _orderFunctions.GetShipmentDateByServiceName(marketplaceId, supplyId);
-                    if (shipmentDate > Common.min1cDate)
-                        _cache.Set(supplyId, shipmentDate, TimeSpan.FromDays(1));
-                }
+                shipmentDate = _orderFunctions.GetShipmentDateByServiceName(marketplaceId, supplyIds);
             }
             return shipmentDate;
         }

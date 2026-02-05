@@ -184,6 +184,7 @@ namespace Refresher1C.Service
                                   {
                                       OrderId = order.Id,
                                       MarketplaceId = order.Code,
+                                      MarketId = market.Id,
                                       OrderOurId = order.Sp13981,
                                       ShipmentId = order.Sp13989,
                                       DeliveryServiceId = order.Sp13986,
@@ -205,6 +206,7 @@ namespace Refresher1C.Service
                                   {
                                       OrderId = gr.Key.OrderId,
                                       MarketplaceId = gr.Key.MarketplaceId.Trim(),
+                                      MarketId = gr.Key.MarketId,
                                       OrderOurId = gr.Key.OrderOurId.Trim(),
                                       ShipmentId = gr.Key.ShipmentId.Trim(),
                                       DeliveryServiceId = gr.Key.DeliveryServiceId.ToString().Trim(),
@@ -227,6 +229,7 @@ namespace Refresher1C.Service
                     {
                         x.OrderId,
                         x.MarketplaceId,
+                        x.MarketId,
                         x.OrderOurId,
                         x.ShipmentId,
                         x.DeliveryServiceId,
@@ -390,7 +393,7 @@ namespace Refresher1C.Service
                             }
                             else if (obj.Key.Тип == "WILDBERRIES")
                             {
-                                var supplyIdResult = await GetWbActiveSupplyId(_firmProxy[obj.Key.FirmaId], obj.Key.AuthToken, obj.Key.DeliveryServiceId, entity.Sp14124.Trim(), stoppingToken);
+                                var supplyIdResult = await GetWbActiveSupplyId(_firmProxy[obj.Key.FirmaId], obj.Key.AuthToken, obj.Key.DeliveryServiceId, obj.Key.MarketId, entity.Sp14124.Trim(), entity.Sp13990, stoppingToken);
                                 if (!supplyIdResult.success)
                                     status = -1;
                                 else if (!string.IsNullOrEmpty(supplyIdResult.supplyId)) 
@@ -2894,7 +2897,7 @@ namespace Refresher1C.Service
                 return true;
             }
         }
-        async Task<(bool success, string supplyId)> GetWbActiveSupplyId(string proxyHost, string authToken, string warehouseId, string officeId, CancellationToken cancellationToken)
+        async Task<(bool success, string supplyId)> GetWbActiveSupplyId(string proxyHost, string authToken, string warehouseId, string marketId, string officeId, DateTime shipmentDate, CancellationToken cancellationToken)
         {
             var supplyListResult = await WbClasses.Functions.GetSuppliesList(_httpService, proxyHost, authToken, cancellationToken);
             if (!string.IsNullOrEmpty(supplyListResult.error))
@@ -2902,34 +2905,33 @@ namespace Refresher1C.Service
                 _logger.LogError(supplyListResult.error);
                 return (success: false, supplyId: "");
             }
-            var supplyId = string.IsNullOrEmpty(officeId)
-                ? supplyListResult.supplyInfos.Select(x => x.SupplyId).FirstOrDefault(x => x.StartsWith(warehouseId, StringComparison.OrdinalIgnoreCase))
+            var supplyIds = string.IsNullOrEmpty(officeId)
+                ? supplyListResult.supplyInfos.Select(x => x.SupplyId).Where(x => x.StartsWith(warehouseId, StringComparison.OrdinalIgnoreCase)).ToList()
                 : supplyListResult.supplyInfos
                     .Where(x => string.IsNullOrEmpty(x.DestinationOfficeID) || x.DestinationOfficeID == officeId)
                     .Select(x => x.SupplyId)
-                    .FirstOrDefault();
+                    .ToList();
 
-            //if (string.IsNullOrEmpty(supplyId))
-            //{
-            //    supplyId = supplyListResult.supplyInfos
-            //        .Where(x => !x.SupplyId.Contains('|'))
-            //        .Select(x => x.SupplyId)
-            //        .FirstOrDefault();
-            //}
-            if (!string.IsNullOrEmpty(supplyId))
+            if (supplyIds.Count > 0)
             {
-                return (success: true, supplyId);
+                var supplyId = await _context.Sc13994s
+                    .Where(x => x.Sp14038 == marketId)
+                    .Where(x => x.Sp13990 == shipmentDate)
+                    .Where(x => supplyIds.Contains(x.Sp13987.Trim()))
+                    .Select(x => x.Sp13987.Trim())
+                    .FirstOrDefaultAsync();
+
+                if (!string.IsNullOrEmpty(supplyId))
+                    return (success: true, supplyId);
             }
-            else
+
+            var supplyCreateResult = await WbClasses.Functions.CreateSupply(_httpService, proxyHost, authToken, warehouseId, officeId, shipmentDate, cancellationToken);
+            if (!string.IsNullOrEmpty(supplyCreateResult.error))
             {
-                var supplyCreateResult = await WbClasses.Functions.CreateSupply(_httpService, proxyHost, authToken, warehouseId, officeId, cancellationToken);
-                if (!string.IsNullOrEmpty(supplyCreateResult.error))
-                {
-                    _logger.LogError(supplyCreateResult.error);
-                    return (success: false, supplyId: "");
-                }
-                return (success: true, supplyId: supplyCreateResult.supplyId ?? "");
+                _logger.LogError(supplyCreateResult.error);
+                return (success: false, supplyId: "");
             }
+            return (success: true, supplyId: supplyCreateResult.supplyId ?? "");
         }
         private async Task CreateLogisticsOrder(string firmaId, string orderId, AliExpressClasses.AliOrder aliOrder, string authToken, CancellationToken cancellationToken)
         {
@@ -3368,7 +3370,7 @@ namespace Refresher1C.Service
                                 _logger.LogError("Wb order: " + wbOrder.Id.ToString() + " can't be cancelled");
                             continue;
                         }
-                        DateTime shipmentDate = await wbHelper.GetActiveSupplyShipmentDate(_firmProxy[firmaId], authToken, id, wbOrder.OfficeId.ToString(), stoppingToken);
+                        DateTime shipmentDate = wbOrder.SellerDate ?? await wbHelper.GetActiveSupplyShipmentDate(_firmProxy[firmaId], authToken, id, wbOrder.OfficeId.ToString(), stoppingToken);
                         if (shipmentDate <= Common.min1cDate)
                         {
                             if (!TimeSpan.TryParse("09:00", out TimeSpan limitTime))
@@ -4744,7 +4746,7 @@ namespace Refresher1C.Service
                                     + ((decimal?)item.WeightDimensions?.Length ?? 0)
                                     + ((decimal?)item.WeightDimensions?.Height ?? 0);
                                 var weight = ((decimal?)item.WeightDimensions?.Weight ?? 0);
-                                var volumeWeight = (decimal)((item.WeightDimensions?.Width ?? 0) * (item.WeightDimensions?.Length ?? 0) * (item.WeightDimensions?.Height ?? 0)) / 5000;
+                                var volumeWeight = (decimal)((item.WeightDimensions?.Width ?? 0) * (item.WeightDimensions?.Length ?? 0) * (item.WeightDimensions?.Height ?? 0)) / 1000;
                                 var modelType = model switch
                                 {
                                     "FBS" => ModelTypeYandex.FBS,

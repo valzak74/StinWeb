@@ -28,6 +28,6 @@ namespace StinClasses.Справочники.Functions
         Task ClearOrderScanned(DateTime shipDate, List<string> campaignIds, string warehouseId, CancellationToken cancellationToken);
         Task ОбновитьOrderShipmentDate(string Id, DateTime ShipmentDate);
         Task RefreshOrderDeliveryServiceId(string Id, long DeliveryServiceId, string DeliveryServiceName, CancellationToken cancellationToken);
-        DateTime GetShipmentDateByServiceName(string marketplaceId, string serviceName);
+        DateTime GetShipmentDateByServiceName(string marketplaceId, List<string> serviceNames);
     }
 }

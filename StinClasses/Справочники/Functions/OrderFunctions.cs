@@ -225,15 +225,16 @@ namespace StinClasses.Справочники.Functions
             }
             await _context.SaveChangesAsync(cancellationToken);
         }
-        public DateTime GetShipmentDateByServiceName(string marketplaceId, string serviceName)
+        public DateTime GetShipmentDateByServiceName(string marketplaceId, List<string> serviceNames)
         {
             var validDateTimes = _context.Sc13994s
-                .Where(x => (x.Sp14038 == marketplaceId) && (x.Sp13987.Trim() == serviceName))
+                .Where(x => x.Sp14038 == marketplaceId)
+                .Where(x => serviceNames.Contains(x.Sp13987.Trim()))
                 .Select(x => x.Sp13990)
                 .ToList();
 
             return validDateTimes.Count > 0
-                ? validDateTimes.Max()
+                ? validDateTimes.Min()
                 : DateTime.MinValue;
         }
     }

@@ -307,7 +307,7 @@ namespace WbClasses
                 err = result.Item2.LogWbErrors("");
             return (orders: result.Item1?.Orders, error: string.IsNullOrEmpty(err) ? "" : "WbGetSupplyOrders: " + err);
         }
-        public static async Task<(string? supplyId, string error)> CreateSupply(IHttpService httpService, string proxyHost, string authToken, string warehouseId, string officeId, CancellationToken cancellationToken)
+        public static async Task<(string? supplyId, string error)> CreateSupply(IHttpService httpService, string proxyHost, string authToken, string warehouseId, string officeId, DateTime shipmentDate, CancellationToken cancellationToken)
         {
             var sbSupplyName = new StringBuilder(warehouseId);
             if (!string.IsNullOrEmpty(officeId))
@@ -316,7 +316,7 @@ namespace WbClasses
                 sbSupplyName.Append(officeId);
             }
             sbSupplyName.Append("|");
-            sbSupplyName.Append(DateTime.Today.ToString("ddMMyyyymmss"));
+            sbSupplyName.Append(shipmentDate.ToString("ddMMyyyymmss"));
 
             var result = await httpService.Exchange<Supply, WbErrorResponse>(
                 $"https://{proxyHost}marketplace-api.wildberries.ru/api/v3/supplies",
