@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Refresher1C.Service;
 using StinClasses.Справочники.Functions;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -60,29 +61,34 @@ namespace Refresher1C
         {
             try
             {
-                Task pickupExpired = Task.Run(async () =>
+                var tasks = new List<Task>();
+                IMarketplaceFunctions marketplaceFunctions = _scopeFactory.CreateScope()
+                    .ServiceProvider.GetRequiredService<IMarketplaceFunctions>();
+                var marketplaces = await marketplaceFunctions.GetAllAsync(stoppingToken);
+                foreach (var marketplace in marketplaces)
+                {
+                    var currentMarketplaceId = marketplace.Id;
+                    tasks.Add(Task.Run(async () => {
+                        using IMarketplaceService MarketplaceScope = _scopeFactory.CreateScope()
+                               .ServiceProvider.GetService<IMarketplaceService>();
+                        await MarketplaceScope.UpdateTariffs(currentMarketplaceId, stoppingToken);
+                    }));
+                }
+
+                tasks.Add(Task.Run(async () =>
                 {
                     using IMarketplaceService MarketplaceScope = _scopeFactory.CreateScope()
                            .ServiceProvider.GetService<IMarketplaceService>();
                     await MarketplaceScope.CheckPickupExpired(stoppingToken);
-                });
-                Task tariffs = Task.Run(async () =>
-                {
-                    using IMarketplaceService MarketplaceScope = _scopeFactory.CreateScope()
-                           .ServiceProvider.GetService<IMarketplaceService>();
-                    await MarketplaceScope.UpdateTariffs(stoppingToken);
-                });
-                Task checkComissStack = Task.Run(async () =>
+                }));
+                tasks.Add(Task.Run(async () =>
                 {
                     using var scope = _scopeFactory.CreateScope();
                     var marketplaceFunctions = scope.ServiceProvider.GetRequiredService<IMarketplaceFunctions>();
                     await marketplaceFunctions.CheckOrdersStackInComission(stoppingToken);
-                });
-                await Task.WhenAll(
-                    pickupExpired,
-                    tariffs,
-                    checkComissStack
-                    );
+                }));
+
+                await Task.WhenAll(tasks);
             }
             catch
             {

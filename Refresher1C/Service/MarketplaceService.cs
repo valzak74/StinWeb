@@ -4327,12 +4327,13 @@ namespace Refresher1C.Service
                          select gr.Key.orderCode.Trim())
                    .ToListAsync(cancellationToken);
         }
-        public async Task UpdateTariffs(CancellationToken cancellationToken)
+        public async Task UpdateTariffs(string marketplaceId, CancellationToken cancellationToken)
         {
             try
             {
                 var marketplaceIds = await (from market in _context.Sc14042s
                                             where !market.Ismark
+                                            && string.IsNullOrEmpty(marketplaceId) ? true : market.Id == marketplaceId
                                             //&& market.Code.Trim() == "1271527" //"22498162235000" // "23503334320000" //
                                             //&& market.Code.Trim() == "22162396"
                                             //&& market.Code.Trim() == "652932"
@@ -4951,7 +4952,8 @@ namespace Refresher1C.Service
                                     _markupFactorPercentDictionary,
                                     item.ЦенаЗакуп, 
                                     typeOzon == ModelTypeOzon.RealFBS ? volumeWeight : volumeForFbs, 
-                                    (decimal)comPercent
+                                    (decimal)comPercent,
+                                    minPrice
                                 ))
                                 {
                                     minPrice = helper.MinPrice();
