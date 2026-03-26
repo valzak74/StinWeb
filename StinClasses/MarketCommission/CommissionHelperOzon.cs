@@ -20,7 +20,10 @@ namespace StinClasses.MarketCommission
             ) : base(markupFactorPercentDictionary, zakupPrice, quant)
         {
             _model = typeOzon;
-            _volumeWeightFactor = VolumeWeightFactor(volumeWeight, price);
+            var dedline = new DateTime(2026, 4, 6);
+            _volumeWeightFactor = DateTime.Today < dedline
+                ? VolumeWeightFactor(volumeWeight)
+                : VolumeWeightFactor(volumeWeight, price);
             PercentFactors = new Dictionary<string, decimal> 
             {
                 { "Showcase", showcasePercent },
@@ -154,6 +157,41 @@ namespace StinClasses.MarketCommission
                         <= 120m => 4300,
                         <= 200m => 5600,
                         _ => 9900
+                    };
+            }
+            return 0;
+        }
+        decimal VolumeWeightFactor(decimal volumeWeight)
+        {
+            switch (_model)
+            {
+                case ModelTypeOzon.FBS:
+                    return volumeWeight switch
+                    {
+                        <= 1m => 81.34m,
+                        <= 3m => 81.34m + (Math.Ceiling(volumeWeight) - 1) * 18.3m, // 18 руб за каждый дополнительный литр свыше 1 до 3
+                        <= 190m => 81.34m + 2 * 18.3m + (Math.Ceiling(volumeWeight) - 3) * 23.39m, // 23 руб за каждый дополнительный литр свыше 3
+                        <= 1000m => 81.34m + 2 * 18.3m + 187 * 23.39m + (Math.Ceiling(volumeWeight) - 190) * 6.1m, // 6 руб за каждый доп. литр свыше 190
+                        _ => 9432.87m
+                    };
+                case ModelTypeOzon.RealFBS:
+                    return volumeWeight switch
+                    {
+                        <= 14m => 1700,
+                        <= 30m => 2200,
+                        <= 65m => 2800,
+                        <= 120m => 4300,
+                        <= 200m => 5600,
+                        _ => 9900
+                    };
+                case ModelTypeOzon.FBO:
+                    return volumeWeight switch
+                    {
+                        <= 1m => 46.77m,
+                        <= 3m => 46.77m + (Math.Ceiling(volumeWeight) - 1) * 10.17m, // 10 руб за каждый дополнительный литр свыше 1 до 3
+                        <= 190m => 46.77m + 2 * 10.17m + (Math.Ceiling(volumeWeight) - 3) * 15.25m, // 15 руб за каждый дополнительный литр свыше 3
+                        <= 1000m => 46.77m + 2 * 10.17m + 187 * 15.25m + (Math.Ceiling(volumeWeight) - 190) * 6.1m, // 6 руб за каждый доп. литр свыше 190
+                        _ => 7859.86m
                     };
             }
             return 0;

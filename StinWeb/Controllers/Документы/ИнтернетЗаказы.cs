@@ -1161,21 +1161,21 @@ namespace StinWeb.Controllers
                            select b.Binary).FirstOrDefaultAsync();
             if (f?.Length > 0)
             {
-                var order = await _order.ПолучитьOrderWithItems(id);
-                if (order?.Тип == "WILDBERRIES")
-                {
-                    var products = await _номенклатура.GetНоменклатураByListIdAsync(order.Items?.Select(x => x.НоменклатураId).ToList());
-                    var stickers = new List<byte[]> { f };
-                    foreach (var product in products)
-                    {
-                        string color = await _номенклатура.GetColorProperty(product.Id);
-                        if (string.IsNullOrEmpty(color))
-                            color = "белый";
-                        var sticker = PdfHelper.PdfFunctions.Instance.ProductSticker(name: product.Наименование, barcodeText: product.Единица.Barcode, vendor: StinClasses.Common.Encode(product.Code, order.Encode), color: color);
-                        stickers.Add(sticker);
-                    }
-                    f = PdfHelper.PdfFunctions.Instance.MergePdf(stickers);
-                }
+                //var order = await _order.ПолучитьOrderWithItems(id);
+                //if (order?.Тип == "WILDBERRIES")
+                //{
+                //    var products = await _номенклатура.GetНоменклатураByListIdAsync(order.Items?.Select(x => x.НоменклатураId).ToList());
+                //    var stickers = new List<byte[]> { f };
+                //    foreach (var product in products)
+                //    {
+                //        string color = await _номенклатура.GetColorProperty(product.Id);
+                //        if (string.IsNullOrEmpty(color))
+                //            color = "белый";
+                //        var sticker = PdfHelper.PdfFunctions.Instance.ProductSticker(name: product.Наименование, barcodeText: product.Единица.Barcode, vendor: StinClasses.Common.Encode(product.Code, order.Encode), color: color);
+                //        stickers.Add(sticker);
+                //    }
+                //    f = PdfHelper.PdfFunctions.Instance.MergePdf(stickers);
+                //}
                 return File(f, "application/pdf");
             }
             else
@@ -1193,29 +1193,29 @@ namespace StinWeb.Controllers
         public async Task<IActionResult> GetMultiLabelsPdf(string[] ids)
         {
             var orderIds = ids.Select(x => x.Replace('_', ' ')).ToList();
-            var files = (from b in _context.VzOrderBinaries
+            var files = await (from b in _context.VzOrderBinaries
                          where orderIds.Contains(b.Id) && b.Extension == "LABELS"
                          orderby b.Id
-                         select new { b.Id, b.Binary }).ToList();
+                         select new { b.Id, b.Binary }).ToListAsync();
             if (files?.Count > 0)
             {
                 var stickers = new List<byte[]>();
                 foreach (var file in files)
                 {
                     stickers.Add(file.Binary);
-                    var order = await _order.ПолучитьOrderWithItems(file.Id);
-                    if (order?.Тип == "WILDBERRIES")
-                    {
-                        var products = await _номенклатура.GetНоменклатураByListIdAsync(order.Items?.Select(x => x.НоменклатураId).ToList());
-                        foreach (var product in products)
-                        {
-                            string color = await _номенклатура.GetColorProperty(product.Id);
-                            if (string.IsNullOrEmpty(color))
-                                color = "белый";
-                            var sticker = PdfHelper.PdfFunctions.Instance.ProductSticker(name: product.Наименование, barcodeText: product.Единица.Barcode, vendor: StinClasses.Common.Encode(product.Code, order.Encode), color: color);
-                            stickers.Add(sticker);
-                        }
-                    }
+                    //var order = await _order.ПолучитьOrderWithItems(file.Id);
+                    //if (order?.Тип == "WILDBERRIES")
+                    //{
+                    //    var products = await _номенклатура.GetНоменклатураByListIdAsync(order.Items?.Select(x => x.НоменклатураId).ToList());
+                    //    foreach (var product in products)
+                    //    {
+                    //        string color = await _номенклатура.GetColorProperty(product.Id);
+                    //        if (string.IsNullOrEmpty(color))
+                    //            color = "белый";
+                    //        var sticker = PdfHelper.PdfFunctions.Instance.ProductSticker(name: product.Наименование, barcodeText: product.Единица.Barcode, vendor: StinClasses.Common.Encode(product.Code, order.Encode), color: color);
+                    //        stickers.Add(sticker);
+                    //    }
+                    //}
                 }
                 return File(PdfHelper.PdfFunctions.Instance.MergePdf(stickers), "application/pdf");
             }
