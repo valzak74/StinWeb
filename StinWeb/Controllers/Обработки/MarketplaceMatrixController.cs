@@ -203,6 +203,7 @@ namespace StinWeb.Controllers.Обработки
             columnValues.Add("Страна", sheet.CreateColumnWithWidth(column++, 3500));
             columnValues.Add("Категория", sheet.CreateColumnWithWidth(column++, 8000));
             columnValues.Add("Штрихкод", sheet.CreateColumnWithWidth(column++, 4300));
+            columnValues.Add("ТнВЭД", sheet.CreateColumnWithWidth(column++, 4300));
             //columnValues.Add("Длина", sheet.CreateColumnWithWidth(column++, 2900));
             //columnValues.Add("Ширина", sheet.CreateColumnWithWidth(column++, 2900));
             //columnValues.Add("Высота", sheet.CreateColumnWithWidth(column++, 2900));
@@ -259,6 +260,7 @@ namespace StinWeb.Controllers.Обработки
             sheet.SetValue(styleHeader, row, columnValues["Страна"], "Страна происхождения");
             sheet.SetValue(styleHeader, row, columnValues["Категория"], "Категория конечная");
             sheet.SetValue(styleHeader, row, columnValues["Штрихкод"], "Штрихкод");
+            sheet.SetValue(styleHeader, row, columnValues["ТнВЭД"], "ТН ВЭД");
             //sheet.SetValue(styleHeader, row, columnValues["Длина"], "Длина, см.");
             //sheet.SetValue(styleHeader, row, columnValues["Ширина"], "Ширина, см.");
             //sheet.SetValue(styleHeader, row, columnValues["Высота"], "Высота, см.");
@@ -307,6 +309,7 @@ namespace StinWeb.Controllers.Обработки
                                  Характеристики = nom.Sp8848.Trim(),
                                  Категория = parent != null ? parent.Descr.Trim() : "",
                                  Штрихкод = sc75.Sp80.Trim(),
+                                 ТнВЭД = nom.Sp12992.Trim(),
                                  Длина = sc75.Sp14037 * 100,
                                  Ширина = sc75.Sp14036 * 100,
                                  Высота = sc75.Sp14035 * 100,
@@ -511,6 +514,7 @@ namespace StinWeb.Controllers.Обработки
                 sheet.SetValue(styleValue, row, columnValues["Страна"], страна);
                 sheet.SetValue(styleValue, row, columnValues["Категория"], item.Категория);
                 sheet.SetValue(styleValue, row, columnValues["Штрихкод"], item.Штрихкод);
+                sheet.SetValue(styleValue, row, columnValues["ТнВЭД"], item.ТнВЭД);
                 //sheet.SetValue(styleValueNum1tail, row, columnValues["Длина"], item.Длина);
                 //sheet.SetValue(styleValueNum1tail, row, columnValues["Ширина"], item.Ширина);
                 //sheet.SetValue(styleValueNum1tail, row, columnValues["Высота"], item.Высота);
