@@ -121,9 +121,10 @@ namespace StinClasses.MarketCommission
         {
             return _volumeWeight switch
             {
-                <= 1m => 70m,
-                <= 160m => 70m + (Math.Ceiling(_volumeWeight) - 1) * 22m, // 22 руб за каждый дополнительный литр свыше 1
-                _ => 70m + 159 * 22m + (Math.Ceiling(_volumeWeight) - 160) * 2m, // 2 руб за каждый дополнительный литр свыше 160
+                <= 1m => 80m,
+                <= 30m => 80m + (Math.Ceiling(_volumeWeight) - 1) * 9m, // 9 руб за каждый дополнительный литр свыше 1
+                <= 200m => 80m + 261 + (Math.Ceiling(_volumeWeight) - 30) * 7m, // 7 руб за каждый дополнительный литр свыше 30
+                _ => 80m + 261 + 1190 + (Math.Ceiling(_volumeWeight) - 200) * 5m, // 5 руб за каждый дополнительный литр свыше 200
             };
         }
         public override decimal MinPrice()
