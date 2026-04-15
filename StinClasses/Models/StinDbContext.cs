@@ -404,6 +404,7 @@ namespace StinClasses.Models
         public virtual DbSet<Sc14101> Sc14101s { get; set; }
         public virtual DbSet<Sc14108> Sc14108s { get; set; }
         public virtual DbSet<Sc14152> Sc14152s { get; set; }
+        public virtual DbSet<Sc14352> Sc14352s { get; set; }
         public virtual DbSet<Sc163> Sc163s { get; set; }
         public virtual DbSet<Sc1710> Sc1710s { get; set; }
         public virtual DbSet<Sc172> Sc172s { get; set; }
@@ -18527,7 +18528,7 @@ namespace StinClasses.Models
 
                 entity.Property(e => e.Sp9351)
                     .IsRequired()
-                    .HasMaxLength(20)
+                    .HasMaxLength(30)
                     .IsUnicode(false)
                     .HasColumnName("SP9351")
                     .IsFixedLength();
@@ -18950,7 +18951,7 @@ namespace StinClasses.Models
 
                 entity.Property(e => e.Sp9806)
                     .IsRequired()
-                    .HasMaxLength(10)
+                    .HasMaxLength(30)
                     .IsUnicode(false)
                     .HasColumnName("SP9806")
                     .IsFixedLength();
@@ -28625,6 +28626,62 @@ namespace StinClasses.Models
                 entity.Property(e => e.Verstamp).HasColumnName("VERSTAMP");
             });
 
+            modelBuilder.Entity<Sc14352>(entity =>
+            {
+                entity.HasKey(e => e.RowId);
+
+                entity.ToTable("SC14352");
+
+                entity.HasIndex(e => new { e.Code, e.RowId }, "CODE")
+                    .IsUnique();
+
+                entity.HasIndex(e => new { e.Descr, e.RowId }, "DESCR")
+                    .IsUnique();
+
+                entity.HasIndex(e => e.Id, "IDD")
+                    .IsUnique();
+
+                entity.HasIndex(e => new { e.Parentext, e.Code, e.RowId }, "PCODE")
+                    .IsUnique();
+
+                entity.HasIndex(e => new { e.Parentext, e.Descr, e.RowId }, "PDESCR")
+                    .IsUnique();
+
+                entity.Property(e => e.RowId).HasColumnName("ROW_ID");
+
+                entity.Property(e => e.Code)
+                    .IsRequired()
+                    .HasMaxLength(5)
+                    .IsUnicode(false)
+                    .HasColumnName("CODE")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Descr)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .IsUnicode(false)
+                    .HasColumnName("DESCR")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Id)
+                    .IsRequired()
+                    .HasMaxLength(9)
+                    .IsUnicode(false)
+                    .HasColumnName("ID")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Ismark).HasColumnName("ISMARK");
+
+                entity.Property(e => e.Parentext)
+                    .IsRequired()
+                    .HasMaxLength(9)
+                    .IsUnicode(false)
+                    .HasColumnName("PARENTEXT")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Verstamp).HasColumnName("VERSTAMP");
+            });
+
             modelBuilder.Entity<Sc163>(entity =>
             {
                 entity.HasKey(e => e.RowId);
@@ -28940,16 +28997,86 @@ namespace StinClasses.Models
 
                 entity.Property(e => e.Sp14318)
                     .IsRequired()
-                    .HasMaxLength(11)
+                    .HasMaxLength(100)
                     .IsUnicode(false)
                     .HasColumnName("SP14318")
                     .IsFixedLength();
 
                 entity.Property(e => e.Sp14319)
                     .IsRequired()
-                    .HasMaxLength(11)
+                    .HasMaxLength(100)
                     .IsUnicode(false)
                     .HasColumnName("SP14319")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Sp14341)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .IsUnicode(false)
+                    .HasColumnName("SP14341")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Sp14342)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .IsUnicode(false)
+                    .HasColumnName("SP14342")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Sp14343)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .IsUnicode(false)
+                    .HasColumnName("SP14343")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Sp14344)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .IsUnicode(false)
+                    .HasColumnName("SP14344")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Sp14345)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .IsUnicode(false)
+                    .HasColumnName("SP14345")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Sp14346)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .IsUnicode(false)
+                    .HasColumnName("SP14346")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Sp14347)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .IsUnicode(false)
+                    .HasColumnName("SP14347")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Sp14348)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .IsUnicode(false)
+                    .HasColumnName("SP14348")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Sp14349)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .IsUnicode(false)
+                    .HasColumnName("SP14349")
+                    .IsFixedLength();
+
+                entity.Property(e => e.Sp14350)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .IsUnicode(false)
+                    .HasColumnName("SP14350")
                     .IsFixedLength();
 
                 entity.Property(e => e.Sp186)
@@ -32432,6 +32559,18 @@ namespace StinClasses.Models
                 entity.Property(e => e.Sp14215)
                     .HasColumnType("numeric(9, 3)")
                     .HasColumnName("SP14215");
+
+                entity.Property(e => e.Sp14386)
+                    .HasColumnType("numeric(3, 2)")
+                    .HasColumnName("SP14386");
+
+                entity.Property(e => e.Sp14387)
+                    .HasColumnType("numeric(3, 2)")
+                    .HasColumnName("SP14387");
+
+                entity.Property(e => e.Sp14388)
+                    .HasColumnType("numeric(3, 2)")
+                    .HasColumnName("SP14388");
 
                 entity.Property(e => e.Sp208)
                     .HasColumnType("numeric(1, 0)")

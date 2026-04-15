@@ -71,6 +71,10 @@ namespace StinClasses.Справочники
         public decimal Fix { get; set; }
         public decimal Multiply { get; set; }
         public decimal MinPrice { get; set; }
+
+        public decimal KOzon { get; set; }
+        public decimal KWb { get; set; }
+        public decimal KYandex { get; set; }
     }
     public interface IMarketplace : IDisposable
     {

@@ -347,6 +347,9 @@ namespace StinClasses.Справочники.Functions
                               OfferId = nom.Code.Encode(marketplace.Encoding),
                               ProductId = markUse.Sp14190.Trim(),
                               Квант = nom.Sp14188,
+                              KOzon = nom.Sp14386,
+                              KWb = nom.Sp14387,
+                              KYandex = nom.Sp14388,
                               DeltaPrice = markUse.Sp14213,
                               Rozn = vzTovar != null ? vzTovar.Rozn ?? 0 : 0,
                               RoznSp = vzTovar != null ? vzTovar.RoznSp ?? 0 : 0,
@@ -367,6 +370,9 @@ namespace StinClasses.Справочники.Functions
                     OfferId = x.OfferId,
                     ProductId = x.ProductId.Split(';').FirstOrDefault(),
                     Квант = x.Квант,
+                    KOzon = x.KOzon,
+                    KWb = x.KWb,
+                    KYandex = x.KYandex,
                     DeltaPrice = x.DeltaPrice,
                     Rozn = x.Rozn,
                     RoznSp = x.RoznSp,
@@ -411,6 +417,14 @@ namespace StinClasses.Справочники.Functions
                         Цена = calcPrice;
                 }
                 Цена = Math.Max(Цена, item.MinPrice);
+                var kPricer = marketplace.Тип switch
+                {
+                    "ЯНДЕКС" => item.KYandex == 0 ? 1 : item.KYandex,
+                    "OZON" => item.KOzon == 0 ? 1 : item.KOzon,
+                    "WILDBERRIES" => item.KWb == 0 ? 1 : item.KWb,
+                    _ => 1
+                };
+                Цена = Цена * kPricer;
                 var priceBeforeDiscount = Цена < item.Rozn ? item.Rozn : 0.00m;
                 priceData.Add((id: item.Id, productId: item.ProductId, offerId: item.OfferId, квант: item.Квант, price: Цена, priceBeforeDiscount: priceBeforeDiscount, minPrice: item.MinPrice));
             }

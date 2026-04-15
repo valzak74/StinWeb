@@ -29,6 +29,16 @@ namespace StinClasses.Models
         public string Sp14317 { get; set; }
         public string Sp14318 { get; set; }
         public string Sp14319 { get; set; }
+        public string Sp14341 { get; set; }
+        public string Sp14342 { get; set; }
+        public string Sp14343 { get; set; }
+        public string Sp14344 { get; set; }
+        public string Sp14345 { get; set; }
+        public string Sp14346 { get; set; }
+        public string Sp14347 { get; set; }
+        public string Sp14348 { get; set; }
+        public string Sp14349 { get; set; }
+        public string Sp14350 { get; set; }
         public string Sp186 { get; set; }
     }
 }

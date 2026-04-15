@@ -1,13 +1,17 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using ExcelHelper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ExcelHelper;
+using Microsoft.Extensions.Logging;
 using NonFactors.Mvc.Lookup;
 using NPOI.HSSF.UserModel;
 using NPOI.HSSF.Util;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
+using StinClasses;
+using StinClasses.MarketCommission;
 using StinClasses.Models;
 using StinWeb.Lookups;
 using StinWeb.Models.DataManager.Справочники;
@@ -15,12 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using StinClasses;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using System.Threading;
-using StinClasses.MarketCommission;
+using System.Threading.Tasks;
 
 namespace StinWeb.Controllers.Обработки
 {
@@ -180,6 +180,9 @@ namespace StinWeb.Controllers.Обработки
             columnValues.Add("Закупочная", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("Розничная", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("РозничнаяСП", sheet.CreateColumnWithWidth(column++, 2900));
+            columnValues.Add("kOzon", sheet.CreateColumnWithWidth(column++, 2900));
+            columnValues.Add("kWb", sheet.CreateColumnWithWidth(column++, 2900));
+            columnValues.Add("kYandex", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("ЦенаПродажи", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("ЦП_ЗЦ", sheet.CreateColumnWithWidth(column++, 2900));
             columnValues.Add("ПроцентМинНаценки", sheet.CreateColumnWithWidth(column++, 2900));
@@ -237,6 +240,9 @@ namespace StinWeb.Controllers.Обработки
             sheet.SetValue(styleHeader, row, columnValues["Закупочная"], "Закупочная цена");
             sheet.SetValue(styleHeader, row, columnValues["Розничная"], "Розничная");
             sheet.SetValue(styleHeader, row, columnValues["РозничнаяСП"], "Розничная спец");
+            sheet.SetValue(styleHeader, row, columnValues["kOzon"], "K/O");
+            sheet.SetValue(styleHeader, row, columnValues["kWb"], "K/W");
+            sheet.SetValue(styleHeader, row, columnValues["kYandex"], "K/Я");
             sheet.SetValue(styleHeader, row, columnValues["ЦенаПродажи"], "Цена продажи");
             sheet.SetValue(styleHeader, row, columnValues["ЦП_ЗЦ"], "ЦП/ЗЦ");
             sheet.SetValue(styleHeader, row, columnValues["ПроцентМинНаценки"], "% Мин. наценки");
@@ -302,6 +308,9 @@ namespace StinWeb.Controllers.Обработки
                                  МинЦена = marketUsing.Sp14198,
                                  VolumeWeight = marketUsing.Sp14229,
                                  Квант = nom.Sp14188,
+                                 kOzon = nom.Sp14386,
+                                 kWb = nom.Sp14387,
+                                 kYandex = nom.Sp14388,
                                  DeltaStock = nom.Sp14215, //marketUsing.Sp14214,
                                  DeltaPrice = marketUsing.Sp14213,
                                  FrozenPrice = marketUsing.Sp14323,
@@ -441,9 +450,20 @@ namespace StinWeb.Controllers.Обработки
                 sheet.SetValue(styleValueMoney, row, columnValues["Закупочная"], item.ЦенаЗакуп);
                 sheet.SetValue(styleValueMoney, row, columnValues["Розничная"], item.ЦенаРозн);
                 sheet.SetValue(styleValueMoney, row, columnValues["РозничнаяСП"], item.ЦенаСп);
+                sheet.SetValue(styleValueMoney, row, columnValues["kOzon"], item.kOzon);
+                sheet.SetValue(styleValueMoney, row, columnValues["kWb"], item.kWb);
+                sheet.SetValue(styleValueMoney, row, columnValues["kYandex"], item.kYandex);
                 var ценаПродажиОБ = item.ЦенаРозн;
                 //var ценаПродажиОБ = item.ЦенаСп > 0 ? Math.Min(item.ЦенаРозн, item.ЦенаСп) : item.ЦенаРозн;
                 var ценаПродажи = item.МинЦена > 0 ? Math.Max(item.МинЦена, ценаПродажиОБ) : ценаПродажиОБ;
+                var kPricer = campaignData.Type.ToUpper() switch
+                {
+                    "ЯНДЕКС" => item.kYandex == 0 ? 1 : item.kYandex,
+                    "OZON" => item.kOzon == 0 ? 1 : item.kOzon,
+                    "WILDBERRIES" => item.kWb == 0 ? 1 : item.kWb,
+                    _ => 1
+                };
+                ценаПродажи = ценаПродажи * kPricer;
                 sheet.SetValue(styleValueMoney, row, columnValues["ЦенаПродажи"], ценаПродажи);
                 sheet.SetValue(styleValueNum, row, columnValues["ЦП_ЗЦ"], item.ЦенаЗакуп == 0 ? 0 : ценаПродажи / item.ЦенаЗакуп);
                 sheet.SetValue(styleValueNum, row, columnValues["ПроцентМинНаценки"], _markupFactorPercentDictionary.GetPercent(item.ЦенаЗакуп));
