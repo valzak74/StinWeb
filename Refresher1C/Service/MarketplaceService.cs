@@ -2471,6 +2471,9 @@ namespace Refresher1C.Service
                             if (periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                             {
                                 await GetOzonDeliveringOrders(marketplace.Id, marketplace.FirmaId, marketplace.ClientId, marketplace.AuthToken, stoppingToken);
+                            }
+                            if (periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
+                            {
                                 await GetOzonDeliveredOrders(marketplace.Id, marketplace.FirmaId, marketplace.ClientId, marketplace.AuthToken, stoppingToken);
                             }
                         }
