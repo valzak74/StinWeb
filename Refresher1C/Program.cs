@@ -1,18 +1,20 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Serilog;
-using Refresher1C.Service;
+using HttpExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using StinClasses.Models;
-using System.Net.Http;
-using System;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Polly;
 using Polly.Extensions.Http;
-using HttpExtensions;
-using StinClasses.Справочники.Functions;
-using StinClasses.Регистры;
+using Refresher1C.Service;
+using Serilog;
 using StinClasses.MarketCommission;
+using StinClasses.Models;
+using StinClasses.Регистры;
+using StinClasses.Справочники.Functions;
+using System;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Refresher1C
 {
@@ -40,7 +42,9 @@ namespace Refresher1C
                 //        maxRetryDelay: System.TimeSpan.FromSeconds(10),
                 //        errorNumbersToAdd: new List<int> { 4060 });
                 //}));
-                
+
+                services.AddSingleton<ISharedQueue, SharedQueue>();
+
                 services.AddHttpClient<IHttpService, HttpService>()
                     .AddPolicyHandler(GetRetryPolicy());
                 services.AddScoped<IDocCreateOrUpdate, DocCreateOrUpdate>();
@@ -59,6 +63,8 @@ namespace Refresher1C
                 services.AddScoped<IРегистрНаборНаСкладе, Регистр_НаборНаСкладе>();
 
                 services.AddScoped<IMarkupFactorPercentDictionary, MarkupFactorPercentDictionary>();
+
+                services.AddHostedService<WorkerDocProducer>();
 
                 if (configuration.GetSection("YouKassa:enable").Get<bool>())
                 {

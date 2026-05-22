@@ -1,24 +1,26 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using HttpExtensions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Refresher1C.Models.SharedQueue;
 using StinClasses;
+using StinClasses.MarketCommission;
 using StinClasses.Models;
 using StinClasses.Документы;
 using StinClasses.Справочники;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Data;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using HttpExtensions;
-using System.Data;
-using System.IO;
-using System.Collections;
 using System.Xml.Linq;
-using Microsoft.Extensions.DependencyInjection;
-using StinClasses.MarketCommission;
-using System.Globalization;
+using YandexClasses;
 
 namespace Refresher1C.Service
 {
@@ -28,7 +30,7 @@ namespace Refresher1C.Service
         private readonly IConfiguration _configuration;
         private readonly ILogger<MarketplaceService> _logger;
         private IHttpService _httpService;
-        private IDocCreateOrUpdate _docService;
+        private ISharedQueue _sharedQueue;
         private IMarkupFactorPercentDictionary _markupFactorPercentDictionary;
         IServiceProvider _serviceProvider;
 
@@ -74,6 +76,7 @@ namespace Refresher1C.Service
         public MarketplaceService(
             IConfiguration configuration, 
             ILogger<MarketplaceService> logger,
+            ISharedQueue sharedQueue,
             IDocCreateOrUpdate docService, 
             IMarkupFactorPercentDictionary markupFactorPercentDictionary,
             StinDbContext context, 
@@ -82,10 +85,10 @@ namespace Refresher1C.Service
         )
         {
             _logger = logger;
-            _docService = docService;
             _markupFactorPercentDictionary = markupFactorPercentDictionary;
             _serviceProvider = serviceProvider;
             _httpService = httpService;
+            _sharedQueue = sharedQueue;
             _context = context;
             _configuration = configuration;
             _marketplace = new MarketplaceEntity(context);
@@ -131,29 +134,36 @@ namespace Refresher1C.Service
                                            (order.Sp13982 == 8) && //order статус = 8
                                            ((doc.Sp4760 == видОперацииЗаявкаОдобренная) || (doc.Sp4760 == видОперацииСчетНаОплату))
                                            //&& order.Code.Trim() == "172517024"
-                                       group new { doc, docT } by new { ЗаявкаId = doc.Iddoc, OrderId = doc.Sp13995, НоменклатураId = docT.Sp2446, Коэффициент = docT.Sp2449 } into gr
+                                       group new { doc, docT } by new { ЗаявкаId = doc.Iddoc, OrderId = doc.Sp13995, OrderCode = order.Code, НоменклатураId = docT.Sp2446, Коэффициент = docT.Sp2449 } into gr
                                        select new
                                        {
-                                           ЗаявкаId = gr.Key.ЗаявкаId,
-                                           OrderId = gr.Key.OrderId,
-                                           НоменклатураId = gr.Key.НоменклатураId,
+                                           gr.Key.ЗаявкаId,
+                                           gr.Key.OrderId,
+                                           OrderCode = gr.Key.OrderCode.Trim(),
+                                           gr.Key.НоменклатураId,
                                            КолДокумента = gr.Sum(x => x.docT.Sp2447) * gr.Key.Коэффициент,
                                        } into docData
                                        join r in _context.Rg4674s.Where(x => x.Period == dateRegTA) on new { IdDoc = docData.ЗаявкаId, НоменклатураId = docData.НоменклатураId } equals new { IdDoc = r.Sp4671, НоменклатураId = r.Sp4669 }
-                                       group new { docData, r } by new { docData.ЗаявкаId, docData.OrderId, docData.НоменклатураId, docData.КолДокумента } into gr
+                                       group new { docData, r } by new { docData.ЗаявкаId, docData.OrderId, docData.OrderCode, docData.НоменклатураId, docData.КолДокумента } into gr
                                        select new
                                        {
-                                           ЗаявкаId = gr.Key.ЗаявкаId,
-                                           OrderId = gr.Key.OrderId,
-                                           НоменклатураId = gr.Key.НоменклатураId,
-                                           КолДокумента = gr.Key.КолДокумента,
+                                           gr.Key.ЗаявкаId,
+                                           gr.Key.OrderId,
+                                           gr.Key.OrderCode,
+                                           gr.Key.НоменклатураId,
+                                           gr.Key.КолДокумента,
                                            КолДоступно = gr.Sum(x => x.r.Sp4672)
                                        };
-                var notReadyЗаявкиIds = остаткиРегЗаявки.Where(x => x.КолДокумента != x.КолДоступно).Select(x => new { x.ЗаявкаId, x.OrderId }).Distinct();
-                var readyЗаявкиIds = await остаткиРегЗаявки.Select(x => new { x.ЗаявкаId, x.OrderId }).Distinct().Except(notReadyЗаявкиIds).ToListAsync();
+                var notReadyЗаявкиIds = остаткиРегЗаявки.Where(x => x.КолДокумента != x.КолДоступно).Select(x => new { x.ЗаявкаId, x.OrderId, x.OrderCode }).Distinct();
+                var readyЗаявкиIds = await остаткиРегЗаявки.Select(x => new { x.ЗаявкаId, x.OrderId, x.OrderCode }).Distinct().Except(notReadyЗаявкиIds).ToListAsync();
 
                 foreach (var data in readyЗаявкиIds)
-                    await _docService.CreateNabor(data.ЗаявкаId, stoppingToken);
+                    _sharedQueue.Enqueue(new SharedQueueDto
+                    {
+                        Key = data.OrderCode,
+                        WorkItem = (docService, cancellationToken) => docService.CreateNabor(data.ЗаявкаId, cancellationToken),
+                    });
+                    //await _docService.CreateNabor(data.ЗаявкаId, stoppingToken);
             }
         }
         public async Task PrepareYandexFbsBoxes(bool regular, CancellationToken stoppingToken)
@@ -749,7 +759,12 @@ namespace Refresher1C.Service
                                 }
                                 else if (statusResult.Item1 == YandexClasses.StatusYandex.CANCELLED)
                                 {
-                                    await _docService.OrderCancelled(order);
+                                    _sharedQueue.Enqueue(new SharedQueueDto
+                                    {
+                                        Key = order.MarketplaceId,
+                                        WorkItem = (docService, _) => docService.OrderCancelled(order),
+                                    });
+                                    //await _docService.OrderCancelled(order);
                                 }
                                 else
                                 {
@@ -860,7 +875,12 @@ namespace Refresher1C.Service
                             }
                             else if (statusResult.Item1 == YandexClasses.StatusYandex.CANCELLED)
                             {
-                                await _docService.OrderCancelled(order);
+                                _sharedQueue.Enqueue(new SharedQueueDto
+                                {
+                                    Key = order.MarketplaceId,
+                                    WorkItem = (docService, _) => docService.OrderCancelled(order),
+                                });
+                                //await _docService.OrderCancelled(order);
                             }
                             else
                             {
@@ -2377,6 +2397,7 @@ namespace Refresher1C.Service
                 var marketplaceIds = await (from market in _context.Sc14042s
                                         where !market.Ismark
                                             //&& (market.Sp14177 == 1)
+                                            //&& (market.Sp14155.Trim() == "Ozon")
                                             //&& (market.Sp14155.Trim() == "Яндекс")
                                             //&& (market.Sp14155.Trim() == "AliExpress")
                                             //&& (market.Sp14155.Trim() == "Sber")
@@ -2384,7 +2405,7 @@ namespace Refresher1C.Service
                                             //&& (market.Code.Trim() == "22498162235000")
                                             //&& (market.Code.Trim() == "23503334320000")
                                             //&& (market.Code.Trim() == "1020000171757000")
-                                            //&& (market.Code.Trim() == "45715133")
+                                            //&& (market.Code.Trim() == "1271527")
                                         select new
                                         {
                                             Id = market.Id,
@@ -2548,40 +2569,65 @@ namespace Refresher1C.Service
                                 case YandexClasses.StatusYandex.CANCELLED_IN_DELIVERY:
                                 case YandexClasses.StatusYandex.CANCELLED_BEFORE_PROCESSING:
                                 case YandexClasses.StatusYandex.CANCELLED_IN_PROCESSING:
-                                    if ((order.InternalStatus != 5) && 
-                                        (order.InternalStatus != 6) && 
-                                        (order.InternalStatus != 14) && 
+                                    if ((order.InternalStatus != 5) &&
+                                        (order.InternalStatus != 6) &&
+                                        (order.InternalStatus != 14) &&
                                         (order.InternalStatus != 16) &&
                                         (order.Scanned == 0)
                                     )
-                                        await _docService.OrderCancelled(order);
+                                        _sharedQueue.Enqueue(new SharedQueueDto
+                                        {
+                                            Key = order.MarketplaceId,
+                                            WorkItem = (docService, _) => docService.OrderCancelled(order),
+                                        });
+                                    //await _docService.OrderCancelled(order);
                                     if ((ts.TotalMinutes > 10) && readyToShipOrders.Contains(detailOrder.Id.ToString()) &&
                                         (order.DeliveryPartnerType != StinDeliveryPartnerType.SHOP) &&
-                                        (order.InternalStatus < 14) && 
-                                        (order.InternalStatus != 6) && 
-                                        (order.InternalStatus != 5) && 
+                                        (order.InternalStatus < 14) &&
+                                        (order.InternalStatus != 6) &&
+                                        (order.InternalStatus != 5) &&
                                         (order.Scanned > 0) &&
                                         periodOpened && !_sleepPeriods.Any(x => x.IsSleeping())
                                     )
-                                        await _docService.OrderDeliveried(order, true);
+                                        _sharedQueue.Enqueue(new SharedQueueDto
+                                        {
+                                            Key = order.MarketplaceId,
+                                            WorkItem = (docService, _) => docService.OrderDeliveried(order, true),
+                                        });
+                                        //await _docService.OrderDeliveried(order, true);
                                     break;
                                 case YandexClasses.StatusYandex.DELIVERY:
-                                    if ((ts.TotalMinutes > 10) && readyToShipOrders.Contains(detailOrder.Id.ToString()) && 
+                                    if ((ts.TotalMinutes > 10) && readyToShipOrders.Contains(detailOrder.Id.ToString()) &&
                                         (order.DeliveryPartnerType != StinDeliveryPartnerType.SHOP) &&
                                         (order.InternalStatus < 14) && (order.InternalStatus != 6) && (order.InternalStatus != 5) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
-                                        await _docService.OrderDeliveried(order, true);
+                                        _sharedQueue.Enqueue(new SharedQueueDto
+                                        {
+                                            Key = order.MarketplaceId,
+                                            WorkItem = (docService, _) => docService.OrderDeliveried(order, true),
+                                        });
+                                        //await _docService.OrderDeliveried(order, true);
                                     break;
                                 case YandexClasses.StatusYandex.DELIVERED:
                                 case YandexClasses.StatusYandex.PARTIALLY_DELIVERED:
                                 case YandexClasses.StatusYandex.PARTIALLY_RETURNED:
                                     if (((order.InternalStatus == 14) || (order.InternalStatus == 16)) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
-                                        await _docService.OrderFromTransferDeliveried(order);
+                                        _sharedQueue.Enqueue(new SharedQueueDto
+                                        {
+                                            Key = order.MarketplaceId,
+                                            WorkItem = (docService, _) => docService.OrderFromTransferDeliveried(order),
+                                        });
+                                        //await _docService.OrderFromTransferDeliveried(order);
                                     else if ((order.InternalStatus == 3) || (order.InternalStatus == -3))
                                     {
                                         if ((ts.TotalMinutes > 10) && readyToShipOrders.Contains(detailOrder.Id.ToString()) &&
                                             (order.DeliveryPartnerType != StinDeliveryPartnerType.SHOP) &&
                                             (order.InternalStatus < 14) && (order.InternalStatus != 6) && (order.InternalStatus != 5) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
-                                            await _docService.OrderDeliveried(order, true);
+                                            _sharedQueue.Enqueue(new SharedQueueDto
+                                            {
+                                                Key = order.MarketplaceId,
+                                                WorkItem = (docService, _) => docService.OrderDeliveried(order, true),
+                                            });
+                                            //await _docService.OrderDeliveried(order, true);
                                     }
                                     break;
                                 case YandexClasses.StatusYandex.PROCESSING:
@@ -2673,31 +2719,60 @@ namespace Refresher1C.Service
                             }
                             double deliveryPrice = 0;
                             double deliverySubsidy = 0;
-                            await _docService.NewOrder(
-                               "SBER",
-                               firmaId,
-                               customerId,
-                               dogovorId,
-                               authorization,
-                               encoding,
-                               Common.SkladEkran,
-                               "",
-                               sberOrder.DeliveryId,
-                               sberOrder.DeliveryMethodId,
-                               StinDeliveryPartnerType.SBER_MEGA_MARKET,
-                               StinDeliveryType.DELIVERY,
-                               deliveryPrice,
-                               deliverySubsidy,
-                               StinPaymentType.NotFound,
-                               StinPaymentMethod.NotFound,
-                               "0",
-                               "",
-                               null,
-                               sberOrder.ShipmentId,
-                               sberOrder.ShipmentId,
-                               sberOrder.ShipmentDateFrom,
-                               orderItems,
-                               cancellationToken);
+                            _sharedQueue.Enqueue(new SharedQueueDto
+                            {
+                                Key = sberOrder.ShipmentId,
+                                WorkItem = (docService, stoppingToken) => docService.NewOrder(
+                                   "SBER",
+                                   firmaId,
+                                   customerId,
+                                   dogovorId,
+                                   authorization,
+                                   encoding,
+                                   Common.SkladEkran,
+                                   "",
+                                   sberOrder.DeliveryId,
+                                   sberOrder.DeliveryMethodId,
+                                   StinDeliveryPartnerType.SBER_MEGA_MARKET,
+                                   StinDeliveryType.DELIVERY,
+                                   deliveryPrice,
+                                   deliverySubsidy,
+                                   StinPaymentType.NotFound,
+                                   StinPaymentMethod.NotFound,
+                                   "0",
+                                   "",
+                                   null,
+                                   sberOrder.ShipmentId,
+                                   sberOrder.ShipmentId,
+                                   sberOrder.ShipmentDateFrom,
+                                   orderItems,
+                                   stoppingToken),
+                            });
+                            //await _docService.NewOrder(
+                            //   "SBER",
+                            //   firmaId,
+                            //   customerId,
+                            //   dogovorId,
+                            //   authorization,
+                            //   encoding,
+                            //   Common.SkladEkran,
+                            //   "",
+                            //   sberOrder.DeliveryId,
+                            //   sberOrder.DeliveryMethodId,
+                            //   StinDeliveryPartnerType.SBER_MEGA_MARKET,
+                            //   StinDeliveryType.DELIVERY,
+                            //   deliveryPrice,
+                            //   deliverySubsidy,
+                            //   StinPaymentType.NotFound,
+                            //   StinPaymentMethod.NotFound,
+                            //   "0",
+                            //   "",
+                            //   null,
+                            //   sberOrder.ShipmentId,
+                            //   sberOrder.ShipmentId,
+                            //   sberOrder.ShipmentDateFrom,
+                            //   orderItems,
+                            //   cancellationToken);
                         }
                     }
                     else
@@ -2706,19 +2781,39 @@ namespace Refresher1C.Service
                                 (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14) && (order.InternalStatus != 16))
                         {
                             if (order.Scanned > 0 && order.InternalStatus < 14 && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
-                                await _docService.OrderDeliveried(order, true);
+                                _sharedQueue.Enqueue(new SharedQueueDto
+                                {
+                                    Key = order.MarketplaceId,
+                                    WorkItem = (docService, _) => docService.OrderDeliveried(order, true),
+                                });
+                                //await _docService.OrderDeliveried(order, true);
                             else
-                                await _docService.OrderCancelled(order);
+                                _sharedQueue.Enqueue(new SharedQueueDto
+                                {
+                                    Key = order.MarketplaceId,
+                                    WorkItem = (docService, _) => docService.OrderCancelled(order),
+                                });
+                                //await _docService.OrderCancelled(order);
                         }
                         else if (readyToShipOrders.Contains(sberOrder.ShipmentId) && (sberOrder.Items?.All(x => x.Status == SberClasses.SberStatus.SHIPPED) ?? false) &&
                             (order.InternalStatus < 14) && (order.InternalStatus != 6) && (order.InternalStatus != 5) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                         {
-                            await _docService.OrderDeliveried(order, true);
+                            _sharedQueue.Enqueue(new SharedQueueDto
+                            {
+                                Key = order.MarketplaceId,
+                                WorkItem = (docService, _) => docService.OrderDeliveried(order, true),
+                            });
+                            //await _docService.OrderDeliveried(order, true);
                         }
                         else if ((sberOrder.Items?.All(x => x.Status == SberClasses.SberStatus.DELIVERED) ?? false) &&
                             ((order.InternalStatus == 14) || (order.InternalStatus == 16)) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                         {
-                            await _docService.OrderFromTransferDeliveried(order);
+                            _sharedQueue.Enqueue(new SharedQueueDto
+                            {
+                                Key = order.MarketplaceId,
+                                WorkItem = (docService, _) => docService.OrderFromTransferDeliveried(order),
+                            });
+                            //await _docService.OrderFromTransferDeliveried(order);
                         }
                     }
                 }
@@ -2799,31 +2894,60 @@ namespace Refresher1C.Service
                                 }
                                 double deliveryPrice = 0;
                                 double deliverySubsidy = 0;
-                                await _docService.NewOrder(
-                                   "SBER",
-                                   firmaId,
-                                   customerId,
-                                   dogovorId,
-                                   authorization,
-                                   encoding,
-                                   Common.SkladEkran,
-                                   "",
-                                   sberOrder.DeliveryId,
-                                   sberOrder.DeliveryMethodId,
-                                   StinDeliveryPartnerType.SBER_MEGA_MARKET,
-                                   StinDeliveryType.DELIVERY,
-                                   deliveryPrice,
-                                   deliverySubsidy,
-                                   StinPaymentType.NotFound,
-                                   StinPaymentMethod.NotFound,
-                                   "0",
-                                   "",
-                                   null,
-                                   sberOrder.ShipmentId,
-                                   sberOrder.DeliveryId,
-                                   sberOrder.ShipmentDateFrom,
-                                   orderItems,
-                                   cancellationToken);
+                                _sharedQueue.Enqueue(new SharedQueueDto
+                                {
+                                    Key = sberOrder.DeliveryId,
+                                    WorkItem = (docService, stoppingToken) => docService.NewOrder(
+                                       "SBER",
+                                       firmaId,
+                                       customerId,
+                                       dogovorId,
+                                       authorization,
+                                       encoding,
+                                       Common.SkladEkran,
+                                       "",
+                                       sberOrder.DeliveryId,
+                                       sberOrder.DeliveryMethodId,
+                                       StinDeliveryPartnerType.SBER_MEGA_MARKET,
+                                       StinDeliveryType.DELIVERY,
+                                       deliveryPrice,
+                                       deliverySubsidy,
+                                       StinPaymentType.NotFound,
+                                       StinPaymentMethod.NotFound,
+                                       "0",
+                                       "",
+                                       null,
+                                       sberOrder.ShipmentId,
+                                       sberOrder.DeliveryId,
+                                       sberOrder.ShipmentDateFrom,
+                                       orderItems,
+                                       stoppingToken),
+                                });
+                                //await _docService.NewOrder(
+                                //   "SBER",
+                                //   firmaId,
+                                //   customerId,
+                                //   dogovorId,
+                                //   authorization,
+                                //   encoding,
+                                //   Common.SkladEkran,
+                                //   "",
+                                //   sberOrder.DeliveryId,
+                                //   sberOrder.DeliveryMethodId,
+                                //   StinDeliveryPartnerType.SBER_MEGA_MARKET,
+                                //   StinDeliveryType.DELIVERY,
+                                //   deliveryPrice,
+                                //   deliverySubsidy,
+                                //   StinPaymentType.NotFound,
+                                //   StinPaymentMethod.NotFound,
+                                //   "0",
+                                //   "",
+                                //   null,
+                                //   sberOrder.ShipmentId,
+                                //   sberOrder.DeliveryId,
+                                //   sberOrder.ShipmentDateFrom,
+                                //   orderItems,
+                                //   cancellationToken);
                             }
                         }
                         else
@@ -2832,19 +2956,39 @@ namespace Refresher1C.Service
                                     (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14) && (order.InternalStatus != 16))
                             {
                                 if (order.Scanned > 0 && order.InternalStatus < 14 && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
-                                    await _docService.OrderDeliveried(order, true);
+                                    _sharedQueue.Enqueue(new SharedQueueDto
+                                    {
+                                        Key = order.MarketplaceId,
+                                        WorkItem = (docService, _) => docService.OrderDeliveried(order, true),
+                                    });
+                                    //await _docService.OrderDeliveried(order, true);
                                 else
-                                    await _docService.OrderCancelled(order);
+                                    _sharedQueue.Enqueue(new SharedQueueDto
+                                    {
+                                        Key = order.MarketplaceId,
+                                        WorkItem = (docService, _) => docService.OrderCancelled(order),
+                                    });
+                                    //await _docService.OrderCancelled(order);
                             }
                             else if (readyToShipOrders.Contains(sberOrder.ShipmentId) && (sberOrder.Items?.All(x => x.Status == SberClasses.SberStatus.SHIPPED) ?? false) &&
                                 (order.InternalStatus < 14) && (order.InternalStatus != 6) && (order.InternalStatus != 5) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                             {
-                                await _docService.OrderDeliveried(order, true);
+                                _sharedQueue.Enqueue(new SharedQueueDto
+                                {
+                                    Key = order.MarketplaceId,
+                                    WorkItem = (docService, _) => docService.OrderDeliveried(order, true),
+                                });
+                                //await _docService.OrderDeliveried(order, true);
                             }
                             else if ((sberOrder.Items?.All(x => x.Status == SberClasses.SberStatus.DELIVERED) ?? false) &&
                                 ((order.InternalStatus == 14) || (order.InternalStatus == 16)) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                             {
-                                await _docService.OrderFromTransferDeliveried(order);
+                                _sharedQueue.Enqueue(new SharedQueueDto
+                                {
+                                    Key = order.MarketplaceId,
+                                    WorkItem = (docService, _) => docService.OrderFromTransferDeliveried(order),
+                                });
+                                //await _docService.OrderFromTransferDeliveried(order);
                             }
                         }
                     }
@@ -2871,7 +3015,12 @@ namespace Refresher1C.Service
                             if ((sberOrder.Items?.All(x => x.Status == SberClasses.SberStatus.DELIVERED) ?? false) &&
                             ((order.InternalStatus == 14) || (order.InternalStatus == 16)) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                             {
-                                await _docService.OrderFromTransferDeliveried(order);
+                                _sharedQueue.Enqueue(new SharedQueueDto
+                                {
+                                    Key = order.MarketplaceId,
+                                    WorkItem = (docService, _) => docService.OrderFromTransferDeliveried(order),
+                                });
+                                //await _docService.OrderFromTransferDeliveried(order);
                             }
                         }
                     }
@@ -3029,33 +3178,60 @@ namespace Refresher1C.Service
                                     shipmentDate = DateTime.Now.AddDays(await _склад.ЭтоРабочийДень(Common.SkladEkran, 1));
                                 long deliveryServiceId = aliOrder.Logistic_orders?.Select(x => x.Id).FirstOrDefault() ?? 0;
                                 string deliveryServiceName = aliOrder.Logistic_orders?.Select(x => x.Track_number).FirstOrDefault() ?? "";
-                                await _docService.NewOrder(
-                                   "ALIEXPRESS",
-                                   firmaId,
-                                   customerId,
-                                   dogovorId,
-                                   authorization,
-                                   encoding,
-                                   Common.SkladEkran,
-                                   string.Join(", ", aliOrder.Order_lines?.Select(x => x.Buyer_comment)),
-                                   deliveryServiceId.ToString(),
-                                   deliveryServiceName,
-                                   StinDeliveryPartnerType.ALIEXPRESS_LOGISTIC,
-                                   StinDeliveryType.DELIVERY,
-                                   (double)aliOrder.Pre_split_postings?.Sum(x => x.Delivery_fee),
-                                   0,
-                                   StinPaymentType.NotFound,
-                                   StinPaymentMethod.NotFound,
-                                   "0",
-                                   "",
-                                   null,
-                                   aliOrder.Id,
-                                   aliOrder.Id,
-                                   shipmentDate,
-                                   orderItems,
-                                   cancellationToken);
-                                //if (aliOrder.Logistic_orders?.Count == 0)
-                                //    await CreateLogisticsOrder(order.Id, aliOrder, authToken, cancellationToken);
+                                _sharedQueue.Enqueue(new SharedQueueDto
+                                {
+                                    Key = aliOrder.Id,
+                                    WorkItem = (docService, stoppingToken) => docService.NewOrder(
+                                       "ALIEXPRESS",
+                                       firmaId,
+                                       customerId,
+                                       dogovorId,
+                                       authorization,
+                                       encoding,
+                                       Common.SkladEkran,
+                                       string.Join(", ", aliOrder.Order_lines?.Select(x => x.Buyer_comment)),
+                                       deliveryServiceId.ToString(),
+                                       deliveryServiceName,
+                                       StinDeliveryPartnerType.ALIEXPRESS_LOGISTIC,
+                                       StinDeliveryType.DELIVERY,
+                                       (double)aliOrder.Pre_split_postings?.Sum(x => x.Delivery_fee),
+                                       0,
+                                       StinPaymentType.NotFound,
+                                       StinPaymentMethod.NotFound,
+                                       "0",
+                                       "",
+                                       null,
+                                       aliOrder.Id,
+                                       aliOrder.Id,
+                                       shipmentDate,
+                                       orderItems,
+                                       stoppingToken),
+                                });
+                                //await _docService.NewOrder(
+                                //   "ALIEXPRESS",
+                                //   firmaId,
+                                //   customerId,
+                                //   dogovorId,
+                                //   authorization,
+                                //   encoding,
+                                //   Common.SkladEkran,
+                                //   string.Join(", ", aliOrder.Order_lines?.Select(x => x.Buyer_comment)),
+                                //   deliveryServiceId.ToString(),
+                                //   deliveryServiceName,
+                                //   StinDeliveryPartnerType.ALIEXPRESS_LOGISTIC,
+                                //   StinDeliveryType.DELIVERY,
+                                //   (double)aliOrder.Pre_split_postings?.Sum(x => x.Delivery_fee),
+                                //   0,
+                                //   StinPaymentType.NotFound,
+                                //   StinPaymentMethod.NotFound,
+                                //   "0",
+                                //   "",
+                                //   null,
+                                //   aliOrder.Id,
+                                //   aliOrder.Id,
+                                //   shipmentDate,
+                                //   orderItems,
+                                //   cancellationToken);
                             }
                         }
                         else
@@ -3087,12 +3263,22 @@ namespace Refresher1C.Service
                                 ((aliOrder.Logistic_orders?.Count > 0) && (aliOrder.Logistic_orders?.All(x => logisticsDelivered.Contains(x.Status)) ?? false))) &&
                                 ((order.InternalStatus == 14) || (order.InternalStatus == 16)) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                             {
-                                await _docService.OrderFromTransferDeliveried(order);
+                                _sharedQueue.Enqueue(new SharedQueueDto
+                                {
+                                    Key = order.MarketplaceId,
+                                    WorkItem = (docService, _) => docService.OrderFromTransferDeliveried(order),
+                                });
+                                //await _docService.OrderFromTransferDeliveried(order);
                             }
                             else if ((aliOrder.Logistic_orders?.Count > 0) && (aliOrder.Logistic_orders?.All(x => logisticsDelivering.Contains(x.Status)) ?? false) &&
                                 (order.InternalStatus < 14) && (order.InternalStatus != 6) && (order.InternalStatus != 5) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                             {
-                                await _docService.OrderDeliveried(order, true);
+                                _sharedQueue.Enqueue(new SharedQueueDto
+                                {
+                                    Key = order.MarketplaceId,
+                                    WorkItem = (docService, _) => docService.OrderDeliveried(order, true),
+                                });
+                                //await _docService.OrderDeliveried(order, true);
                             }
                             else if ((aliOrder.Order_display_status == AliExpressClasses.OrderDisplayStatus.WaitSendGoods) ||
                                  (aliOrder.Order_display_status == AliExpressClasses.OrderDisplayStatus.PartialSendGoods))
@@ -3108,7 +3294,12 @@ namespace Refresher1C.Service
                                     {
                                         order.ShipmentDate = shipmentDate;
                                         await _order.ОбновитьOrderShipmentDate(order.Id, shipmentDate);
-                                        await _docService.ОбновитьНомерМаршрута(order);
+                                        _sharedQueue.Enqueue(new SharedQueueDto
+                                        {
+                                            Key = order.MarketplaceId,
+                                            WorkItem = (docService, _) => docService.ОбновитьНомерМаршрута(order),
+                                        });
+                                        //await _docService.ОбновитьНомерМаршрута(order);
                                     }
                                     await _order.ОбновитьOrderStatus(order.Id, 8);
                                 }
@@ -3126,9 +3317,19 @@ namespace Refresher1C.Service
                             )
                             {
                                 if (order.Scanned > 0 && order.InternalStatus < 14 && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
-                                    await _docService.OrderDeliveried(order, true);
+                                    _sharedQueue.Enqueue(new SharedQueueDto
+                                    {
+                                        Key = order.MarketplaceId,
+                                        WorkItem = (docService, _) => docService.OrderDeliveried(order, true),
+                                    });
+                                    //await _docService.OrderDeliveried(order, true);
                                 else
-                                    await _docService.OrderCancelled(order);
+                                    _sharedQueue.Enqueue(new SharedQueueDto
+                                    {
+                                        Key = order.MarketplaceId,
+                                        WorkItem = (docService, _) => docService.OrderCancelled(order),
+                                    });
+                                   //await _docService.OrderCancelled(order);
                             }
                         }
                     }
@@ -3239,7 +3440,10 @@ namespace Refresher1C.Service
                                             int колДнейПередLimitDate = await _склад.ЭтоРабочийДень(Common.SkladEkran, -1, limitDate);
                                             shipmentDate = limitDate.AddDays(колДнейПередLimitDate);
                                         }
-                                        await _docService.NewOrder(
+                                        _sharedQueue.Enqueue(new SharedQueueDto
+                                        {
+                                            Key = orderDto.Order_id.ToString(),
+                                            WorkItem = (docService, cancellationToken) => docService.NewOrder(
                                            "ALIEXPRESS",
                                            firmaId,
                                            customerId,
@@ -3263,7 +3467,8 @@ namespace Refresher1C.Service
                                            orderDto.Order_id.ToString(),
                                            shipmentDate,
                                            orderItems,
-                                           cancellationToken);
+                                           cancellationToken),
+                                        });
                                     }
                                     else
                                     {
@@ -3280,7 +3485,11 @@ namespace Refresher1C.Service
                                     ((orderDto.Order_status == AliExpressClasses.OrderStatus.WAIT_BUYER_ACCEPT_GOODS) &&
                                      (order.InternalStatus != 6)))
                                 {
-                                    await _docService.OrderDeliveried(order);
+                                    _sharedQueue.Enqueue(new SharedQueueDto
+                                    {
+                                        Key = order.MarketplaceId,
+                                        WorkItem = (docService, _) => docService.OrderDeliveried(order),
+                                    });
                                 }
                                 else if (((orderDto.Order_status == AliExpressClasses.OrderStatus.WAIT_SELLER_SEND_GOODS) ||
                                      (orderDto.Order_status == AliExpressClasses.OrderStatus.SELLER_PART_SEND_GOODS)) &&
@@ -3293,7 +3502,12 @@ namespace Refresher1C.Service
                                     {
                                         order.ShipmentDate = shipmentDate;
                                         await _order.ОбновитьOrderShipmentDate(order.Id, shipmentDate);
-                                        await _docService.ОбновитьНомерМаршрута(order);
+
+                                        _sharedQueue.Enqueue(new SharedQueueDto
+                                        {
+                                            Key = order.MarketplaceId,
+                                            WorkItem = (docService, _) => docService.ОбновитьНомерМаршрута(order),
+                                        });
                                     }
                                     await _order.ОбновитьOrderStatus(order.Id, 8);
                                 }
@@ -3302,7 +3516,11 @@ namespace Refresher1C.Service
                                     ((orderDto.End_reason == "pay_timeout") || (orderDto.End_reason == "buyer_cancel_notpay_order")) &&
                                     (order.InternalStatus != 5) && (order.InternalStatus != 6))
                                 {
-                                    await _docService.OrderCancelled(order);
+                                    _sharedQueue.Enqueue(new SharedQueueDto
+                                    {
+                                        Key = order.MarketplaceId,
+                                        WorkItem = (docService, _) => docService.OrderCancelled(order),
+                                    });
                                 }
                             }
                         }
@@ -3397,31 +3615,60 @@ namespace Refresher1C.Service
                             Floor = "",
                             Postcode = "",
                         };
-                        await _docService.NewOrder(
-                           "WILDBERRIES",
-                           firmaId,
-                           customerId,
-                           dogovorId,
-                           authorization,
-                           encoding,
-                           Common.SkladEkran,
-                           "",
-                           deliveryServiceId,
-                           deliveryServiceName,
-                           StinDeliveryPartnerType.WILDBERRIES,
-                           StinDeliveryType.DELIVERY,
-                           0,
-                           0,
-                           StinPaymentType.NotFound,
-                           StinPaymentMethod.NotFound,
-                           "0",
-                           "",
-                           address,
-                           wbOrder.Id.ToString(),
-                           wbOrder.Id.ToString(),
-                           shipmentDate,
-                           orderItems,
-                           stoppingToken);
+                        _sharedQueue.Enqueue(new SharedQueueDto
+                        {
+                            Key = wbOrder.Id.ToString(),
+                            WorkItem = (docService, cancellationToken) => docService.NewOrder(
+                               "WILDBERRIES",
+                               firmaId,
+                               customerId,
+                               dogovorId,
+                               authorization,
+                               encoding,
+                               Common.SkladEkran,
+                               "",
+                               deliveryServiceId,
+                               deliveryServiceName,
+                               StinDeliveryPartnerType.WILDBERRIES,
+                               StinDeliveryType.DELIVERY,
+                               0,
+                               0,
+                               StinPaymentType.NotFound,
+                               StinPaymentMethod.NotFound,
+                               "0",
+                               "",
+                               address,
+                               wbOrder.Id.ToString(),
+                               wbOrder.Id.ToString(),
+                               shipmentDate,
+                               orderItems,
+                               cancellationToken),
+                        });
+                        //await _docService.NewOrder(
+                        //   "WILDBERRIES",
+                        //   firmaId,
+                        //   customerId,
+                        //   dogovorId,
+                        //   authorization,
+                        //   encoding,
+                        //   Common.SkladEkran,
+                        //   "",
+                        //   deliveryServiceId,
+                        //   deliveryServiceName,
+                        //   StinDeliveryPartnerType.WILDBERRIES,
+                        //   StinDeliveryType.DELIVERY,
+                        //   0,
+                        //   0,
+                        //   StinPaymentType.NotFound,
+                        //   StinPaymentMethod.NotFound,
+                        //   "0",
+                        //   "",
+                        //   address,
+                        //   wbOrder.Id.ToString(),
+                        //   wbOrder.Id.ToString(),
+                        //   shipmentDate,
+                        //   orderItems,
+                        //   stoppingToken);
                     }
                 }
             }
@@ -3457,9 +3704,17 @@ namespace Refresher1C.Service
                             if ((order.InternalStatus != 14) && (order.InternalStatus != 16))
                             {
                                 if (order.Scanned > 0 && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
-                                    await _docService.OrderDeliveried(order, true);
+                                    _sharedQueue.Enqueue(new SharedQueueDto
+                                    {
+                                        Key = order.MarketplaceId,
+                                        WorkItem = (docService, _) => docService.OrderDeliveried(order, true),
+                                    });
                                 else
-                                    await _docService.OrderCancelled(order);
+                                    _sharedQueue.Enqueue(new SharedQueueDto
+                                    {
+                                        Key = order.MarketplaceId,
+                                        WorkItem = (docService, _) => docService.OrderCancelled(order),
+                                    });
                             }
                             else if (order.InternalStatus == 14)
                                 await _order.ОбновитьOrderStatus(order.Id, 16);
@@ -3473,7 +3728,11 @@ namespace Refresher1C.Service
                         {
                             var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, wbOrderId.ToString());
                             if ((order != null) && (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14))
-                                await _docService.OrderDeliveried(order, true);
+                                _sharedQueue.Enqueue(new SharedQueueDto
+                                {
+                                    Key = order.MarketplaceId,
+                                    WorkItem = (docService, _) => docService.OrderDeliveried(order, true),
+                                });
                         }
                         var deliveredOrderIds = result.orders?.Where(x => x.Value == WbClasses.WbStatus.sold)
                             .Select(x => x.Key);
@@ -3481,9 +3740,17 @@ namespace Refresher1C.Service
                         {
                             var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, wbOrderId.ToString());
                             if ((order != null) && (order.InternalStatus != 5) && (order.InternalStatus != 6) && (order.InternalStatus != 14) && (order.InternalStatus != 16))
-                                await _docService.OrderDeliveried(order, true);
+                                _sharedQueue.Enqueue(new SharedQueueDto
+                                {
+                                    Key = order.MarketplaceId,
+                                    WorkItem = (docService, _) => docService.OrderDeliveried(order, true),
+                                });
                             if ((order != null) && ((order.InternalStatus == 14) || (order.InternalStatus == 16)))
-                                await _docService.OrderFromTransferDeliveried(order);
+                                _sharedQueue.Enqueue(new SharedQueueDto
+                                {
+                                    Key = order.MarketplaceId,
+                                    WorkItem = (docService, _) => docService.OrderFromTransferDeliveried(order),
+                                });
                         }
                     }
                 }
@@ -3574,31 +3841,60 @@ namespace Refresher1C.Service
                         {
                             foreach (var orderItem in orderItems.GroupBy(x => x.ИдентификаторПоставщика))
                             {
-                                await _docService.NewOrder(
-                                   "OZON",
-                                   firmaId,
-                                   customerId,
-                                   dogovorId,
-                                   authToken,
-                                   encoding,
-                                   Common.SkladEkran,
-                                   "",
-                                   posting.Delivery_method != null ? posting.Delivery_method.Id.ToString() : "0",
-                                   posting.Delivery_method != null ? posting.Delivery_method.Name : "",
-                                   StinDeliveryPartnerType.OZON_LOGISTIC,
-                                   StinDeliveryType.DELIVERY,
-                                   0,
-                                   0,
-                                   StinPaymentType.NotFound,
-                                   StinPaymentMethod.NotFound,
-                                   "0",
-                                   posting.Analytics_data != null ? posting.Analytics_data.Region : "",
-                                   posting.Analytics_data != null ? new OrderRecipientAddress { City = posting.Analytics_data.City } : null,
-                                   posting.Order_number,
-                                   orderItem.Key,
-                                   posting.Shipment_date,
-                                   orderItem.Select(x => x).ToList(),
-                                   stoppingToken);
+                                _sharedQueue.Enqueue(new SharedQueueDto
+                                {
+                                    Key = orderItem.Key,
+                                    WorkItem = (docService, cancellationToken) => docService.NewOrder(
+                                       "OZON",
+                                       firmaId,
+                                       customerId,
+                                       dogovorId,
+                                       authToken,
+                                       encoding,
+                                       Common.SkladEkran,
+                                       "",
+                                       posting.Delivery_method != null ? posting.Delivery_method.Id.ToString() : "0",
+                                       posting.Delivery_method != null ? posting.Delivery_method.Name : "",
+                                       StinDeliveryPartnerType.OZON_LOGISTIC,
+                                       StinDeliveryType.DELIVERY,
+                                       0,
+                                       0,
+                                       StinPaymentType.NotFound,
+                                       StinPaymentMethod.NotFound,
+                                       "0",
+                                       posting.Analytics_data != null ? posting.Analytics_data.Region : "",
+                                       posting.Analytics_data != null ? new OrderRecipientAddress { City = posting.Analytics_data.City } : null,
+                                       posting.Order_number,
+                                       orderItem.Key,
+                                       posting.Shipment_date,
+                                       orderItem.Select(x => x).ToList(),
+                                       cancellationToken),
+                                });
+                                //await _docService.NewOrder(
+                                //   "OZON",
+                                //   firmaId,
+                                //   customerId,
+                                //   dogovorId,
+                                //   authToken,
+                                //   encoding,
+                                //   Common.SkladEkran,
+                                //   "",
+                                //   posting.Delivery_method != null ? posting.Delivery_method.Id.ToString() : "0",
+                                //   posting.Delivery_method != null ? posting.Delivery_method.Name : "",
+                                //   StinDeliveryPartnerType.OZON_LOGISTIC,
+                                //   StinDeliveryType.DELIVERY,
+                                //   0,
+                                //   0,
+                                //   StinPaymentType.NotFound,
+                                //   StinPaymentMethod.NotFound,
+                                //   "0",
+                                //   posting.Analytics_data != null ? posting.Analytics_data.Region : "",
+                                //   posting.Analytics_data != null ? new OrderRecipientAddress { City = posting.Analytics_data.City } : null,
+                                //   posting.Order_number,
+                                //   orderItem.Key,
+                                //   posting.Shipment_date,
+                                //   orderItem.Select(x => x).ToList(),
+                                //   stoppingToken);
                             }
                         }
                     }
@@ -3817,7 +4113,11 @@ namespace Refresher1C.Service
                         if ((order != null) && (detailOrder.Status == YandexClasses.StatusYandex.DELIVERED) &&
                             (order.InternalStatus == 14))
                         {
-                            await _docService.OrderFromTransferDeliveried(order);
+                            _sharedQueue.Enqueue(new SharedQueueDto
+                            {
+                                Key = order.MarketplaceId,
+                                WorkItem = (docService, _) => docService.OrderFromTransferDeliveried(order),
+                            });
                         }
                     }
                 }
@@ -3976,31 +4276,60 @@ namespace Refresher1C.Service
                                 deliveryPrice = detailOrder.Delivery?.Price ?? 0 + detailOrder.Delivery?.Subsidy ?? 0;
                                 deliverySubsidy = detailOrder.Delivery?.Subsidy ?? 0;
                             }
-                            await _docService.NewOrder(
-                                "YANDEX",
-                                firmaId,
-                                customerId,
-                                dogovorId,
-                                authorization,
-                                encoding,
-                                складОтгрузкиId,
-                                detailOrder.Notes ?? "",
-                                detailOrder.Delivery?.DeliveryServiceId ?? "0",
-                                detailOrder.Delivery?.ServiceName ?? "",
-                                (StinDeliveryPartnerType)detailOrder.Delivery?.DeliveryPartnerType,
-                                (StinDeliveryType)detailOrder.Delivery?.Type,
-                                deliveryPrice,
-                                deliverySubsidy,
-                                (StinPaymentType)detailOrder.PaymentType,
-                                (StinPaymentMethod)detailOrder.PaymentMethod,
-                                detailOrder.Delivery?.Region?.Id.ToString(),
-                                detailOrder.Delivery?.Region?.Name ?? "",
-                                address,
-                                orderDeliveryShipmentId,
-                                detailOrder.Id.ToString(),
-                                orderShipmentDate,
-                                orderItems,
-                                cancellationToken);
+                            _sharedQueue.Enqueue(new SharedQueueDto
+                            {
+                                Key = detailOrder.Id.ToString(),
+                                WorkItem = (docService, stoppingToken) => docService.NewOrder(
+                                    "YANDEX",
+                                    firmaId,
+                                    customerId,
+                                    dogovorId,
+                                    authorization,
+                                    encoding,
+                                    складОтгрузкиId,
+                                    detailOrder.Notes ?? "",
+                                    detailOrder.Delivery?.DeliveryServiceId ?? "0",
+                                    detailOrder.Delivery?.ServiceName ?? "",
+                                    (StinDeliveryPartnerType)detailOrder.Delivery?.DeliveryPartnerType,
+                                    (StinDeliveryType)detailOrder.Delivery?.Type,
+                                    deliveryPrice,
+                                    deliverySubsidy,
+                                    (StinPaymentType)detailOrder.PaymentType,
+                                    (StinPaymentMethod)detailOrder.PaymentMethod,
+                                    detailOrder.Delivery?.Region?.Id.ToString(),
+                                    detailOrder.Delivery?.Region?.Name ?? "",
+                                    address,
+                                    orderDeliveryShipmentId,
+                                    detailOrder.Id.ToString(),
+                                    orderShipmentDate,
+                                    orderItems,
+                                    stoppingToken),
+                            });
+                            //await _docService.NewOrder(
+                            //    "YANDEX",
+                            //    firmaId,
+                            //    customerId,
+                            //    dogovorId,
+                            //    authorization,
+                            //    encoding,
+                            //    складОтгрузкиId,
+                            //    detailOrder.Notes ?? "",
+                            //    detailOrder.Delivery?.DeliveryServiceId ?? "0",
+                            //    detailOrder.Delivery?.ServiceName ?? "",
+                            //    (StinDeliveryPartnerType)detailOrder.Delivery?.DeliveryPartnerType,
+                            //    (StinDeliveryType)detailOrder.Delivery?.Type,
+                            //    deliveryPrice,
+                            //    deliverySubsidy,
+                            //    (StinPaymentType)detailOrder.PaymentType,
+                            //    (StinPaymentMethod)detailOrder.PaymentMethod,
+                            //    detailOrder.Delivery?.Region?.Id.ToString(),
+                            //    detailOrder.Delivery?.Region?.Name ?? "",
+                            //    address,
+                            //    orderDeliveryShipmentId,
+                            //    detailOrder.Id.ToString(),
+                            //    orderShipmentDate,
+                            //    orderItems,
+                            //    cancellationToken);
                         }
                     }
                 }
@@ -4119,41 +4448,75 @@ namespace Refresher1C.Service
                                 deliveryPrice = detailOrder.Delivery?.Price ?? 0 + detailOrder.Delivery?.Subsidy ?? 0;
                                 deliverySubsidy = detailOrder.Delivery?.Subsidy ?? 0;
                             }
-                            await _docService.NewOrder(
-                                "YANDEX",
-                                firmaId,
-                                customerId,
-                                dogovorId,
-                                authorization,
-                                encoding,
-                                складОтгрузкиId,
-                                detailOrder.Notes ?? "",
-                                detailOrder.Delivery?.DeliveryServiceId ?? "0",
-                                detailOrder.Delivery?.ServiceName ?? "",
-                                (StinDeliveryPartnerType)detailOrder.Delivery?.DeliveryPartnerType,
-                                (StinDeliveryType)detailOrder.Delivery?.Type,
-                                deliveryPrice,
-                                deliverySubsidy,
-                                (StinPaymentType)detailOrder.PaymentType,
-                                (StinPaymentMethod)detailOrder.PaymentMethod,
-                                detailOrder.Delivery?.Region?.Id.ToString(),
-                                detailOrder.Delivery?.Region?.Name ?? "",
-                                address,
-                                orderDeliveryShipmentId,
-                                detailOrder.Id.ToString(),
-                                orderShipmentDate,
-                                orderItems,
-                                cancellationToken);
+                            _sharedQueue.Enqueue(new SharedQueueDto
+                            {
+                                Key = detailOrder.Id.ToString(),
+                                WorkItem = (docService, stoppingToken) => docService.NewOrder(
+                                    "YANDEX",
+                                    firmaId,
+                                    customerId,
+                                    dogovorId,
+                                    authorization,
+                                    encoding,
+                                    складОтгрузкиId,
+                                    detailOrder.Notes ?? "",
+                                    detailOrder.Delivery?.DeliveryServiceId ?? "0",
+                                    detailOrder.Delivery?.ServiceName ?? "",
+                                    (StinDeliveryPartnerType)detailOrder.Delivery?.DeliveryPartnerType,
+                                    (StinDeliveryType)detailOrder.Delivery?.Type,
+                                    deliveryPrice,
+                                    deliverySubsidy,
+                                    (StinPaymentType)detailOrder.PaymentType,
+                                    (StinPaymentMethod)detailOrder.PaymentMethod,
+                                    detailOrder.Delivery?.Region?.Id.ToString(),
+                                    detailOrder.Delivery?.Region?.Name ?? "",
+                                    address,
+                                    orderDeliveryShipmentId,
+                                    detailOrder.Id.ToString(),
+                                    orderShipmentDate,
+                                    orderItems,
+                                    stoppingToken),
+                            });
+                            //await _docService.NewOrder(
+                            //    "YANDEX",
+                            //    firmaId,
+                            //    customerId,
+                            //    dogovorId,
+                            //    authorization,
+                            //    encoding,
+                            //    складОтгрузкиId,
+                            //    detailOrder.Notes ?? "",
+                            //    detailOrder.Delivery?.DeliveryServiceId ?? "0",
+                            //    detailOrder.Delivery?.ServiceName ?? "",
+                            //    (StinDeliveryPartnerType)detailOrder.Delivery?.DeliveryPartnerType,
+                            //    (StinDeliveryType)detailOrder.Delivery?.Type,
+                            //    deliveryPrice,
+                            //    deliverySubsidy,
+                            //    (StinPaymentType)detailOrder.PaymentType,
+                            //    (StinPaymentMethod)detailOrder.PaymentMethod,
+                            //    detailOrder.Delivery?.Region?.Id.ToString(),
+                            //    detailOrder.Delivery?.Region?.Name ?? "",
+                            //    address,
+                            //    orderDeliveryShipmentId,
+                            //    detailOrder.Id.ToString(),
+                            //    orderShipmentDate,
+                            //    orderItems,
+                            //    cancellationToken);
                         }
                         else
                         {
                             if (order.InternalStatus == 0)
                                 await _order.ОбновитьOrderStatus(order.Id, 8);
-                            else if (readyToShipOrders.Contains(detailOrder.Id.ToString()) && 
+                            else if (readyToShipOrders.Contains(detailOrder.Id.ToString()) &&
                                 (detailOrder.Status == YandexClasses.StatusYandex.PROCESSING) && (detailOrder.SubStatus == YandexClasses.SubStatusYandex.SHIPPED) &&
                                 (order.InternalStatus < 14) && (order.InternalStatus != 6) && (order.InternalStatus != 5) && periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
                             {
-                                await _docService.OrderDeliveried(order, true);
+                                _sharedQueue.Enqueue(new SharedQueueDto
+                                {
+                                    Key = order.MarketplaceId,
+                                    WorkItem = (docService, _) => docService.OrderDeliveried(order, true),
+                                });
+                                //await _docService.OrderDeliveried(order, true);
                             }
                         }
                     }
@@ -4214,7 +4577,11 @@ namespace Refresher1C.Service
                         var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, item.Item1);
                         if ((order != null) && (order.InternalStatus != 5) && (order.InternalStatus != 6))
                         {
-                            await _docService.OrderCancelled(order);
+                            _sharedQueue.Enqueue(new SharedQueueDto
+                            {
+                                Key = order.MarketplaceId,
+                                WorkItem = (docService, _) => docService.OrderCancelled(order),
+                            });
                         }
                     }
                 }
@@ -4263,7 +4630,12 @@ namespace Refresher1C.Service
                     (order.Scanned == 0)
                 )
                 {
-                    await _docService.OrderCancelled(order);
+                    _sharedQueue.Enqueue(new SharedQueueDto
+                    {
+                        Key = order.MarketplaceId,
+                        WorkItem = (docService, _) => docService.OrderCancelled(order),
+                    });
+                    //await _docService.OrderCancelled(order);
                 }
             }
         }
@@ -4275,12 +4647,24 @@ namespace Refresher1C.Service
                 var orders = await GetOzonDetailOrders(_firmProxy[firmaId], clientId, authToken, marketplaceId, OzonClasses.OrderStatus.delivering, stoppingToken);
                 orders.AddRange(await GetOzonDetailOrders(_firmProxy[firmaId], clientId, authToken, marketplaceId, OzonClasses.OrderStatus.driver_pickup, stoppingToken));
                 foreach (var order in orders.Where(x => activeOrders.Contains(x.MarketplaceId)))
-                    await _docService.OrderDeliveried(order, true);
+                    if (!_sleepPeriods.Any(x => x.IsSleeping()))
+                        _sharedQueue.Enqueue(new SharedQueueDto
+                        {
+                            Key = order.MarketplaceId,
+                            WorkItem = (docService, _) => docService.OrderDeliveried(order, true),
+                        });
+                        //await _docService.OrderDeliveried(order, true);
 
                 orders = await GetOzonDetailOrders(_firmProxy[firmaId], clientId, authToken, marketplaceId, OzonClasses.OrderStatus.cancelled, stoppingToken);
                 foreach (var order in orders.Where(x => activeOrders.Contains(x.MarketplaceId) && x.Scanned > 0))
                 {
-                    await _docService.OrderDeliveried(order, true);
+                    if (!_sleepPeriods.Any(x => x.IsSleeping()))
+                        _sharedQueue.Enqueue(new SharedQueueDto
+                        {
+                            Key = order.MarketplaceId,
+                            WorkItem = (docService, _) => docService.OrderDeliveried(order, true),
+                        });
+                        //await _docService.OrderDeliveried(order, true);
                 }
 
                 orders = await GetOzonDetailOrders(_firmProxy[firmaId], clientId, authToken, marketplaceId, OzonClasses.OrderStatus.arbitration, stoppingToken);
@@ -4306,10 +4690,23 @@ namespace Refresher1C.Service
                 //var checkedNumbers = orders.Select(x => x.MarketplaceId);
                 foreach (var order in orders.Where(x => activeOrders.Contains(x.MarketplaceId)))
                 {
-                    if (order.InternalStatus == 3 || order.InternalStatus == -3)
-                        await _docService.OrderDeliveried(order, true);
-                    if ((order.InternalStatus == 14) || (order.InternalStatus == 16) || (order.InternalStatus == -14) || (order.InternalStatus == -16))
-                        await _docService.OrderFromTransferDeliveried(order);
+                    if (!_sleepPeriods.Any(x => x.IsSleeping()))
+                    {
+                        if (order.InternalStatus == 3 || order.InternalStatus == -3)
+                            _sharedQueue.Enqueue(new SharedQueueDto
+                            {
+                                Key = order.MarketplaceId,
+                                WorkItem = (docService, _) => docService.OrderDeliveried(order, true),
+                            });
+                            //await _docService.OrderDeliveried(order, true);
+                        if ((order.InternalStatus == 14) || (order.InternalStatus == 16) || (order.InternalStatus == -14) || (order.InternalStatus == -16))
+                            _sharedQueue.Enqueue(new SharedQueueDto
+                            {
+                                Key = order.MarketplaceId,
+                                WorkItem = (docService, _) => docService.OrderFromTransferDeliveried(order),
+                            });
+                            //await _docService.OrderFromTransferDeliveried(order);
+                    }
                 }
             }
             //_logger.LogError($"GetOzonDeliveredOrders \"{marketplaceId}\" ended");

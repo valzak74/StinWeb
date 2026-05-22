@@ -50,5 +50,18 @@ namespace StinClasses.Справочники
             }
             return "";
         }
+        public string ПолучитьКодМаршрута2(DateTime shipDate, string направлениеId)
+        {
+            var currentTime = DateTime.Now.TimeOfDay;
+
+            var isEveningDespatch = currentTime > TimeSpan.FromHours(23) || currentTime <= TimeSpan.FromHours(12);
+            foreach (var entity in _context.Sc14082s.Where(x => !x.Ismark && (x.Sp14078.Date == shipDate.Date)))
+            {
+                var направления = entity.Sp14080.Split(',').Select(x => x.Trim()).ToList();
+                if (направления.Contains(направлениеId))
+                    return entity.Code.Trim();
+            }
+            return "";
+        }
     }
 }

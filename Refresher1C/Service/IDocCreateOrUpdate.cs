@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Refresher1C.Service
 {
-    interface IDocCreateOrUpdate: IDisposable
+    public interface IDocCreateOrUpdate: IDisposable
     {
         Task CompleteSuccessPaymentAsync(string idDoc, string status, CancellationToken stoppingToken);
         Task ОбновитьНомерМаршрута(Order order);
