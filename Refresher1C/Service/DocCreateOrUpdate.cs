@@ -231,8 +231,14 @@ namespace Refresher1C.Service
             string regionId, string regionName, OrderRecipientAddress address,
             string shipmentId, string postingNumber, DateTime shipmentDate, List<OrderItem> items, CancellationToken cancellationToken)
         {
-            var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(defFirmaId);
             var market = await _marketplace.ПолучитьMarketplaceByFirma(authApi, defFirmaId);
+            var needCreateDoc = await _order.ПолучитьOrderByMarketplaceId(market.Id, postingNumber) == null;
+            if (!needCreateDoc)
+            {
+                return;
+            }
+
+            var разрешенныеФирмы = await _фирма.ПолучитьСписокРазрешенныхФирмAsync(defFirmaId);
             List<string> списокСкладовНаличияТовара = null;
             if (!string.IsNullOrEmpty(market.СкладId))
                 списокСкладовНаличияТовара = new List<string> { market.СкладId };
