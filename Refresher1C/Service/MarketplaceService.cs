@@ -181,7 +181,9 @@ namespace Refresher1C.Service
                                   //join markUse in _context.Sc14152s.Where(x => !x.Ismark) on new { NomId = nom.Id, MarketId = market.Id } equals new { NomId = markUse.Parentext, MarketId = markUse.Sp14147 } into _markUse
                                   //from markUse in _markUse.DefaultIfEmpty()
                                   where r.Period == dateRegTA && ((r.Sp14011 == 10) || (r.Sp14011 == 11)) &&
-                                    (regular ? (order.Sp13982 == 8) : (order.Sp13982 == -1)) //order статус = 8
+                                    (regular 
+                                        ? (order.Sp13982 == 8 || (market.Sp14155.ToUpper().Trim() == "WILDBERRIES" && order.Sp13982 == 2 && order.Sp13987.Trim() == "")) 
+                                        : (order.Sp13982 == -1)) //order статус = 8
                                     //&& order.Code.Trim() == "4313022892"
                                     && (((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.YANDEX_MARKET) ||
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.SBER_MEGA_MARKET) ||
