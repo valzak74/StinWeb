@@ -3596,7 +3596,7 @@ namespace Refresher1C.Service
                         DateTime shipmentDate = wbOrder.SellerDate ?? await wbHelper.GetActiveSupplyShipmentDate(_firmProxy[firmaId], authToken, id, wbOrder.OfficeId.ToString(), stoppingToken);
                         if (shipmentDate <= Common.min1cDate)
                         {
-                            if (!TimeSpan.TryParse("09:00", out TimeSpan limitTime))
+                            if (!TimeSpan.TryParse("16:00", out TimeSpan limitTime))
                                 limitTime = TimeSpan.MinValue;
                             var leavingDate = DateTime.Now.TimeOfDay > limitTime ? 1 : 0;
                             shipmentDate = DateTime.Today.AddDays(await _склад.ЭтоРабочийДень(Common.SkladEkran, leavingDate));
@@ -3841,6 +3841,10 @@ namespace Refresher1C.Service
                         }
                         if (needCreateDoc)
                         {
+                            if (!TimeSpan.TryParse("16:00", out TimeSpan limitTime))
+                                limitTime = TimeSpan.MinValue;
+                            var leavingDate = DateTime.Now.TimeOfDay > limitTime ? 1 : 0;
+                            var shipmentDate = DateTime.Today.AddDays(await _склад.ЭтоРабочийДень(Common.SkladEkran, leavingDate));
                             foreach (var orderItem in orderItems.GroupBy(x => x.ИдентификаторПоставщика))
                             {
                                 _sharedQueue.Enqueue(new SharedQueueDto
@@ -3868,35 +3872,10 @@ namespace Refresher1C.Service
                                        posting.Analytics_data != null ? new OrderRecipientAddress { City = posting.Analytics_data.City } : null,
                                        posting.Order_number,
                                        orderItem.Key,
-                                       posting.Shipment_date,
+                                       shipmentDate,
                                        orderItem.Select(x => x).ToList(),
                                        cancellationToken),
                                 });
-                                //await _docService.NewOrder(
-                                //   "OZON",
-                                //   firmaId,
-                                //   customerId,
-                                //   dogovorId,
-                                //   authToken,
-                                //   encoding,
-                                //   Common.SkladEkran,
-                                //   "",
-                                //   posting.Delivery_method != null ? posting.Delivery_method.Id.ToString() : "0",
-                                //   posting.Delivery_method != null ? posting.Delivery_method.Name : "",
-                                //   StinDeliveryPartnerType.OZON_LOGISTIC,
-                                //   StinDeliveryType.DELIVERY,
-                                //   0,
-                                //   0,
-                                //   StinPaymentType.NotFound,
-                                //   StinPaymentMethod.NotFound,
-                                //   "0",
-                                //   posting.Analytics_data != null ? posting.Analytics_data.Region : "",
-                                //   posting.Analytics_data != null ? new OrderRecipientAddress { City = posting.Analytics_data.City } : null,
-                                //   posting.Order_number,
-                                //   orderItem.Key,
-                                //   posting.Shipment_date,
-                                //   orderItem.Select(x => x).ToList(),
-                                //   stoppingToken);
                             }
                         }
                     }
@@ -4637,7 +4616,6 @@ namespace Refresher1C.Service
                         Key = order.MarketplaceId,
                         WorkItem = (docService, _) => docService.OrderCancelled(order),
                     });
-                    //await _docService.OrderCancelled(order);
                 }
             }
         }
@@ -4655,7 +4633,6 @@ namespace Refresher1C.Service
                             Key = order.MarketplaceId,
                             WorkItem = (docService, _) => docService.OrderDeliveried(order, true),
                         });
-                        //await _docService.OrderDeliveried(order, true);
 
                 orders = await GetOzonDetailOrders(_firmProxy[firmaId], clientId, authToken, marketplaceId, OzonClasses.OrderStatus.cancelled, stoppingToken);
                 foreach (var order in orders.Where(x => activeOrders.Contains(x.MarketplaceId) && x.Scanned > 0))
@@ -4666,7 +4643,6 @@ namespace Refresher1C.Service
                             Key = order.MarketplaceId,
                             WorkItem = (docService, _) => docService.OrderDeliveried(order, true),
                         });
-                        //await _docService.OrderDeliveried(order, true);
                 }
 
                 orders = await GetOzonDetailOrders(_firmProxy[firmaId], clientId, authToken, marketplaceId, OzonClasses.OrderStatus.arbitration, stoppingToken);
@@ -4677,7 +4653,6 @@ namespace Refresher1C.Service
         }
         private async Task GetOzonDeliveredOrders(string marketplaceId, string firmaId, string clientId, string authToken, CancellationToken stoppingToken)
         {
-            //_logger.LogError($"GetOzonDeliveredOrders \"{marketplaceId}\" started");
             var activeOrders = await _context.Sc13994s
                 .Where(x => ((x.Sp13982 == 14) || (x.Sp13982 == 16) || (x.Sp13982 == -14) || (x.Sp13982 == -16)) &&
                     ((StinDeliveryPartnerType)x.Sp13985 == StinDeliveryPartnerType.OZON_LOGISTIC) &&
@@ -4689,7 +4664,6 @@ namespace Refresher1C.Service
             if (activeOrders?.Count > 0)
             {
                 var orders = await GetOzonDetailOrders(_firmProxy[firmaId], clientId, authToken, marketplaceId, OzonClasses.OrderStatus.delivered, stoppingToken);
-                //var checkedNumbers = orders.Select(x => x.MarketplaceId);
                 foreach (var order in orders.Where(x => activeOrders.Contains(x.MarketplaceId)))
                 {
                     if (!_sleepPeriods.Any(x => x.IsSleeping()))
@@ -4700,18 +4674,15 @@ namespace Refresher1C.Service
                                 Key = order.MarketplaceId,
                                 WorkItem = (docService, _) => docService.OrderDeliveried(order, true),
                             });
-                            //await _docService.OrderDeliveried(order, true);
                         if ((order.InternalStatus == 14) || (order.InternalStatus == 16) || (order.InternalStatus == -14) || (order.InternalStatus == -16))
                             _sharedQueue.Enqueue(new SharedQueueDto
                             {
                                 Key = order.MarketplaceId,
                                 WorkItem = (docService, _) => docService.OrderFromTransferDeliveried(order),
                             });
-                            //await _docService.OrderFromTransferDeliveried(order);
                     }
                 }
             }
-            //_logger.LogError($"GetOzonDeliveredOrders \"{marketplaceId}\" ended");
         }
         private async Task<List<string>> ActiveOrders(string marketplaceId, CancellationToken cancellationToken)
         {

@@ -276,6 +276,8 @@ namespace StinWeb.Controllers
                               join item in _context.Sc14033s on order.Id equals item.Parentext
                               join nom in _context.Sc84s on item.Sp14022 equals nom.Id
                               join ed in _context.Sc75s on nom.Sp94 equals ed.Id
+                              join docPredvZayavka in _context.Dh12747s on order.Id equals docPredvZayavka.Sp14007
+                              join j in _context._1sjourns on docPredvZayavka.Iddoc equals j.Iddoc
                               join markUse in _context.Sc14152s on new { nomId = nom.Id, marketId = market.Id } equals new { nomId = markUse.Parentext, marketId = markUse.Sp14147 } into _markUse
                               from markUse in _markUse.DefaultIfEmpty()
                               where !order.Ismark && (order.Sp13982 != 5 || order.Sp14254 == 1) &&
@@ -292,7 +294,7 @@ namespace StinWeb.Controllers
                                                 : markUse.Sp14190.Trim() != market.Sp14154.Trim() 
                                             : true
                                     )
-                              group new { order, market, item, nom, ed } by new
+                              group new { order, market, item, nom, ed, j } by new
                               {
                                   orderId = order.Id,
                                   orderNo = order.Code + 
@@ -302,7 +304,8 @@ namespace StinWeb.Controllers
                                   типДоставкиПартнер = order.Sp13985,
                                   типДоставки = order.Sp13988,
                                   scanned = order.Sp14254,
-                                  logScanInfo = order.Sp14255.Trim()
+                                  logScanInfo = order.Sp14255.Trim(),
+                                  dateTimeIddoc = j.DateTimeIddoc,
                               } into gr
                               select new
                               {
@@ -314,7 +317,8 @@ namespace StinWeb.Controllers
                                   LogScanInfo = gr.Key.logScanInfo,
                                   КолТовара = gr.Sum(x => x.item.Sp14023),
                                   СуммаТовара = gr.Sum(x => ((x.item.Sp14025 > 0 ? x.item.Sp14025 : x.item.Sp14024) + x.item.Sp14026) * x.item.Sp14023),
-                                  КолГрузоМест = gr.Sum(x => ((x.market.Sp14155.ToUpper().Trim() == "ЯНДЕКС") || (x.market.Sp14155.ToUpper().Trim() == "SBER")) ? ((x.ed.Sp14063 == 0 ? 1 : x.ed.Sp14063) * x.item.Sp14023) / (x.nom.Sp14188 == 0 ? 1 : x.nom.Sp14188) : 1)
+                                  КолГрузоМест = gr.Sum(x => ((x.market.Sp14155.ToUpper().Trim() == "ЯНДЕКС") || (x.market.Sp14155.ToUpper().Trim() == "SBER")) ? ((x.ed.Sp14063 == 0 ? 1 : x.ed.Sp14063) * x.item.Sp14023) / (x.nom.Sp14188 == 0 ? 1 : x.nom.Sp14188) : 1),
+                                  DateTimeIddoc = gr.Key.dateTimeIddoc,
                               }).ToListAsync(cancellationToken);
             if (reportType == 1)
                 data = data.Where(x => x.Scanned == x.КолГрузоМест).ToList();
@@ -336,6 +340,7 @@ namespace StinWeb.Controllers
                     x.КолТовара,
                     x.СуммаТовара,
                     x.КолГрузоМест,
+                    x.DateTimeIddoc,
                 };
             }).ToList();
             var orderIds = data.Select(x => x.OrderId);
@@ -390,12 +395,14 @@ namespace StinWeb.Controllers
                        d.LogScanInfo,
                        d.КолГрузоМест,
                        d.КолТовара,
+                       OrderCreatedDateTime = d.DateTimeIddoc.ToDateTime(),
                        d.СуммаТовара
                    } into gr
-                   orderby gr.Key.OrderNo.Contains("-") ? gr.Key.OrderNo : gr.Key.OrderNo.Substring(gr.Key.OrderNo.Length - 3)
+                   orderby gr.Key.OrderCreatedDateTime
                    select new LoadingListOrder
                    {
                        OrderNo = gr.Key.OrderNo,
+                       OrderCreated = gr.Key.OrderCreatedDateTime.ToString("dd.MM.yyyy HH:mm:ss"),
                        ТипДоставки = gr.Key.ТипДоставки,
                        Status = gr.Key.Status,
                        Scanned = (int)gr.Key.Scanned,
@@ -2636,6 +2643,33 @@ namespace StinWeb.Controllers
             if (результат == null)
                 результат = new Долги();
             return PartialView("_IndexИнфоДолги", результат);
+        }
+    }
+
+    public static class LocalExtensions
+    {
+        public static DateTime ToDateTime(this string DateTimeIddoc)
+        {
+            DateTime result = new DateTime();
+            if (DateTimeIddoc.Length >= 14 && DateTime.TryParseExact(DateTimeIddoc.Substring(0, 8), "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out result))
+            {
+                var milliseconds = Decode36(DateTimeIddoc.Substring(8, 6).Trim()) / 10;
+                result = result.AddMilliseconds(milliseconds);
+            }
+            return result;
+        }
+        public static long Decode36(this string input)
+        {
+            string CharList = "0123456789abcdefghijklmnopqrstuvwxyz";
+            var reversed = input.ToLower().Reverse();
+            long result = 0;
+            int pos = 0;
+            foreach (char c in reversed)
+            {
+                result += CharList.IndexOf(c) * (long)Math.Pow(36, pos);
+                pos++;
+            }
+            return result;
         }
     }
 }

@@ -164,6 +164,7 @@ namespace StinWeb.Models.DataManager.Отчеты
     public class LoadingListOrder : OrderTemplate
     {
         public string OrderNo { get; set; }
+        public string OrderCreated { get; set; }
         public int Scanned { get; set; }
         public string LogScanInfo { get; set; }
         public decimal КолГрузоМест { get; set; }
