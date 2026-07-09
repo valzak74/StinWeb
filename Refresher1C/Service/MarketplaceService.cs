@@ -20,7 +20,6 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using YandexClasses;
 
 namespace Refresher1C.Service
 {
@@ -5062,6 +5061,7 @@ namespace Refresher1C.Service
             CancellationToken cancellationToken)
         {
             int requestLimit = 500;
+            var paused = TimeSpan.FromSeconds(15);
 
             var query = from markUse in _context.Sc14152s
                         join nom in _context.Sc84s on markUse.Parentext equals nom.Id
@@ -5080,6 +5080,10 @@ namespace Refresher1C.Service
                         };
             for (int i = 0; i < query.Count(); i = i + requestLimit)
             {
+                if (i > 0)
+                {
+                    await Task.Delay(paused, cancellationToken);
+                }
                 var data = await query
                     .OrderBy(x => x.Sku)
                     .Skip(i)
