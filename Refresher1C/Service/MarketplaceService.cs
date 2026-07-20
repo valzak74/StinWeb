@@ -3834,7 +3834,7 @@ namespace Refresher1C.Service
                                     Id = item.Sku.ToString(),
                                     НоменклатураId = item.Offer_id.Decode(encoding),
                                     Количество = item.Quantity,
-                                    Цена = Convert.ToDecimal(item.Price, new System.Globalization.NumberFormatInfo { NumberDecimalSeparator = "." }),
+                                    Цена = Convert.ToDecimal(item.Price.Amount, new System.Globalization.NumberFormatInfo { NumberDecimalSeparator = "." }),
                                 });
                             }
                         }
@@ -4571,31 +4571,33 @@ namespace Refresher1C.Service
         {
             var result = new List<Order>();
 
-            int limit = 1000;
-            int numberCount = 0;
-            bool nextPage = true;
-            while (nextPage)
+            int limit = 100;
+            var nextCursor = string.Empty;
+            var nextPage = false;
+            do
             {
-                var resultWeb = await OzonClasses.OzonOperators.DetailOrders(_httpService, firmaProxy, clientId, authToken,
+                var (postings, cursor, hasNext, error) = await OzonClasses.OzonOperators.DetailOrders(_httpService, firmaProxy, clientId, authToken,
                     status,
                     60,
                     limit,
-                    limit * numberCount,
+                    nextCursor,
                     stoppingToken);
-                if (resultWeb.Item3 != null)
-                    _logger.LogError(resultWeb.Item3);
-                if (resultWeb.Item1 != null)
+                if (error != null)
+                    _logger.LogError(error);
+                if (postings != null)
                 {
-                    foreach (var posting in resultWeb.Item1)
+                    foreach (var posting in postings)
                     {
                         var order = await _order.ПолучитьOrderByMarketplaceId(marketplaceId, posting.Posting_number);
                         if (order != null)
                             result.Add(order);
                     }
                 }
-                numberCount++;
-                nextPage = resultWeb.Item2.HasValue ? resultWeb.Item2.Value : false;
+                nextCursor = cursor ?? string.Empty;
+                nextPage = hasNext.HasValue && hasNext.Value;
             }
+            while (nextPage);
+
             return result;
         }
         private async Task GetOzonCancelOrders(string firmaId, string clientId, string authToken, string id, CancellationToken stoppingToken)

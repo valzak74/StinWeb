@@ -31,64 +31,74 @@ namespace OzonClasses
             request.Dir = SortOrder.ASC;
             request.Filter = new UnfulfilledFilter
             {
-                //Delivering_date_from = DateTime.Today.AddDays(-30),
-                //Delivering_date_to = DateTime.Today.AddDays(30),
-
                 Cutoff_from = DateTime.Today.AddDays(-60),
                 Cutoff_to = DateTime.Today.AddDays(60),
-                Status = OrderStatus.awaiting_packaging //awaiting_deliver //
+                Statuses = new() { OrderStatus.awaiting_packaging }//awaiting_deliver //
             };
             request.Limit = limit;
-            request.Offset = 0;
+            request.Cursor = string.Empty;
             var headers = GetOzonHeaders(clientId, authToken);
-            var result = await httpService.Exchange<OzonUnfulfilledOrderResponse, ErrorResponse>(
-                $"https://{proxyHost}api-seller.ozon.ru/v3/posting/fbs/unfulfilled/list",
-                HttpMethod.Post,
-                headers,
-                request,
-                cancellationToken);
-            string err = "";
-            if (result.Item2 != null)
-            {
-                err = "OzonUnfulfilledResponse : " + result.Item2;
-                //return new(null, "OzonUnfulfilledResponse : " + result.Item2);
-            }
             List<FbsPosting> data = new List<FbsPosting>();
-            if ((result.Item1 != null) && (result.Item1.Result != null) && (result.Item1.Result.Count > 0) &&
-                (result.Item1.Result.Postings != null) && (result.Item1.Result.Postings.Count > 0))
+            string err = "";
+            var hasNext = false;
+            do
             {
-                data.AddRange(result.Item1.Result.Postings);
-                //return new(result.Item1.Result.Postings, null);
+                var result = await httpService.Exchange<OzonUnfulfilledOrderResponse, ErrorResponse>(
+                    $"https://{proxyHost}api-seller.ozon.ru/v4/posting/fbs/unfulfilled/list",
+                    HttpMethod.Post,
+                    headers,
+                    request,
+                    cancellationToken);
+                if (result.Item2 != null)
+                {
+                    if (!string.IsNullOrEmpty(err))
+                        err += Environment.NewLine + result.Item2;
+                    else
+                        err = "OzonUnfulfilledResponse : " + result.Item2;
+                }
+                if (result.Item1?.Postings?.Count > 0)
+                {
+                    data.AddRange(result.Item1.Postings);
+                }
+
+                hasNext = result.Item1?.Has_next ?? false;
             }
+            while (hasNext);
             //second check
-            request.Filter.Status = OrderStatus.awaiting_deliver;
-            result = await httpService.Exchange<OzonUnfulfilledOrderResponse, ErrorResponse>(
-                $"https://{proxyHost}api-seller.ozon.ru/v3/posting/fbs/unfulfilled/list",
-                HttpMethod.Post,
-                headers,
-                request,
-                cancellationToken);
-            if (result.Item2 != null)
+            request.Filter.Statuses = new() { OrderStatus.awaiting_deliver };
+            request.Cursor = string.Empty;
+            hasNext = false;
+            do
             {
-                if (!string.IsNullOrEmpty(err))
-                    err += Environment.NewLine + result.Item2;
-                else
-                    err = "OzonUnfulfilledResponse : " + result.Item2;
-                //return new(null, "OzonUnfulfilledResponse : " + result.Item2);
+                var result = await httpService.Exchange<OzonUnfulfilledOrderResponse, ErrorResponse>(
+                    $"https://{proxyHost}api-seller.ozon.ru/v4/posting/fbs/unfulfilled/list",
+                    HttpMethod.Post,
+                    headers,
+                    request,
+                    cancellationToken);
+                if (result.Item2 != null)
+                {
+                    if (!string.IsNullOrEmpty(err))
+                        err += Environment.NewLine + result.Item2;
+                    else
+                        err = "OzonUnfulfilledResponse : " + result.Item2;
+                }
+                if (result.Item1?.Postings?.Count > 0)
+                {
+                    data.AddRange(result.Item1.Postings);
+                }
+
+                hasNext = result.Item1?.Has_next ?? false;
             }
-            if ((result.Item1 != null) && (result.Item1.Result != null) && (result.Item1.Result.Count > 0) &&
-                (result.Item1.Result.Postings != null) && (result.Item1.Result.Postings.Count > 0))
-            {
-                data.AddRange(result.Item1.Result.Postings);
-                //return new(result.Item1.Result.Postings, null);
-            }
+            while (hasNext);
+
             return new(data.Count > 0 ? data : null, string.IsNullOrEmpty(err) ? null : err);
         }
-        public static async Task<Tuple<List<FbsPosting>?,bool?, string?>> DetailOrders(IHttpService httpService, string proxyHost, string clientId, string authToken,
-            OrderStatus? status,
+        public static async Task<Tuple<List<FbsPosting>?, string?, bool?, string?>> DetailOrders(IHttpService httpService, string proxyHost, string clientId, string authToken,
+            OrderStatus status,
             int checkDays,
             long limit,
-            long offset,
+            string cursor,
             CancellationToken cancellationToken)
         {
             var request = new DetailOrderRequest();
@@ -97,27 +107,26 @@ namespace OzonClasses
             {
                 Since = DateTime.Today.AddDays(-checkDays),
                 To = DateTime.Today.AddDays(checkDays),
-                Status = status,
+                Statuses = new() { status },
                 //Order_id = 23849303191
             };
             request.Limit = limit;
-            request.Offset = offset;
-            var result = await httpService.Exchange<DetailOrderResponse, ErrorResponse>(
-                $"https://{proxyHost}api-seller.ozon.ru/v3/posting/fbs/list",
+            request.Cursor = cursor;
+            var (detailOrder, error) = await httpService.Exchange<DetailOrderResponse, ErrorResponse>(
+                $"https://{proxyHost}api-seller.ozon.ru/v4/posting/fbs/list",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
                 cancellationToken);
-            if (result.Item2 != null)
+            if (error != null)
             {
-                return new(null,null, "DetailOrderResponse : " + result.Item2);
+                return new(null, null, null, "DetailOrderResponse : " + error);
             }
-            if ((result.Item1 != null) && (result.Item1.Result != null) && 
-                (result.Item1.Result.Postings != null) && (result.Item1.Result.Postings.Count > 0))
+            if (detailOrder?.Postings?.Count > 0)
             {
-                return new(result.Item1.Result.Postings,result.Item1.Result.Has_next, null);
+                return new(detailOrder.Postings, detailOrder.Cursor, detailOrder.Has_next, null);
             }
-            return new(null,null, null);
+            return new(null, null, null, null);
         }
         public static async Task<Tuple<OrderStatus?,string?, PostingBarcodes?>> OrderDetails(IHttpService httpService, string proxyHost, string clientId, string authToken,
             string postingNumber,

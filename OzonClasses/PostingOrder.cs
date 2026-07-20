@@ -18,7 +18,7 @@
     public class PostingAdditionalData
     {
         public string? Posting_number { get; set; }
-        public List<PostingProduct>? Products { get; set; }
+        public List<PostingProductV3>? Products { get; set; }
     }
     public class PostingPackage
     {

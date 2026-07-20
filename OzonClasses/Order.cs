@@ -90,24 +90,29 @@ namespace OzonClasses
         public SortOrder Dir { get; set; }
         public DetailFilter? Filter { get; set; }
         public long Limit { get; set; }
-        public long Offset { get; set; }
+        public string? Cursor { get; set; }
         public RequestWithParams? With { get; set; }
     }
     public class DetailOrderResponse
     {
-        public DetailOrderResult? Result { get; set; }
+        public string? Cursor { get; set; }
+        public bool Has_next { get; set; }
+        public List<FbsPosting>? Postings { get; set; }
     }
     public class OzonUnfulfilledOrderRequest
     {
         public SortOrder Dir { get; set; }
         public UnfulfilledFilter? Filter { get; set; }
         public long Limit { get; set; }
-        public long Offset { get; set; }
+        public string? Cursor { get; set; }
         public RequestWithParams? With { get; set; }
     }
     public class OzonUnfulfilledOrderResponse
     {
-        public UnfulfilledOrderResult? Result { get; set; }
+        public long Count { get; set; }
+        public string? Cursor { get; set; }
+        public bool Has_next { get; set; }
+        public List<FbsPosting>? Postings { get; set; }
     }
     public class DetailFilter
     {
@@ -118,7 +123,7 @@ namespace OzonClasses
         public DateTime? Since { get; set; }
         [JsonConverter(typeof(DateFormatConverter), "yyyy-MM-dd'T'HH:mm:sszzz")]
         public DateTime? To { get; set; }
-        public OrderStatus? Status { get; set; }
+        public List<OrderStatus>? Statuses { get; set; }
         public List<long>? Warehouse_id { get; set; }
         public bool ShouldSerializeDelivery_method_id()
         {
@@ -142,22 +147,12 @@ namespace OzonClasses
         }
         public bool ShouldSerializeStatus()
         {
-            return Status != null;
+            return Statuses?.Count > 0;
         }
         public bool ShouldSerializeWarehouse_id()
         {
             return (Warehouse_id != null) && (Warehouse_id.Count > 0);
         }
-    }
-    public class DetailOrderResult
-    {
-        public bool Has_next { get; set; }
-        public List<FbsPosting>? Postings { get; set; }
-    }
-    public class UnfulfilledOrderResult
-    {
-        public long Count { get; set; }
-        public List<FbsPosting>? Postings { get; set; }
     }
     public class FbsPosting
     {
@@ -198,7 +193,7 @@ namespace OzonClasses
         public List<long>? Products_requiring_country { get; set; }
         public List<long>? Products_requiring_mandatory_mark { get; set; }
     }
-    public class PostingProduct
+    public class PostingProductV3
     {
         public List<string>? Mandatory_mark { get; set; }
         public string? Name { get; set; }
@@ -206,6 +201,21 @@ namespace OzonClasses
         public string? Price { get; set; }
         public int Quantity { get; set; }
         public long Sku { get; set; }
+    }
+    public class PostingProduct
+    {
+        public List<string>? Mandatory_mark { get; set; }
+        public string? Name { get; set; }
+        public string? Offer_id { get; set; }
+        public PriceData? Price { get; set; }
+        public int Quantity { get; set; }
+        public long Sku { get; set; }
+    }
+    public class PriceData
+    {
+        public string? Amount { get; set; }
+        public string? Currency { get; set; }
+
     }
     public class FinancialData
     {
@@ -332,7 +342,7 @@ namespace OzonClasses
         public DateTime Delivering_date_to { get; set; }
         public List<long>? Delivery_method_id { get; set; }
         public List<long>? Provider_id { get; set; }
-        public OrderStatus Status { get; set; }
+        public List<OrderStatus>? Statuses { get; set; }
         public List<long>? Warehouse_id { get; set; }
         public bool ShouldSerializeCutoff_from()
         {
@@ -352,7 +362,7 @@ namespace OzonClasses
         }
         public bool ShouldSerializeStatus()
         {
-            return Status != OrderStatus.NotFound;
+            return Statuses?.Count > 0;
         }
     }
     [JsonConverter(typeof(DefaultUnknownEnumConverter), (int)NotFound)]
