@@ -25,14 +25,15 @@ namespace OzonClasses
         }
         public static async Task<Tuple<List<FbsPosting>?,string?>> UnfulfilledOrders(IHttpService httpService, string proxyHost, string clientId, string authToken,
             long limit,
+            double checkDays,
             CancellationToken cancellationToken)
         {
             var request = new OzonUnfulfilledOrderRequest();
             request.Dir = SortOrder.ASC;
             request.Filter = new UnfulfilledFilter
             {
-                Cutoff_from = DateTime.Today.AddDays(-60),
-                Cutoff_to = DateTime.Today.AddDays(60),
+                Cutoff_from = DateTime.Today.AddDays(-checkDays),
+                Cutoff_to = DateTime.Today.AddDays(checkDays),
                 Statuses = new() { OrderStatus.awaiting_packaging }//awaiting_deliver //
             };
             request.Limit = limit;

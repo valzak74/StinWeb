@@ -2430,7 +2430,7 @@ namespace Refresher1C.Service
                         {
                             await GetOzonNewOrders(marketplace.ClientId, marketplace.AuthToken,
                                 marketplace.Id, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
-                                marketplace.Encoding, stoppingToken);
+                                marketplace.Encoding, 3, stoppingToken);
                         }
                         else if (marketplace.Тип == "ЯНДЕКС")
                         {
@@ -2488,6 +2488,10 @@ namespace Refresher1C.Service
                     {
                         if (marketplace.Тип == "OZON")
                         {
+                            await GetOzonNewOrders(marketplace.ClientId, marketplace.AuthToken,
+                                marketplace.Id, marketplace.FirmaId, marketplace.CustomerId, marketplace.DogovorId,
+                                marketplace.Encoding, 7, stoppingToken);
+
                             await GetOzonCancelOrders(marketplace.FirmaId, marketplace.ClientId, marketplace.AuthToken,
                                 marketplace.Id, stoppingToken);
                             if (periodOpened && !_sleepPeriods.Any(x => x.IsSleeping()))
@@ -3757,7 +3761,7 @@ namespace Refresher1C.Service
                 }
             }
         }
-        private async Task GetOzonNewOrders(string clientId, string authToken, string id, string firmaId, string customerId, string dogovorId, EncodeVersion encoding, CancellationToken stoppingToken)
+        private async Task GetOzonNewOrders(string clientId, string authToken, string id, string firmaId, string customerId, string dogovorId, EncodeVersion encoding, double checkDays, CancellationToken stoppingToken)
         {
             if (int.TryParse(_configuration["Orderer:maxPerRequest"], out int maxPerRequest))
                 maxPerRequest = Math.Max(maxPerRequest, 1);
@@ -3765,6 +3769,7 @@ namespace Refresher1C.Service
                 maxPerRequest = 100;
             var result = await OzonClasses.OzonOperators.UnfulfilledOrders(_httpService, _firmProxy[firmaId], clientId, authToken,
                 maxPerRequest,
+                checkDays,
                 stoppingToken);
             if (result.Item2 != null)
             {
