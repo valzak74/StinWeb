@@ -63,6 +63,7 @@ namespace OzonClasses
                 }
 
                 hasNext = result.Item1?.Has_next ?? false;
+                request.Cursor = result.Item1?.Cursor;
             }
             while (hasNext);
             //second check
@@ -90,6 +91,7 @@ namespace OzonClasses
                 }
 
                 hasNext = result.Item1?.Has_next ?? false;
+                request.Cursor = result.Item1?.Cursor;
             }
             while (hasNext);
 
