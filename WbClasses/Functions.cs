@@ -333,16 +333,16 @@ namespace WbClasses
             string supplyId, string orderId,
             CancellationToken cancellationToken)
         {
-            var result = await httpService.Exchange<bool, WbErrorResponse>(
+            var (success, wbErrors) = await httpService.Exchange<bool, List<WbErrorResponse>>(
                 $"https://{proxyHost}marketplace-api.wildberries.ru/api/marketplace/v3/supplies/{supplyId}/orders",
                 HttpMethod.Patch,
                 GetCustomHeaders(authToken),
                 new AddToSupply(orderId),
                 cancellationToken);
-            string err = "";
-            if (result.Item2 != null)
-                err = result.Item2.LogWbErrors("");
-            return (success: result.Item1, error: string.IsNullOrEmpty(err) ? "" : "WbGetSuppliesList: " + err);
+            var err = wbErrors?.Count > 0
+                ? string.Join(", ", wbErrors.Select(x => x.LogWbErrors("")))
+                : string.Empty;
+            return (success, error: string.IsNullOrEmpty(err) ? "" : $"WbAddToSupply: {orderId} {err}");
         }
         public static async Task<(Supply? supply, string error)> GetSupplyInfo(IHttpService httpService, string authToken, string supplyId, CancellationToken cancellationToken)
         {

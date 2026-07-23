@@ -73,12 +73,12 @@ namespace Refresher1C.Service
             GC.SuppressFinalize(this);
         }
         public MarketplaceService(
-            IConfiguration configuration, 
+            IConfiguration configuration,
             ILogger<MarketplaceService> logger,
             ISharedQueue sharedQueue,
-            IDocCreateOrUpdate docService, 
+            IDocCreateOrUpdate docService,
             IMarkupFactorPercentDictionary markupFactorPercentDictionary,
-            StinDbContext context, 
+            StinDbContext context,
             IHttpService httpService,
             IServiceProvider serviceProvider
         )
@@ -132,7 +132,7 @@ namespace Refresher1C.Service
                                            (nom.Sp2417 == ВидыНоменклатуры.Товар) &&
                                            (order.Sp13982 == 8) && //order статус = 8
                                            ((doc.Sp4760 == видОперацииЗаявкаОдобренная) || (doc.Sp4760 == видОперацииСчетНаОплату))
-                                           //&& order.Code.Trim() == "172517024"
+                                       //&& order.Code.Trim() == "172517024"
                                        group new { doc, docT } by new { ЗаявкаId = doc.Iddoc, OrderId = doc.Sp13995, OrderCode = order.Code, НоменклатураId = docT.Sp2446, Коэффициент = docT.Sp2449 } into gr
                                        select new
                                        {
@@ -162,7 +162,7 @@ namespace Refresher1C.Service
                         Key = data.OrderCode,
                         WorkItem = (docService, cancellationToken) => docService.CreateNabor(data.ЗаявкаId, cancellationToken),
                     });
-                    //await _docService.CreateNabor(data.ЗаявкаId, stoppingToken);
+                //await _docService.CreateNabor(data.ЗаявкаId, stoppingToken);
             }
         }
         public async Task PrepareYandexFbsBoxes(bool regular, CancellationToken stoppingToken)
@@ -411,7 +411,10 @@ namespace Refresher1C.Service
                                 {
                                     var addToSupplyResult = await WbClasses.Functions.AddToSupply(_httpService, _firmProxy[obj.Key.FirmaId], obj.Key.AuthToken, supplyIdResult.supplyId, obj.Key.MarketplaceId, stoppingToken);
                                     if (!string.IsNullOrEmpty(addToSupplyResult.error))
+                                    {
                                         err = addToSupplyResult.error;
+                                        _logger.LogError(err);
+                                    }
                                     if (!addToSupplyResult.success)
                                         status = -1;
                                     else
@@ -2529,7 +2532,7 @@ namespace Refresher1C.Service
                     }
                     catch (Exception e)
                     {
-                        _logger.LogError("RefreshSlowOrders single market : " + e.Message);
+                        _logger.LogError("RefreshSlowOrders single market {market}: {message}", marketplace.Code, e.Message);
                     }
                 }
             }
