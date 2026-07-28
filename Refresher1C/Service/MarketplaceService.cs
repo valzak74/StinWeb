@@ -3851,7 +3851,9 @@ namespace Refresher1C.Service
                             if (!TimeSpan.TryParse("16:00", out TimeSpan limitTime))
                                 limitTime = TimeSpan.MinValue;
                             var leavingDate = DateTime.Now.TimeOfDay > limitTime ? 1 : 0;
-                            var shipmentDate = DateTime.Today.AddDays(await _склад.ЭтоРабочийДень(Common.SkladEkran, leavingDate));
+                            var shipmentDate = posting.Delivery_method?.Tpl_provider_id > 0 // realFBS
+                                ? posting.Shipment_date
+                                : DateTime.Today.AddDays(await _склад.ЭтоРабочийДень(Common.SkladEkran, leavingDate));
                             foreach (var orderItem in orderItems.GroupBy(x => x.ИдентификаторПоставщика))
                             {
                                 _sharedQueue.Enqueue(new SharedQueueDto
