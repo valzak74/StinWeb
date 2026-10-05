@@ -731,6 +731,7 @@ namespace StinClasses.Документы
                 Тип = form.Order?.Тип,
                 OrderNo = (form.Order?.MarketplaceId ?? "") + 
                     (form.Order?.Тип == "ALIEXPRESS" ? " / " + (form.Order?.DeliveryServiceName ?? "") :
+                     form.Order?.Тип == "OZON" ? " / " + (form.Order?.RegionName ?? "") :
                      form.Order?.Тип == "WILDBERRIES" ? " / " + (form.Order?.DeliveryServiceId ?? "") + " / " + (form.Order?.RegionId ?? "") : ""),
                 Поставщик = form.Общие.Фирма.Наименование,
                 Покупатель = form.Контрагент?.Наименование ?? "",

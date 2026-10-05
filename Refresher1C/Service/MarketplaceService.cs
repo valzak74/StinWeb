@@ -545,10 +545,10 @@ namespace Refresher1C.Service
                                             _logger.LogError(resultDetails.Item2);
                                         if (resultDetails.Item3 != null)
                                         {
-                                            if (!string.IsNullOrEmpty(resultDetails.Item3.Upper_barcode))
-                                                entity.Sp13987 = resultDetails.Item3.Upper_barcode;
-                                            if (!string.IsNullOrEmpty(resultDetails.Item3.Lower_barcode))
-                                                entity.Sp13992 = resultDetails.Item3.Lower_barcode;
+                                            if (!string.IsNullOrEmpty(resultDetails.Item3))
+                                            //    entity.Sp13987 = resultDetails.Item3.Upper_barcode;
+                                            //if (!string.IsNullOrEmpty(resultDetails.Item3.Lower_barcode))
+                                                entity.Sp13992 = resultDetails.Item3;
                                         }
                                         break;
                                     }

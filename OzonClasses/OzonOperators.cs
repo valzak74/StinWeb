@@ -131,7 +131,7 @@ namespace OzonClasses
             }
             return new(null, null, null, null);
         }
-        public static async Task<Tuple<OrderStatus?,string?, PostingBarcodes?>> OrderDetails(IHttpService httpService, string proxyHost, string clientId, string authToken,
+        public static async Task<Tuple<OrderStatus?,string?, string?>> OrderDetails(IHttpService httpService, string proxyHost, string clientId, string authToken,
             string postingNumber,
             CancellationToken cancellationToken)
         {
@@ -150,7 +150,7 @@ namespace OzonClasses
             }
             if ((result.Item1 != null) && (result.Item1.Result != null))
             {
-                return new(result.Item1.Result.Status, null, result.Item1.Result.Barcodes);
+                return new(result.Item1.Result.Status, null, result.Item1.Result.Scanit);
             }
             return new(null, null, null);
         }

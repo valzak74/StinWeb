@@ -39,6 +39,7 @@ namespace OzonClasses
         public long Order_id { get; set; }
         public string? Order_number { get; set; }
         public string? Posting_number { get; set; }
+        public string? Scanit { get; set; }
         public ProductExemplar? Product_exemplars { get; set; }
         public List<PostingProductDetail>? Products { get; set; }
         public string? Provider_status { get; set; }
@@ -171,6 +172,7 @@ namespace OzonClasses
         public long Order_id { get; set; }
         public string? Order_number { get; set; }
         public string? Posting_number { get; set; }
+        public string? Scanit { get; set; }
         public List<PostingProduct>? Products { get; set; }
         public PostingRequirements? Requirements { get; set; }
         public DateTime Shipment_date { get; set; }
