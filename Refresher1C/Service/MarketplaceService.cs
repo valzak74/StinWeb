@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Refresher1C.Models.AsyncTasksQueue;
 using Refresher1C.Models.SharedQueue;
 using StinClasses;
 using StinClasses.MarketCommission;
@@ -29,6 +30,7 @@ namespace Refresher1C.Service
         private readonly IConfiguration _configuration;
         private readonly ILogger<MarketplaceService> _logger;
         private IHttpService _httpService;
+        private IAsyncTasksQueue _asyncTasksQueue;
         private ISharedQueue _sharedQueue;
         private IMarkupFactorPercentDictionary _markupFactorPercentDictionary;
         IServiceProvider _serviceProvider;
@@ -75,6 +77,7 @@ namespace Refresher1C.Service
         public MarketplaceService(
             IConfiguration configuration,
             ILogger<MarketplaceService> logger,
+            IAsyncTasksQueue asyncTasksQueue,
             ISharedQueue sharedQueue,
             IDocCreateOrUpdate docService,
             IMarkupFactorPercentDictionary markupFactorPercentDictionary,
@@ -87,6 +90,7 @@ namespace Refresher1C.Service
             _markupFactorPercentDictionary = markupFactorPercentDictionary;
             _serviceProvider = serviceProvider;
             _httpService = httpService;
+            _asyncTasksQueue = asyncTasksQueue;
             _sharedQueue = sharedQueue;
             _context = context;
             _configuration = configuration;
@@ -460,7 +464,7 @@ namespace Refresher1C.Service
                                   join market in _context.Sc14042s on order.Sp14038 equals market.Id
                                   join binary in _context.VzOrderBinaries.Where(x => x.Extension.Trim().ToUpper() == "LABELS") on order.Id equals binary.Id into _binary
                                   from binary in _binary.DefaultIfEmpty()
-                                  where //order.Code.Trim() == "2301258054266676" &&
+                                  where //order.Code.Trim() == "0148577005-0223-1"
                                         (regular ? ((order.Sp13982 == 1) || (order.Sp13982 == 2) || (order.Sp13982 == 3)) : (order.Sp13982 == -2)) && //order статус = 1 (грузовые места сформированы)
                                         (((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.YANDEX_MARKET) ||
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.SBER_MEGA_MARKET) ||
@@ -468,8 +472,8 @@ namespace Refresher1C.Service
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.WILDBERRIES) ||
                                         ((StinDeliveryPartnerType)order.Sp13985 == StinDeliveryPartnerType.OZON_LOGISTIC)) &&
                                         (binary == null)
-                                        //&& market.Code.Trim() == "18795"
-                                        //&& order.Code.Trim() == "172517024"
+                                  //&& market.Code.Trim() == "18795"
+                                  //&& order.Code.Trim() == "172517024"
                                   group new { order, market } by new { order.Id, order.Code, firmaId = market.Parentext, campaignId = market.Code, clientId = market.Sp14053, token = market.Sp14054, тип = market.Sp14155 } into gr
                                   select new
                                   {
@@ -528,43 +532,25 @@ namespace Refresher1C.Service
                             }
                             else if (order.Тип == "OZON")
                             {
-                                TimeSpan sleepPeriod = TimeSpan.FromSeconds(5);
-                                int tryCount = 5;
-                                while (true)
+                                if (_asyncTasksQueue.Contains(order.OrderId))
+                                    continue;
+
+                                var (task, error) = await OzonClasses.OzonOperators.CreatePackageLabel(_httpService, _firmProxy[order.FirmaId], order.ClientId, order.AuthToken,
+                                    order.MarketplaceId, 
+                                    stoppingToken);
+                                if (error != null)
+                                    _logger.LogError($"PreparePdfLabels order {order.MarketplaceId}: {error}");
+                                if (task.HasValue)
                                 {
-                                    var result = await OzonClasses.OzonOperators.GetLabels(_httpService, _firmProxy[order.FirmaId], order.ClientId, order.AuthToken,
-                                        new List<string> { order.MarketplaceId },
-                                        stoppingToken);
-                                    if (result.Item1 != null)
+                                    _asyncTasksQueue.Enqueue(new AsyncTasksQueueDto
                                     {
-                                        label = result.Item1;
-                                        var resultDetails = await OzonClasses.OzonOperators.OrderDetails(_httpService, _firmProxy[order.FirmaId], order.ClientId, order.AuthToken,
-                                            order.MarketplaceId,
-                                            stoppingToken);
-                                        if (resultDetails.Item2 != null)
-                                            _logger.LogError(resultDetails.Item2);
-                                        if (resultDetails.Item3 != null)
-                                        {
-                                            if (!string.IsNullOrEmpty(resultDetails.Item3))
-                                            //    entity.Sp13987 = resultDetails.Item3.Upper_barcode;
-                                            //if (!string.IsNullOrEmpty(resultDetails.Item3.Lower_barcode))
-                                                entity.Sp13992 = resultDetails.Item3;
-                                        }
-                                        break;
-                                    }
-                                    if (result.Item2 != null && !string.IsNullOrEmpty(result.Item2) && (--tryCount == 0))
-                                    {
-                                        if ((result.Item2 == "3: POSTINGS_NOT_READY") || (result.Item2 == "3: INVALID_ARGUMENT"))
-                                            status = entity.Sp13982;
-                                        else
-                                        {
-                                            _logger.LogError(result.Item2);
-                                            status = -2;
-                                            err = result.Item2;
-                                        }
-                                        break;
-                                    }
-                                    await Task.Delay(sleepPeriod);
+                                        Key = order.OrderId,
+                                        WorkItem = (asyncTaskService, cancellationToken) =>
+                                            asyncTaskService.DownloadPdfLabels(order.FirmaId, order.ClientId, order.AuthToken,
+                                                order.OrderId, order.MarketplaceId, task.Value, 0,
+                                                cancellationToken
+                                            )
+                                    });
                                 }
                             }
                             else if (order.Тип == "ALIEXPRESS")

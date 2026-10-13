@@ -23,6 +23,7 @@ using JsonExtensions;
 using HttpExtensions;
 using System.Threading;
 using System.Text.RegularExpressions;
+using NPOI.SS.Formula.Functions;
 
 namespace StinWeb.Controllers
 {
@@ -911,6 +912,7 @@ namespace StinWeb.Controllers
                                ShipmentDate = order.Sp13990,
                                ПредварительнаяЗаявкаНомер = order.Sp13981.Trim(),
                                CustomerNotes = order.Sp14122,
+                               RegionName = order.Sp13992.Trim(),
                                Town = order.Sp14125.Trim(),
                                Street = order.Sp14127.Trim(),
                                House = order.Sp14128.Trim(),
@@ -987,7 +989,7 @@ namespace StinWeb.Controllers
                 {
                     Id = gr.Key.Id,
                     Тип = gr.Key.Тип,
-                    MarketplaceId = gr.Key.MarketplaceId,
+                    MarketplaceId = (gr.Key.MarketplaceId + " / " + (gr.Key.Тип == "OZON" ? gr.Select(x => x.RegionName).Where(x => x.StartsWith("ii")).FirstOrDefault() ?? string.Empty : string.Empty)).TrimEnd(' ','/'),
                     MarketplaceType = gr.Key.MarketplaceType,
                     MarketplaceName = gr.Key.Тип + " " + gr.Key.MarketplaceName,
                     ShipmentDate = gr.Key.ShipmentDate,

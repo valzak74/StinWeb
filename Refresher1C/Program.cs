@@ -44,11 +44,13 @@ namespace Refresher1C
                 //}));
 
                 services.AddSingleton<ISharedQueue, SharedQueue>();
+                services.AddSingleton<IAsyncTasksQueue, AsyncTasksQueue>();
 
                 services.AddHttpClient<IHttpService, HttpService>()
                     .AddPolicyHandler(GetRetryPolicy());
                 services.AddScoped<IDocCreateOrUpdate, DocCreateOrUpdate>();
                 services.AddScoped<IMarketplaceService, MarketplaceService>();
+                services.AddScoped<IAsyncTaskService, AsyncTaskService>();
 
                 services.AddScoped<IStockFunctions, StockFunctions>();
                 services.AddScoped<IFirmaFunctions, FirmaFunctions>();
@@ -65,6 +67,7 @@ namespace Refresher1C
                 services.AddScoped<IMarkupFactorPercentDictionary, MarkupFactorPercentDictionary>();
 
                 services.AddHostedService<WorkerDocProducer>();
+                services.AddHostedService<WorkerAsyncTasksLauncher>();
 
                 if (configuration.GetSection("YouKassa:enable").Get<bool>())
                 {

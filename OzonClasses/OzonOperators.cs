@@ -557,22 +557,67 @@ namespace OzonClasses
             }
             return (updatedOfferIds: uploadIds, tooManyRequests: tooManyIds, errorOfferIds: errorIds, errorMessage: err);
         }
-        public static async Task<Tuple<byte[]?,string?>> GetLabels(IHttpService httpService, string proxyHost, string clientId, string authToken,
-            List<string> postingNumbers,
+        public static async Task<Tuple<long?, string?>> CreatePackageLabel(IHttpService httpService, string proxyHost, string clientId, string authToken,
+            string postingNumber, 
             CancellationToken cancellationToken)
         {
-            var request = new PackageLabelRequest();
-            request.Posting_number = postingNumbers;
-            var result = await httpService.Exchange<byte[], ErrorResponse>(
-                $"https://{proxyHost}api-seller.ozon.ru/v2/posting/fbs/package-label",
+            var request = new CreatePackageLabelRequest
+            {
+                Posting_numbers = new List<string> { postingNumber },
+            };
+            var (createPackageLabelResponse, errorResponse) = await httpService.Exchange<CreatePackageLabelResponse, ErrorResponse>(
+                $"https://{proxyHost}api-seller.ozon.ru/v3/posting/fbs/package-label/create",
                 HttpMethod.Post,
                 GetOzonHeaders(clientId, authToken),
                 request,
                 cancellationToken);
-            if (result.Item2 != null)
-                return new(null, ParseOzonError(result.Item2));
-            return new(result.Item1, null);
+            if (errorResponse != null)
+                return new(null, ParseOzonError(errorResponse));
+            if (createPackageLabelResponse != null)
+            {
+                return new(createPackageLabelResponse.Tasks.Select(x => x.Task_id).FirstOrDefault(), null);
+            }
+            return new(null, null);
         }
+        public static async Task<Tuple<byte[]?, bool, string?>> GetPackageLabel(IHttpService httpService, string proxyHost, string clientId, string authToken,
+            long taskId,
+            CancellationToken cancellationToken)
+        {
+            var request = new PackageLabelRequest();
+            request.Task_id = taskId;
+            var (packageLabelResponse, errorResponse) = await httpService.Exchange<PackageLabelResponse, ErrorResponse>(
+                $"https://{proxyHost}api-seller.ozon.ru/v2/posting/fbs/package-label/get",
+                HttpMethod.Post,
+                GetOzonHeaders(clientId, authToken),
+                request,
+                cancellationToken);
+            if (errorResponse != null)
+                return new(null, false, ParseOzonError(errorResponse));
+            if (packageLabelResponse != null)
+            {
+                byte[] bytes = null;
+                if (packageLabelResponse.Status.Code == PackageLabelStatusCode.completed && packageLabelResponse.File_url != null)
+                    bytes = await httpService.DownloadFileAsync(packageLabelResponse.File_url, taskId.ToString(), cancellationToken);
+                return new(bytes, packageLabelResponse.Status.Code is PackageLabelStatusCode.pending or PackageLabelStatusCode.in_progress, null);
+            }
+            return new(null, false, null);
+        }
+        //public static async Task<Tuple<byte[]?,string?>> GetLabels(IHttpService httpService, string proxyHost, string clientId, string authToken,
+        //    List<string> postingNumbers,
+        //    CancellationToken cancellationToken)
+        //{
+        //    var request = new PackageLabelRequest();
+        //    request.Posting_number = postingNumbers;
+        //    var result = await httpService.Exchange<byte[], ErrorResponse>(
+        //        $"https://{proxyHost}api-seller.ozon.ru/v2/posting/fbs/package-label",
+        //        HttpMethod.Post,
+        //        GetOzonHeaders(clientId, authToken),
+        //        request,
+        //        cancellationToken);
+        //    if (result.Item2 != null)
+        //        return new(null, ParseOzonError(result.Item2));
+        //    return new(result.Item1, null);
+        //}
         public static async Task<(Dictionary<string, (double ComPercent, double ComAmount, double VolumeWeight, string Price)>, string? Error)> ProductComission(IHttpService httpService, 
             string proxyHost, string clientId, string authToken,
             IReadOnlyDictionary<string, string> saleSchemaByOfferId,
