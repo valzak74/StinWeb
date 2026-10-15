@@ -8,6 +8,7 @@ namespace StinClasses.MarketCommission
 {
     public class CommissionHelperYandex : CommissionHelper
     {
+        decimal _multipliyer;
         //readonly ModelTypeYandex _model;
         //readonly decimal _dimensionsLimit = 150;
         //readonly decimal _weightLimit = 25;
@@ -26,6 +27,7 @@ namespace StinClasses.MarketCommission
             decimal weight,
             decimal dimensions) : base(markupFactorPercentDictionary, zakupPrice, quant)
         {
+            _multipliyer = markupFactorPercentDictionary.GetMultiplier(MarketType.Yandex);
             //_model = typeYandex;
             _volumeWeight = Math.Max(weight, volumeWeight);
             var averageMile = VolumeWeightFactor();
@@ -128,8 +130,8 @@ namespace StinClasses.MarketCommission
         }
         public override decimal MinPrice()
         {
-            decimal calcMinPrice = base.MinPrice();
-            calcMinPrice = GetMinPriceWithBorder(calcMinPrice);
+            decimal calcMinPrice = base.MinPrice() * _multipliyer;
+            calcMinPrice = GetMinPriceWithBorder(calcMinPrice) * _multipliyer;
             //if ((_model == ModelTypeYandex.DBS) ||
             //    _isLightFactor ||
             //    _isHard)

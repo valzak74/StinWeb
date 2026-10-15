@@ -11,4 +11,6 @@ public interface IMarkupFactorPercentDictionary
     IReadOnlyDictionary<decimal, decimal> PercentByPrices { get; }
 
     decimal GetPercent(decimal price);
+
+    decimal GetMultiplier(MarketType marketType);
 }

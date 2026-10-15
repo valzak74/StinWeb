@@ -18,6 +18,7 @@ public class CommissionHelperWB : CommissionHelper
     decimal _maxSumSize = 200.0m;
     decimal _maxWeight = 25;
     decimal _ekvaring = 2.0m;
+    decimal _multipliyer;
 
     public CommissionHelperWB(
         IMarkupFactorPercentDictionary markupFactorPercentDictionary,
@@ -30,6 +31,7 @@ public class CommissionHelperWB : CommissionHelper
         decimal weightBrutto
     ) : base(markupFactorPercentDictionary, zakupPrice, quant)
     {
+        _multipliyer = markupFactorPercentDictionary.GetMultiplier(MarketType.Wb);
         decimal liters = length * width * height / 1000;
         decimal sumLogistics = VolumeWeightFactor(liters);
         bool isHard = (weightBrutto > _maxWeight)
@@ -63,6 +65,6 @@ public class CommissionHelperWB : CommissionHelper
     }
     public override decimal MinPrice()
     {
-        return base.MinPrice() * Quant;
+        return base.MinPrice() * Quant * _multipliyer;
     }
 }

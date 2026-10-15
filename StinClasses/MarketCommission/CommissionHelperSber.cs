@@ -5,6 +5,7 @@ namespace StinClasses.MarketCommission
     public class CommissionHelperSber : CommissionHelper
     {
         decimal _volumeLogisticsFactor;
+        decimal _multipliyer;
         (decimal percent, decimal limMin, decimal limMax) _tariffLastMile = (percent: 5.0m, limMin: 10.0m, limMax: 500.0m);
         public CommissionHelperSber(
             IMarkupFactorPercentDictionary markupFactorPercentDictionary, 
@@ -15,6 +16,7 @@ namespace StinClasses.MarketCommission
             ) : base(markupFactorPercentDictionary, zakupPrice, quant)
         {
             _volumeLogisticsFactor = VolumeLogisticsFactor(volume);
+            _multipliyer = markupFactorPercentDictionary.GetMultiplier(MarketType.Sber);
             FixCommissions = new Dictionary<string, decimal>
             {
                 { "Sorting", 10m }, //сортировка 10 руб
@@ -31,18 +33,18 @@ namespace StinClasses.MarketCommission
         }
         public override decimal MinPrice()
         {
-            decimal calcMinPrice = base.MinPrice() * Quant;
+            decimal calcMinPrice = base.MinPrice() * Quant * _multipliyer;
             if (calcMinPrice > GetLimit(_tariffLastMile.percent, _tariffLastMile.limMax))
             {
                 FixCommissions["LastMile"] = _tariffLastMile.limMax;
                 PercentFactors["LastMile"] = 0;
-                calcMinPrice = base.MinPrice() * Quant;
+                calcMinPrice = base.MinPrice() * Quant * _multipliyer;
             }
             else if (calcMinPrice < GetLimit(_tariffLastMile.percent, _tariffLastMile.limMin))
             {
                 FixCommissions["LastMile"] = _tariffLastMile.limMin;
                 PercentFactors["LastMile"] = 0;
-                calcMinPrice = base.MinPrice() * Quant;
+                calcMinPrice = base.MinPrice() * Quant * _multipliyer;
             }
             return calcMinPrice;
         }

@@ -9,6 +9,7 @@ namespace StinClasses.MarketCommission
         public bool IsKGT = false;
         (decimal percent, decimal limMin, decimal limMax) _tariffLastMile = (percent: 5.5m, limMin: 20.0m, limMax: 500.0m);
         decimal _volumeWeightFactor;
+        decimal _multipliyer;
         public CommissionHelperOzon(
             ModelTypeOzon typeOzon, 
             int quant, 
@@ -21,6 +22,7 @@ namespace StinClasses.MarketCommission
         {
             _model = typeOzon;
             _volumeWeightFactor = VolumeWeightFactor(volumeWeight, price);
+            _multipliyer = markupFactorPercentDictionary.GetMultiplier(MarketType.Ozon);
             PercentFactors = new Dictionary<string, decimal> 
             {
                 { "Showcase", showcasePercent },
@@ -163,7 +165,7 @@ namespace StinClasses.MarketCommission
 
         public override decimal MinPrice()
         {
-            decimal calcMinPrice = base.MinPrice();
+            decimal calcMinPrice = base.MinPrice() * _multipliyer;
             if (_model == ModelTypeOzon.RealFBS)
                 return calcMinPrice;
             if (PercentFactors.ContainsKey("LastMile"))
@@ -172,13 +174,13 @@ namespace StinClasses.MarketCommission
                 {
                     FixCommissions["LastMile"] = _tariffLastMile.limMax;
                     PercentFactors["LastMile"] = 0;
-                    calcMinPrice = base.MinPrice();
+                    calcMinPrice = base.MinPrice() * _multipliyer;
                 }
                 else if (calcMinPrice < GetLimit(_tariffLastMile.percent, _tariffLastMile.limMin))
                 {
                     FixCommissions["LastMile"] = _tariffLastMile.limMin;
                     PercentFactors["LastMile"] = 0;
-                    calcMinPrice = base.MinPrice();
+                    calcMinPrice = base.MinPrice() * _multipliyer;
                 }
             }
             return calcMinPrice;
